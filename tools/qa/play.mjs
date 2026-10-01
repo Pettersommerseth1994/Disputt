@@ -1,6 +1,7 @@
 // UI end-to-end: several "phones" (isolated browser contexts) play a whole game through the real interface.
-//   node tools/qa/play.mjs [players=4] [target=2] [--p2p] [--shots]
+//   node tools/qa/play.mjs [players=4] [target=2] [--p2p] [--url=https://…] [--shots]
 //   --p2p   test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server
+//   --url   play against an already deployed peer-to-peer site (real PeerJS cloud, real 5 s timers), e.g. the GitHub Pages address
 // Needs Google Chrome (CHROME_PATH to override). Exits non-zero on the first thing that does not behave.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -17,15 +18,18 @@ const PLAYERS = nums[0] ?? 4;
 const TARGET = nums[1] ?? 2;
 assert.ok(Number.isInteger(PLAYERS) && PLAYERS >= 3 && PLAYERS <= 10 && Number.isInteger(TARGET) && TARGET >= 1, 'usage: play.mjs [players 3-10] [target]');
 const SHOTS = flags.includes('--shots');
-const P2P = flags.includes('--p2p');
+const LIVE_URL = flags.find((f) => f.startsWith('--url='))?.slice('--url='.length);
+const LIVE = Boolean(LIVE_URL);
+const P2P = LIVE || flags.includes('--p2p');
+const SLOW = LIVE ? 2 : 1; // the deployed site runs on the real timers and a real network
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 'Nina', 'Lars'];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(...a);
 
-const site = P2P ? await startP2PSite() : await startNodeSite();
+const site = LIVE ? { base: LIVE_URL.replace(/\/+$/, ''), stop: async () => {} } : P2P ? await startP2PSite() : await startNodeSite();
 const base = site.base;
-log(`${P2P ? 'peer-to-peer build' : 'Node server'} at ${base}`);
+log(`${LIVE ? 'deployed peer-to-peer site' : P2P ? 'peer-to-peer build' : 'Node server'} at ${base}`);
 // (loopback WebRTC between two pages of the same browser needs real host candidates, not mDNS names)
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars', '--disable-features=WebRtcHideLocalIpsWithMdns'] });
 if (SHOTS) fs.mkdirSync('tmp/play', { recursive: true });
@@ -70,7 +74,7 @@ async function register(p, name, avatarIndex) {
 try {
   // ------------------------------------------------------------ lobby
   const host = await newPhone(NAMES[0]);
-  await host.page.goto(base);
+  await host.page.goto(`${base}/`);
   await waitText(host, /Lur dem/);
   await shot(host, '01-home');
   await clickButton(host, 'Start et spill');
@@ -126,7 +130,7 @@ try {
   while (!finished && round < 30) {
     round++;
     // role reveal: exactly one impostor; only the impostor sees the answer
-    await Promise.all(all.map((p) => waitText(p, /IMPOSTER|LOJAL/i)));
+    await Promise.all(all.map((p) => waitText(p, /IMPOSTER|LOJAL/i, 10000 * SLOW)));
     const roles = await Promise.all(all.map(async (p) => ((await p.page.$('.role__secret')) ? 'impostor' : 'loyal')));
     assert.equal(roles.filter((r) => r === 'impostor').length, 1, `round ${round}: exactly one impostor, got ${roles}`);
     const impostor = all[roles.indexOf('impostor')];
@@ -142,7 +146,7 @@ try {
     // discussion: one asker holds the question, the others only see who
     await Promise.all(
       all.map((p) =>
-        p.page.waitForFunction(() => document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText), { timeout: 12000 }),
+        p.page.waitForFunction(() => document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText), { timeout: 12000 * SLOW }),
       ),
     );
     const askerIndex = (await Promise.all(all.map(async (p) => (await p.page.$('.question__text')) !== null))).indexOf(true);
@@ -193,7 +197,7 @@ try {
 
     // countdown, then the verdict on the asker's phone only
     await Promise.all(all.map((p) => waitText(p, /låst|låste/i)));
-    await waitText(asker, groupRight ? /Riktig!/i : /Feil!/i, 8000);
+    await waitText(asker, groupRight ? /Riktig!/i : /Feil!/i, 8000 * SLOW);
     for (const p of all.filter((x) => x !== asker)) {
       const t = await bodyText(p);
       assert.ok(!/Riktig!|Feil!/i.test(t), 'others do not see the verdict');
@@ -207,12 +211,12 @@ try {
       b.click();
       b.click();
     });
-    await waitText(asker, /Imposteren var|vant!|Delt seier/i, 8000);
+    await waitText(asker, /Imposteren var|vant!|Delt seier/i, 8000 * SLOW);
     await sleep(300);
     assert.equal(await asker.page.$('.toast'), null, 'no error toast after a double tap');
 
     // summary (or the winner)
-    await Promise.all(all.map((p) => waitText(p, /Imposteren var|vant!|Delt seier/i, 8000)));
+    await Promise.all(all.map((p) => waitText(p, /Imposteren var|vant!|Delt seier/i, 8000 * SLOW)));
     const hostText = await bodyText(host);
     finished = /vant!|Delt seier/i.test(hostText);
     if (round === 1) await shot(host, '09-summary');

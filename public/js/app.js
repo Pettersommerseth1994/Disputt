@@ -5,6 +5,7 @@ import { Lobby } from './screens/lobby.js';
 import { Profile } from './screens/profile.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
 import { HostSheet, QrSheet, RulesSheet, ScoresSheet } from './screens/sheets.js';
+import { isP2P } from './settings.js';
 import { useStore } from './store.js';
 import { Button, useWakeLock } from './ui.js';
 
@@ -15,6 +16,8 @@ function themeOf(view) {
   if (view.phase === 'reveal' && view.you.isAsker && view.reveal) return view.reveal.correct ? 'right' : 'wrong';
   return '';
 }
+// Two failed attempts in a row (about 30 s): most likely a network that does not let phones talk to each other directly.
+const STUCK_HINT = 'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.';
 const THEME_COLORS = { '': '#6a1428', impostor: '#d71f2f', loyal: '#2868d4', right: '#7eba2d', wrong: '#f48b8f' };
 
 function gameScreen(view, s) {
@@ -63,13 +66,14 @@ export function App() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[theme]);
   }, [theme]);
 
+  const hint = isP2P && s.stuck >= 2 ? STUCK_HINT : null;
   let screen;
   if (s.replaced) screen = html`<${Replaced} />`;
   else if (view) screen = gameScreen(view, s);
   else if (s.seats) screen = html`<${SeatPicker} />`;
   else if (s.creating) screen = html`<${Connecting} text="Starter spillet …" />`;
-  else if (s.session) screen = html`<${Connecting} text="Kobler til spillet ditt …" />`;
-  else if (s.joining || s.route.page === 'join') screen = html`<${Connecting} text=${`Blir med i ${s.joining ?? s.route.code} …`} />`;
+  else if (s.session) screen = html`<${Connecting} text="Kobler til spillet ditt …" hint=${hint} />`;
+  else if (s.joining || s.route.page === 'join') screen = html`<${Connecting} text=${`Blir med i ${s.joining ?? s.route.code} …`} hint=${hint} />`;
   else screen = html`<${Home} />`;
 
   const offline = s.conn !== 'open' && !s.replaced && (s.everOpened || s.conn === 'closed');
@@ -80,7 +84,7 @@ export function App() {
   else if (view && s.sheet === 'qr') sheet = html`<${QrSheet} view=${view} />`;
 
   return html`
-    ${offline && html`<div class="banner" role="status">${s.everOpened ? 'Mistet forbindelsen – kobler til igjen' : 'Får ikke kontakt med serveren'}</div>`}
+    ${offline && html`<div class="banner" role="status">${s.everOpened ? 'Mistet forbindelsen – kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}
     ${screen}
     ${sheet}
     ${s.toast && html`<div class="toast" role="alert" key=${s.toast}>${s.toast}</div>`}

@@ -23,7 +23,9 @@
     "play": "node tools/qa/play.mjs",
     "pages:build": "node tools/pages/build.mjs",
     "pages:preview": "node tools/pages/serve.mjs",
-    "play:p2p": "node tools/qa/play.mjs --p2p"
+    "play:p2p": "node tools/qa/play.mjs --p2p",
+    "play:live": "node tools/qa/play.mjs --url=https://pettersommerseth1994.github.io/Disputt",
+    "qa:stuck": "node tools/qa/stuck.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

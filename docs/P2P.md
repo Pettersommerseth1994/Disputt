@@ -27,6 +27,7 @@ Koden ligger i [`public/js/p2p/`](../public/js/p2p) (`host.js`, `guest.js`, `ada
 | En gjest mister forbindelsen eller laster siden på nytt | Kommer tilbake automatisk (`resume`), akkurat som med server. |
 | En gjest mister nettleserdataene sine | Hen åpner lenken igjen, velger seg selv fra «Spillet har startet» og tar over plassen. |
 | En gjest forsvinner brått (batteri, tunnel) | Verten markerer hen som frakoblet etter ca. 35 s uten ping, og plassen kan overtas. |
+| En gjest får ikke koblet til (verten er funnet, men nettet slipper ikke telefonene i direkte kontakt) | Hen prøver på nytt hvert femtende sekund. Etter to mislykkede forsøk (ca. 30 s) står det et råd på skjermen: sjekk at verten har siden åpen, og bytt mellom Wi‑Fi og mobildata. |
 | Megleren (`0.peerjs.com`) er nede | Nye spill og innmeldinger feiler. Pågående spill fortsetter (kanalene er direkte). |
 
 ## Begrensninger
@@ -57,8 +58,10 @@ Gratis TURN finnes (f.eks. fra Metered eller Cloudflare), men krever en konto ho
 npm run pages:build            # bygger dist/ (som GitHub Pages)
 npm run pages:preview          # bygger og serverer dist/ på http://localhost:8080
 npm run play:p2p -- 4 2        # UI-test: 4 «telefoner» spiller til 2 poeng over WebRTC
+npm run play:live              # samme test mot den publiserte siden (ekte megler og tidtakere)
+npm run qa:stuck               # gjest uten linje til verten får rådet «bytt mellom Wi‑Fi og mobildata»
 ```
 
-`play:p2p` starter en lokal PeerJS-megler og serverer den *bygde* siden, så hele flyten (bygget, CSP-en og WebRTC) testes uten internett. Den tester blant annet at verten kan laste siden på nytt midt i en runde, og at en forsvunnet telefons plass kan overtas. Enhetstestene dekker adapteren ([`test/adapter.test.js`](../test/adapter.test.js)), lagring og gjenoppretting av rom ([`test/game.test.js`](../test/game.test.js)) og selve byggeresultatet ([`test/pages-build.test.js`](../test/pages-build.test.js)).
+`play:p2p` starter en lokal PeerJS-megler og serverer den *bygde* siden, så hele flyten (bygget, CSP-en og WebRTC) testes uten internett. `play:live` spiller samme spill mot siden på GitHub Pages og den ekte megleren. Alle «telefonene» sitter da på samme maskin og nett, så den viser at siden og megleren virker, ikke at et gitt mobilnett slipper gjennom. Den tester blant annet at verten kan laste siden på nytt midt i en runde, og at en forsvunnet telefons plass kan overtas. Enhetstestene dekker adapteren ([`test/adapter.test.js`](../test/adapter.test.js)), lagring og gjenoppretting av rom ([`test/game.test.js`](../test/game.test.js)) og selve byggeresultatet ([`test/pages-build.test.js`](../test/pages-build.test.js)).
 
 Lokale testlenker kan overstyre innstillingene (bare på `localhost` og private nett): `?mode=p2p&peerHost=127.0.0.1&peerPort=9000`.

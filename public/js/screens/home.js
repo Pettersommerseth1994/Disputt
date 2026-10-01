@@ -81,11 +81,12 @@ function JoinByCode({ onBack }) {
 }
 
 /** Shown while a stored session is being resumed or a QR link is being joined. */
-export function Connecting({ text = 'Kobler til …' }) {
+export function Connecting({ text = 'Kobler til …', hint = null }) {
   return html`<main class="screen">
     <div class="grow center stack stack--loose" style="justify-content:center;align-items:center">
       <${Avatar} id="sky" size="xl" alive />
       <h2>${text}</h2>
+      ${hint && html`<p class="muted center" role="status" style="max-width:30ch">${hint}</p>`}
       <${Button} variant="text" onClick=${() => forget()}>Avbryt</${Button}>
     </div>
   </main>`;

@@ -40,6 +40,7 @@ export const store = {
   route: parseRoute(),
   joining: null, // room code we are trying to join
   creating: false, // p2p: the host is being set up (reserving a room code with the signalling server)
+  stuck: 0, // p2p: how many connection attempts in a row failed without ever finding a line to the host
   seats: null, // { code, seats } when the game has already started and a seat can be claimed
   notice: null, // message shown on the home screen (e.g. "game is gone")
   toast: null, // transient error/info

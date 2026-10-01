@@ -74,7 +74,7 @@ function handleOpen() {
   retry = 0;
   unreachable = 0;
   bestRtt = Infinity;
-  setStore({ conn: 'open', everOpened: true });
+  setStore({ conn: 'open', everOpened: true, stuck: 0 });
   if (store.session) rawSend({ t: 'resume', ...store.session });
   // A join sent on a link that died before the welcome arrived is sent again, exactly once.
   for (let i = outbox.length - 1; i >= 0; i--) if (outbox[i].t === 'join') outbox.splice(i, 1);
@@ -96,7 +96,8 @@ function handleClose(info) {
     if (!store.session) return forget('Fant ikke dette spillet. Sjekk koden, og at verten har siden åpen.');
     if (unreachable > UNREACHABLE_LIMIT) return forget('Verten er ikke å nå lenger, så spillet er trolig avsluttet.');
   }
-  setStore({ conn: 'closed' });
+  // p2p: the host was found but no line could be set up (timeout), or the introduction service did not answer (offline)
+  setStore({ conn: 'closed', stuck: info.timeout || info.offline ? store.stuck + 1 : store.stuck });
   scheduleRetry();
 }
 
@@ -334,7 +335,7 @@ export const actions = {
     return send({ t: 'create' });
   },
   join: (code) => {
-    setStore({ joining: code });
+    setStore({ joining: code, stuck: 0 });
     if (isP2P) {
       teardown();
       connect(); // p2p connects to this particular room
@@ -377,6 +378,6 @@ export function forget(notice = null) {
     teardown();
     setStore({ conn: 'open', everOpened: true });
   }
-  setStore({ session: null, view: null, joining: null, seats: null, notice, route: { page: 'home' }, sheet: null, creating: false });
+  setStore({ session: null, view: null, joining: null, seats: null, notice, route: { page: 'home' }, sheet: null, creating: false, stuck: 0 });
   goHome();
 }
