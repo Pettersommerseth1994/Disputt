@@ -3,7 +3,7 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
-import { Avatar, Button, QR, Scoreboard, Sheet, joinSite, joinUrl } from '../ui.js';
+import { Avatar, Button, QR, Scoreboard, Sheet, ShareLink, joinSite, joinUrl } from '../ui.js';
 
 const close = () => setStore({ sheet: null });
 
@@ -82,6 +82,7 @@ export function QrSheet({ view }) {
       <${QR} text=${url} />
       <p class="lobby__code display">${view.code}</p>
       <p class="small">${joinSite(s.info).replace(/^https?:\/\//, '').replace(/\/$/, '')}</p>
+      <${ShareLink} url=${url} code=${view.code} />
     </div>
   </${Sheet}>`;
 }

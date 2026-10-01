@@ -3,7 +3,7 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
-import { Avatar, Button, CloseIcon, HelpIcon, Logo, QR, joinSite, joinUrl, keepsAwake } from '../ui.js';
+import { Avatar, Button, CloseIcon, HelpIcon, Logo, QR, ShareLink, joinSite, joinUrl, keepsAwake } from '../ui.js';
 import { isP2P } from '../settings.js';
 import { cx, plural } from '../util.js';
 
@@ -121,6 +121,7 @@ function HostLobby({ view }) {
           <p class="lobby__code display" aria-label=${`Spillkode ${view.code.split('').join(' ')}`}>${view.code}</p>
           <p class="small">eller gå til<br /><strong>${shortUrl}</strong><br />og skriv koden</p>
         </div>
+        <${ShareLink} url=${url} code=${view.code} />
       </section>
 
       ${!view.you.ready &&

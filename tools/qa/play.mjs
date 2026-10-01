@@ -97,6 +97,22 @@ try {
   if (P2P) assert.equal(qrLink, `${base}/?j=${code}`, 'p2p: the QR link is the page address itself');
   log(`host created game ${code}`);
 
+  // "Del lenke": through the phone's share sheet where there is one, otherwise the link is copied
+  await host.page.evaluate(() => {
+    window.__shared = null;
+    window.__copied = null;
+    Object.defineProperty(navigator, 'share', { value: async (data) => void (window.__shared = data), configurable: true });
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (t) => void (window.__copied = t) }, configurable: true });
+  });
+  await clickButton(host, 'Del lenke');
+  const shared = await host.page.evaluate(() => window.__shared);
+  assert.equal(shared?.url, qrLink, 'the share sheet gets the same link as the QR code');
+  assert.ok(shared?.text?.includes(code), 'the shared text carries the room code');
+  await host.page.evaluate(() => Object.defineProperty(navigator, 'share', { value: undefined, configurable: true }));
+  await clickButton(host, 'Del lenke');
+  await waitText(host, /Lenken er kopiert/);
+  assert.equal(await host.page.evaluate(() => window.__copied), qrLink, 'without a share sheet the link is copied');
+
   const others = [];
   for (let i = 1; i < PLAYERS; i++) {
     const p = await newPhone(NAMES[i]);

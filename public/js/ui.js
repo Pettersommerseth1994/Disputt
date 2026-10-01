@@ -5,6 +5,7 @@ import { html, useEffect, useMemo, useRef, useState } from './vendor/htm-preact.
 import { qrSvg } from './qr.js';
 import { ROOT, asset } from './paths.js';
 import { config, isP2P } from './settings.js';
+import { toast } from './store.js';
 import { clock, cx, ranking, useRemaining } from './util.js';
 
 export const avatarOf = (id) => AVATARS.find((a) => a.id === id);
@@ -148,6 +149,48 @@ export function Scoreboard({ view, gains = {} }) {
 export function QR({ text, label = 'QR-kode for å bli med i spillet' }) {
   const svg = useMemo(() => qrSvg(text), [text]);
   return html`<div class="qr" role="img" aria-label=${label} dangerouslySetInnerHTML=${{ __html: svg }}></div>`;
+}
+
+/** Puts text on the clipboard; false when the browser refuses (no HTTPS, no permission). */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    /* fall through to the old way */
+  }
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+  document.body.append(area);
+  area.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    /* not allowed either */
+  }
+  area.remove();
+  return ok;
+}
+
+/** "Del lenke": opens the phone's share sheet (Messages, WhatsApp …) so friends who are not in the room can join; elsewhere the link is copied. */
+export function ShareLink({ url, code, variant = 'orange' }) {
+  const share = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Disputt', text: `Bli med på Disputt! Spillkode: ${code}`, url });
+        return;
+      }
+    } catch (err) {
+      if (err?.name === 'AbortError') return; // the player closed the share sheet
+      // anything else: sharing is not available here, so copy instead
+    }
+    if (await copyText(url)) toast('Lenken er kopiert. Send den til de andre.');
+    else toast(`Kopier lenken: ${url}`, 12000);
+  };
+  return html`<${Button} variant=${variant} size="small" onClick=${share}>Del lenke</${Button}>`;
 }
 
 /** Address phones should open: the public URL if configured, else the LAN address when the host page is on localhost. */
