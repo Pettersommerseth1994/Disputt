@@ -83,6 +83,7 @@ npm run play -- 6 3    # …med 6 spillere, til 3 poeng
 npm run play:p2p -- 4 2  # det samme over WebRTC (peer-to-peer-bygget + lokal megler, uten internett)
 npm run play:live      # det samme mot den publiserte siden på GitHub Pages (ekte megler, ekte tidtakere, ca. 1,5 min)
 npm run qa:stuck       # en gjest som ikke får linje til verten får et råd på skjermen (ca. 40 s)
+npm run qa:signalling  # verten mister kontakten med meglertjenesten (også midt i et spill): nye gjester kommer likevel inn
 npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/
 npm run pages:preview  # bygg og vis GitHub Pages-versjonen lokalt (http://localhost:8080)
 ```

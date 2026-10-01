@@ -60,6 +60,7 @@ npm run pages:preview          # bygger og serverer dist/ på http://localhost:8
 npm run play:p2p -- 4 2        # UI-test: 4 «telefoner» spiller til 2 poeng over WebRTC
 npm run play:live              # samme test mot den publiserte siden (ekte megler og tidtakere)
 npm run qa:stuck               # gjest uten linje til verten får rådet «bytt mellom Wi‑Fi og mobildata»
+npm run qa:signalling          # verten mister kontakten med meglertjenesten: spillet fortsetter, nye gjester kommer inn
 ```
 
 `play:p2p` starter en lokal PeerJS-megler og serverer den *bygde* siden, så hele flyten (bygget, CSP-en og WebRTC) testes uten internett. `play:live` spiller samme spill mot siden på GitHub Pages og den ekte megleren. Alle «telefonene» sitter da på samme maskin og nett, så den viser at siden og megleren virker, ikke at et gitt mobilnett slipper gjennom. Den tester blant annet at verten kan laste siden på nytt midt i en runde, og at en forsvunnet telefons plass kan overtas. Enhetstestene dekker adapteren ([`test/adapter.test.js`](../test/adapter.test.js)), lagring og gjenoppretting av rom ([`test/game.test.js`](../test/game.test.js)) og selve byggeresultatet ([`test/pages-build.test.js`](../test/pages-build.test.js)).
