@@ -46,6 +46,7 @@ export function Logo({ small = false }) {
 
 export const CloseIcon = () => html`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>`;
 export const TrophyIcon = () => html`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v4M8 20h8" /></svg>`;
+export const GearIcon = () => html`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.95 5.31 L10.33 2.55 L13.67 2.55 L14.05 5.31 L15.29 5.82 L17.51 4.14 L19.86 6.49 L18.18 8.71 L18.69 9.95 L21.45 10.33 L21.45 13.67 L18.69 14.05 L18.18 15.29 L19.86 17.51 L17.51 19.86 L15.29 18.18 L14.05 18.69 L13.67 21.45 L10.33 21.45 L9.95 18.69 L8.71 18.18 L6.49 19.86 L4.14 17.51 L5.82 15.29 L5.31 14.05 L2.55 13.67 L2.55 10.33 L5.31 9.95 L5.82 8.71 L4.14 6.49 L6.49 4.14 L8.71 5.82 Z" /><circle cx="12" cy="12" r="3.1" /></svg>`;
 export const HelpIcon = () => html`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.6 2.6 0 1 1 3.6 2.4c-.8.4-1.1.9-1.1 1.8M12 17h.01" /></svg>`;
 
 /** mm:ss with fixed-width digit cells so the numbers never jitter. */
@@ -253,7 +254,8 @@ export function useWakeLock(active) {
 
 export function Confetti({ count = 36 }) {
   const pieces = useMemo(() => {
-    const colors = ['var(--yellow)', 'var(--lime)', 'var(--orange)', 'var(--pink)', 'var(--blue-light)', 'var(--violet)', 'var(--cream)'];
+    // (no cream: a cream piece falling behind cream text makes the letters look as if they had holes in them)
+    const colors = ['var(--yellow)', 'var(--lime)', 'var(--orange)', 'var(--pink)', 'var(--blue-light)', 'var(--violet)'];
     return Array.from({ length: count }, (_, i) => ({
       x: `${(i * 97) % 100}%`,
       c: colors[i % colors.length],

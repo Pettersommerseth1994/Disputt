@@ -121,29 +121,42 @@ button { touch-action: manipulation; }
 }
 [hidden] { display: none !important; }
 
-/* Sticky action bar at the bottom of a scrolling screen */
+/* The bar with a screen's main action (a button), frozen to the bottom of the screen. Its background is solid: the last
+   layer is an opaque colour, so nothing that scrolls underneath shows through its text or its button. (A bar that only
+   has text or links is not frozen at all: that is `.foot`, below. `node tools/qa/dock.mjs` checks both rules.) */
 .dock {
   --page-bg: var(--burgundy-700);
   --dock-tex: var(--tex-dark);
   position: sticky;
   bottom: 0;
   z-index: 5;
-  isolation: isolate;
   margin: auto calc(var(--page-x) * -1) 0;
-  padding: var(--s-5) var(--page-x) var(--page-bottom);
+  padding: var(--s-4) var(--page-x) var(--page-bottom);
+  background: var(--tex-grain), var(--dock-tex), var(--page-bg);
 }
-/* The backdrop is the page surface again, faded out upward, so content scrolls away under the buttons. */
+/* A soft edge: what scrolls up to the bar fades into the page colour instead of being cut off by a straight line. */
 .dock::before {
   content: '';
   position: absolute;
-  inset: -1.4rem 0 0;
-  z-index: -1;
-  background: var(--tex-grain), var(--dock-tex), var(--page-bg);
-  -webkit-mask-image: linear-gradient(to top, #000 70%, transparent);
-  mask-image: linear-gradient(to top, #000 70%, transparent);
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 1.4rem;
+  background: linear-gradient(to top, var(--page-bg), transparent);
   pointer-events: none;
 }
 .dock > * + * { margin-top: var(--s-3); }
+
+/* The end of a page: text and links that need no freezing (waiting for the host, "how to play"). It sits after the
+   content, and at the bottom of the screen when the content is short. */
+.foot {
+  margin-top: auto;
+  padding: var(--s-5) 0 var(--page-bottom);
+}
+.foot > * + * { margin-top: var(--s-3); }
+
+/* A screen that ends without a bar: the same room under the last thing on it. */
+.screen--padded { padding-bottom: var(--page-bottom); }
 
 /* Hand-drawn underline under a word */
 .scribble {

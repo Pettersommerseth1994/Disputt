@@ -64,6 +64,15 @@ En flate = en flat farge + korn + strek:
 
 En nettleser sine verktøylinjer tar 150–300 px, så en telefon viser ofte bare ca. 550–660 px høyde, ikke de 844 px skjermen har. Skjermene man skal se på et øyeblikk (rolle, nedtelling, fasit, diskusjon) må derfor få plass uten scrolling, og knappen nederst skal ikke dekke tekst. Illustrasjonene skalerer med synlig høyde (`dvh`, og `height: auto` slik at `<img height>` ikke holder av tom plass), og `screens.css` strammer inn avstander på lave skjermer. `npm run qa:fit` måler det på flere størrelser, også med lengste spørsmål og svar i banken.
 
+## Bunnlinjer: aldri tekst oppå andre ting
+
+To regler, og `npm run qa:dock` måler dem på flere skjermstørrelser (og at ingen synlig tekst overlapper annen tekst):
+
+1. **Det som er frosset til bunnen av skjermen (`.dock`, `position: sticky`) er skjermens hovedhandling, en knapp**, og har en *ugjennomsiktig* bakgrunn. Ingenting som ruller under skal skinne gjennom tekst eller knapp. (Bakgrunnen er sist i `background`-listen som en vanlig farge. Den gikk en gang tapt på alle vanlige skjermer fordi `--page-bg` pekte på `--theme-bg` uten reserveverdi, og en tom `data-theme` fikk hele deklarasjonen til å bli ugyldig. Derfor har variabelen nå en reserveverdi.) Kanten oppover er en egen, myk gradient (`.dock::before`), ikke en maske over innholdet.
+2. **Tekst og lenker som ikke trenger å være frosset (venter på verten, «Slik spiller du») er ikke frosset.** De ligger som `.foot` på slutten av siden, nederst på skjermen når innholdet er kort.
+
+Valg som gjelder deg selv (endre navn eller avatar, vis QR-koden, forlat spillet) ligger bak tannhjulet øverst til høyre i lobbyen (`SettingsSheet`), ikke som løse lenker under spillerlisten.
+
 ## Logo
 
 `public/assets/logo/`: `disputt-logo.svg` (mørk brun, hovedlogo), `-cream` (for mørke flater), `-eye` (alternativ med øye i i-prikken). Tegnet opp som konturer av Fraunces med `npm run logo` (fargene står øverst i `tools/logo/build.mjs` og må følge `--ink` og `--cream`). På burgunder brukes den mørke logoen alltid i et gult klistremerke (`.logo-sticker`).

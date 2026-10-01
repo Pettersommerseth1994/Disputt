@@ -34,13 +34,18 @@ export function Finished({ view }) {
       <${Scoreboard} view=${view} />
     </section>
 
-    <div class="dock">
-      ${view.you.isHost
-        ? html`<${Button} block variant="lime" onClick=${() => actions.again()}>Spill igjen</${Button}>`
-        : html`<p class="center muted" role="status">Venter på at verten starter et nytt spill …</p>`}
-      <div class="row row--center">
-        <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
-      </div>
-    </div>
+    ${view.you.isHost
+      ? html`<div class="dock">
+          <${Button} block variant="lime" onClick=${() => actions.again()}>Spill igjen</${Button}>
+          <div class="row row--center">
+            <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
+          </div>
+        </div>`
+      : html`<div class="foot">
+          <p class="center muted" role="status">Venter på at verten starter et nytt spill …</p>
+          <div class="row row--center">
+            <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
+          </div>
+        </div>`}
   </main>`;
 }

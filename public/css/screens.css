@@ -11,7 +11,10 @@ html[data-theme='impostor'] { --theme-bg: var(--red); background: var(--red); }
 html[data-theme='loyal'] { --theme-bg: var(--blue); background: var(--blue); }
 html[data-theme='right'] { --theme-bg: var(--lime); background: var(--lime); }
 html[data-theme='wrong'] { --theme-bg: var(--pink); background: var(--pink); }
-html[data-theme] .dock { --page-bg: var(--theme-bg); }
+/* (The attribute is also present, but empty, on the ordinary screens, where --theme-bg does not exist. Without a fallback the
+   variable became "invalid at computed-value time" and the bar's whole background silently vanished, which is what let the
+   content scroll through the buttons and text of the bar.) */
+html[data-theme] .dock { --page-bg: var(--theme-bg, var(--burgundy-700)); }
 html[data-theme='impostor'] body { background: var(--tex-grain), var(--tex-light-soft), var(--red); }
 html[data-theme='loyal'] body { background: var(--tex-grain), var(--tex-light-soft), var(--blue); }
 html[data-theme='right'] body { background: var(--tex-grain), var(--tex-light-soft), var(--lime); }

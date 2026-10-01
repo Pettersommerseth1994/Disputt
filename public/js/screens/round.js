@@ -219,13 +219,13 @@ export function Summary({ view }) {
       <p class="small muted center">Først til ${view.target} poeng vinner.</p>
     </section>
 
-    <div class="dock">
-      ${isHost
-        ? html`<${Button} block variant="lime" onClick=${() => actions.next()}>Neste runde</${Button}>
-            <div class="row row--center row--wrap">
-              <${Button} variant="text" onClick=${() => setStore({ sheet: 'host' })}>Vertsvalg</${Button}>
-            </div>`
-        : html`<p class="center muted" role="status">Venter på at verten starter neste runde …</p>`}
-    </div>
+    ${isHost
+      ? html`<div class="dock">
+          <${Button} block variant="lime" onClick=${() => actions.next()}>Neste runde</${Button}>
+          <div class="row row--center row--wrap">
+            <${Button} variant="text" onClick=${() => setStore({ sheet: 'host' })}>Vertsvalg</${Button}>
+          </div>
+        </div>`
+      : html`<p class="foot center muted" role="status">Venter på at verten starter neste runde …</p>`}
   </main>`;
 }

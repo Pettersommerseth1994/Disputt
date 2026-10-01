@@ -156,6 +156,44 @@ try {
   const all = [host, ...others];
   log(`${PLAYERS} players in the lobby`);
 
+  // A guest's gear menu: change name or avatar, show the QR code, leave. (They used to be three loose links in a frozen bar
+  // under the player list, drawn on top of the players.)
+  // (clicked from inside the page: a sheet is replaced by another one in the same spot, and a click that first measures the
+  // button can find it gone)
+  const clickLabel = async (p, label) => {
+    await p.page.waitForSelector(`button[aria-label="${label}"]`, { timeout: 5000 });
+    await p.page.evaluate((l) => document.querySelector(`button[aria-label="${l}"]`).click(), label);
+  };
+  const gear = (p) => clickLabel(p, 'Innstillinger');
+  const menuGuest = others[0];
+  await gear(menuGuest);
+  await waitText(menuGuest, /Innstillinger/);
+  await clickButton(menuGuest, 'Vis QR-koden');
+  await waitText(menuGuest, new RegExp(`Bli med[\\s\\S]*${code}`));
+  await clickLabel(menuGuest, 'Lukk');
+  await menuGuest.page.waitForFunction(() => !document.querySelector('.sheet'));
+  await gear(menuGuest);
+  await clickButton(menuGuest, 'Endre navn eller avatar');
+  await menuGuest.page.waitForSelector('#name');
+  await clickButton(menuGuest, 'Avbryt');
+  await waitText(menuGuest, /Du er med/);
+  if (PLAYERS < NAMES.length) {
+    // leaving takes two taps, so a stray tap in a menu cannot throw anybody out of the game
+    const leaver = await newPhone(NAMES[PLAYERS]);
+    await leaver.page.goto(`${base}/?j=${code}`);
+    await register(leaver, NAMES[PLAYERS], 0);
+    await waitText(leaver, /Du er med/);
+    await waitText(host, new RegExp(`Spillere\\s+${PLAYERS + 1}/10`));
+    await gear(leaver);
+    await clickButton(leaver, 'Forlat spillet');
+    await waitText(leaver, /Trykk igjen for å forlate spillet/);
+    assert.match(await bodyText(host), new RegExp(NAMES[PLAYERS]), 'one tap does not make anybody leave');
+    await clickButton(leaver, 'Trykk igjen for å forlate spillet');
+    await waitText(leaver, /Diskuter\s+og\s+vinn/);
+    await waitText(host, new RegExp(`Spillere\\s+${PLAYERS}/10`));
+    log('the gear menu works: QR code, change profile, and leaving (two taps)');
+  }
+
   // removing a friend takes two taps: the first only arms the button
   await host.page.evaluate(() => document.querySelector('.player__kick').click());
   await waitText(host, /Fjern\?/);

@@ -74,6 +74,17 @@ export function HostSheet({ view }) {
   return html`<${Sheet} title="Vertsvalg" onClose=${close}><${HostControls} view=${view} /></${Sheet}>`;
 }
 
+/** What used to be three loose links under the player list: change name or avatar, show the QR code, leave. */
+export function SettingsSheet() {
+  return html`<${Sheet} title="Innstillinger" onClose=${close}>
+    <div class="stack">
+      <${Button} block variant="cream" onClick=${() => setStore({ sheet: null, editing: true })}>Endre navn eller avatar</${Button}>
+      <${Button} block variant="cream" onClick=${() => setStore({ sheet: 'qr' })}>Vis QR-koden</${Button}>
+      <${ConfirmButton} block variant="pink" label="Trykk igjen for å forlate spillet" onConfirm=${() => { close(); actions.leave(); }}>Forlat spillet</${ConfirmButton}>
+    </div>
+  </${Sheet}>`;
+}
+
 export function QrSheet({ view }) {
   const s = useStore();
   const url = joinUrl(s.info, view.code);

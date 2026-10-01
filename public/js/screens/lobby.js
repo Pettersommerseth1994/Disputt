@@ -3,7 +3,7 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
-import { Avatar, Button, CloseIcon, HelpIcon, Logo, QR, ShareLink, joinSite, joinUrl, keepsAwake } from '../ui.js';
+import { Avatar, Button, CloseIcon, GearIcon, HelpIcon, Logo, QR, ShareLink, joinSite, joinUrl, keepsAwake } from '../ui.js';
 import { isP2P } from '../settings.js';
 import { cx, plural } from '../util.js';
 
@@ -179,10 +179,13 @@ function GuestLobby({ view }) {
   const s = useStore();
   const host = view.players.find((p) => p.isHost);
   const me = view.players.find((p) => p.id === view.you.id);
-  return html`<main class="screen lobby">
+  return html`<main class="screen screen--padded lobby">
     <header class="row row--between">
       <${Logo} small />
-      <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller du"><${HelpIcon} /></${Button}>
+      <div class="row">
+        <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'settings' })} aria-label="Innstillinger"><${GearIcon} /></${Button}>
+        <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller du"><${HelpIcon} /></${Button}>
+      </div>
     </header>
 
     <div class="stack stack--loose grow" style="margin-top:var(--s-5)">
@@ -197,14 +200,6 @@ function GuestLobby({ view }) {
         <${Players} view=${view} />
         <${AwakeTip} denied=${s.wakeLockDenied} />
       </section>
-    </div>
-
-    <div class="dock">
-      <div class="row row--center row--wrap">
-        <${Button} variant="text" onClick=${() => setStore({ editing: true })}>Endre navn eller avatar</${Button}>
-        <${Button} variant="text" onClick=${() => setStore({ sheet: 'qr' })}>Vis QR-koden</${Button}>
-        <${Button} variant="text" onClick=${() => actions.leave()}>Forlat spillet</${Button}>
-      </div>
     </div>
   </main>`;
 }

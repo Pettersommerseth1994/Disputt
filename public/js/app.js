@@ -4,7 +4,7 @@ import { Connecting, Home, SeatPicker } from './screens/home.js';
 import { Lobby } from './screens/lobby.js';
 import { Profile } from './screens/profile.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
-import { HostSheet, QrSheet, RulesSheet, ScoresSheet } from './screens/sheets.js';
+import { HostSheet, QrSheet, RulesSheet, ScoresSheet, SettingsSheet } from './screens/sheets.js';
 import { isP2P } from './settings.js';
 import { useStore } from './store.js';
 import { Button, useWakeLock } from './ui.js';
@@ -82,6 +82,7 @@ export function App() {
   else if (view && s.sheet === 'scores') sheet = html`<${ScoresSheet} view=${view} />`;
   else if (view && s.sheet === 'host') sheet = html`<${HostSheet} view=${view} />`;
   else if (view && s.sheet === 'qr') sheet = html`<${QrSheet} view=${view} />`;
+  else if (view && s.sheet === 'settings') sheet = html`<${SettingsSheet} />`;
 
   return html`
     ${offline && html`<div class="banner" role="status">${s.everOpened ? 'Mistet forbindelsen – kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}

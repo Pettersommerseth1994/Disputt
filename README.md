@@ -96,6 +96,7 @@ npm run qa:hostile     # tilkoblinger av feil type, tilkoblinger som tier, og en
 npm run play:subpath   # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages
 npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/ (VIEWPORT=390x664 for en nettleser med verktøylinjer)
 npm run qa:fit         # får skjermene plass uten scrolling på de synlige skjermstørrelsene (390×664, 375×553 …)?
+npm run qa:dock        # bunnlinjene er ugjennomsiktige, bare linjer med en knapp er frosset, og ingen tekst ligger oppå annen tekst
 npm run pages:preview  # bygg og vis GitHub Pages-versjonen lokalt (http://localhost:8080)
 ```
 
