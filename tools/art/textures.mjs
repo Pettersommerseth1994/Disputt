@@ -141,7 +141,7 @@ function grainTile(seed, size = 256) {
   const n2 = periodicNoise(rng.fork('b'), size, size, 2);
   const n4 = periodicNoise(rng.fork('c'), size, size, 8);
   const out = Buffer.alloc(size * size * 4);
-  const light = hex('#fff6e3'), dark = hex('#1c0a10');
+  const light = hex('#f8e6b8'), dark = hex('#2a1409'); // the palette's cream and a dark chocolate
   const r = rng.fork('px');
   for (let i = 0; i < size * size; i++) {
     const v = 0.5 * n1[i] + 0.35 * n2[i] + 0.15 * n4[i];
@@ -171,10 +171,10 @@ export async function buildTextures(root) {
   const out = [];
   out.push(await writePNG(join(dir, 'grain.png'), grainTile("grain"), 256, 16));
   out.push(await writePNG(join(dir, 'crayon-light.png'), crayonTile('crayon-light', {
-    colors: ['#fff8ea', '#ffffff'], alpha: [0.08, 0.28], maxA: 0.32,
+    colors: ['#fbeccb', '#fff3d4'], alpha: [0.08, 0.28], maxA: 0.32,
   }), 512, 16));
   out.push(await writePNG(join(dir, 'crayon-dark.png'), crayonTile('crayon-dark', {
-    colors: ['#1c0a10', '#3a0a18'], alpha: [0.07, 0.22], maxA: 0.27,
+    colors: ['#2a1409', '#3a0a18'], alpha: [0.07, 0.22], maxA: 0.27,
   }), 512, 16));
   return out;
 }

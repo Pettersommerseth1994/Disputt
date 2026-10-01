@@ -6,8 +6,8 @@ import * as fontkit from 'fontkit';
 
 const FONT_PATH = process.argv[2] ?? 'tmp/fonts/fraunces-display.ttf';
 const OUT_DIR = 'public/assets/logo';
-const INK = '#14070b';
-const CREAM = '#fff6e3';
+const INK = '#3a2012'; // keep in sync with --ink in public/css/tokens.css
+const CREAM = '#f8e6b8'; // ... and --cream
 const WORD = 'Disputt';
 const TRACKING = -0.012; // em; the heavy italic wants to be a little tighter
 const SCALE = 0.1;       // font units -> svg units (UPM 2000 -> 200px em)

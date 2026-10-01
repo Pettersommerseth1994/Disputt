@@ -17,7 +17,7 @@ export function GameBar({ view }) {
   </header>`;
 }
 
-// ------------------------------------------------------------------ 1. role reveal (5 s)
+// ------------------------------------------------------------------ 1. role reveal (8 s)
 
 export function RoleReveal({ view }) {
   const { you } = view;
@@ -80,7 +80,7 @@ export function Question({ view }) {
     ${ms <= 0 && html`<p class="timeup">Tiden er ute – bli enige og lås svaret!</p>`}
 
     <section class="card card--paper stack stack--tight question__card">
-      <p class="eyebrow" style="color:var(--ink);opacity:.65">Les høyt for de andre</p>
+      <p class="eyebrow" style="color:var(--ink);opacity:.78">Les høyt for de andre</p>
       <h2 class="question__text">${question.text}</h2>
     </section>
 
@@ -115,7 +115,7 @@ export function Discussion({ view }) {
     <section class="center stack" style="align-items:center;margin-top:var(--s-4)">
       <${Avatar} id=${asker?.avatar} size="lg" alive offline=${asker && !asker.connected} />
       <h2>${asker?.name} har spørsmålet</h2>
-      <p class="muted">Lytt når ${asker?.name} leser det opp – og diskuter dere frem til riktig svar.</p>
+      <p class="muted discussion__hint">Lytt når ${asker?.name} leser det opp – og diskuter dere frem til riktig svar.</p>
     </section>
 
     <section class="timer-block center stack stack--tight">
@@ -163,7 +163,7 @@ export function RevealAsker({ view }) {
       <img class="reveal__art" src=${asset(r.correct ? 'assets/art/eye-right.svg' : 'assets/art/eye-wrong.svg')} alt="" width="400" height="300" />
       <h1 class="reveal__word pop-in">${r.correct ? 'Riktig!' : 'Feil!'}</h1>
       <div class="card card--paper center reveal__answer rise-in">
-        <p class="eyebrow" style="color:var(--ink);opacity:.65">Riktig svar</p>
+        <p class="eyebrow" style="color:var(--ink);opacity:.78">Riktig svar</p>
         <p class="role__answer"><span>${r.correctLetter}</span>${r.correctText}</p>
       </div>
       <p class="lead">${r.correct ? 'Gruppa lot seg ikke lure.' : 'Imposteren lurte dere.'} Si det høyt til de andre – og trykk så på knappen.</p>
@@ -206,7 +206,7 @@ export function Summary({ view }) {
     <section class="card card--paper impostor-card row pop-in">
       <${Avatar} id=${impostor?.avatar} size="md" alive />
       <div>
-        <p class="eyebrow" style="color:var(--ink);opacity:.65">Imposteren var</p>
+        <p class="eyebrow" style="color:var(--ink);opacity:.78">Imposteren var</p>
         <p class="display impostor-card__name">${impostor?.name}</p>
       </div>
     </section>

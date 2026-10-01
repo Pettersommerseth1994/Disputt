@@ -1,7 +1,7 @@
 // UI end-to-end: several "phones" (isolated browser contexts) play a whole game through the real interface.
 //   node tools/qa/play.mjs [players=4] [target=2] [--p2p] [--url=https://…] [--shots]
 //   --p2p   test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server
-//   --url   play against an already deployed peer-to-peer site (real PeerJS cloud, real 5 s timers), e.g. the GitHub Pages address
+//   --url   play against an already deployed peer-to-peer site (real PeerJS cloud, real timers), e.g. the GitHub Pages address
 // Needs Google Chrome (CHROME_PATH to override). Exits non-zero on the first thing that does not behave.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -75,7 +75,7 @@ try {
   // ------------------------------------------------------------ lobby
   const host = await newPhone(NAMES[0]);
   await host.page.goto(`${base}/`);
-  await waitText(host, /Lur dem/);
+  await waitText(host, /Diskuter\s+og\s+vinn/);
   await shot(host, '01-home');
   await clickButton(host, 'Start et spill');
   // the host sees the QR code straight away and picks their own profile from the lobby

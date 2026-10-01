@@ -14,7 +14,7 @@ export function Home() {
     <${Decor} />
     <div class="home__hero grow">
       <div class="pop-in"><${Logo} /></div>
-      <h1 class="home__tagline rise-in">Lur dem.<br />Eller avslør <span class="scribble">lureren.</span></h1>
+      <h1 class="home__tagline rise-in">Diskuter<br />og <span class="scribble">vinn</span></h1>
       <p class="lead muted rise-in" style="animation-delay:.1s">Et sosialt spill for 3 eller flere. Alle spiller på sin egen telefon.</p>
       ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${s.notice}</p>`}
     </div>

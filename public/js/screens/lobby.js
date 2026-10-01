@@ -115,7 +115,7 @@ function HostLobby({ view }) {
 
     <div class="stack stack--loose" style="margin-top:var(--s-5)">
       <section class="card card--paper card--tilt-r center stack lobby__qr">
-        <p class="eyebrow" style="color:var(--ink);opacity:.7">Skann for å bli med</p>
+        <p class="eyebrow" style="color:var(--ink);opacity:.78">Skann for å bli med</p>
         <${QR} text=${url} />
         <div class="lobby__join">
           <p class="lobby__code display" aria-label=${`Spillkode ${view.code.split('').join(' ')}`}>${view.code}</p>

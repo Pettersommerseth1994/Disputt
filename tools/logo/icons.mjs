@@ -5,7 +5,8 @@ import * as fontkit from 'fontkit';
 import sharp from 'sharp';
 
 const FONT_PATH = process.argv[2] ?? 'tmp/fonts/fraunces-display.ttf';
-const INK = '#14070b';
+const INK = '#3a2012'; // keep in sync with --ink in public/css/tokens.css
+const CREAM = '#f8e6b8'; // ... and --cream
 const YELLOW = '#fae025';
 const font = fontkit.openSync(FONT_PATH).getVariation({ wght: 900, opsz: 144 });
 const D = font.glyphForCodePoint('D'.codePointAt(0));
@@ -28,10 +29,10 @@ function iconSvg({ pad, radius }) {
   const ry = 150 * scale;
   const bg = radius ? `<rect width="512" height="512" rx="${radius}" fill="${YELLOW}"/>` : `<rect width="512" height="512" fill="${YELLOW}"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">${bg}<path d="${path}" fill="${INK}"/>
-<ellipse cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="#fff6e3" transform="rotate(-8 ${ex.toFixed(1)} ${ey.toFixed(1)})"/>
+<ellipse cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${CREAM}" transform="rotate(-8 ${ex.toFixed(1)} ${ey.toFixed(1)})"/>
 <circle cx="${(ex + rx * 0.1).toFixed(1)}" cy="${(ey + ry * 0.05).toFixed(1)}" r="${(ry * 0.78).toFixed(1)}" fill="#2230c8"/>
 <circle cx="${(ex + rx * 0.1).toFixed(1)}" cy="${(ey + ry * 0.05).toFixed(1)}" r="${(ry * 0.42).toFixed(1)}" fill="${INK}"/>
-<circle cx="${(ex + rx * 0.3).toFixed(1)}" cy="${(ey - ry * 0.28).toFixed(1)}" r="${(ry * 0.2).toFixed(1)}" fill="#fff6e3"/></svg>`;
+<circle cx="${(ex + rx * 0.3).toFixed(1)}" cy="${(ey - ry * 0.28).toFixed(1)}" r="${(ry * 0.2).toFixed(1)}" fill="${CREAM}"/></svg>`;
 }
 
 const out = 'public/assets/icons';

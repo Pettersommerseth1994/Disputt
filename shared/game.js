@@ -3,7 +3,7 @@
 // Time never comes from timers inside the room: the host process calls `tick(now)` ~10x/second and every
 // handler reads the injected clock. That keeps the engine deterministic and easy to test.
 //
-// Round flow:  ROLE (5 s) -> QUESTION (discussion timer) -> LOCKED (5 s countdown) -> REVEAL (asker only)
+// Round flow:  ROLE (8 s) -> QUESTION (discussion timer) -> LOCKED (5 s countdown) -> REVEAL (asker only)
 //              -> SUMMARY (scores applied) -> next ROLE ...  or FINISHED when someone leads at/above the target.
 
 import { isAvatarId } from './avatars.mjs';
@@ -30,7 +30,7 @@ export const LIMITS = Object.freeze({
 });
 
 export const DEFAULT_TIMINGS = Object.freeze({
-  roleMs: 5000,
+  roleMs: 8000,
   countdownMs: 5000,
   discussionMs: 6 * 60_000,
   addMs: 60_000,

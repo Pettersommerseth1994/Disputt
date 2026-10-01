@@ -89,9 +89,9 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   justify-content: center;
   gap: var(--s-4);
 }
-.role__eyebrow { color: rgba(255, 246, 227, 0.92); }
-.role .lead, .role__next { text-shadow: 0 1px 0 rgba(20, 4, 10, 0.4), 0 2px 6px rgba(20, 4, 10, 0.25); }
-.role__art { width: min(78vw, 17rem); margin-bottom: calc(var(--s-4) * -0.5); animation: wobble 4s ease-in-out infinite; }
+.role__eyebrow { color: var(--cream); }
+.role .lead, .role__next { text-shadow: 0 1px 0 rgb(var(--shadow-rgb) / 0.4), 0 2px 6px rgb(var(--shadow-rgb) / 0.25); }
+.role__art { width: min(78vw, 17rem, 36vh, 36dvh); height: auto; margin-bottom: calc(var(--s-4) * -0.5); animation: wobble 4s ease-in-out infinite; }
 .role__word {
   font-size: clamp(3rem, 14.5vw, 5.2rem);
   text-transform: uppercase;
@@ -110,7 +110,7 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   box-shadow: var(--shadow-2);
   transform: rotate(-1.5deg);
 }
-.role__secret .eyebrow { color: rgba(28, 10, 16, 0.65); }
+.role__secret .eyebrow { color: rgb(var(--ink-rgb) / 0.75); }
 .role__answer {
   display: inline-flex;
   align-items: center;
@@ -129,11 +129,11 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   height: 1.5em;
   border-radius: 50% 46% 54% 48% / 48% 52% 48% 52%;
   background: var(--tex-grain), var(--tex-light), var(--lime);
-  box-shadow: 0 3px 0 rgba(28, 10, 16, 0.25);
+  box-shadow: 0 3px 0 rgb(var(--ink-rgb) / 0.25);
 }
-.role__next { margin: 0; font-size: var(--fs-small); color: rgba(255, 246, 227, 0.88); }
+.role__next { margin: 0; font-size: var(--fs-small); color: var(--cream); }
 .role__bar { padding: var(--s-4) 0 var(--page-bottom); }
-.role .bar { height: 1.1rem; background: rgba(20, 4, 10, 0.3); }
+.role .bar { height: 1.1rem; background: rgb(var(--shadow-rgb) / 0.3); }
 
 /* ---- Question / discussion -------------------------------------------------- */
 .timer-block { padding: var(--s-2) 0; }
@@ -171,7 +171,7 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 /* ---- Verdict (asker only) ---------------------------------------------------------- */
 .reveal { color: var(--ink); text-align: center; }
 .reveal__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4); }
-.reveal__art { width: min(70vw, 15rem); animation: wobble 3.5s ease-in-out infinite; }
+.reveal__art { width: min(70vw, 15rem, 32vh, 32dvh); height: auto; animation: wobble 3.5s ease-in-out infinite; }
 .reveal__word { font-size: clamp(3.4rem, 18vw, 6rem); text-transform: uppercase; color: var(--cream); text-shadow: 5px 6px 0 var(--ink); }
 .reveal__answer { width: min(100%, 20rem); }
 .reveal .lead { font-weight: 700; }
@@ -208,9 +208,27 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 
 /* ---- Wider screens: keep the phone-shaped column, add a little air ---------------------------- */
 @media (min-width: 640px) {
-  #app { box-shadow: 0 0 0 3px rgba(255, 246, 227, 0.08), 0 0 80px rgba(0, 0, 0, 0.35); }
+  #app { box-shadow: 0 0 0 3px rgb(var(--cream-rgb) / 0.08), 0 0 80px rgb(var(--shadow-rgb) / 0.35); }
 }
 @media (max-height: 640px) {
   .home__hero { padding: var(--s-4) 0; gap: var(--s-4); }
-  .role__art { width: 9rem; }
+}
+/* Short screens: a browser's toolbars can leave only ~550 px. Trade air for room instead of pushing text under the button.
+   (`node tools/qa/fit.mjs` checks that the at-a-glance screens fit.) */
+@media (max-height: 700px) {
+  /* the asker's screen is the densest one: question, four options and the lock button */
+  .question { gap: var(--s-2); }
+  .question .option { min-height: 3.25rem; }
+  .question .option__letter { width: 2.35rem; height: 2.35rem; font-size: 1.4rem; }
+}
+@media (max-height: 660px) {
+  .discussion .avatar--lg { --size: 4.75rem; }
+  .discussion .timer { font-size: clamp(3.4rem, 17vw, 4.6rem); }
+}
+@media (max-height: 620px) {
+  .role__body, .reveal__body { gap: var(--s-3); }
+  .reveal__word { font-size: clamp(3rem, 16vw, 4.6rem); }
+}
+@media (max-height: 580px) {
+  .discussion__hint { display: none; } /* "who has the question" already says it; the sentence under it is the first thing to go */
 }

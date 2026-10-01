@@ -612,13 +612,9 @@ describe('question deck', () => {
     }
   });
 
-  it('ships four well-formed test questions, including the tourists one', () => {
-    assert.equal(QUESTIONS.length, 4);
-    for (const q of QUESTIONS) {
-      assert.equal(q.options.length, 4);
-      assert.ok(q.correct >= 0 && q.correct < 4);
-      assert.ok(q.text.endsWith('?'));
-    }
+  it('still ships the original test questions, the tourists one first (the QA fixtures rely on it)', () => {
+    // (the bank as a whole is checked in questions.test.js)
+    assert.equal(QUESTIONS[0].id, 'turister');
     const t = QUESTIONS.find((q) => q.id === 'turister');
     assert.equal(t.text, 'Hvilket land har flest turister årlig?');
     assert.deepEqual(t.options, ['USA', 'Japan', 'Frankrike', 'Kina']);

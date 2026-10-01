@@ -26,7 +26,8 @@
     "play:p2p": "node tools/qa/play.mjs --p2p",
     "play:live": "node tools/qa/play.mjs --url=https://pettersommerseth1994.github.io/Disputt",
     "qa:stuck": "node tools/qa/stuck.mjs",
-    "qa:signalling": "node tools/qa/signalling.mjs"
+    "qa:signalling": "node tools/qa/signalling.mjs",
+    "qa:fit": "node tools/qa/fit.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

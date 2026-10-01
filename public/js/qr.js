@@ -17,5 +17,5 @@ export function qrSvg(text) {
       if (qr.isDark(r, c)) d += `M${c + quiet} ${r + quiet}h1v1h-1z`;
     }
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#fff6e3"/><path d="${d}" fill="#1c0a10"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#f8e6b8"/><path d="${d}" fill="#3a2012"/></svg>`;
 }

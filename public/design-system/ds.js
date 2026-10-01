@@ -52,8 +52,8 @@ const ratio = (a, b) => {
   const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 };
-const CREAM = toRgb('#fff6e3');
-const INK = toRgb('#1c0a10');
+const CREAM = toRgb(css.getPropertyValue('--cream').trim());
+const INK = toRgb(css.getPropertyValue('--ink').trim());
 
 for (const [id, tokens] of Object.entries(GROUPS)) {
   const host = document.getElementById(id);
@@ -96,8 +96,8 @@ const SCREENS = [
   ['profile-new', 'Profil', 'Navn og avatar. Tatte avatarer er utilgjengelige.'],
   ['lobby-host-3', 'Lobby – vert', 'QR-kode, spillere, poengmål og Start Disputt.'],
   ['lobby-guest-3', 'Lobby – spiller', 'Venter på verten. Kan se hvem som er med.'],
-  ['role-impostor', 'Rolle: imposter', 'Rød skjerm. Kun imposteren får se riktig svar. 5 sekunder.'],
-  ['role-loyal', 'Rolle: lojal', 'Blå skjerm. 5 sekunder.'],
+  ['role-impostor', 'Rolle: imposter', 'Rød skjerm. Kun imposteren får se riktig svar. 8 sekunder.'],
+  ['role-loyal', 'Rolle: lojal', 'Blå skjerm. 8 sekunder.'],
   ['question-asker-selected', 'Spørsmål', 'Den som svarer: klokke, 2/6/10 min, spørsmål, alternativer og lås.'],
   ['discussion-impostor', 'Diskusjon', 'Alle andre: hvem som har spørsmålet, klokka og rolle-påminnelse.'],
   ['countdown-asker', 'Nedtelling', '5 – 4 – 3 – 2 – 1 etter at svaret er låst.'],

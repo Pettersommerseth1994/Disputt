@@ -1,6 +1,6 @@
 # Disputt
 
-> **Lur dem. Eller avslør lureren.**
+> **Diskuter og vinn.**
 
 Disputt er et sosialt bløff- og diskusjonsspill for **3–10 spillere**. Alle spiller på sin egen telefon, samlet i samme rom. Én av dere er imposter og vet svaret på spørsmålet. De andre må finne ut hva som er riktig, uten å bli lurt.
 
@@ -20,7 +20,7 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 
 1. **Verten** åpner Disputt og starter et spill. Hen får en QR-kode som de andre skanner.
 2. Alle skriver inn **navn** og velger en av ti **avatarer**. Verten ser spillerne komme inn, velger hvor mange **poeng** man spiller til (ett poeng tar ca. 10 min, vi anbefaler minst 5) og trykker **Start Disputt**.
-3. **Roller:** én tilfeldig spiller blir **imposter** (rød skjerm, får se riktig svar, f.eks. «C: Frankrike»). Alle andre er **lojale** (blå skjerm). Vises i 5 sekunder.
+3. **Roller:** én tilfeldig spiller blir **imposter** (rød skjerm, får se riktig svar, f.eks. «C: Frankrike»). Alle andre er **lojale** (blå skjerm). Vises i 8 sekunder.
 4. En tilfeldig spiller (kan også være imposteren) får **spørsmålet** med fire alternativer og leser det høyt. Klokka starter med en gang; hen kan sette den til **2, 6 eller 10 minutter** og legge til tid underveis.
 5. Alle **diskuterer**. Imposteren prøver å lure de andre til å svare feil. Hvordan man blir enige er opp til gruppa.
 6. Spilleren med spørsmålet **krysser av** svaret dere ble enige om og låser det. Så telles det ned **5-4-3-2-1**, og fasiten avsløres **kun på den telefonen**.
@@ -62,11 +62,11 @@ Utseendet er surrealistisk og lekent: fargestift/oljepastell på dyp burgunder, 
 - **Dokumentasjon:** [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md).
 - **Kode:** `public/css/tokens.css` (farger, typografi, rom, former, bevegelse), `components.css` (knapper, felt, avatarer, klokke, svaralternativer …), `screens.css` (skjermene).
 - **Illustrasjoner:** de ti avatarene, rolleskjerm-øyne, teksturer og dekor genereres av `tools/art` (`npm run art`). De kan byttes ut 1:1 med håndtegnede SVG-er (samme filnavn, `viewBox 0 0 400 400`).
-- **Logo:** `public/assets/logo/` (svart, krem og «øye i i-prikken»), generert fra fonten med `npm run logo`.
+- **Logo:** `public/assets/logo/` (mørk brun, krem og «øye i i-prikken»), generert fra fonten med `npm run logo`.
 
 ## Spørsmål
 
-Spørsmålene ligger i [`shared/questions.js`](shared/questions.js): tekst, fire alternativer og indeksen til riktig svar. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Det er foreløpig **fire testspørsmål**, så de gjentas i lengre spill.
+Spørsmålene ligger i [`shared/questions.js`](shared/questions.js): tekst, fire alternativer og indeksen til riktig svar. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Banken har **54 spørsmål**: de fire første testspørsmålene og 50 om norsk og internasjonal allmennkunnskap, helst ting man egentlig vet men har glemt, så gruppa må diskutere seg frem (og imposteren har noe å spille på). Sjekk fakta mot en kilde, og la riktig svar stå på ulike plasser; `test/questions.test.js` passer på formen.
 
 ## Struktur
 
@@ -92,7 +92,8 @@ npm run play:p2p -- 4 2  # det samme over WebRTC (peer-to-peer-bygget + lokal me
 npm run play:live      # det samme mot den publiserte siden på GitHub Pages (ekte megler, ekte tidtakere, ca. 1,5 min)
 npm run qa:stuck       # en gjest som ikke får linje til verten får et råd på skjermen (ca. 40 s)
 npm run qa:signalling  # verten mister kontakten med meglertjenesten (også midt i et spill): nye gjester kommer likevel inn
-npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/
+npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/ (VIEWPORT=390x664 for en nettleser med verktøylinjer)
+npm run qa:fit         # får skjermene plass uten scrolling på de synlige skjermstørrelsene (390×664, 375×553 …)?
 npm run pages:preview  # bygg og vis GitHub Pages-versjonen lokalt (http://localhost:8080)
 ```
 

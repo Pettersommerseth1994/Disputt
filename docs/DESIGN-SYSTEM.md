@@ -21,6 +21,8 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 
 **Farger:** burgunder (`--burgundy-950…500`, siden er `700`), kritt (`--yellow --lime --orange --coral --pink --violet --blue --blue-light --teal`), skjermfarger (`--red` imposter, `--blue` lojal, `--lime` riktig, `--pink` feil), papir/blekk (`--cream --ink`). Kritt-fargene er trukket ut av referansetegningene.
 
+**Aldri ren hvit eller svart.** «Hvitt» er en smørkrem (`--cream`, `#f8e6b8`) og «svart» en mørk sjokoladebrun (`--ink`, `#3a2012`): all tekst, logoen, papirkort, kremknapper og QR-koden (brune moduler på kremfarget bunn) bruker dem. Gjennomsiktige varianter lages av kanalene (`rgb(var(--cream-rgb) / .5)`, `--ink-rgb`, og `--shadow-rgb` for de harde kritt-skyggene), så paletten står ett sted. Kremtekst på de røde og blå rolleskjermene skal holde minst 4,5:1 i kontrast, og det er derfor `--red` og `--blue` er så dype som de er. Stilguiden (`/design-system/`) viser kontrasten for alle fargene.
+
 **Typografi:** `--font-display` (Fraunces, tung kursiv, *soft + wonky*) til overskrifter, knapper, tall og navn på store flater; `--font-text` (Lora) til alt annet. Skala: `--fs-hero --fs-h1 --fs-h2 --fs-h3 --fs-lead --fs-body --fs-small --fs-micro`.
 
 **Rom:** 4 px-rutenett (`--s-1…7`), `--page-x/top/bottom` tar hensyn til hakk og hjemmelinje (`env(safe-area-inset-*)`).
@@ -58,6 +60,10 @@ En flate = en flat farge + korn + strek:
 - Rolleskjerm-øyne, krone, dekor og teksturer ligger i `public/assets/art` og `public/assets/textures`.
 - Alt genereres deterministisk med `npm run art` (kilde i `tools/art`). Vil du bruke håndtegnede illustrasjoner, overskriv SVG-ene med samme filnavn.
 
+## Små skjermer
+
+En nettleser sine verktøylinjer tar 150–300 px, så en telefon viser ofte bare ca. 550–660 px høyde, ikke de 844 px skjermen har. Skjermene man skal se på et øyeblikk (rolle, nedtelling, fasit, diskusjon) må derfor få plass uten scrolling, og knappen nederst skal ikke dekke tekst. Illustrasjonene skalerer med synlig høyde (`dvh`, og `height: auto` slik at `<img height>` ikke holder av tom plass), og `screens.css` strammer inn avstander på lave skjermer. `npm run qa:fit` måler det på flere størrelser, også med lengste spørsmål og svar i banken.
+
 ## Logo
 
-`public/assets/logo/`: `disputt-logo.svg` (svart, hovedlogo), `-cream` (for mørke flater), `-eye` (alternativ med øye i i-prikken). Tegnet opp som konturer av Fraunces med `npm run logo`. På burgunder brukes den svarte logoen alltid i et gult klistremerke (`.logo-sticker`).
+`public/assets/logo/`: `disputt-logo.svg` (mørk brun, hovedlogo), `-cream` (for mørke flater), `-eye` (alternativ med øye i i-prikken). Tegnet opp som konturer av Fraunces med `npm run logo` (fargene står øverst i `tools/logo/build.mjs` og må følge `--ink` og `--cream`). På burgunder brukes den mørke logoen alltid i et gult klistremerke (`.logo-sticker`).

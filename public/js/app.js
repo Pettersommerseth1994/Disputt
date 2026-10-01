@@ -18,7 +18,7 @@ function themeOf(view) {
 }
 // Two failed attempts in a row (about 30 s): most likely a network that does not let phones talk to each other directly.
 const STUCK_HINT = 'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.';
-const THEME_COLORS = { '': '#6a1428', impostor: '#d71f2f', loyal: '#2868d4', right: '#7eba2d', wrong: '#f48b8f' };
+const THEME_COLORS = { '': '#6a1428', impostor: '#c61a2b', loyal: '#2261c6', right: '#7eba2d', wrong: '#f48b8f' };
 
 function gameScreen(view, s) {
   switch (view.phase) {

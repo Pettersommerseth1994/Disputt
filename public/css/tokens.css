@@ -51,23 +51,28 @@
   --pink-deep: #c9575e;
   --violet: #b170b4;
   --violet-deep: #7b3f9e;
-  --blue: #2868d4; /* "loyal" screen; 4.9:1 against cream text */
+  --blue: #2261c6; /* "loyal" screen; 4.7:1 against cream text */
   --blue-light: #88c6db;
   --blue-deep: #1a4aa6;
   --indigo: #2230c8;
   --teal: #1b838c;
   --teal-light: #53a0a7;
-  --red: #d71f2f; /* "impostor" screen */
+  --red: #c61a2b; /* "impostor" screen; 4.7:1 against cream text */
   --red-deep: #8f1220;
 
-  --cream: #fff6e3;
-  --cream-dim: #e8dcc3;
-  --ink: #1c0a10; /* logo + text on light paper */
+  /* "White" and "black" are never pure: a butter cream and a dark chocolate brown. The -rgb triplets exist so that
+     translucent versions (rgb(var(--cream-rgb) / .5)) follow the palette instead of hard-coding it. */
+  --cream: #f8e6b8; /* every "white": text on burgundy, paper cards, cream buttons, the QR code's background */
+  --cream-dim: #dcc592; /* the edge under cream buttons */
+  --ink: #3a2012; /* every "black": the logo and all text on light paper, the QR code's modules */
+  --cream-rgb: 248 230 184;
+  --ink-rgb: 58 32 18;
+  --shadow-rgb: 32 12 6; /* hard crayon shadows: a dark warm brown, not black */
 
   /* ---- Semantic colours ------------------------------------------------ */
   --bg: var(--burgundy-700);
   --fg: var(--cream);
-  --fg-muted: rgba(255, 246, 227, 0.86);
+  --fg-muted: rgb(var(--cream-rgb) / 0.86);
   --surface: var(--burgundy-600);
   --surface-deep: var(--burgundy-800);
   --accent: var(--yellow);
@@ -123,7 +128,7 @@
   --r-pill: 999px;
 
   /* ---- Depth: hard "crayon" offsets instead of blurry shadows ---------- */
-  --edge: rgba(20, 4, 10, 0.34);
+  --edge: rgb(var(--shadow-rgb) / 0.36);
   --shadow-1: 0 3px 0 var(--edge);
   --shadow-2: 0 6px 0 var(--edge);
   --shadow-3: 0 10px 0 var(--edge);

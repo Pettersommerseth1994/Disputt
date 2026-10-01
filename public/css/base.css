@@ -158,7 +158,7 @@ button { touch-action: manipulation; }
   place-items: center;
   min-height: 100dvh;
 }
-.boot img { width: 12rem; opacity: 0.9; filter: invert(1) sepia(1) saturate(0.2) brightness(1.05); }
+.boot img { width: 12rem; height: auto; opacity: 0.9; }
 
 /* ---- Motion ------------------------------------------------------------------ */
 @keyframes pop {

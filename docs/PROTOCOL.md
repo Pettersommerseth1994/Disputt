@@ -43,7 +43,7 @@ Feilkoder: `room_not_found`, `bad_token`, `started`, `full`, `busy`, `bad_name`,
 
 ## Faser
 
-`lobby → role (5 s) → question → locked (5 s) → reveal → summary → role …  → finished`
+`lobby → role (8 s) → question → locked (5 s) → reveal → summary → role …  → finished`
 
 Overgangene `role → question` og `locked → reveal` skjer av seg selv på serveren. Resten utløses av meldinger.
 
@@ -53,7 +53,7 @@ Overgangene `role → question` og `locked → reveal` skjer av seg selv på ser
 {
   "code": "KRAP", "phase": "question", "round": 3, "target": 5, "hostId": "…", "now": 1790000000000,
   "limits": { "min": 3, "max": 10 },
-  "timings": { "roleMs": 5000, "countdownMs": 5000 },
+  "timings": { "roleMs": 8000, "countdownMs": 5000 },
   "players": [{ "id": "…", "name": "Mari", "avatar": "mandarin", "score": 2, "connected": true, "isHost": false }],
   "pending": 0,                       // tilkoblede som ikke har valgt profil ennå
   "you": {
