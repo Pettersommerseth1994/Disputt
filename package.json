@@ -5,13 +5,16 @@
   "type": "module",
   "description": "Disputt – et sosialt bløff- og diskusjonsspill for 3+ spillere. Mobile first.",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node --test test/",
+    "test": "node --test \"test/*.test.js\"",
+    "shots": "node tools/qa/shots.mjs",
     "art": "node tools/art/build.mjs",
+    "logo": "node tools/logo/build.mjs",
+    "fonts": "bash tools/fonts/build.sh",
     "vendor": "node tools/vendor.mjs"
   },
   "license": "UNLICENSED",
@@ -21,7 +24,9 @@
   "devDependencies": {
     "fontkit": "^2.0.4",
     "htm": "^3.1.1",
+    "jsqr": "^1.4.0",
     "preact": "^11.0.0",
+    "puppeteer-core": "^25.12.0",
     "qrcode-generator": "^2.0.4",
     "sharp": "^0.35.5"
   }

@@ -530,6 +530,7 @@ export class Room {
       hostId: this.hostId,
       now: this.clock(),
       limits: { min: LIMITS.minPlayers, max: LIMITS.maxPlayers },
+      timings: { roleMs: this.timings.roleMs, countdownMs: this.timings.countdownMs },
       players: ready.map((p) => ({
         id: p.id,
         name: p.name,

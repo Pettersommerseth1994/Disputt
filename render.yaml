@@ -1,0 +1,17 @@
+# Render blueprint: New + > Blueprint, pick this repo. Free plan is enough for a test game
+# (the instance sleeps after ~15 min without traffic and wakes up on the next visit).
+services:
+  - type: web
+    name: disputt
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: node server/index.js
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      # Optional: set once a custom domain is connected, e.g. https://disputt.no
+      - key: PUBLIC_URL
+        sync: false

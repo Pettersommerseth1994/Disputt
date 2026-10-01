@@ -1,0 +1,213 @@
+/* ==========================================================================
+   DISPUTT DESIGN SYSTEM — screens
+   Layout and mood per screen. Whole-page colour changes (role / verdict) use html[data-theme].
+   ========================================================================== */
+
+.screen { gap: var(--s-4); }
+.screen > .grow { min-height: 0; }
+.dock { --page-bg: var(--burgundy-700); background: linear-gradient(to top, var(--page-bg) 62%, transparent); }
+
+/* ---- Page themes: the whole viewport takes the screen's colour ---------------- */
+html[data-theme='impostor'] { --page-bg: var(--red); background: var(--red); }
+html[data-theme='loyal'] { --page-bg: var(--blue); background: var(--blue); }
+html[data-theme='right'] { --page-bg: var(--lime); background: var(--lime); }
+html[data-theme='wrong'] { --page-bg: var(--pink); background: var(--pink); }
+html[data-theme='impostor'] body { background: var(--tex-grain), var(--tex-light), var(--red); }
+html[data-theme='loyal'] body { background: var(--tex-grain), var(--tex-light), var(--blue); }
+html[data-theme='right'] body { background: var(--tex-grain), var(--tex-light), var(--lime); }
+html[data-theme='wrong'] body { background: var(--tex-grain), var(--tex-light), var(--pink); }
+html[data-theme='impostor'] .dock,
+html[data-theme='loyal'] .dock,
+html[data-theme='right'] .dock,
+html[data-theme='wrong'] .dock { background: linear-gradient(to top, var(--page-bg) 62%, transparent); }
+
+/* ---- Home ------------------------------------------------------------------- */
+.home { overflow: hidden; }
+.home__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-5);
+  padding: var(--s-6) 0 var(--s-5);
+  text-align: center;
+}
+.home__tagline { font-size: clamp(2.1rem, 10vw, 2.9rem); text-shadow: 3px 4px 0 var(--edge); }
+.home__notice { color: var(--ink); font-weight: 700; }
+.decor--home-a { top: 1rem; left: -1.5rem; --size: 6.5rem; }
+.decor--home-b { top: 4.4rem; right: -1.8rem; --size: 6rem; }
+.decor--home-c { bottom: 17rem; left: -0.9rem; --size: 4.4rem; }
+.decor--home-d { bottom: 20.5rem; right: -0.6rem; --size: 4.2rem; }
+
+/* ---- Lobby ------------------------------------------------------------------ */
+.qr { width: min(62vw, 14rem); aspect-ratio: 1; margin-inline: auto; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 3px var(--ink); }
+.qr svg { width: 100%; height: 100%; }
+.lobby__qr { align-items: center; }
+.lobby__qr { gap: var(--s-3); padding: var(--s-4) var(--s-4) var(--s-5); }
+.lobby__join { display: flex; align-items: center; justify-content: center; gap: var(--s-4); flex-wrap: wrap; }
+.lobby__code {
+  margin: 0;
+  padding: 0.12em 0.45em 0.2em 0.6em;
+  font-size: 2.3rem;
+  letter-spacing: 0.16em;
+  color: var(--ink);
+  background: var(--tex-grain), var(--tex-light), var(--yellow);
+  border-radius: 46% 54% 49% 51% / 58% 46% 54% 42%;
+  box-shadow: 0 5px 0 var(--yellow-deep);
+  transform: rotate(-2deg);
+}
+.player { position: relative; }
+.player__kick {
+  position: absolute;
+  top: -0.35rem;
+  right: 0.1rem;
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--cream);
+  background: var(--burgundy-900);
+  box-shadow: 0 2px 0 var(--edge);
+  cursor: pointer;
+}
+.player__kick svg { width: 0.85rem; height: 0.85rem; }
+
+/* ---- In-round header ---------------------------------------------------------- */
+.gamebar { gap: var(--s-3); }
+
+/* ---- Role reveal ---------------------------------------------------------------- */
+.role { text-align: center; color: var(--cream); }
+.role__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-4);
+}
+.role__eyebrow { color: rgba(255, 246, 227, 0.85); }
+.role__art { width: min(78vw, 17rem); margin-bottom: calc(var(--s-4) * -0.5); animation: wobble 4s ease-in-out infinite; }
+.role__word {
+  font-size: clamp(3rem, 14.5vw, 5.2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  color: var(--cream);
+  text-shadow: 5px 6px 0 var(--ink);
+}
+.role__secret {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 14rem;
+  padding: var(--s-3) var(--s-5) var(--s-4);
+  border-radius: var(--r-card);
+  color: var(--ink);
+  background: var(--tex-grain), var(--cream);
+  box-shadow: var(--shadow-2);
+  transform: rotate(-1.5deg);
+}
+.role__secret .eyebrow { color: rgba(28, 10, 16, 0.65); }
+.role__answer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.9rem, 9vw, 2.5rem);
+  line-height: 1.1;
+}
+.role__answer span {
+  display: grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50% 46% 54% 48% / 48% 52% 48% 52%;
+  background: var(--tex-grain), var(--tex-light), var(--lime);
+  box-shadow: 0 3px 0 rgba(28, 10, 16, 0.25);
+}
+.role__next { margin: 0; font-size: var(--fs-small); color: rgba(255, 246, 227, 0.88); }
+.role__bar { padding: var(--s-4) 0 var(--page-bottom); }
+.role .bar { height: 1.1rem; background: rgba(20, 4, 10, 0.3); }
+
+/* ---- Question / discussion -------------------------------------------------- */
+.timer-block { padding: var(--s-2) 0; }
+.timer-controls { display: flex; align-items: center; justify-content: center; gap: var(--s-3); width: 100%; }
+.timer-controls .segmented { flex: 1; max-width: 17rem; }
+/* the asker's screen is dense: everything about time sits on one row */
+.question { gap: var(--s-3); }
+.timebar { display: flex; align-items: center; gap: var(--s-3); }
+.timebar .timer { flex: none; font-size: 2.35rem; text-shadow: 2px 3px 0 var(--edge); }
+.timebar .segmented { flex: 1; min-width: 0; }
+.timebar .btn { flex: none; padding-inline: 0.8rem; }
+.question .timeup { text-align: center; }
+.question__card { padding: var(--s-3) var(--s-4) var(--s-4); }
+.question .option { min-height: 3.6rem; padding-block: 0.45rem; }
+.question .option__letter { width: 2.6rem; height: 2.6rem; font-size: 1.5rem; }
+.question .option__text { font-size: 1.15rem; }
+.question .options { gap: var(--s-2); }
+.dock--compact { padding-top: var(--s-3); }
+.timeup { margin: 0; font-weight: 700; font-size: var(--fs-lead); color: var(--yellow); animation: pulse 1s ease-in-out infinite; }
+.question__text { font-family: var(--font-text); font-weight: 700; font-size: clamp(1.45rem, 7vw, 1.8rem); line-height: 1.2; letter-spacing: 0; color: var(--ink); text-wrap: pretty; }
+.discussion__tip { font-style: italic; font-size: var(--fs-small); }
+
+/* ---- Countdown ------------------------------------------------------------------ */
+.countdown__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4); text-align: center; }
+.countdown__n {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: min(58vw, 15rem);
+  line-height: 0.85;
+  color: var(--yellow);
+  text-shadow: 8px 10px 0 var(--edge);
+  animation: pop 0.65s var(--ease-bounce) both;
+}
+
+/* ---- Verdict (asker only) ---------------------------------------------------------- */
+.reveal { color: var(--ink); text-align: center; }
+.reveal__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4); }
+.reveal__art { width: min(70vw, 15rem); animation: wobble 3.5s ease-in-out infinite; }
+.reveal__word { font-size: clamp(3.4rem, 18vw, 6rem); text-transform: uppercase; color: var(--cream); text-shadow: 5px 6px 0 var(--ink); }
+.reveal__answer { width: min(100%, 20rem); }
+.reveal .lead { font-weight: 700; }
+
+/* ---- Summary ------------------------------------------------------------------------- */
+.summary__head h1 { font-size: clamp(2.2rem, 10.5vw, 3.2rem); }
+.impostor-card { gap: var(--s-4); align-items: center; }
+.impostor-card__name { margin: 0; font-size: 2rem; line-height: 1.05; overflow-wrap: anywhere; }
+
+/* ---- Finale -------------------------------------------------------------------------------- */
+.finale { position: relative; z-index: 2; }
+.finale__hero { justify-content: center; align-items: center; padding-top: var(--s-6); }
+.finale__hero .avatar--xl { margin-top: 3.2rem; }
+
+/* ---- Rules ------------------------------------------------------------------------------------ */
+.rules { display: flex; flex-direction: column; gap: var(--s-4); margin: 0; padding: 0; list-style: none; }
+.rules li { display: flex; align-items: flex-start; gap: var(--s-4); }
+.rules__n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50% 46% 54% 48% / 48% 52% 48% 52%;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.35rem;
+  color: var(--ink);
+  background: var(--tex-grain), var(--tex-light), var(--yellow);
+  box-shadow: 0 3px 0 var(--edge);
+}
+.rules h3 { margin-bottom: 0.15rem; }
+.rules p { font-size: var(--fs-small); line-height: 1.4; }
+
+/* ---- Wider screens: keep the phone-shaped column, add a little air ---------------------------- */
+@media (min-width: 640px) {
+  #app { box-shadow: 0 0 0 3px rgba(255, 246, 227, 0.08), 0 0 80px rgba(0, 0, 0, 0.35); }
+}
+@media (max-height: 640px) {
+  .home__hero { padding: var(--s-4) 0; gap: var(--s-4); }
+  .role__art { width: 9rem; }
+}

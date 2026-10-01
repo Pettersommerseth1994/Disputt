@@ -1,0 +1,78 @@
+// Visual QA: renders every screen at phone size from engine-generated views and saves PNGs to tmp/shots/.
+//   node tools/qa/shots.mjs [filter]      e.g. node tools/qa/shots.mjs role
+// Needs Google Chrome (set CHROME_PATH to override) and `npm install` (puppeteer-core).
+import fs from 'node:fs';
+import puppeteer from 'puppeteer-core';
+import { createApp } from '../../server/index.js';
+import { buildFixtures } from './fixtures.mjs';
+
+const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const OUT = 'tmp/shots';
+const filter = process.argv[2] ?? '';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+fs.mkdirSync(OUT, { recursive: true });
+const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
+const port = await app.listen();
+const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars'] });
+const page = await browser.newPage();
+await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
+page.on('console', (m) => ['error', 'warning'].includes(m.type()) && console.error(`console.${m.type()}:`, m.text()));
+page.on('requestfailed', (r) => console.error('FAILED:', r.url().replace(/^http:\/\/127\.0\.0\.1:\d+/, '')));
+
+const url = `http://127.0.0.1:${port}/?debug=offline`;
+const shot = async (name, opts = {}) => {
+  if (filter && !name.includes(filter)) return;
+  await sleep(opts.wait ?? 800);
+  await page.screenshot({ path: `${OUT}/${name}.png`, fullPage: opts.full ?? true });
+  console.log('shot', name);
+};
+
+async function show(view, extra = {}) {
+  await page.evaluate((view, extra) => {
+    window.__realNow ??= Date.now.bind(Date);
+    const delta = view.now - window.__realNow();
+    Date.now = () => window.__realNow() + delta; // make the injected timestamps line up with "now"
+    window.__disputt.setStore({
+      conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null,
+      session: { code: view.code, playerId: view.you.id, token: 'qa' },
+      info: { publicUrl: null, lanUrls: ['http://192.168.100.59:3000'] },
+      ...extra,
+    });
+  }, view, extra);
+}
+
+await page.goto(url, { waitUntil: 'networkidle0' });
+await page.evaluate(() => window.__disputt.setStore({ conn: 'open', everOpened: true }));
+await shot('00-home');
+await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Bli med med kode'))?.click());
+await shot('01-join-code', { wait: 400 });
+await page.evaluate(() => window.__disputt.setStore({ sheet: 'rules' }));
+await shot('02-rules', { full: false });
+await page.evaluate(() => window.__disputt.setStore({ sheet: null }));
+
+const f = buildFixtures();
+const order = [
+  'profile-new', 'profile-edit', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
+  'role-impostor', 'role-loyal',
+  'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-loyal', 'discussion-low',
+  'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wait',
+  'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest',
+  'finished-host', 'finished-guest',
+];
+let i = 3;
+for (const key of order) {
+  await show(f[key], key === 'profile-edit' ? { editing: true } : {});
+  await shot(`${String(i++).padStart(2, '0')}-${key}`, { wait: key.startsWith('role') || key.startsWith('finished') ? 900 : 650 });
+}
+await show(f['lobby-host-3'], { sheet: 'qr' });
+await shot('90-sheet-qr', { full: false });
+await show(f['summary-wrong-host'], { sheet: 'scores' });
+await shot('91-sheet-scores', { full: false });
+await show(f['summary-wrong-host'], { sheet: 'host' });
+await shot('92-sheet-host', { full: false });
+
+await browser.close();
+await app.close();
+console.log(`done -> ${OUT}/`);
