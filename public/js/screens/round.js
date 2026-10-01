@@ -190,7 +190,7 @@ export function WaitReveal({ view }) {
 
 export function Summary({ view }) {
   const s = view.summary;
-  const impostor = playerById(view, s.impostorId);
+  const impostor = playerById(view, s.impostorId) ?? s.impostor; // the impostor may have been removed since
   const isHost = view.you.isHost;
   const headline = s.skipped ? 'Runden ble hoppet over' : s.correct ? 'Gruppa hadde rett!' : 'Imposteren lurte dere!';
   const sub = s.skipped ? 'Ingen fikk poeng.' : s.correct ? 'Alle lojale fikk 1 poeng.' : `${impostor?.name ?? 'Imposteren'} fikk 1 poeng.`;

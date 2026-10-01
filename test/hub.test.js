@@ -30,18 +30,68 @@ describe('hub cleanup', () => {
     assert.equal(ws.closed.reason, 'expired');
   });
 
-  it('drops abandoned rooms (nobody connected) after thirty minutes', () => {
+  it('drops a lobby that nobody is in after five minutes', () => {
     const { hub, advance, join } = setup();
-    const ws = fakeSocket();
-    const conn = { ws, code: null, playerId: null };
+    const conn = { ws: fakeSocket(), code: null, playerId: null };
     join(conn, { t: 'create' });
-    hub.close(conn); // the host's phone disconnects
+    hub.close(conn); // the host's phone disconnects before anyone joined
+    advance(4 * 60 * 1000);
+    hub.sweep();
+    assert.equal(hub.rooms.size, 1);
+    advance(2 * 60 * 1000);
+    hub.sweep();
+    assert.equal(hub.rooms.size, 0);
+  });
+
+  it('keeps a started game for thirty minutes after everybody disconnected (phones come back)', () => {
+    const { hub, advance, join } = setup();
+    const conns = [0, 1, 2].map(() => ({ ws: fakeSocket(), code: null, playerId: null }));
+    join(conns[0], { t: 'create' });
+    const code = conns[0].code;
+    join(conns[0], { t: 'profile', name: 'A', avatar: 'lime' });
+    for (const [i, c] of conns.slice(1).entries()) {
+      join(c, { t: 'join', code });
+      join(c, { t: 'profile', name: `B${i}`, avatar: ['mandarin', 'blabaer'][i] });
+    }
+    join(conns[0], { t: 'start' });
+    assert.equal(hub.rooms.get(code).room.phase, 'role');
+    for (const c of conns) hub.close(c);
     advance(29 * 60 * 1000);
     hub.sweep();
     assert.equal(hub.rooms.size, 1);
     advance(2 * 60 * 1000);
     hub.sweep();
     assert.equal(hub.rooms.size, 0);
+  });
+
+  it('answers a stale tap with a fresh state instead of an error toast', () => {
+    const { hub, join } = setup();
+    const conns = [0, 1, 2].map(() => ({ ws: fakeSocket(), code: null, playerId: null }));
+    join(conns[0], { t: 'create' });
+    const code = conns[0].code;
+    join(conns[0], { t: 'profile', name: 'A', avatar: 'lime' });
+    for (const [i, c] of conns.slice(1).entries()) {
+      join(c, { t: 'join', code });
+      join(c, { t: 'profile', name: `B${i}`, avatar: ['mandarin', 'blabaer'][i] });
+    }
+    join(conns[0], { t: 'start' });
+    const before = conns[0].ws.sent.length;
+    join(conns[0], { t: 'start' }); // double tap: the game is already running
+    const after = conns[0].ws.sent.slice(before);
+    assert.equal(after.some((m) => m.t === 'error'), false, 'no error toast');
+    assert.equal(after.at(-1).t, 'state');
+    assert.equal(after.at(-1).view.phase, 'role');
+  });
+
+  it('limits how many rooms one connection can open, and frees an empty lobby it leaves behind', () => {
+    const { hub, join } = setup();
+    const ws = fakeSocket();
+    const conn = { ws, code: null, playerId: null };
+    for (let i = 0; i < 3; i++) join(conn, { t: 'create' });
+    assert.equal(hub.rooms.size, 1, 'each abandoned empty lobby is dropped right away');
+    join(conn, { t: 'create' });
+    assert.equal(ws.sent.at(-1).code, 'busy');
+    assert.equal(hub.rooms.size, 1);
   });
 
   it('keeps a room alive while somebody is connected', () => {

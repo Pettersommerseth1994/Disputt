@@ -1,11 +1,13 @@
 // Connects rooms to WebSockets: message routing, identity (resume/claim), broadcasting and cleanup.
 
-import { GameError, Room } from './game.js';
+import { GameError, PHASE, Room } from './game.js';
 import { defaultRandom, makeRoomCode, normalizeCode } from './util.js';
 
 const MAX_ROOMS = 500;
 const ROOM_TTL_MS = 6 * 60 * 60 * 1000;
 const ABANDONED_TTL_MS = 30 * 60 * 1000;
+const EMPTY_LOBBY_TTL_MS = 5 * 60 * 1000; // a lobby nobody is in and nobody has joined is not worth keeping
+const MAX_ROOMS_PER_SOCKET = 3;
 
 const send = (ws, msg) => {
   if (ws.readyState === 1) ws.send(JSON.stringify(msg));
@@ -42,6 +44,9 @@ export class Hub {
       }
     } catch (err) {
       if (err instanceof GameError) {
+        // A tap on a screen that is already out of date (double tap, slow network): not the player's fault.
+        // Say nothing, just bring their screen up to date.
+        if (err.code === 'bad_phase' && this.resync(conn)) return;
         send(conn.ws, { t: 'error', code: err.code, message: err.message, ...err.extra });
       } else {
         console.error('[hub] unexpected error', err);
@@ -64,8 +69,20 @@ export class Hub {
   tick() {
     const now = this.clock();
     for (const entry of this.rooms.values()) {
-      if (entry.room.tick(now)) this.afterChange(entry);
+      try {
+        if (entry.room.tick(now)) this.afterChange(entry);
+      } catch (err) {
+        console.error(`[hub] tick failed for room ${entry.room.code}`, err);
+      }
     }
+  }
+
+  /** Sends one player their current view (used when their screen is stale). */
+  resync(conn) {
+    const entry = this.rooms.get(conn.code);
+    if (!entry || !conn.playerId || !entry.room.players.has(conn.playerId)) return false;
+    send(conn.ws, { t: 'state', view: entry.room.viewFor(conn.playerId) });
+    return true;
   }
 
   /** Drops finished or abandoned rooms. */
@@ -73,7 +90,9 @@ export class Hub {
     const now = this.clock();
     for (const [code, entry] of this.rooms) {
       const age = now - entry.room.lastActivity;
-      if (age > ROOM_TTL_MS || (entry.room.empty && age > ABANDONED_TTL_MS)) {
+      const sparseLobby = entry.room.phase === PHASE.LOBBY && entry.room.readyPlayers().length < 2;
+      const abandonedFor = sparseLobby ? EMPTY_LOBBY_TTL_MS : ABANDONED_TTL_MS;
+      if (age > ROOM_TTL_MS || (entry.room.empty && age > abandonedFor)) {
         for (const ws of entry.sockets.values()) {
           send(ws, { t: 'closed', reason: 'expired' });
           ws.close(1000, 'expired');
@@ -86,8 +105,12 @@ export class Hub {
   // ---------------------------------------------------------------- identity
 
   create(conn) {
+    if ((conn.created ?? 0) >= MAX_ROOMS_PER_SOCKET) {
+      throw new GameError('busy', 'Du har startet for mange spill på rad. Last inn siden på nytt.');
+    }
     if (this.rooms.size >= MAX_ROOMS) throw new GameError('busy', 'Serveren er full akkurat nå. Prøv igjen om litt.');
     this.leaveCurrent(conn);
+    conn.created = (conn.created ?? 0) + 1;
     const code = makeRoomCode(this.rand, (c) => this.rooms.has(c));
     const room = new Room({ code, rand: this.rand, now: this.clock, timings: this.timings, questions: this.questions });
     const entry = { room, sockets: new Map() };
@@ -138,9 +161,13 @@ export class Hub {
 
   /** A connection that creates/joins a different room first lets go of the one it had. */
   leaveCurrent(conn) {
-    if (conn.code) this.close(conn);
+    const oldCode = conn.code;
+    if (oldCode) this.close(conn);
     conn.code = null;
     conn.playerId = null;
+    // A lobby that has just lost its only visitor is dropped at once instead of lingering for half an hour.
+    const old = oldCode && this.rooms.get(oldCode);
+    if (old && old.room.empty && old.room.phase === PHASE.LOBBY && old.room.readyPlayers().length < 2) this.rooms.delete(oldCode);
   }
 
   // ---------------------------------------------------------------- game messages

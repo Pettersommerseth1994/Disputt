@@ -27,7 +27,7 @@ function ConfirmButton({ onConfirm, children, label = 'Trykk igjen for å bekref
 
 function HostControls({ view }) {
   const inRound = ['role', 'question', 'locked', 'reveal'].includes(view.phase);
-  const canTarget = ['lobby', 'summary'].includes(view.phase);
+  const canTarget = view.phase !== 'finished';
   const offline = view.players.filter((p) => !p.connected && !p.isHost);
   const bump = (d) => actions.target(Math.min(99, Math.max(1, view.target + d)));
   return html`<section class="stack">

@@ -157,6 +157,9 @@ export function joinBase(info) {
   return location.origin;
 }
 
+/** True where the browser can keep the screen awake (needs HTTPS or localhost). Elsewhere we tell players to turn off auto-lock. */
+export const keepsAwake = typeof navigator !== 'undefined' && 'wakeLock' in navigator && window.isSecureContext;
+
 /** Keeps the screen awake while a game is on (where the browser allows it). */
 export function useWakeLock(active) {
   const lock = useRef(null);

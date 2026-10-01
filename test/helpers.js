@@ -27,9 +27,9 @@ export class TestClient {
     });
   }
 
-  static connect(port, { origin } = {}) {
+  static connect(port, { origin, headers = {} } = {}) {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`, origin ? { headers: { Origin: origin } } : undefined);
+      const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`, origin || Object.keys(headers).length ? { headers: { ...(origin ? { Origin: origin } : {}), ...headers } } : undefined);
       ws.once('open', () => resolve(new TestClient(ws)));
       ws.once('error', reject);
       ws.once('unexpected-response', (_req, res) => reject(Object.assign(new Error('rejected'), { status: res.statusCode })));

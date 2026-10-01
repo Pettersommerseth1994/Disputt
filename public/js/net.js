@@ -35,6 +35,9 @@ export function connect() {
     bestRtt = Infinity;
     setStore({ conn: 'open', everOpened: true });
     if (store.session) send({ t: 'resume', ...store.session });
+    // A join sent on a socket that died before the welcome arrived is sent again, exactly once.
+    for (let i = outbox.length - 1; i >= 0; i--) if (outbox[i].t === 'join') outbox.splice(i, 1);
+    if (store.joining && !store.session) outbox.unshift({ t: 'join', code: store.joining });
     ping();
     clearInterval(pingTimer);
     pingTimer = setInterval(ping, 15000);
@@ -124,13 +127,23 @@ function onMessage(msg) {
       setStore({ session, view: msg.view, joining: null, seats: null, notice: null, route: { page: 'home' } });
       break;
     }
-    case 'state':
+    case 'state': {
       syncClock(msg.view.now);
-      setStore({ view: msg.view, editing: msg.view.phase === 'lobby' ? store.editing : false });
+      // A new round starts with the role reveal: nothing (rules, QR, scoreboard) may be open on top of it.
+      const newRound = msg.view.phase === 'role' && store.view?.phase !== 'role';
+      setStore({ view: msg.view, editing: msg.view.phase === 'lobby' ? store.editing : false, sheet: newRound ? null : store.sheet });
       break;
+    }
     case 'removed': {
       saveSession(null);
-      const why = msg.reason === 'kicked' ? 'Verten fjernet deg fra spillet.' : msg.reason === 'not_ready' ? 'Spillet startet før du var klar.' : 'Du er ikke lenger med i spillet.';
+      const why =
+        msg.reason === 'left'
+          ? null // you chose to leave: no explanation needed
+          : msg.reason === 'kicked'
+            ? 'Verten fjernet deg fra spillet.'
+            : msg.reason === 'not_ready'
+              ? 'Spillet startet før du var klar.'
+              : 'Du er ikke lenger med i spillet.';
       setStore({ session: null, view: null, notice: why, route: { page: 'home' } });
       break;
     }

@@ -8,7 +8,8 @@ import { createApp } from '../../server/index.js';
 import { buildFixtures } from './fixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const OUT = 'tmp/shots';
+const [VW, VH] = (process.env.VIEWPORT ?? '390x844').split('x').map(Number); // e.g. VIEWPORT=375x667 for an iPhone SE
+const OUT = VW === 390 && VH === 844 ? 'tmp/shots' : `tmp/shots-${VW}x${VH}`;
 const DOCS = process.argv.includes('--docs'); // also write 1x-viewport WebPs for the style guide gallery
 const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
 const DOCS_DIR = 'public/design-system/screens';
@@ -22,7 +23,7 @@ const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars'] });
 const page = await browser.newPage();
-await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+await page.setViewport({ width: VW, height: VH, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 page.on('console', (m) => ['error', 'warning'].includes(m.type()) && console.error(`console.${m.type()}:`, m.text()));
 page.on('requestfailed', (r) => console.error('FAILED:', r.url().replace(/^http:\/\/127\.0\.0\.1:\d+/, '')));

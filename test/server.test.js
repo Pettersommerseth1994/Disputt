@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import net from 'node:net';
 import zlib from 'node:zlib';
 import { after, before, describe, it } from 'node:test';
 import { createApp } from '../server/index.js';
+import { TestClient } from './helpers.js';
 
 let app;
 let base;
@@ -114,5 +116,54 @@ describe('api', () => {
     assert.ok(Array.isArray(info.lanUrls));
     assert.equal(typeof info.rooms, 'number');
     assert.equal((await get('/api/info')).headers.get('cache-control'), 'no-store');
+  });
+});
+
+describe('hostile input', () => {
+  const rawRequest = (target, extra = '') =>
+    new Promise((resolve) => {
+      const url = new URL(base);
+      const socket = net.connect(Number(url.port), url.hostname, () => socket.write(`GET ${target} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n${extra}\r\n`));
+      let buf = '';
+      socket.on('data', (d) => (buf += d));
+      socket.on('close', () => resolve(buf.split('\r\n')[0]));
+      socket.on('error', () => resolve('error'));
+      setTimeout(() => { socket.destroy(); resolve('timeout'); }, 2000);
+    });
+
+  it('survives malformed request targets (one bad request must not take the server down)', async () => {
+    for (const target of ['//', '///', '/%', '/%E0%A4%A', '/\\', 'http://[', '*', '/j/%']) {
+      const status = await rawRequest(target);
+      assert.match(status, /HTTP\/1\.1 (400|404)/, `${target} -> ${status}`);
+    }
+    // still alive
+    assert.equal(await (await get('/healthz')).text(), 'ok');
+  });
+
+  it('refuses WebSocket upgrades on invalid or foreign paths', async () => {
+    const upgrade = (target) => rawRequest(target, 'Upgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n').then((line) => line);
+    for (const target of ['//', '/ws%', '/other']) assert.match(await upgrade(target), /HTTP\/1\.1 (400|403|404)/, target);
+    assert.equal(await (await get('/healthz')).text(), 'ok');
+  });
+});
+
+describe('websocket origin check behind a proxy', () => {
+  it('accepts the proxy-forwarded host and the configured public address, and nothing else', async () => {
+    const port = Number(new URL(base).port);
+    // Host was rewritten by a proxy, but it says which host the browser used
+    const viaProxy = await TestClient.connect(port, { origin: 'https://disputt.example', headers: { 'X-Forwarded-Host': 'disputt.example' } });
+    viaProxy.close();
+    await assert.rejects(TestClient.connect(port, { origin: 'https://disputt.example' }), (e) => e.status === 403, 'foreign origin without the forwarded host');
+    await assert.rejects(TestClient.connect(port, { origin: 'https://evil.example', headers: { 'X-Forwarded-Host': 'disputt.example' } }), (e) => e.status === 403);
+
+    const configured = createApp({ port: 0, host: '127.0.0.1', silent: true, publicUrl: 'https://disputt.example' });
+    const configuredPort = await configured.listen();
+    try {
+      const ok = await TestClient.connect(configuredPort, { origin: 'https://disputt.example' });
+      ok.close();
+      await assert.rejects(TestClient.connect(configuredPort, { origin: 'https://evil.example' }), (e) => e.status === 403);
+    } finally {
+      await configured.close();
+    }
   });
 });

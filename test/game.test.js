@@ -60,6 +60,17 @@ function playRound(ctx, { groupRight }) {
   return cur;
 }
 
+/** Starts games with different seeds until the first round satisfies `wanted` (e.g. "the asker is not the host"). */
+function roundWhere(players, wanted, target = 50) {
+  for (let seed = 1; seed < 300; seed++) {
+    const ctx = lobby(players, { seed });
+    ctx.room.setTarget(ctx.host.id, target);
+    ctx.room.start(ctx.host.id);
+    if (wanted(ctx.room.current, ctx)) return ctx;
+  }
+  throw new Error('no seed produced a round matching the condition');
+}
+
 const finishRound = (ctx, groupRight) => {
   const { room, clock } = ctx;
   const cur = room.current;
@@ -508,8 +519,21 @@ describe('skipping and kicking', () => {
 });
 
 describe('host handover and cleanup', () => {
-  it('hands the controls to a connected player after the grace period', () => {
+  it('is patient with a host whose phone locked while friends are still joining (lobby: 10 minutes)', () => {
     const ctx = lobby(4);
+    ctx.room.disconnect(ctx.host.id);
+    ctx.clock.advance(DEFAULT_TIMINGS.hostGraceLobbyMs - 1);
+    ctx.room.tick(ctx.clock.now());
+    assert.equal(ctx.room.hostId, ctx.host.id);
+    ctx.clock.advance(1);
+    assert.equal(ctx.room.tick(ctx.clock.now()), true);
+    assert.notEqual(ctx.room.hostId, ctx.host.id);
+    assert.ok(byId(ctx.room, ctx.room.hostId).connected);
+  });
+
+  it('hands the controls to a connected player after three minutes during a game', () => {
+    const ctx = lobby(4);
+    ctx.room.start(ctx.host.id);
     ctx.room.disconnect(ctx.host.id);
     ctx.clock.advance(DEFAULT_TIMINGS.hostGraceMs - 1);
     ctx.room.tick(ctx.clock.now());
@@ -517,7 +541,38 @@ describe('host handover and cleanup', () => {
     ctx.clock.advance(1);
     assert.equal(ctx.room.tick(ctx.clock.now()), true);
     assert.notEqual(ctx.room.hostId, ctx.host.id);
-    assert.ok(byId(ctx.room, ctx.room.hostId).connected);
+  });
+
+  it('never throws the room creator out for an unfinished profile, even after the host role moved on', () => {
+    const clock = fakeClock();
+    const room = new Room({ code: 'MAKE', now: clock.now, rand: seeded(3) });
+    const host = room.addPlayer({ asHost: true });
+    room.connect(host.id);
+    const guest = room.addPlayer();
+    room.setProfile(guest.id, { name: 'Gjest', avatar: AVATAR_IDS[1] });
+    room.connect(guest.id);
+    room.disconnect(host.id); // the host showed the QR first, then the screen locked: no profile picked yet
+    clock.advance(DEFAULT_TIMINGS.hostGraceLobbyMs + 1);
+    room.tick(clock.now());
+    assert.equal(room.hostId, guest.id, 'someone else holds the controls now');
+    clock.advance(60 * 60_000);
+    room.tick(clock.now());
+    assert.ok(room.players.has(host.id), 'but the creator can still come back');
+    assert.equal(room.authenticate(host.id, host.token).id, host.id);
+  });
+
+  it('still sweeps other guests who never finished their profile', () => {
+    const clock = fakeClock();
+    const room = new Room({ code: 'MAKE', now: clock.now, rand: seeded(4) });
+    const host = room.addPlayer({ asHost: true });
+    room.connect(host.id);
+    const ghost = room.addPlayer();
+    room.connect(ghost.id);
+    room.disconnect(ghost.id);
+    clock.advance(DEFAULT_TIMINGS.placeholderMs + 1);
+    room.tick(clock.now());
+    assert.ok(!room.players.has(ghost.id));
+    assert.ok(room.players.has(host.id));
   });
 
   it('keeps the host if they come back in time', () => {
@@ -567,5 +622,96 @@ describe('question deck', () => {
     assert.equal(t.text, 'Hvilket land har flest turister årlig?');
     assert.deepEqual(t.options, ['USA', 'Japan', 'Frankrike', 'Kina']);
     assert.equal(t.options[t.correct], 'Frankrike');
+  });
+});
+
+describe('absent players', () => {
+  it('only players who were in the round can score from it (an absent friend does not farm points)', () => {
+    const ctx = lobby(5, { seed: 11 });
+    ctx.room.setTarget(ctx.host.id, 50);
+    const absent = ctx.players[4];
+    ctx.room.disconnect(absent.id);
+    for (let i = 0; i < 6; i++) {
+      if (ctx.room.phase === PHASE.LOBBY) ctx.room.start(ctx.host.id);
+      else nextRound(ctx);
+      ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+      ctx.room.tick(ctx.clock.now());
+      finishRound(ctx, true); // the group is always right
+    }
+    assert.equal(byId(ctx.room, absent.id).score, 0, 'absent the whole game: no points');
+    const present = ctx.players.slice(0, 4).map((p) => byId(ctx.room, p.id).score);
+    assert.ok(Math.max(...present) > 0);
+  });
+
+  it('a player who drops out after the roles were dealt still scores for that round', () => {
+    const ctx = lobby(4, { seed: 5 });
+    ctx.room.setTarget(ctx.host.id, 50);
+    ctx.room.start(ctx.host.id);
+    const cur = ctx.room.current;
+    const dropper = ctx.players.find((p) => p.id !== cur.impostorId && p.id !== cur.askerId);
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    ctx.room.disconnect(dropper.id); // phone locked mid-discussion
+    finishRound(ctx, true);
+    assert.equal(byId(ctx.room, dropper.id).score, 1);
+  });
+
+  it('a seat taken over mid-round does not score that round, but plays the next one', () => {
+    const ctx = lobby(4, { seed: 9 });
+    ctx.room.setTarget(ctx.host.id, 50);
+    ctx.room.disconnect(ctx.players[3].id);
+    ctx.room.start(ctx.host.id);
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    ctx.room.claimSeat(ctx.players[3].id);
+    ctx.room.connect(ctx.players[3].id);
+    finishRound(ctx, true);
+    assert.equal(byId(ctx.room, ctx.players[3].id).score, 0);
+    nextRound(ctx);
+    assert.ok(ctx.room.current.participants.includes(ctx.players[3].id));
+  });
+
+  it('keeps a decided round when the offline asker is removed after the answer was locked', () => {
+    const ctx = roundWhere(5, (cur, c) => cur.askerId !== c.host.id);
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    const cur = ctx.room.current;
+    ctx.room.lock(cur.askerId, cur.question.correct);
+    ctx.clock.advance(DEFAULT_TIMINGS.countdownMs);
+    ctx.room.tick(ctx.clock.now());
+    ctx.room.disconnect(cur.askerId);
+    ctx.room.kick(ctx.host.id, cur.askerId);
+    assert.equal(ctx.room.phase, PHASE.SUMMARY);
+    const s = ctx.room.viewFor(ctx.host.id).summary;
+    assert.equal(s.skipped, false, 'the round still counts');
+    assert.equal(s.correct, true);
+    // everybody who was in the round and is still here, except the impostor, got the point
+    const expected = cur.participants.filter((id) => id !== cur.impostorId && ctx.room.players.has(id));
+    assert.deepEqual(Object.keys(s.gained).sort(), expected.sort());
+    assert.ok(expected.length >= 1);
+  });
+
+  it('the summary names the impostor even if they were removed from the game', () => {
+    const ctx = roundWhere(5, (cur, c) => cur.impostorId !== c.host.id);
+    const cur = ctx.room.current;
+    const impostorName = byId(ctx.room, cur.impostorId).name;
+    ctx.room.disconnect(cur.impostorId);
+    ctx.room.kick(ctx.host.id, cur.impostorId);
+    const s = ctx.room.viewFor(ctx.host.id).summary;
+    assert.equal(s.impostor.name, impostorName);
+    assert.ok(s.impostor.avatar);
+  });
+
+  it('lets the host change the target at any time during a game, and checks for a winner when the round ends', () => {
+    const ctx = lobby(4, { seed: 2 });
+    ctx.room.setTarget(ctx.host.id, 5);
+    ctx.room.start(ctx.host.id);
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    ctx.room.setTarget(ctx.host.id, 1); // mid-discussion
+    assert.equal(ctx.room.phase, PHASE.QUESTION);
+    finishRound(ctx, false); // the impostor scores 1 -> unique leader at the new target
+    assert.equal(ctx.room.phase, PHASE.FINISHED);
+    throwsCode(() => ctx.room.setTarget(ctx.host.id, 3), 'bad_phase');
   });
 });

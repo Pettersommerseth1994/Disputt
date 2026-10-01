@@ -75,6 +75,7 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   cursor: pointer;
 }
 .player__kick svg { width: 0.85rem; height: 0.85rem; }
+.player__kick--armed { width: auto; padding: 0 0.6rem; border-radius: var(--r-pill); font-size: 0.78rem; font-weight: 700; color: var(--cream); background: var(--red); }
 
 /* ---- In-round header ---------------------------------------------------------- */
 .gamebar { gap: var(--s-3); }

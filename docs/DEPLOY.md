@@ -58,7 +58,19 @@ docker build -t disputt .
 docker run -p 3000:3000 -e PUBLIC_URL=https://disputt.no disputt
 ```
 
-Legg gjerne en omvendt proxy (Caddy, nginx, Cloudflare) foran for HTTPS. WebSocket-stien er `/ws` og må slippes gjennom (`Upgrade`-header).
+Legg gjerne en omvendt proxy (Caddy, nginx, Cloudflare) foran for HTTPS. WebSocket-stien er `/ws` og må slippes gjennom (`Upgrade`-header). Eksempel for nginx:
+
+```nginx
+location / {
+  proxy_pass http://127.0.0.1:3000;
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;                 # serveren sjekker at siden og WebSocket kommer fra samme adresse
+  proxy_set_header X-Forwarded-Host $host;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+  proxy_read_timeout 3600s;
+}
+```
 
 ## 5. Tunnel fra egen maskin (spillere på mobildata)
 
@@ -75,5 +87,5 @@ cloudflared tunnel --url http://localhost:3000   # brew install cloudflared
 
 - Ingen kontoer eller persondata lagres. Alt ligger i minnet og forsvinner når rommet er ferdig (6 timer, eller 30 minutter uten tilkoblede spillere).
 - Alle svar fra serveren er skreddersydd per spiller: hemmeligheter (imposterens svar, spørsmålet, fasiten) sendes bare til den som skal se dem.
-- WebSocket godtar bare samme opprinnelse (`Origin` = `Host`), meldinger er maks 4 kB og begrenset til ca. 15 per sekund per tilkobling.
+- WebSocket godtar bare samme opprinnelse (`Origin` må være samme adresse som `Host`, `X-Forwarded-Host` eller `PUBLIC_URL`), meldinger er maks 4 kB og begrenset til ca. 15 per sekund per tilkobling. Én tilkobling kan åpne maks 3 rom, og tomme lobbyer ryddes bort etter 5 minutter.
 - Strenge sikkerhetshoder (CSP uten inline-skript, `nosniff`, `frame-ancestors 'none'`) på alle svar.

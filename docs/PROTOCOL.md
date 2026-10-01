@@ -12,7 +12,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). Serveren er autoritati
 | `resume` | `code, playerId, token` | tilbakevendende | `welcome`, eller feil `bad_token` / `room_not_found` |
 | `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser) |
 | `profile` | `name, avatar` | lobby | setter/endrer navn og avatar (unike) |
-| `target` | `value` (1–99) | vert, lobby/oppsummering | poengmål |
+| `target` | `value` (1–99) | vert, når som helst før spillet er ferdig | poengmål (sjekkes for vinner når runden er ferdig) |
 | `start` | | vert, lobby | starter første runde (min. 3 klare og tilkoblede) |
 | `select` | `index` (0–3 / null) | den som svarer | lagrer foreløpig valg (overlever sideoppdatering) |
 | `timer.set` | `seconds` (30–3600) | den som svarer | setter gjenstående tid (2/6/10 min i UI) |
@@ -36,6 +36,8 @@ Klient og server snakker JSON over én WebSocket (`/ws`). Serveren er autoritati
 | `removed` | `reason`: spilleren er fjernet (`kicked`, `not_ready`, `left`, `timeout`) |
 | `closed` | `reason`: `expired` (rommet er borte) eller `replaced` (samme spiller åpnet en annen fane) |
 | `pong` | `c, s`: `s` er serverklokka (ms) |
+
+**Utdaterte trykk:** kommer en melding i en fase den ikke hører hjemme i (dobbelttrykk, treg linje), svarer serveren *ikke* med en feil, men sender bare spilleren en fersk `state`, så skjermen rettes opp uten at det dukker opp en feilmelding.
 
 Feilkoder: `room_not_found`, `bad_token`, `started`, `full`, `busy`, `bad_name`, `name_taken`, `bad_avatar`, `avatar_taken`, `not_host`, `not_asker`, `bad_phase`, `need_players`, `need_connected`, `not_ready`, `bad_value`, `no_session`, `bad_message`, `seat_gone`, `seat_taken`, `server`.
 
@@ -67,7 +69,7 @@ Overgangene `role → question` og `locked → reveal` skjer av seg selv på ser
   "selected": 2,                      // KUN den som svarer
   "countdown": { "endsAt": 0 },       // fase locked
   "reveal": { "correct": true, "chosen": 2, "correctIndex": 2, "correctLetter": "C", "correctText": "Frankrike", "question": {} }, // KUN den som svarer, fase reveal
-  "summary": { "round": 3, "correct": true, "skipped": false, "gained": { "<id>": 1 }, "tiebreak": false, "impostorId": "…", "askerId": "…" },
+  "summary": { "round": 3, "correct": true, "skipped": false, "gained": { "<id>": 1 }, "tiebreak": false, "impostorId": "…", "impostor": { "id": "…", "name": "Ola", "avatar": "blabaer" }, "askerId": "…" },
   "winners": ["<id>"]                 // fase finished
 }
 ```

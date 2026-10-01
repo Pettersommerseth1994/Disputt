@@ -98,6 +98,11 @@ try {
   const all = [host, ...others];
   log(`${PLAYERS} players in the lobby`);
 
+  // removing a friend takes two taps: the first only arms the button
+  await host.page.evaluate(() => document.querySelector('.player__kick').click());
+  await waitText(host, /Fjern\?/);
+  assert.match(await bodyText(host), new RegExp(NAMES[PLAYERS - 1]), 'one tap does not remove anyone');
+
   // host sets the target via the free-text field and starts
   await host.page.focus('#target'); // focusing selects the old value, so typing replaces it
   await host.page.keyboard.type(String(TARGET));
@@ -175,7 +180,15 @@ try {
     }
     assert.match(await bodyText(asker), new RegExp(q.options[q.correct]));
     if (round === 1) await shot(asker, '08-reveal');
-    await clickButton(asker, 'Gå videre');
+    // a double tap on "Gå videre": the second tap hits a screen that is already out of date, and must not show an error
+    await asker.page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('Gå videre'));
+      b.click();
+      b.click();
+    });
+    await waitText(asker, /Imposteren var|vant!|Delt seier/i, 8000);
+    await sleep(300);
+    assert.equal(await asker.page.$('.toast'), null, 'no error toast after a double tap');
 
     // summary (or the winner)
     await Promise.all(all.map((p) => waitText(p, /Imposteren var|vant!|Delt seier/i, 8000)));
@@ -185,7 +198,33 @@ try {
     if (!finished) {
       assert.match(hostText, /Gruppa hadde rett|Imposteren lurte dere/);
       assert.match(await bodyText(others[0]), /Venter på at verten starter neste runde/);
+
+      // a phone loses its browser data mid-game: the player re-enters through the QR link and takes their old seat
+      if (round === 1 && others.length >= 3) {
+        const lost = others[others.length - 1];
+        await lost.ctx.close();
+        const fresh = await newPhone(lost.name);
+        await fresh.page.goto(`${base}/j/${code}`);
+        await waitText(fresh, /Spillet har startet/i);
+        await shot(fresh, '12-seat-picker');
+        await fresh.page.waitForFunction(
+          (n) => [...document.querySelectorAll('.player')].some((el) => el.innerText.includes(n)),
+          { timeout: 10000 },
+          lost.name,
+        );
+        await fresh.page.evaluate((n) => [...document.querySelectorAll('.player')].find((el) => el.innerText.includes(n)).click(), lost.name);
+        await waitText(fresh, /Venter på at verten starter neste runde/);
+        all[all.indexOf(lost)] = fresh;
+        others[others.indexOf(lost)] = fresh;
+        log('a fresh phone took over the lost seat');
+      }
+      // a guest has the scoreboard open when the host starts the next round: the role reveal must not be hidden behind it
+      const guest = others[0];
+      await guest.page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Poeng')).click());
+      await guest.page.waitForSelector('.sheet-backdrop');
       await clickButton(host, 'Neste runde');
+      await waitText(guest, /IMPOSTER|LOJAL/i);
+      assert.equal(await guest.page.$('.sheet-backdrop'), null, 'sheets close when a new round starts');
     }
   }
 

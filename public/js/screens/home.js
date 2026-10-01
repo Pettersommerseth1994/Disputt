@@ -57,7 +57,11 @@ function JoinByCode({ onBack }) {
           id="code"
           class="input input--code"
           value=${code}
-          onInput=${(e) => setCode(e.currentTarget.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4))}
+          onInput=${(e) => {
+            const v = e.currentTarget.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+            e.currentTarget.value = v; // a re-render alone would not undo a rejected character
+            setCode(v);
+          }}
           maxlength="4"
           autocomplete="off"
           autocapitalize="characters"

@@ -34,7 +34,8 @@ export const DEFAULT_TIMINGS = Object.freeze({
   countdownMs: 5000,
   discussionMs: 6 * 60_000,
   addMs: 60_000,
-  hostGraceMs: 45_000,
+  hostGraceMs: 3 * 60_000, // host offline this long during a game -> someone else takes over
+  hostGraceLobbyMs: 10 * 60_000, // phones lock their screens while friends are still scanning the code
   placeholderMs: 60_000,
 });
 
@@ -60,6 +61,7 @@ export class Room {
 
     this.players = new Map();
     this.hostId = null;
+    this.creatorId = null; // the player who opened the room; never cleaned up as an unfinished profile
     this.phase = PHASE.LOBBY;
     this.round = 0;
     this.target = 5;
@@ -97,7 +99,7 @@ export class Room {
       lastSeen: now,
     };
     this.players.set(player.id, player);
-    if (asHost) this.hostId = player.id;
+    if (asHost) this.hostId = this.creatorId = player.id;
     this.touch();
     return player;
   }
@@ -193,8 +195,13 @@ export class Room {
     }
     const cur = this.current;
     const inCurrentRound = cur && IN_ROUND.includes(this.phase) && (cur.impostorId === targetId || cur.askerId === targetId);
+    // Once the answer is locked the result is decided: removing someone must not wipe out a round that was already won or lost.
+    const decided = this.phase === PHASE.LOCKED || this.phase === PHASE.REVEAL;
     this.removePlayer(targetId, 'kicked');
-    if (inCurrentRound) this.finishRoundWithoutPoints();
+    if (inCurrentRound) {
+      if (decided) this.applyScoring();
+      else this.finishRoundWithoutPoints();
+    }
   }
 
   leave(playerId) {
@@ -218,15 +225,13 @@ export class Room {
 
   setTarget(playerId, value) {
     this.needHost(playerId);
-    if (![PHASE.LOBBY, PHASE.SUMMARY].includes(this.phase)) {
-      throw new GameError('bad_phase', 'Poengmålet kan bare endres i lobbyen og mellom rundene.');
-    }
+    if (this.phase === PHASE.FINISHED) throw new GameError('bad_phase', 'Spillet er ferdig.');
     const n = Number(value);
     if (!Number.isInteger(n) || n < LIMITS.targetMin || n > LIMITS.targetMax) {
       throw new GameError('bad_value', `Velg et tall mellom ${LIMITS.targetMin} og ${LIMITS.targetMax}.`);
     }
     this.target = n;
-    if (this.phase === PHASE.SUMMARY) this.finishIfDecided();
+    if (this.phase === PHASE.SUMMARY) this.finishIfDecided(); // mid-round changes are checked when the round ends
     this.touch();
   }
 
@@ -352,7 +357,8 @@ export class Room {
     const host = this.players.get(this.hostId);
     if (!host || !host.connected) {
       this.hostAwaySince ??= now;
-      if (now - this.hostAwaySince >= this.timings.hostGraceMs) {
+      const grace = this.phase === PHASE.LOBBY ? this.timings.hostGraceLobbyMs : this.timings.hostGraceMs;
+      if (now - this.hostAwaySince >= grace) {
         const before = this.hostId;
         this.migrateHost();
         if (this.hostId !== before) changed = true;
@@ -364,7 +370,7 @@ export class Room {
     // Lobby placeholders that never finished their profile and left are cleaned up.
     if (this.phase === PHASE.LOBBY) {
       for (const p of [...this.players.values()]) {
-        if (!isReady(p) && !p.connected && p.id !== this.hostId && now - p.lastSeen > this.timings.placeholderMs) {
+        if (!isReady(p) && !p.connected && p.id !== this.hostId && p.id !== this.creatorId && now - p.lastSeen > this.timings.placeholderMs) {
           this.removePlayer(p.id, 'timeout');
           changed = true;
         }
@@ -385,7 +391,9 @@ export class Room {
     this.current = {
       number: ++this.round,
       impostorId: impostor.id,
+      impostor: { id: impostor.id, name: impostor.name, avatar: impostor.avatar }, // survives the impostor being removed later
       askerId: asker.id,
+      participants: pool.map((p) => p.id), // only players who were in this round can score from it
       question: this.nextQuestion(),
       roleEndsAt: now + this.timings.roleMs,
       discussionEndsAt: null,
@@ -416,10 +424,11 @@ export class Room {
     const cur = this.current;
     const gained = {};
     if (cur.correct) {
-      for (const p of this.players.values()) {
-        if (isReady(p) && p.id !== cur.impostorId) {
+      for (const id of cur.participants) {
+        const p = this.players.get(id);
+        if (p && isReady(p) && id !== cur.impostorId) {
           p.score += 1;
-          gained[p.id] = 1;
+          gained[id] = 1;
         }
       }
     } else {
@@ -591,6 +600,7 @@ export class Room {
       view.summary = {
         ...cur.summary,
         impostorId: cur.impostorId,
+        impostor: cur.impostor,
         askerId: cur.askerId,
       };
     }

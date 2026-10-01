@@ -191,7 +191,8 @@
 .avatar--md { --size: 4rem; }
 .avatar--lg { --size: 7rem; box-shadow: 0 5px 0 var(--edge); }
 .avatar--xl { --size: min(60vw, 12rem); box-shadow: 0 7px 0 var(--edge); }
-.avatar--alive { animation: wobble 5s ease-in-out infinite; }
+/* its own compositing layer: the animation then moves a cached bitmap instead of re-rasterising the filtered SVG */
+.avatar--alive { animation: wobble 5s ease-in-out infinite; will-change: transform; }
 .avatar--unknown { font-family: var(--font-display); font-weight: 900; font-size: 2.3rem; line-height: 1; color: var(--ink); background: var(--tex-grain), var(--tex-light), var(--cream); }
 .profile-prompt {
   display: flex;
