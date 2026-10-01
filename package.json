@@ -1,0 +1,28 @@
+{
+  "name": "disputt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Disputt – et sosialt bløff- og diskusjonsspill for 3+ spillere. Mobile first.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test test/",
+    "art": "node tools/art/build.mjs",
+    "vendor": "node tools/vendor.mjs"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "fontkit": "^2.0.4",
+    "htm": "^3.1.1",
+    "preact": "^11.0.0",
+    "qrcode-generator": "^2.0.4",
+    "sharp": "^0.35.5"
+  }
+}
