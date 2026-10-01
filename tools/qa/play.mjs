@@ -9,7 +9,7 @@ import jsQR from 'jsqr';
 import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { QUESTIONS } from '../../shared/questions.js';
-import { startNodeSite, startP2PSite } from './sites.mjs';
+import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -147,6 +147,7 @@ try {
     round++;
     // role reveal: exactly one impostor; only the impostor sees the answer
     await Promise.all(all.map((p) => waitText(p, /IMPOSTER|LOJAL/i, 10000 * SLOW)));
+    const roleSeenAt = Date.now();
     const roles = await Promise.all(all.map(async (p) => ((await p.page.$('.role__secret')) ? 'impostor' : 'loyal')));
     assert.equal(roles.filter((r) => r === 'impostor').length, 1, `round ${round}: exactly one impostor, got ${roles}`);
     const impostor = all[roles.indexOf('impostor')];
@@ -165,6 +166,13 @@ try {
         p.page.waitForFunction(() => document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText), { timeout: 12000 * SLOW }),
       ),
     );
+    if (round === 1) {
+      // the role screen lasts as long as the engine says: 8 s on the real site, the test timings (FAST) elsewhere
+      const shown = Date.now() - roleSeenAt;
+      const expected = LIVE ? 8000 : FAST.roleMs;
+      assert.ok(Math.abs(shown - expected) < 1500, `the role screen lasts about ${expected / 1000} s (it lasted ${(shown / 1000).toFixed(1)} s)`);
+      log(`the role screen lasted ${(shown / 1000).toFixed(1)} s`);
+    }
     const askerIndex = (await Promise.all(all.map(async (p) => (await p.page.$('.question__text')) !== null))).indexOf(true);
     assert.ok(askerIndex >= 0, `round ${round}: someone has the question`);
     const asker = all[askerIndex];
