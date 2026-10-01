@@ -8,6 +8,14 @@ Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de
 
 **Spill nå: https://pettersommerseth1994.github.io/Disputt/**
 
+### Test med venner (fra hvilket som helst nett)
+
+1. **Verten** åpner lenken over, trykker *Start et spill* og velger navn og avatar.
+2. De andre **skanner QR-koden** på vertens skjerm, eller verten trykker *Del lenke* og sender den i en chat. Man kan også gå til siden og skrive den firebokstavers koden.
+3. Verten trykker *Start Disputt* når alle er med (minst tre).
+
+Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)): **verten er serveren.** Vær vert fra en telefon på Wi-Fi (eller en laptop), og hold siden åpen med skjermen våken. Får en gjest ikke kontakt etter ca. 30 sekunder, står det et råd på skjermen: bytt mellom Wi-Fi og mobildata. Noen mobilnett og bedriftsnett slipper ikke telefoner i direkte kontakt (det finnes ingen TURN-server ennå, se veikartet).
+
 ## Slik spilles det
 
 1. **Verten** åpner Disputt og starter et spill. Hen får en QR-kode som de andre skanner.
