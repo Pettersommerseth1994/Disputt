@@ -409,12 +409,12 @@
 .scoreboard { display: flex; flex-direction: column; gap: var(--s-4); margin: 0; padding: 0; list-style: none; }
 .score {
   display: grid;
-  grid-template-columns: 1.6rem auto 1fr auto;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr) auto; /* (minmax: a long name wraps instead of pushing the points out of the screen) */
   align-items: center;
   gap: var(--s-3);
 }
 .score__rank { font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; text-align: center; opacity: 0.85; }
-.score__name { display: flex; align-items: baseline; gap: var(--s-2); margin-bottom: 0.3rem; font-weight: 700; line-height: 1.15; }
+.score__name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s-2); margin-bottom: 0.3rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
 .score__name small { font-weight: 600; opacity: 0.7; }
 .score__points { min-width: 2.2rem; text-align: right; font-family: var(--font-display); font-weight: 900; font-size: 2rem; line-height: 1; }
 .score__gain {
@@ -432,6 +432,12 @@
 }
 .score--leader .score__rank { color: var(--yellow); opacity: 1; }
 .score--offline { opacity: 0.6; }
+
+/* A player in the host's list of who is offline: the name gives way (and wraps), the "remove" button never does. */
+.offline-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+.offline-row__who { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.offline-row__who > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.offline-row .btn { flex: none; }
 
 /* ---- Sheet (bottom modal) ---------------------------------------------------- */
 .sheet-backdrop {
@@ -509,9 +515,10 @@
 /* ---- Role strip & secret-answer reminder ------------------------------------- */
 .role-strip {
   display: flex;
+  flex-wrap: wrap; /* with big text the "hold to see the answer" button drops to a second line instead of leaving the screen */
   align-items: center;
   justify-content: space-between;
-  gap: var(--s-3);
+  gap: var(--s-2) var(--s-3);
   padding: 0.55rem 0.9rem;
   border-radius: var(--r-input);
   font-weight: 700;

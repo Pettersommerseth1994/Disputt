@@ -44,12 +44,15 @@ h4,
   line-height: 1.02;
   letter-spacing: -0.012em;
   text-wrap: balance;
+  /* Names end up in headings ("Kari har spørsmålet", "Petter vant!"), and a name is the one thing in them that cannot be
+     broken at a space: better broken anywhere than run off the screen. */
+  overflow-wrap: anywhere;
 }
 h1 { font-size: var(--fs-h1); }
 h2 { font-size: var(--fs-h2); }
 h3 { font-size: var(--fs-h3); line-height: 1.1; }
 
-p { margin: 0; text-wrap: pretty; }
+p { margin: 0; text-wrap: pretty; overflow-wrap: anywhere; } /* (names sit in sentences too, and a name has no spaces to break at) */
 a { color: var(--yellow); text-underline-offset: 0.2em; text-decoration-thickness: 2px; }
 strong, b { font-weight: 700; }
 small, .small { font-size: var(--fs-small); }
@@ -123,7 +126,7 @@ button { touch-action: manipulation; }
 
 /* The bar with a screen's main action (a button), frozen to the bottom of the screen. Its background is solid: the last
    layer is an opaque colour, so nothing that scrolls underneath shows through its text or its button. (A bar that only
-   has text or links is not frozen at all: that is `.foot`, below. `node tools/qa/dock.mjs` checks both rules.) */
+   has text or links is not frozen at all: that is `.foot`, below. `node tools/qa/overlap.mjs` checks both rules.) */
 .dock {
   --page-bg: var(--burgundy-700);
   --dock-tex: var(--tex-dark);

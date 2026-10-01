@@ -64,9 +64,22 @@ En flate = en flat farge + korn + strek:
 
 En nettleser sine verktøylinjer tar 150–300 px, så en telefon viser ofte bare ca. 550–660 px høyde, ikke de 844 px skjermen har. Skjermene man skal se på et øyeblikk (rolle, nedtelling, fasit, diskusjon) må derfor få plass uten scrolling, og knappen nederst skal ikke dekke tekst. Illustrasjonene skalerer med synlig høyde (`dvh`, og `height: auto` slik at `<img height>` ikke holder av tom plass), og `screens.css` strammer inn avstander på lave skjermer. `npm run qa:fit` måler det på flere størrelser, også med lengste spørsmål og svar i banken.
 
-## Bunnlinjer: aldri tekst oppå andre ting
+## Aldri tekst oppå andre ting, aldri tekst som blir skåret av
 
-To regler, og `npm run qa:dock` måler dem på flere skjermstørrelser (og at ingen synlig tekst overlapper annen tekst):
+`npm run qa:overlap` går gjennom alle skjermer (alle spillvisninger, startsiden, «jeg har en kode», tilkobling, plassvelger, «åpnet et annet sted» og alle ark) på flere telefonstørrelser. Den kjører også med det verste spillet tillater: ti spillere, de bredeste 14-bokstavsnavnene (`WWWWWWWWWWWWWW`), lengste spørsmål og svar, to-sifrede poeng, og med 125 % større tekst. Reglene:
+
+- ingen synlig tekst ligger oppå annen synlig tekst, uansett hvor siden er rullet til
+- ingen tekst går ut over kanten av skjermen (appen klipper sidelengs overflyt, så den ville bare blitt skåret av)
+- ingen tekst skjules av sin egen boks (et langt navn som kuttes)
+- bunnlinjene følger reglene under
+
+`npm run qa:overlap -- --self-test` ødelegger layouten med vilje på tre måter og sjekker at målingen slår ut: en måling som aldri klager beviser ingenting.
+
+**Navn er den ene tingen i en setning som ikke kan brytes ved et mellomrom.** Derfor har overskrifter og avsnitt `overflow-wrap: anywhere` (et langt navn brytes heller enn å gå ut av skjermen), poengtavlens midtkolonne er `minmax(0, 1fr)` slik at et langt navn brytes i stedet for å skyve poengene ut, og lister med en knapp ved siden av navnet (som «Fjern» i vertens ark) lar navnet gi etter mens knappen ikke gjør det.
+
+### Bunnlinjer
+
+To regler (måles av samme verktøy):
 
 1. **Det som er frosset til bunnen av skjermen (`.dock`, `position: sticky`) er skjermens hovedhandling, en knapp**, og har en *ugjennomsiktig* bakgrunn. Ingenting som ruller under skal skinne gjennom tekst eller knapp. (Bakgrunnen er sist i `background`-listen som en vanlig farge. Den gikk en gang tapt på alle vanlige skjermer fordi `--page-bg` pekte på `--theme-bg` uten reserveverdi, og en tom `data-theme` fikk hele deklarasjonen til å bli ugyldig. Derfor har variabelen nå en reserveverdi.) Kanten oppover er en egen, myk gradient (`.dock::before`), ikke en maske over innholdet.
 2. **Tekst og lenker som ikke trenger å være frosset (venter på verten, «Slik spiller du») er ikke frosset.** De ligger som `.foot` på slutten av siden, nederst på skjermen når innholdet er kort.

@@ -47,8 +47,8 @@ function HostControls({ view }) {
     html`<div class="stack stack--tight">
       <span class="field__label">Frakoblet akkurat nå</span>
       ${offline.map(
-        (p) => html`<div class="row row--between" key=${p.id}>
-          <span class="row"><${Avatar} id=${p.avatar} size="xs" offline /><span>${p.name}</span></span>
+        (p) => html`<div class="offline-row" key=${p.id}>
+          <span class="offline-row__who"><${Avatar} id=${p.avatar} size="xs" offline /><span>${p.name}</span></span>
           <${ConfirmButton} size="small" variant="ghost" label="Sikker?" onConfirm=${() => actions.kick(p.id)}>Fjern</${ConfirmButton}>
         </div>`,
       )}
