@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { AVATAR_IDS } from '../shared/avatars.mjs';
 import { createApp } from '../server/index.js';
-import { QUESTIONS } from '../server/questions.js';
+import { QUESTIONS } from '../shared/questions.js';
 import { TestClient, sleep } from './helpers.js';
 
 let app;

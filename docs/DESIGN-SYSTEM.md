@@ -15,6 +15,7 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 | `public/js/ui.js` | JS-komponentene (`Avatar`, `Button`, `Timer`, `Sheet`, `Scoreboard`, `QR`, `HoldToReveal`, …) som bruker klassene over. |
 | `public/design-system/` | Stilguide-siden. |
 | `shared/avatars.mjs` | Avatar-rosteret (id, navn, aksentfarge). |
+| `public/config.js`, `public/js/paths.js` | Distribusjonsinnstillinger og stedsuavhengige stier (alle URL-er er relative, så siden virker både på `/` og under `/Disputt/`). |
 
 ## Tokens i korte trekk
 

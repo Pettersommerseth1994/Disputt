@@ -1,7 +1,7 @@
 // Hub-level behaviour that needs no real sockets: cleanup of old/abandoned rooms and the capacity guard.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Hub } from '../server/hub.js';
+import { Hub } from '../shared/hub.js';
 
 const fakeSocket = () => ({ readyState: 1, sent: [], closed: null, send(m) { this.sent.push(JSON.parse(m)); }, close(code, reason) { this.closed = { code, reason }; } });
 
@@ -124,5 +124,56 @@ describe('hub cleanup', () => {
       assert.doesNotThrow(() => join(conn, bad));
     }
     assert.equal(hub.rooms.size, 1);
+  });
+});
+
+describe('hub: caller-chosen codes, export/import, change hook (peer-to-peer host)', () => {
+  it('creates a room with the code the caller reserved, and refuses duplicates and bad codes', () => {
+    const { hub, join } = setup();
+    const a = { ws: fakeSocket(), code: null, playerId: null };
+    hub.createWithCode(a, 'KRAP');
+    assert.equal(a.code, 'KRAP');
+    assert.equal(a.ws.sent[0].t, 'welcome');
+    assert.equal(a.ws.sent[0].code, 'KRAP');
+    const b = { ws: fakeSocket(), code: null, playerId: null };
+    assert.throws(() => hub.createWithCode(b, 'KRAP'), /opptatt/);
+    assert.throws(() => hub.createWithCode(b, 'krap'), /opptatt/);
+    assert.throws(() => hub.createWithCode(b, 'TOOLONG'), /opptatt/);
+    join(b, { t: 'join', code: 'krap' }); // players can still join it (codes are case-insensitive)
+    assert.equal(b.ws.sent.at(-1).t, 'welcome');
+  });
+
+  it('exports a room and imports it into a fresh hub where players resume with their tokens', () => {
+    const first = setup();
+    const host = { ws: fakeSocket(), code: null, playerId: null };
+    first.hub.createWithCode(host, 'ZXWQ');
+    first.join(host, { t: 'profile', name: 'Vert', avatar: 'lime' });
+    const guest = { ws: fakeSocket(), code: null, playerId: null };
+    first.join(guest, { t: 'join', code: 'ZXWQ' });
+    first.join(guest, { t: 'profile', name: 'Gjest', avatar: 'sol' });
+    const welcome = host.ws.sent[0];
+    const snapshot = JSON.parse(JSON.stringify(first.hub.exportRoom('ZXWQ')));
+
+    const second = setup();
+    assert.equal(second.hub.importRoom(snapshot), 'ZXWQ');
+    const back = { ws: fakeSocket(), code: null, playerId: null };
+    second.join(back, { t: 'resume', code: 'ZXWQ', playerId: welcome.playerId, token: welcome.token });
+    const again = back.ws.sent.at(-1);
+    assert.equal(again.t, 'welcome');
+    assert.equal(again.view.you.name, 'Vert');
+    assert.equal(again.view.players.length, 2);
+    assert.equal(first.hub.exportRoom('NOPE'), null);
+  });
+
+  it('calls the change hook after state changes, so a host can persist them', () => {
+    const { hub, join } = setup();
+    let calls = 0;
+    hub.onChange = () => calls++;
+    const conn = { ws: fakeSocket(), code: null, playerId: null };
+    hub.createWithCode(conn, 'ABCD');
+    const afterCreate = calls;
+    assert.ok(afterCreate > 0);
+    join(conn, { t: 'profile', name: 'A', avatar: 'lime' });
+    assert.ok(calls > afterCreate);
   });
 });

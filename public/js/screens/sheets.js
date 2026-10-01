@@ -3,7 +3,7 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
-import { Avatar, Button, QR, Scoreboard, Sheet, joinBase } from '../ui.js';
+import { Avatar, Button, QR, Scoreboard, Sheet, joinSite, joinUrl } from '../ui.js';
 
 const close = () => setStore({ sheet: null });
 
@@ -76,12 +76,12 @@ export function HostSheet({ view }) {
 
 export function QrSheet({ view }) {
   const s = useStore();
-  const url = `${joinBase(s.info)}/j/${view.code}`;
+  const url = joinUrl(s.info, view.code);
   return html`<${Sheet} title="Bli med" onClose=${close}>
     <div class="card card--paper center stack lobby__qr" style="align-items:center">
       <${QR} text=${url} />
       <p class="lobby__code display">${view.code}</p>
-      <p class="small">${url.replace(/^https?:\/\//, '')}</p>
+      <p class="small">${joinSite(s.info).replace(/^https?:\/\//, '').replace(/\/$/, '')}</p>
     </div>
   </${Sheet}>`;
 }

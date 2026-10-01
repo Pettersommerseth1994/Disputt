@@ -1,8 +1,10 @@
 // Shared UI components (the JS half of the design system; styles live in /css/components.css).
 
-import { AVATARS } from '/shared/avatars.mjs';
+import { AVATARS } from '../shared/avatars.mjs';
 import { html, useEffect, useMemo, useRef, useState } from './vendor/htm-preact.js';
 import { qrSvg } from './qr.js';
+import { ROOT, asset } from './paths.js';
+import { config, isP2P } from './settings.js';
 import { clock, cx, ranking, useRemaining } from './util.js';
 
 export const avatarOf = (id) => AVATARS.find((a) => a.id === id);
@@ -15,8 +17,8 @@ export function Avatar({ id, size = 'md', alive = false, offline = false, crown 
     role="img"
     aria-label=${label ?? a?.name ?? 'Avatar'}
   >
-    ${crown && html`<img class="avatar__crown" src="/assets/art/crown.svg" alt="" />`}
-    ${a && html`<img src=${`/assets/avatars/${a.id}.svg`} alt="" width="400" height="400" decoding="async" />`}
+    ${crown && html`<img class="avatar__crown" src=${asset('assets/art/crown.svg')} alt="" />`}
+    ${a && html`<img src=${asset(`assets/avatars/${a.id}.svg`)} alt="" width="400" height="400" decoding="async" />`}
     ${badge !== null && html`<span class="avatar__badge">${badge}</span>`}
   </span>`;
 }
@@ -37,7 +39,7 @@ export function Button({ variant, size, block, class: cls, children, ...rest }) 
 
 export function Logo({ small = false }) {
   return html`<span class=${cx('logo-sticker', small && 'logo-sticker--sm')}>
-    <img src="/assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130" />
+    <img src=${asset('assets/logo/disputt-logo.svg')} alt="Disputt" width="300" height="130" />
   </span>`;
 }
 
@@ -155,6 +157,22 @@ export function joinBase(info) {
   const local = host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host.endsWith('.local');
   if (local && info?.lanUrls?.length) return info.lanUrls[0];
   return location.origin;
+}
+
+/** The site players open to join (always with a trailing slash). */
+export function joinSite(info) {
+  // On static hosting (peer-to-peer) or with a remote game server, the page itself is the address to share.
+  if (isP2P || config.serverUrl) return `${location.origin}${ROOT.pathname}`;
+  return `${joinBase(info)}/`;
+}
+
+/** The link a phone opens to join `code` (this is what the QR code contains). */
+export function joinUrl(info, code) {
+  const keep = new URLSearchParams();
+  // local test overrides (?mode=p2p&peerHost=…) must follow the link, or the guest would run in a different mode
+  for (const [k, v] of new URLSearchParams(location.search)) if (['mode', 'peerHost', 'peerPort', 'peerPath', 'peerSecure', 'ice'].includes(k)) keep.set(k, v);
+  keep.set('j', code);
+  return `${joinSite(info)}?${keep}`;
 }
 
 /** True where the browser can keep the screen awake (needs HTTPS or localhost). Elsewhere we tell players to turn off auto-lock. */

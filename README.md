@@ -6,6 +6,8 @@ Disputt er et sosialt bløff- og diskusjonsspill for **3–10 spillere**. Alle s
 
 Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de andre skanner en QR-kode.
 
+**Spill nå: https://pettersommerseth1994.github.io/Disputt/**
+
 ## Slik spilles det
 
 1. **Verten** åpner Disputt og starter et spill. Hen får en QR-kode som de andre skanner.
@@ -29,7 +31,11 @@ Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de
 
 ## Kom i gang
 
-Du trenger [Node.js](https://nodejs.org) 22 eller nyere.
+Det finnes tre måter å kjøre Disputt på. Spillet og skjermene er helt like i alle tre.
+
+**1. På nettet, uten installasjon: GitHub Pages (peer-to-peer).** Åpne lenken over. Siden ligger på GitHub Pages, som bare kan vise filer, så *vertens telefon kjører selve spillet* og de andre kobler seg rett til den (WebRTC). Verten må holde siden åpen mens dere spiller. Fungerer fra alle nett, men noen strenge nett (bedrift, enkelte mobiloperatører) kan blokkere direkte tilkobling. Detaljer, begrensninger og innstillinger: **[docs/P2P.md](docs/P2P.md)**.
+
+**2. Kjør selv på egen maskin (Node + WebSocket).** Du trenger [Node.js](https://nodejs.org) 22 eller nyere.
 
 ```bash
 npm install
@@ -38,7 +44,7 @@ npm start
 
 Terminalen skriver ut to adresser. Åpne **adressen merket «På mobilen (Wi‑Fi)»** på telefonen til verten (ikke `localhost`), så peker QR-koden riktig for de andre. Alle må være på samme Wi‑Fi. Macen kan spørre om `node` skal få ta imot innkommende tilkoblinger, svar «Tillat».
 
-Vil du teste uten felles Wi‑Fi, eller legge spillet ut på nett (Render, Fly, Docker, egen adresse som disputt.no)? Se **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+**3. Egen server på nett (Render, Fly, Docker).** Mest robust: en server som alltid står, og ingen avhengighet til vertens telefon. Se **[docs/DEPLOY.md](docs/DEPLOY.md)**. GitHub Pages kan også settes til å bruke en slik server.
 
 ## Designsystem
 
@@ -52,37 +58,41 @@ Utseendet er surrealistisk og lekent: fargestift/oljepastell på dyp burgunder, 
 
 ## Spørsmål
 
-Spørsmålene ligger i [`server/questions.js`](server/questions.js): tekst, fire alternativer og indeksen til riktig svar. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Det er foreløpig **fire testspørsmål**, så de gjentas i lengre spill.
+Spørsmålene ligger i [`shared/questions.js`](shared/questions.js): tekst, fire alternativer og indeksen til riktig svar. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Det er foreløpig **fire testspørsmål**, så de gjentas i lengre spill.
 
 ## Struktur
 
 ```
-server/    Node-server (HTTP + WebSocket). game.js er selve spillmotoren: en ren tilstandsmaskin uten I/O.
-shared/    Avatar-rosteret, brukt av både server og klient.
-public/    Klienten: Preact + htm uten byggesteg (css/, js/, assets/, design-system/).
-tools/     Generatorer (art, logo, fonter) og QA-verktøy (skjermbilder, UI-test).
-test/      Enhets-, server-, QR- og ende-til-ende-tester.
-docs/      Protokoll, drift, designsystem.
+server/    Node-serveren (HTTP + WebSocket): index.js og static.js.
+shared/    Spillmotoren (game.js = ren tilstandsmaskin, hub.js, questions.js, util.js) og avatar-rosteret.
+           Kjører både i Node-serveren og, i peer-to-peer-modus, i vertens nettleser.
+public/    Klienten: Preact + htm uten byggesteg (css/, js/, js/p2p/, assets/, design-system/).
+tools/     Generatorer (art, logo, fonter), byggeverktøy for GitHub Pages (pages/) og QA-verktøy (qa/).
+test/      Enhets-, server-, QR-, bygge- og ende-til-ende-tester.
+docs/      Protokoll, drift, peer-to-peer, designsystem.
 ```
 
-Serveren er én prosess med spillrom i minnet (ingen database, ingen kontoer). Motoren eier all spillogikk og sender hver spiller *kun det hen skal se*: ingen hemmeligheter (imposterens svar, spørsmålet, fasiten) ligger i andres data. Protokollen er beskrevet i [docs/PROTOCOL.md](docs/PROTOCOL.md).
+Spillrommene ligger i minnet (ingen database, ingen kontoer). Motoren eier all spillogikk og sender hver spiller *kun det hen skal se*: ingen hemmeligheter (imposterens svar, spørsmålet, fasiten) ligger i andres data. Protokollen er beskrevet i [docs/PROTOCOL.md](docs/PROTOCOL.md).
 
 ## Tester og kvalitetssikring
 
 ```bash
-npm test            # motor, WebSocket-ende-til-ende, QR-koden dekodes, statiske ruter
-npm run play        # UI-test: flere "telefoner" i ekte nettleser spiller et helt spill (krever Google Chrome)
-npm run play -- 6 3 # …med 6 spillere, til 3 poeng
-npm run shots       # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/
+npm test               # motor, lagring/gjenoppretting, WebSocket-ende-til-ende, QR-koden dekodes, statiske ruter, bygget for Pages
+npm run play           # UI-test: flere "telefoner" i ekte nettleser spiller et helt spill (krever Google Chrome)
+npm run play -- 6 3    # …med 6 spillere, til 3 poeng
+npm run play:p2p -- 4 2  # det samme over WebRTC (peer-to-peer-bygget + lokal megler, uten internett)
+npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/
+npm run pages:preview  # bygg og vis GitHub Pages-versjonen lokalt (http://localhost:8080)
 ```
 
 ## Personvern
 
-Ingen kontoer, ingen cookies, ingen sporing. Navn og avatar finnes bare i serverens minne mens spillet pågår, og identiteten i nettleseren ligger i `sessionStorage` for den ene fanen.
+Ingen kontoer, ingen cookies, ingen sporing. Navn og avatar finnes bare i spillets minne (serverens, eller vertens nettleser i peer-to-peer-modus) mens spillet pågår, og identiteten i nettleseren ligger i `sessionStorage` for den ene fanen. I peer-to-peer-modus kobler PeerJS' offentlige meglertjeneste telefonene sammen (den ser ikke spilltrafikken), og slik WebRTC fungerer kan spillerne teknisk se hverandres IP-adresser.
 
 ## Veikart
 
 - En vanlig nettside (forside, regler, kontakt) på disputt.no.
 - Flere spørsmål og kategorier, evt. kategorivalg per spill.
 - Lyd og haptikk (kun den som svarer), «behold skjermen våken» også uten HTTPS.
+- TURN-server for peer-to-peer (de få nettene som blokkerer direkte tilkobling), eller en alltid-på spillserver på Render.
 - Håndtegnede avatarer og rolle-illustrasjoner i stedet for de prosedyretegnede.

@@ -1,6 +1,6 @@
 // Name + avatar. Used when joining, and again when someone wants to change their profile in the lobby.
 
-import { AVATARS } from '/shared/avatars.mjs';
+import { AVATARS } from '../../shared/avatars.mjs';
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore } from '../store.js';

@@ -2,7 +2,7 @@
 // Used by tools/qa/shots.mjs (visual QA) — the views are exactly what the server would send.
 
 import { AVATAR_IDS } from '../../shared/avatars.mjs';
-import { DEFAULT_TIMINGS, Room } from '../../server/game.js';
+import { DEFAULT_TIMINGS, Room } from '../../shared/game.js';
 
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas'];
 

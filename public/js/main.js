@@ -1,9 +1,11 @@
 import { App } from './app.js';
 import { actions, connect, dropSession, reconnectNow } from './net.js';
+import { asset } from './paths.js';
+import { config, isP2P } from './settings.js';
 import { html, render } from './vendor/htm-preact.js';
 import { setStore, store } from './store.js';
 
-// QR-code link (/j/ABCD): join that room, unless this tab already belongs to it (then we simply resume).
+// QR-code link (?j=ABCD, or the older /j/ABCD): join that room, unless this tab already belongs to it (then we resume).
 if (store.route.page === 'join') {
   if (store.session && store.session.code !== store.route.code) dropSession();
   if (!store.session) actions.join(store.route.code);
@@ -17,10 +19,13 @@ document.addEventListener('visibilitychange', () => document.visibilityState ===
 window.addEventListener('online', reconnectNow);
 window.addEventListener('pageshow', (e) => e.persisted && reconnectNow());
 
-fetch('/api/info')
-  .then((r) => r.json())
-  .then((info) => setStore({ info }))
-  .catch(() => {});
+// Only our own Node server has /api/info (LAN addresses for the QR code). Static hosting does not.
+if (!isP2P && !config.serverUrl) {
+  fetch(asset('api/info'))
+    .then((r) => r.json())
+    .then((info) => setStore({ info }))
+    .catch(() => {});
+}
 
 // Dev/QA hook: lets screenshots and tests inject a view without a game.
 if (debug !== null) window.__disputt = { store, setStore };

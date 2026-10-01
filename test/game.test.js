@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { AVATAR_IDS } from '../shared/avatars.mjs';
-import { DEFAULT_TIMINGS, GameError, LIMITS, PHASE, Room } from '../server/game.js';
-import { QUESTIONS } from '../server/questions.js';
+import { DEFAULT_TIMINGS, GameError, LIMITS, PHASE, Room } from '../shared/game.js';
+import { QUESTIONS } from '../shared/questions.js';
+import { defaultRandom, makeId, makeToken } from '../shared/util.js';
 
 // ------------------------------------------------------------------ helpers
 
@@ -713,5 +714,128 @@ describe('absent players', () => {
     finishRound(ctx, false); // the impostor scores 1 -> unique leader at the new target
     assert.equal(ctx.room.phase, PHASE.FINISHED);
     throwsCode(() => ctx.room.setTarget(ctx.host.id, 3), 'bad_phase');
+  });
+});
+
+describe('saving and restoring a room (the peer-to-peer host survives a reload)', () => {
+  /** What every player sees right now. */
+  const views = (ctx) => Object.fromEntries(ctx.players.map((p) => [p.id, ctx.room.viewFor(p.id)]));
+
+  /** A copy brought back from JSON, with everybody reconnected, sharing the same clock. */
+  function restored(ctx) {
+    const copy = Room.fromJSON(JSON.parse(JSON.stringify(ctx.room)), { now: ctx.clock.now, rand: seeded(1234) });
+    for (const p of ctx.players) copy.connect(p.id);
+    return copy;
+  }
+
+  const sameViews = (ctx, label) => {
+    const copy = restored(ctx);
+    for (const p of ctx.players) assert.deepEqual(copy.viewFor(p.id), ctx.room.viewFor(p.id), `${label}: view for ${p.id}`);
+    return copy;
+  };
+
+  it('shows every player exactly what the original showed, in every phase', () => {
+    const ctx = lobby(5, { seed: 8 });
+    ctx.room.setTarget(ctx.host.id, 6);
+    sameViews(ctx, 'lobby');
+
+    ctx.room.start(ctx.host.id);
+    sameViews(ctx, 'role reveal'); // the impostor's secret survives
+
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    ctx.room.select(ctx.room.current.askerId, 2);
+    sameViews(ctx, 'question');
+
+    ctx.room.lock(ctx.room.current.askerId, ctx.room.current.question.correct);
+    sameViews(ctx, 'locked');
+
+    ctx.clock.advance(DEFAULT_TIMINGS.countdownMs);
+    ctx.room.tick(ctx.clock.now());
+    sameViews(ctx, 'reveal'); // the verdict is only on the asker's view, and survives
+
+    ctx.room.continueRound(ctx.room.current.askerId);
+    sameViews(ctx, 'summary');
+  });
+
+  it('keeps the winner and the final scores', () => {
+    const ctx = lobby(4, { seed: 2 });
+    ctx.room.setTarget(ctx.host.id, 1);
+    ctx.room.start(ctx.host.id);
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    finishRound(ctx, false);
+    assert.equal(ctx.room.phase, PHASE.FINISHED);
+    const copy = sameViews(ctx, 'finished');
+    assert.deepEqual(copy.winnerIds, ctx.room.winnerIds);
+  });
+
+  it('lets the game carry on from a restored mid-round state, with the same tokens', () => {
+    const ctx = lobby(4, { seed: 6 });
+    ctx.room.setTarget(ctx.host.id, 5);
+    ctx.room.start(ctx.host.id);
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    const { askerId, impostorId, question } = ctx.room.current;
+
+    const copy = Room.fromJSON(JSON.parse(JSON.stringify(ctx.room)), { now: ctx.clock.now, rand: seeded(5) });
+    for (const p of ctx.players) {
+      assert.equal(copy.authenticate(p.id, p.token).id, p.id, 'old tokens still work');
+      copy.connect(p.id);
+    }
+    copy.lock(askerId, question.correct);
+    ctx.clock.advance(DEFAULT_TIMINGS.countdownMs);
+    copy.tick(ctx.clock.now());
+    copy.continueRound(askerId);
+    for (const p of copy.players.values()) assert.equal(p.score, p.id === impostorId ? 0 : 1);
+    copy.nextRound(ctx.host.id);
+    assert.equal(copy.round, 2);
+  });
+
+  it('starts everybody disconnected and never shares state with the snapshot', () => {
+    const ctx = lobby(3);
+    const snapshot = JSON.parse(JSON.stringify(ctx.room));
+    const copy = Room.fromJSON(snapshot, { now: ctx.clock.now });
+    assert.ok([...copy.players.values()].every((p) => p.connected === false));
+    snapshot.players[0].name = 'Endret';
+    assert.notEqual(copy.players.get(snapshot.players[0].id).name, 'Endret');
+    assert.throws(() => Room.fromJSON({ v: 99 }), /Unknown room snapshot/);
+    assert.throws(() => Room.fromJSON(null), /Unknown room snapshot/);
+  });
+
+  it('forgets the question deck if the question bank changed, but keeps the round', () => {
+    const ctx = lobby(3, { seed: 4 });
+    ctx.room.start(ctx.host.id);
+    const snapshot = JSON.parse(JSON.stringify(ctx.room));
+    const bigger = [...QUESTIONS, { id: 'ekstra', text: 'Hva er 2+2?', options: ['3', '4', '5', '6'], correct: 1 }];
+    const copy = Room.fromJSON(snapshot, { now: ctx.clock.now, questions: bigger });
+    assert.deepEqual(copy.deck, []);
+    assert.equal(copy.current.question.id, ctx.room.current.question.id);
+  });
+});
+
+describe('shared helpers', () => {
+  it('random integers stay in range and are spread evenly', () => {
+    const n = 7;
+    const counts = new Array(n).fill(0);
+    const draws = 70_000;
+    for (let i = 0; i < draws; i++) {
+      const v = defaultRandom.int(n);
+      assert.ok(Number.isInteger(v) && v >= 0 && v < n);
+      counts[v]++;
+    }
+    for (const c of counts) assert.ok(Math.abs(c - draws / n) < (draws / n) * 0.06, `uneven: ${counts}`);
+    assert.equal(defaultRandom.int(1), 0);
+    assert.throws(() => defaultRandom.int(0), RangeError);
+    assert.throws(() => defaultRandom.int(1.5), RangeError);
+  });
+
+  it('makes long random tokens and short ids, all different', () => {
+    const tokens = new Set(Array.from({ length: 200 }, makeToken));
+    const ids = new Set(Array.from({ length: 200 }, makeId));
+    assert.equal(tokens.size, 200);
+    assert.equal(ids.size, 200);
+    assert.match([...tokens][0], /^[0-9a-f]{32}$/);
+    assert.match([...ids][0], /^[0-9a-f]{10}$/);
   });
 });

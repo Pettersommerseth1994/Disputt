@@ -1,10 +1,26 @@
-import { randomBytes, randomInt } from 'node:crypto';
+// Helpers shared by the Node server and the browser (the peer-to-peer host runs this same engine in the page).
+
+const webCrypto = globalThis.crypto;
+
+/** Uniform integer in [0, n), by rejection sampling over 32 random bits (no modulo bias). */
+function randomInt(n) {
+  if (!Number.isInteger(n) || n <= 0 || n > 2 ** 32) throw new RangeError('randomInt: n out of range');
+  const limit = Math.floor(2 ** 32 / n) * n;
+  const buf = new Uint32Array(1);
+  let x;
+  do {
+    webCrypto.getRandomValues(buf);
+    x = buf[0];
+  } while (x >= limit);
+  return x % n;
+}
 
 /** Default randomness source. Tests inject their own with the same shape. */
-export const defaultRandom = { int: (n) => randomInt(n) };
+export const defaultRandom = { int: randomInt };
 
-export const makeToken = () => randomBytes(16).toString('hex');
-export const makeId = () => randomBytes(5).toString('hex');
+const randomHex = (bytes) => Array.from(webCrypto.getRandomValues(new Uint8Array(bytes)), (b) => b.toString(16).padStart(2, '0')).join('');
+export const makeToken = () => randomHex(16);
+export const makeId = () => randomHex(5);
 
 /** Fisher–Yates, returns a new array. */
 export function shuffle(items, rand = defaultRandom) {

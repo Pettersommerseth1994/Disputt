@@ -3,7 +3,8 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
-import { Avatar, Button, CloseIcon, HelpIcon, Logo, QR, joinBase, keepsAwake } from '../ui.js';
+import { Avatar, Button, CloseIcon, HelpIcon, Logo, QR, joinSite, joinUrl, keepsAwake } from '../ui.js';
+import { isP2P } from '../settings.js';
 import { cx, plural } from '../util.js';
 
 const MINUTES_PER_POINT = 10;
@@ -101,9 +102,8 @@ function HostLobby({ view }) {
   };
 
   const enough = view.players.length >= view.limits.min;
-  const base = joinBase(s.info);
-  const url = `${base}/j/${view.code}`;
-  const shortUrl = base.replace(/^https?:\/\//, '');
+  const url = joinUrl(s.info, view.code);
+  const shortUrl = joinSite(s.info).replace(/^https?:\/\//, '').replace(/\/$/, '');
   const need = view.limits.min - view.players.length;
   const canStart = enough && (valid || emptied) && view.you.ready && s.conn === 'open';
 
@@ -131,6 +131,8 @@ function HostLobby({ view }) {
           <span>Velg navn og avatar, så er du med selv.</span>
         </span>
       </button>`}
+
+      ${isP2P && html`<p class="small muted center" role="note" style="max-width:24rem;margin-inline:auto">Du er spillets «server». Hold denne siden åpen mens dere spiller. Laster du den på nytt, fortsetter spillet der det var.</p>`}
 
       <section class="stack">
         <h2 class="center">Spillere <span class="muted">${view.players.length}/${view.limits.max}</span></h2>

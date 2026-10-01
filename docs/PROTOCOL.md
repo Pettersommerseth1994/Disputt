@@ -1,6 +1,6 @@
 # Protokoll
 
-Klient og server snakker JSON over én WebSocket (`/ws`). Serveren er autoritativ: klienten sender *intensjoner*, og serveren svarer med en **skreddersydd visning** (`view`) til hver spiller etter hver endring. Klienten tegner bare det den får.
+Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus, se [P2P.md](P2P.md), er det en WebRTC-datakanal til vertens telefon i stedet for en WebSocket; meldingene er de samme.) Serveren er autoritativ: klienten sender *intensjoner*, og serveren svarer med en **skreddersydd visning** (`view`) til hver spiller etter hver endring. Klienten tegner bare det den får.
 
 ## Klient → server
 

@@ -1,0 +1,55 @@
+# Publishes the static (peer-to-peer) build of Disputt to GitHub Pages on every push to main.
+# Optional repository variables (Settings > Secrets and variables > Actions > Variables) change what is built:
+#   DISPUTT_SERVER_URL    wss://… address of a Disputt Node server. Set it and the site talks to that server instead of
+#                         running peer-to-peer (see docs/DEPLOY.md).
+#   DISPUTT_ICE_SERVERS   JSON array of WebRTC servers, e.g. a TURN server for networks that refuse direct connections.
+#   DISPUTT_PEER_HOST / DISPUTT_PEER_PORT / DISPUTT_PEER_PATH / DISPUTT_PEER_SECURE   a self-hosted PeerJS server.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - id: pages
+        uses: actions/configure-pages@v6
+      - name: Build the static site
+        run: node tools/pages/build.mjs --out dist --base "${{ steps.pages.outputs.base_path }}/"
+        env:
+          DISPUTT_MODE: ${{ vars.DISPUTT_SERVER_URL != '' && 'server' || 'p2p' }}
+          DISPUTT_SERVER_URL: ${{ vars.DISPUTT_SERVER_URL }}
+          DISPUTT_ICE_SERVERS: ${{ vars.DISPUTT_ICE_SERVERS }}
+          DISPUTT_PEER_HOST: ${{ vars.DISPUTT_PEER_HOST }}
+          DISPUTT_PEER_PORT: ${{ vars.DISPUTT_PEER_PORT }}
+          DISPUTT_PEER_PATH: ${{ vars.DISPUTT_PEER_PATH }}
+          DISPUTT_PEER_SECURE: ${{ vars.DISPUTT_PEER_SECURE }}
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,11 +1,14 @@
 // UI end-to-end: several "phones" (isolated browser contexts) play a whole game through the real interface.
-//   node tools/qa/play.mjs [players=4] [target=2] [--shots]
+//   node tools/qa/play.mjs [players=4] [target=2] [--p2p] [--shots]
+//   --p2p   test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server
 // Needs Google Chrome (CHROME_PATH to override). Exits non-zero on the first thing that does not behave.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import jsQR from 'jsqr';
 import puppeteer from 'puppeteer-core';
-import { createApp } from '../../server/index.js';
-import { QUESTIONS } from '../../server/questions.js';
+import sharp from 'sharp';
+import { QUESTIONS } from '../../shared/questions.js';
+import { startNodeSite, startP2PSite } from './sites.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -14,15 +17,17 @@ const PLAYERS = nums[0] ?? 4;
 const TARGET = nums[1] ?? 2;
 assert.ok(Number.isInteger(PLAYERS) && PLAYERS >= 3 && PLAYERS <= 10 && Number.isInteger(TARGET) && TARGET >= 1, 'usage: play.mjs [players 3-10] [target]');
 const SHOTS = flags.includes('--shots');
+const P2P = flags.includes('--p2p');
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 'Nina', 'Lars'];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(...a);
 
-const app = createApp({ port: 0, host: '127.0.0.1', silent: true, tickMs: 50, hubOptions: { timings: { roleMs: 1600, countdownMs: 1600 } } });
-const port = await app.listen();
-const base = `http://127.0.0.1:${port}`;
-const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars'] });
+const site = P2P ? await startP2PSite() : await startNodeSite();
+const base = site.base;
+log(`${P2P ? 'peer-to-peer build' : 'Node server'} at ${base}`);
+// (loopback WebRTC between two pages of the same browser needs real host candidates, not mDNS names)
+const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars', '--disable-features=WebRtcHideLocalIpsWithMdns'] });
 if (SHOTS) fs.mkdirSync('tmp/play', { recursive: true });
 
 // ---------------------------------------------------------------- helpers
@@ -79,14 +84,19 @@ try {
   await waitText(host, /Spillere\s+1\/10/);
   const code = await host.page.$eval('.lobby__code', (el) => el.textContent.trim());
   assert.match(code, /^[A-Z]{4}$/, 'host sees a four-letter code');
-  const qrOk = await host.page.$eval('.qr svg', (svg) => svg.querySelectorAll('path').length > 0);
-  assert.ok(qrOk, 'QR code is rendered');
+  // the QR code really contains a join link for this room
+  const svg = await host.page.$eval('.qr svg', (el) => el.outerHTML);
+  const { data, info } = await sharp(Buffer.from(svg), { density: 300 }).resize(500, 500).flatten({ background: '#fff' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const qrLink = jsQR(new Uint8ClampedArray(data), info.width, info.height)?.data;
+  assert.ok(qrLink, 'the QR code can be read');
+  assert.equal(new URL(qrLink).searchParams.get('j'), code, `the QR link carries the room code (${qrLink})`);
+  if (P2P) assert.equal(qrLink, `${base}/?j=${code}`, 'p2p: the QR link is the page address itself');
   log(`host created game ${code}`);
 
   const others = [];
   for (let i = 1; i < PLAYERS; i++) {
     const p = await newPhone(NAMES[i]);
-    await p.page.goto(`${base}/j/${code.toLowerCase()}`); // like scanning the QR code
+    await p.page.goto(`${base}/?j=${code.toLowerCase()}`); // like scanning the QR code
     await register(p, NAMES[i], 0); // taken avatars are disabled, so the first enabled one is always free
     await waitText(p, /Du er med/);
     others.push(p);
@@ -163,6 +173,17 @@ try {
       const again = await bodyText(bystander);
       assert.match(again, bystander === impostor ? /IMPOSTER/i : /LOJAL/i, 'role restored after reload');
       log('reload restored the session');
+      if (P2P) {
+        // the game lives in the host's page: reloading it must not end the game, and guests must find their way back
+        await host.page.reload();
+        await host.page.waitForFunction(() => document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText), { timeout: 30000 });
+        for (const p of others) {
+          // back in the round: no "connection lost" banner, and the screen is the asker's or the discussion screen again
+          await p.page.waitForFunction(() => !document.querySelector('.banner') && (document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText)), { timeout: 40000 });
+        }
+        assert.match(await bodyText(host), host === impostor ? /IMPOSTER/i : /LOJAL/i, 'host role restored after reload');
+        log('the host reloaded and everybody is back in the same round');
+      }
     }
     const groupRight = round % 2 === 1;
     const choice = groupRight ? q.correct : (q.correct + 1) % 4;
@@ -204,14 +225,18 @@ try {
         const lost = others[others.length - 1];
         await lost.ctx.close();
         const fresh = await newPhone(lost.name);
-        await fresh.page.goto(`${base}/j/${code}`);
+        await fresh.page.goto(`${base}/?j=${code}`);
         await waitText(fresh, /Spillet har startet/i);
         await shot(fresh, '12-seat-picker');
-        await fresh.page.waitForFunction(
-          (n) => [...document.querySelectorAll('.player')].some((el) => el.innerText.includes(n)),
-          { timeout: 10000 },
-          lost.name,
-        );
+        const seatShown = (n) => fresh.page.evaluate((n) => [...document.querySelectorAll('.player')].some((el) => el.innerText.includes(n)), n);
+        // over WebRTC the host needs a little while to notice that a phone has vanished; "Sjekk på nytt" asks again
+        for (let tries = 0; !(await seatShown(lost.name)); tries++) {
+          assert.ok(tries < (P2P ? 14 : 4), `the seat of ${lost.name} became available`);
+          await sleep(P2P ? 5000 : 400);
+          if (await seatShown(lost.name)) break;
+          await clickButton(fresh, 'Sjekk på nytt');
+          await waitText(fresh, /Spillet har startet/i);
+        }
         await fresh.page.evaluate((n) => [...document.querySelectorAll('.player')].find((el) => el.innerText.includes(n)).click(), lost.name);
         await waitText(fresh, /Venter på at verten starter neste runde/);
         all[all.indexOf(lost)] = fresh;
@@ -245,6 +270,7 @@ try {
   if (SHOTS) for (const p of phones) await p.page.screenshot({ path: `tmp/play/FAIL-${p.name}.png` }).catch(() => {});
   process.exitCode = 1;
 } finally {
-  await browser.close();
-  await app.close();
+  await browser.close().catch(() => {});
+  await Promise.race([site.stop(), sleep(4000)]);
+  process.exit(process.exitCode ?? 0); // the local PeerJS server may keep sockets open; do not hang on them
 }

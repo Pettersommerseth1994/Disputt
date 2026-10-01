@@ -149,7 +149,7 @@ button { touch-action: manipulation; }
 .scribble {
   display: inline-block;
   padding-bottom: 0.28em;
-  background: url('/assets/art/scribble-underline.svg') left bottom / 100% 0.42em no-repeat;
+  background: url('../assets/art/scribble-underline.svg') left bottom / 100% 0.42em no-repeat;
 }
 
 /* ---- Boot splash (visible until the app mounts) ---------------------------- */

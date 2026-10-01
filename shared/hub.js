@@ -20,6 +20,7 @@ export class Hub {
     this.timings = timings;
     this.questions = questions;
     this.rooms = new Map(); // code -> { room, sockets: Map<playerId, ws> }
+    this.onChange = null; // optional hook: called with the room entry after every broadcast (the P2P host persists from it)
   }
 
   // ---------------------------------------------------------------- transport entry points
@@ -105,18 +106,51 @@ export class Hub {
   // ---------------------------------------------------------------- identity
 
   create(conn) {
+    this.openRoom(conn, null);
+  }
+
+  /** Like `create`, but the caller chooses the code (the peer-to-peer host reserves it with the signalling server first). */
+  createWithCode(conn, code) {
+    if (!/^[A-Z]{4}$/.test(code) || this.rooms.has(code)) throw new GameError('busy', 'Den koden er opptatt.');
+    this.openRoom(conn, code);
+  }
+
+  openRoom(conn, wantedCode) {
     if ((conn.created ?? 0) >= MAX_ROOMS_PER_SOCKET) {
       throw new GameError('busy', 'Du har startet for mange spill på rad. Last inn siden på nytt.');
     }
     if (this.rooms.size >= MAX_ROOMS) throw new GameError('busy', 'Serveren er full akkurat nå. Prøv igjen om litt.');
     this.leaveCurrent(conn);
     conn.created = (conn.created ?? 0) + 1;
-    const code = makeRoomCode(this.rand, (c) => this.rooms.has(c));
+    const code = wantedCode ?? makeRoomCode(this.rand, (c) => this.rooms.has(c));
     const room = new Room({ code, rand: this.rand, now: this.clock, timings: this.timings, questions: this.questions });
     const entry = { room, sockets: new Map() };
     this.rooms.set(code, entry);
     const player = room.addPlayer({ asHost: true });
     this.attach(entry, conn, player);
+  }
+
+  /** Tells everybody the game is over and forgets every room (used when a peer-to-peer host leaves). */
+  closeAll(reason = 'expired') {
+    for (const entry of this.rooms.values()) {
+      for (const ws of entry.sockets.values()) {
+        send(ws, { t: 'closed', reason });
+        ws.close(1000, reason);
+      }
+    }
+    this.rooms.clear();
+  }
+
+  /** The room as plain JSON (see Room#toJSON), or null if there is no such room. */
+  exportRoom(code) {
+    return this.rooms.get(code)?.room.toJSON() ?? null;
+  }
+
+  /** Brings a saved room back; players reconnect with `resume`. Returns the room code. */
+  importRoom(snapshot) {
+    const room = Room.fromJSON(snapshot, { rand: this.rand, now: this.clock, timings: this.timings, questions: this.questions });
+    this.rooms.set(room.code, { room, sockets: new Map() });
+    return room.code;
   }
 
   join(conn, msg) {
@@ -244,6 +278,7 @@ export class Hub {
       if (pid === except) continue;
       send(ws, { t: 'state', view: entry.room.viewFor(pid) });
     }
+    this.onChange?.(entry);
   }
 
   get stats() {

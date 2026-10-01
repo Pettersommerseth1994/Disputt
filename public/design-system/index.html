@@ -6,20 +6,20 @@
   <title>Disputt – designsystem</title>
   <meta name="description" content="Disputts designsystem: farger, typografi, kritt-teksturer, avatarer og komponenter.">
   <meta name="theme-color" content="#3d0a18">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="preload" href="/assets/fonts/fraunces-italic.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/lora.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/tokens.css">
-  <link rel="stylesheet" href="/css/base.css">
-  <link rel="stylesheet" href="/css/components.css">
-  <link rel="stylesheet" href="/css/screens.css">
-  <link rel="stylesheet" href="/design-system/ds.css">
-  <script type="module" src="/design-system/ds.js"></script>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../assets/fonts/fraunces-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fonts/lora.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/screens.css">
+  <link rel="stylesheet" href="ds.css">
+  <script type="module" src="ds.js"></script>
 </head>
 <body class="ds">
 
 <header class="ds-top">
-  <a class="logo-sticker logo-sticker--sm" href="/design-system/" aria-label="Designsystem"><img src="/assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130"></a>
+  <a class="logo-sticker logo-sticker--sm" href="./" aria-label="Designsystem"><img src="../assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130"></a>
   <nav class="ds-nav" aria-label="Seksjoner">
     <a href="#prinsipper">Prinsipper</a>
     <a href="#logo">Logo</a>
@@ -65,27 +65,27 @@
     <div class="ds-grid ds-grid--wide">
       <div class="ds-demo ds-demo--yellow ds-stack" style="justify-items:center">
         <span class="ds-label">Hovedlogo · svart</span>
-        <img src="/assets/logo/disputt-logo.svg" alt="Disputt" width="260" height="112" style="width:16rem;height:auto">
-        <a href="/assets/logo/disputt-logo.svg" download>disputt-logo.svg</a>
+        <img src="../assets/logo/disputt-logo.svg" alt="Disputt" width="260" height="112" style="width:16rem;height:auto">
+        <a href="../assets/logo/disputt-logo.svg" download>disputt-logo.svg</a>
       </div>
       <div class="ds-demo ds-stack" style="justify-items:center">
         <span class="ds-label">På burgunder · klistremerke</span>
-        <span class="logo-sticker"><img src="/assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130"></span>
+        <span class="logo-sticker"><img src="../assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130"></span>
         <span class="ds-note">Klasse <code>.logo-sticker</code> (<code>--sm</code> for topplinjer)</span>
       </div>
       <div class="ds-demo ds-stack" style="justify-items:center">
         <span class="ds-label">Krem · for mørke flater uten klistremerke</span>
-        <img src="/assets/logo/disputt-logo-cream.svg" alt="Disputt" width="260" height="112" style="width:16rem;height:auto">
-        <a href="/assets/logo/disputt-logo-cream.svg" download>disputt-logo-cream.svg</a>
+        <img src="../assets/logo/disputt-logo-cream.svg" alt="Disputt" width="260" height="112" style="width:16rem;height:auto">
+        <a href="../assets/logo/disputt-logo-cream.svg" download>disputt-logo-cream.svg</a>
       </div>
       <div class="ds-demo ds-demo--yellow ds-stack" style="justify-items:center">
         <span class="ds-label">Alternativ · øye i i-prikken</span>
-        <img src="/assets/logo/disputt-logo-eye.svg" alt="Disputt" width="260" height="130" style="width:16rem;height:auto">
-        <a href="/assets/logo/disputt-logo-eye.svg" download>disputt-logo-eye.svg</a>
+        <img src="../assets/logo/disputt-logo-eye.svg" alt="Disputt" width="260" height="130" style="width:16rem;height:auto">
+        <a href="../assets/logo/disputt-logo-eye.svg" download>disputt-logo-eye.svg</a>
       </div>
       <div class="ds-demo ds-stack" style="justify-items:center">
         <span class="ds-label">Appikon</span>
-        <img src="/assets/icons/icon-512.png" alt="Disputt-ikon" width="144" height="144" style="width:9rem;height:9rem;border-radius:2rem">
+        <img src="../assets/icons/icon-512.png" alt="Disputt-ikon" width="144" height="144" style="width:9rem;height:9rem;border-radius:2rem">
         <span class="ds-note">Svart «D» på gult, med et øye i bukten. Genereres med <code>npm run logo</code>.</span>
       </div>
     </div>
@@ -177,10 +177,10 @@
       <div class="ds-demo ds-stack">
         <span class="ds-label">Tilstander</span>
         <div class="ds-row">
-          <div class="ds-motion"><span class="avatar avatar--md avatar--offline"><img src="/assets/avatars/blabaer.svg" alt=""></span><code>--offline</code></div>
-          <div class="ds-motion"><span class="avatar avatar--md"><img class="avatar__crown" src="/assets/art/crown.svg" alt=""><img src="/assets/avatars/sol.svg" alt=""></span><code>krone</code></div>
-          <div class="ds-motion"><span class="avatar avatar--md"><img src="/assets/avatars/drue.svg" alt=""><span class="avatar__badge">3</span></span><code>merke</code></div>
-          <div class="ds-motion"><span class="avatar avatar--md avatar--alive"><img src="/assets/avatars/hand.svg" alt=""></span><code>--alive</code></div>
+          <div class="ds-motion"><span class="avatar avatar--md avatar--offline"><img src="../assets/avatars/blabaer.svg" alt=""></span><code>--offline</code></div>
+          <div class="ds-motion"><span class="avatar avatar--md"><img class="avatar__crown" src="../assets/art/crown.svg" alt=""><img src="../assets/avatars/sol.svg" alt=""></span><code>krone</code></div>
+          <div class="ds-motion"><span class="avatar avatar--md"><img src="../assets/avatars/drue.svg" alt=""><span class="avatar__badge">3</span></span><code>merke</code></div>
+          <div class="ds-motion"><span class="avatar avatar--md avatar--alive"><img src="../assets/avatars/hand.svg" alt=""></span><code>--alive</code></div>
         </div>
       </div>
     </div>
@@ -281,9 +281,9 @@
     <div class="ds-grid ds-grid--wide">
       <div class="card ds-phone">
         <ol class="scoreboard">
-          <li class="score score--leader"><span class="score__rank">1</span><span class="avatar avatar--sm"><img class="avatar__crown" src="/assets/art/crown.svg" alt=""><img src="/assets/avatars/mandarin.svg" alt=""></span><div><div class="score__name">Mari <small>(deg)</small></div><div class="bar" style="--p:.8;--fill:#f8852c"><div class="bar__fill"></div></div></div><span class="score__points">4<span class="score__gain">+1</span></span></li>
-          <li class="score"><span class="score__rank">2</span><span class="avatar avatar--sm"><img src="/assets/avatars/blabaer.svg" alt=""></span><div><div class="score__name">Ola</div><div class="bar" style="--p:.6;--fill:#2e7ece"><div class="bar__fill"></div></div></div><span class="score__points">3</span></li>
-          <li class="score score--offline"><span class="score__rank">3</span><span class="avatar avatar--sm avatar--offline"><img src="/assets/avatars/sky.svg" alt=""></span><div><div class="score__name">Sofie</div><div class="bar bar--zero" style="--p:0;--fill:#88c6db"><div class="bar__fill"></div></div></div><span class="score__points">0</span></li>
+          <li class="score score--leader"><span class="score__rank">1</span><span class="avatar avatar--sm"><img class="avatar__crown" src="../assets/art/crown.svg" alt=""><img src="../assets/avatars/mandarin.svg" alt=""></span><div><div class="score__name">Mari <small>(deg)</small></div><div class="bar" style="--p:.8;--fill:#f8852c"><div class="bar__fill"></div></div></div><span class="score__points">4<span class="score__gain">+1</span></span></li>
+          <li class="score"><span class="score__rank">2</span><span class="avatar avatar--sm"><img src="../assets/avatars/blabaer.svg" alt=""></span><div><div class="score__name">Ola</div><div class="bar" style="--p:.6;--fill:#2e7ece"><div class="bar__fill"></div></div></div><span class="score__points">3</span></li>
+          <li class="score score--offline"><span class="score__rank">3</span><span class="avatar avatar--sm avatar--offline"><img src="../assets/avatars/sky.svg" alt=""></span><div><div class="score__name">Sofie</div><div class="bar bar--zero" style="--p:0;--fill:#88c6db"><div class="bar__fill"></div></div></div><span class="score__points">0</span></li>
         </ol>
       </div>
       <div class="ds-stack"><p class="ds-note">Strekens farge er avatarens aksentfarge. «+1» popper inn etter en halv sekund. Frakoblede spillere blir dempet.</p>
@@ -313,11 +313,11 @@
   <section class="ds-section" id="bevegelse">
     <header><h2>Bevegelse</h2><p>Små, spretne og aldri i veien. Alt slås av for dem som har «reduser bevegelse» på. Trykk på figurene for å spille av.</p></header>
     <div class="ds-grid">
-      <div class="ds-motion"><span class="avatar avatar--lg pop-in" data-replay="pop-in"><img src="/assets/avatars/lime.svg" alt=""></span><strong>pop-in</strong><span class="ds-note">Nye spillere, titler. 0,5 s, spretter forbi.</span></div>
-      <div class="ds-motion"><span class="avatar avatar--lg rise-in" data-replay="rise-in"><img src="/assets/avatars/kirsebaer.svg" alt=""></span><strong>rise-in</strong><span class="ds-note">Tekst og kort som kommer inn. 0,45 s.</span></div>
-      <div class="ds-motion"><span class="avatar avatar--lg avatar--alive"><img src="/assets/avatars/briller.svg" alt=""></span><strong>wobble</strong><span class="ds-note">Avatarer «puster»: ±2° og lett klem, 5 s sløyfe.</span></div>
-      <div class="ds-motion"><span class="avatar avatar--lg" style="animation:pulse 1.2s ease-in-out infinite"><img src="/assets/avatars/sol.svg" alt=""></span><strong>pulse</strong><span class="ds-note">Tiden er ute, venter-plasser.</span></div>
-      <div class="ds-motion"><span class="avatar avatar--lg" style="animation:float 5s ease-in-out infinite"><img src="/assets/avatars/hand.svg" alt=""></span><strong>float</strong><span class="ds-note">Dekor som svever.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg pop-in" data-replay="pop-in"><img src="../assets/avatars/lime.svg" alt=""></span><strong>pop-in</strong><span class="ds-note">Nye spillere, titler. 0,5 s, spretter forbi.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg rise-in" data-replay="rise-in"><img src="../assets/avatars/kirsebaer.svg" alt=""></span><strong>rise-in</strong><span class="ds-note">Tekst og kort som kommer inn. 0,45 s.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg avatar--alive"><img src="../assets/avatars/briller.svg" alt=""></span><strong>wobble</strong><span class="ds-note">Avatarer «puster»: ±2° og lett klem, 5 s sløyfe.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg" style="animation:pulse 1.2s ease-in-out infinite"><img src="../assets/avatars/sol.svg" alt=""></span><strong>pulse</strong><span class="ds-note">Tiden er ute, venter-plasser.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg" style="animation:float 5s ease-in-out infinite"><img src="../assets/avatars/hand.svg" alt=""></span><strong>float</strong><span class="ds-note">Dekor som svever.</span></div>
     </div>
   </section>
 

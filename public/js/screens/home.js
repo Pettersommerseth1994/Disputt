@@ -99,8 +99,9 @@ export function SeatPicker() {
     <div class="stack stack--loose grow" style="justify-content:center">
       <div class="stack stack--tight center">
         <h1>Spillet har startet</h1>
-        <p class="muted">${list.length ? 'Var du allerede med? Velg deg selv for å hoppe inn igjen.' : 'Du kan ikke bli med midt i en runde. Be verten om å starte et nytt spill.'}</p>
+        <p class="muted">${list.length ? 'Var du allerede med? Velg deg selv for å hoppe inn igjen.' : 'Du kan ikke bli med midt i en runde. Var du med før? Da kan det ta et halvt minutt før spillet ser at telefonen din er borte. Prøv igjen straks, eller be verten starte et nytt spill.'}</p>
       </div>
+      ${list.length === 0 && html`<${Button} block variant="cream" onClick=${() => actions.join(seats.code)}>Sjekk på nytt</${Button}>`}
       ${list.length > 0 &&
       html`<div class="player-grid">
         ${list.map(

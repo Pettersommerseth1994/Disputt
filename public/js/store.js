@@ -24,8 +24,11 @@ export function saveSession(session) {
   }
 }
 
+/** Join links look like <site>/?j=ABCD (works on any static host). Older <site>/j/ABCD links still work on the Node server. */
 export function parseRoute(loc = window.location) {
-  const m = loc.pathname.match(/^\/j\/([A-Za-z]{4})\/?$/);
+  const q = new URLSearchParams(loc.search).get('j');
+  if (q && /^[A-Za-z]{4}$/.test(q)) return { page: 'join', code: q.toUpperCase() };
+  const m = loc.pathname.match(/\/j\/([A-Za-z]{4})\/?$/);
   return m ? { page: 'join', code: m[1].toUpperCase() } : { page: 'home' };
 }
 
@@ -36,6 +39,7 @@ export const store = {
   session: loadSession(),
   route: parseRoute(),
   joining: null, // room code we are trying to join
+  creating: false, // p2p: the host is being set up (reserving a room code with the signalling server)
   seats: null, // { code, seats } when the game has already started and a seat can be claimed
   notice: null, // message shown on the home screen (e.g. "game is gone")
   toast: null, // transient error/info

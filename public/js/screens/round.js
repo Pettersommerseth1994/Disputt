@@ -3,6 +3,7 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { serverNow } from '../net.js';
+import { asset } from '../paths.js';
 import { setStore } from '../store.js';
 import { Avatar, Button, RoleStrip, Scoreboard, Timer, TrophyIcon } from '../ui.js';
 import { cx, letter, playerById, useRemaining, vibrate } from '../util.js';
@@ -29,7 +30,7 @@ export function RoleReveal({ view }) {
   return html`<main class=${cx('screen role', impostor ? 'role--impostor' : 'role--loyal')}>
     <div class="role__body grow">
       <p class="eyebrow role__eyebrow">Din rolle</p>
-      <img class="role__art" src=${impostor ? '/assets/art/eye-impostor.svg' : '/assets/art/eye-loyal.svg'} alt="" width="400" height="300" />
+      <img class="role__art" src=${asset(impostor ? 'assets/art/eye-impostor.svg' : 'assets/art/eye-loyal.svg')} alt="" width="400" height="300" />
       <h1 class="role__word pop-in">${impostor ? 'Imposter' : 'Lojal'}</h1>
       ${impostor
         ? html`<div class="role__secret rise-in">
@@ -159,7 +160,7 @@ export function RevealAsker({ view }) {
   useEffect(() => vibrate(r.correct ? [60, 40, 60, 40, 180] : 350), []);
   return html`<main class=${cx('screen reveal', r.correct ? 'reveal--right' : 'reveal--wrong')}>
     <div class="reveal__body grow">
-      <img class="reveal__art" src=${r.correct ? '/assets/art/eye-right.svg' : '/assets/art/eye-wrong.svg'} alt="" width="400" height="300" />
+      <img class="reveal__art" src=${asset(r.correct ? 'assets/art/eye-right.svg' : 'assets/art/eye-wrong.svg')} alt="" width="400" height="300" />
       <h1 class="reveal__word pop-in">${r.correct ? 'Riktig!' : 'Feil!'}</h1>
       <div class="card card--paper center reveal__answer rise-in">
         <p class="eyebrow" style="color:var(--ink);opacity:.65">Riktig svar</p>

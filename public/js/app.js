@@ -67,8 +67,9 @@ export function App() {
   if (s.replaced) screen = html`<${Replaced} />`;
   else if (view) screen = gameScreen(view, s);
   else if (s.seats) screen = html`<${SeatPicker} />`;
+  else if (s.creating) screen = html`<${Connecting} text="Starter spillet …" />`;
   else if (s.session) screen = html`<${Connecting} text="Kobler til spillet ditt …" />`;
-  else if (s.route.page === 'join') screen = html`<${Connecting} text=${`Blir med i ${s.route.code} …`} />`;
+  else if (s.joining || s.route.page === 'join') screen = html`<${Connecting} text=${`Blir med i ${s.joining ?? s.route.code} …`} />`;
   else screen = html`<${Home} />`;
 
   const offline = s.conn !== 'open' && !s.replaced && (s.everOpened || s.conn === 'closed');

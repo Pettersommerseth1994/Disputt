@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WebSocketServer } from 'ws';
-import { Hub } from './hub.js';
+import { Hub } from '../shared/hub.js';
 import { createStaticHandler } from './static.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -26,7 +26,7 @@ const SECURITY_HEADERS = {
     "font-src 'self'",
     "connect-src 'self' ws: wss:",
     "manifest-src 'self'",
-    "base-uri 'none'",
+    "base-uri 'self'",
     "form-action 'none'",
     "frame-ancestors 'none'",
   ].join('; '),
@@ -57,17 +57,22 @@ export function createApp({
   port = Number(process.env.PORT) || 3000,
   host = process.env.HOST || '0.0.0.0',
   publicUrl = process.env.PUBLIC_URL || null,
+  allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
   hubOptions = {},
   tickMs = 100,
   silent = false,
 } = {}) {
   const hub = new Hub(hubOptions);
-  let publicHost = null;
-  try {
-    publicHost = publicUrl ? new URL(publicUrl).host : null;
-  } catch {
-    /* an unusable PUBLIC_URL only costs us the proxy allowance */
-  }
+  const hostOf = (value) => {
+    try {
+      return new URL(/^[a-z]+:\/\//i.test(value) ? value : `https://${value}`).host;
+    } catch {
+      return null; // an unusable value only costs us that allowance
+    }
+  };
+  const publicHost = publicUrl ? hostOf(publicUrl) : null;
+  // Other sites that may open a WebSocket to this server (e.g. a GitHub Pages page configured to use it).
+  const extraHosts = allowedOrigins.map(hostOf).filter(Boolean);
   const statics = createStaticHandler({ publicDir: path.join(ROOT, 'public'), sharedDir: path.join(ROOT, 'shared') });
 
   const handleRequest = (req, res) => {
@@ -116,7 +121,7 @@ export function createApp({
     if (origin) {
       // The page's origin must be this very site. Behind a proxy the Host header may have been rewritten,
       // so also accept the forwarded host and the configured public address.
-      const allowed = new Set([req.headers.host, String(req.headers['x-forwarded-host'] ?? '').split(',')[0].trim(), publicHost].filter(Boolean));
+      const allowed = new Set([req.headers.host, String(req.headers['x-forwarded-host'] ?? '').split(',')[0].trim(), publicHost, ...extraHosts].filter(Boolean));
       try {
         sameOrigin = allowed.has(new URL(origin).host);
       } catch {

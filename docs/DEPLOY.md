@@ -10,8 +10,24 @@ Disputt er **én Node-prosess** som serverer nettsiden *og* spillets WebSocket p
 | `PORT` | `3000` | Port å lytte på. Render, Fly og de fleste plattformer setter denne selv. |
 | `HOST` | `0.0.0.0` | Hvilket nettverkskort. `0.0.0.0` lar telefoner på samme nett koble til. |
 | `PUBLIC_URL` | – | Valgfri. Adressen QR-koden skal peke på (f.eks. `https://disputt.no`). Uten den brukes adressen verten har åpnet, og LAN-adressen hvis verten sitter på `localhost`. |
+| `ALLOWED_ORIGINS` | – | Valgfri, kommaseparert liste med nettadresser som får koble til WebSocket fra en annen side (f.eks. en GitHub Pages-side som bruker denne serveren). |
 
 Helsesjekk: `GET /healthz` svarer `ok`.
+
+## 0. GitHub Pages (peer-to-peer, ingen server)
+
+Repoet bygger og publiserer siden til GitHub Pages ved hver push til `main` ([`.github/workflows/pages.yml`](../.github/workflows/pages.yml)): `https://<bruker>.github.io/Disputt/`. Pages kan ikke kjøre en server, så spillet kjører i **vertens nettleser** og gjestene kobler seg direkte til den. Hvordan det virker, hva som skjer ved avbrudd og begrensningene står i **[P2P.md](P2P.md)**.
+
+Gratis GitHub-kontoer får bare Pages fra *offentlige* repoer.
+
+### Pages + Render (alltid-på server)
+
+Vil du ha en server som alltid står (og slippe at alt henger på vertens telefon), kan Pages-siden bruke Render-serveren:
+
+1. Sett opp Render som under (steg 2).
+2. På Render: miljøvariabelen `ALLOWED_ORIGINS=https://<bruker>.github.io` (serveren godtar da nettsider derfra).
+3. På GitHub: Settings → Secrets and variables → Actions → Variables → ny variabel `DISPUTT_SERVER_URL` = `wss://<din-render-adresse>/ws`.
+4. Actions → **Pages** → *Run workflow*. Siden bruker nå serveren. Slett variabelen for å gå tilbake til peer-to-peer.
 
 ## 1. På din egen maskin (samme Wi‑Fi)
 

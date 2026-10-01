@@ -1,5 +1,5 @@
 // Style guide behaviour. Colours are read from the live CSS tokens, so this page cannot drift from tokens.css.
-import { AVATARS } from '/shared/avatars.mjs';
+import { AVATARS } from '../shared/avatars.mjs';
 
 const GROUPS = {
   'sw-burgundy': [
@@ -82,12 +82,12 @@ for (const [id, tokens] of Object.entries(GROUPS)) {
 const avatarHost = document.getElementById('avatar-grid');
 if (avatarHost) {
   avatarHost.innerHTML = AVATARS.map(
-    (a) => `<div class="ds-motion"><span class="avatar avatar--lg avatar--alive"><img src="/assets/avatars/${a.id}.svg" alt="" width="400" height="400"></span><strong>${a.name}</strong><span class="ds-note"><code>${a.id}</code> <span style="color:${a.accent}">●</span> ${a.accent}</span></div>`,
+    (a) => `<div class="ds-motion"><span class="avatar avatar--lg avatar--alive"><img src="../assets/avatars/${a.id}.svg" alt="" width="400" height="400"></span><strong>${a.name}</strong><span class="ds-note"><code>${a.id}</code> <span style="color:${a.accent}">●</span> ${a.accent}</span></div>`,
   ).join('');
 }
 const sizes = document.getElementById('avatar-sizes');
 if (sizes) {
-  sizes.innerHTML = ['xs', 'sm', 'md', 'lg'].map((s) => `<div class="ds-motion"><span class="avatar avatar--${s}"><img src="/assets/avatars/mandarin.svg" alt=""></span><code>avatar--${s}</code></div>`).join('');
+  sizes.innerHTML = ['xs', 'sm', 'md', 'lg'].map((s) => `<div class="ds-motion"><span class="avatar avatar--${s}"><img src="../assets/avatars/mandarin.svg" alt=""></span><code>avatar--${s}</code></div>`).join('');
 }
 
 // ---- screen gallery (images come from `npm run shots -- --docs`; missing ones are dropped silently)
@@ -110,7 +110,7 @@ const SCREENS = [
 const gallery = document.getElementById('screen-gallery');
 if (gallery) {
   gallery.innerHTML = SCREENS.map(
-    ([key, title, text]) => `<figure><img loading="lazy" src="/design-system/screens/${key}.webp" alt="${title}" width="390" height="844"><figcaption><strong>${title}</strong>${text}</figcaption></figure>`,
+    ([key, title, text]) => `<figure><img loading="lazy" src="screens/${key}.webp" alt="${title}" width="390" height="844"><figcaption><strong>${title}</strong>${text}</figcaption></figure>`,
   ).join('');
   gallery.querySelectorAll('img').forEach((img) => img.addEventListener('error', () => img.closest('figure')?.remove()));
 }

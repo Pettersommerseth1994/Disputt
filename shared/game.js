@@ -6,7 +6,7 @@
 // Round flow:  ROLE (5 s) -> QUESTION (discussion timer) -> LOCKED (5 s countdown) -> REVEAL (asker only)
 //              -> SUMMARY (scores applied) -> next ROLE ...  or FINISHED when someone leads at/above the target.
 
-import { isAvatarId } from '../shared/avatars.mjs';
+import { isAvatarId } from './avatars.mjs';
 import { LETTERS, QUESTIONS } from './questions.js';
 import { cleanName, defaultRandom, makeId, makeToken, shuffle } from './util.js';
 
@@ -74,6 +74,69 @@ export class Room {
     this.deck = [];
     this.lastQuestionIndex = -1;
     this.createdAt = this.lastActivity = now();
+  }
+
+  // ---------------------------------------------------------------- persistence
+
+  /**
+   * Plain-JSON copy of everything needed to carry on later. The peer-to-peer host keeps this in sessionStorage, so a
+   * reload (or a browser that discards the tab) does not end the game. `JSON.stringify(room)` uses it too.
+   */
+  toJSON() {
+    return {
+      v: 1,
+      code: this.code,
+      createdAt: this.createdAt,
+      lastActivity: this.lastActivity,
+      hostId: this.hostId,
+      creatorId: this.creatorId,
+      phase: this.phase,
+      round: this.round,
+      target: this.target,
+      winnerIds: this.winnerIds,
+      history: this.history,
+      deck: this.deck,
+      lastQuestionIndex: this.lastQuestionIndex,
+      questionCount: this.questions.length,
+      hostAwaySince: this.hostAwaySince,
+      players: [...this.players.values()].map((p) => ({
+        id: p.id,
+        token: p.token,
+        name: p.name,
+        avatar: p.avatar,
+        score: p.score,
+        joinedAt: p.joinedAt,
+        lastSeen: p.lastSeen,
+      })),
+      current: this.current,
+    };
+  }
+
+  /** Rebuilds a room from `toJSON()`. Everybody starts out disconnected; their phones reconnect with their tokens. */
+  static fromJSON(data, options = {}) {
+    if (!data || data.v !== 1 || typeof data.code !== 'string' || !Array.isArray(data.players)) {
+      throw new Error('Unknown room snapshot');
+    }
+    const copy = JSON.parse(JSON.stringify(data)); // never share state with the caller
+    const room = new Room({ ...options, code: copy.code });
+    room.createdAt = copy.createdAt;
+    room.lastActivity = room.clock();
+    room.hostId = copy.hostId;
+    room.creatorId = copy.creatorId;
+    room.phase = copy.phase;
+    room.round = copy.round;
+    room.target = copy.target;
+    room.winnerIds = copy.winnerIds ?? [];
+    room.history = copy.history ?? [];
+    room.current = copy.current ?? null;
+    room.hostAwaySince = null;
+    // deck positions only make sense for the same question bank
+    const sameBank = copy.questionCount === room.questions.length;
+    room.deck = sameBank ? copy.deck ?? [] : [];
+    room.lastQuestionIndex = sameBank ? copy.lastQuestionIndex ?? -1 : -1;
+    const now = room.clock();
+    for (const p of copy.players) room.players.set(p.id, { ...p, connected: false, lastSeen: now });
+    return room;
   }
 
   // ---------------------------------------------------------------- players

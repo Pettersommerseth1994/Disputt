@@ -28,7 +28,11 @@ const cacheControl = (ext, rel) => {
   return 'no-cache'; // html/css/js: always revalidate (cheap thanks to ETag) so deploys show up immediately
 };
 
-export function createStaticHandler({ publicDir, sharedDir }) {
+/**
+ * `sharedExtensions` limits what /shared/ may serve. The Node server only shares the avatar roster (.mjs): the game engine
+ * and the question bank in the same folder must not be handed to players. A static build serves the lot (see tools/pages).
+ */
+export function createStaticHandler({ publicDir, sharedDir, sharedExtensions = ['.mjs'] }) {
   const compressed = new Map(); // key -> Buffer
 
   function resolve(urlPath) {
@@ -36,7 +40,7 @@ export function createStaticHandler({ publicDir, sharedDir }) {
     if (rel.includes('\0')) return null;
     if (rel.startsWith('/shared/')) {
       const file = path.join(sharedDir, path.normalize(rel.slice('/shared/'.length)));
-      return file.startsWith(sharedDir + path.sep) && file.endsWith('.mjs') ? { file, rel } : null;
+      return file.startsWith(sharedDir + path.sep) && sharedExtensions.some((ext) => file.endsWith(ext)) ? { file, rel } : null;
     }
     if (rel.endsWith('/')) rel += 'index.html';
     const file = path.join(publicDir, path.normalize(rel));
@@ -58,19 +62,19 @@ export function createStaticHandler({ publicDir, sharedDir }) {
     try {
       stat = fs.statSync(file);
       if (stat.isDirectory()) {
+        // Relative URLs on the page (css/…, ../assets/…) only work from the directory form of the address.
+        if (!urlPath.endsWith('/')) {
+          const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+          res.writeHead(301, { Location: `${urlPath}/${q}`, 'Cache-Control': 'no-cache' });
+          return res.end();
+        }
         file = path.join(file, 'index.html');
         rel = rel.replace(/\/?$/, '/index.html');
         stat = fs.statSync(file);
       }
     } catch {
       if (!fallback) return notFound(res);
-      file = path.join(publicDir, 'index.html');
-      rel = '/index.html';
-      try {
-        stat = fs.statSync(file);
-      } catch {
-        return notFound(res);
-      }
+      return serveAppShell(req, res);
     }
 
     const ext = path.extname(file).toLowerCase();
@@ -108,6 +112,20 @@ export function createStaticHandler({ publicDir, sharedDir }) {
     }
     res.writeHead(200, { ...headers, 'Content-Encoding': encoding, 'Content-Length': body.length });
     res.end(body);
+  }
+
+  /** The app page for links like /j/ABCD: the same index.html, with <base> so its relative URLs still point at the root. */
+  function serveAppShell(req, res) {
+    let html;
+    try {
+      html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+    } catch {
+      return notFound(res);
+    }
+    html = html.replace('<head>', '<head>\n  <base href="/">');
+    const body = Buffer.from(html);
+    res.writeHead(200, { 'Content-Type': TYPES['.html'], 'Cache-Control': 'no-cache', 'Content-Length': body.length });
+    res.end(req.method === 'HEAD' ? undefined : body);
   }
 
   return { serve };

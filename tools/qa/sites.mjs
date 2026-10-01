@@ -1,0 +1,52 @@
+// The two ways Disputt can be served, for the browser tests:
+//   startNodeSite() - the Node server (WebSocket mode), exactly what `npm start` runs.
+//   startP2PSite()  - the *built* static site (tools/pages/build.mjs) plus a local PeerJS signalling server, so the
+//                     whole peer-to-peer flow, the build output and its Content-Security-Policy are tested offline.
+import http from 'node:http';
+import net from 'node:net';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createApp } from '../../server/index.js';
+import { createStaticHandler } from '../../server/static.js';
+import { build } from '../pages/build.mjs';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+export const FAST = { roleMs: 1600, countdownMs: 1600 };
+
+export async function startNodeSite() {
+  const app = createApp({ port: 0, host: '127.0.0.1', silent: true, tickMs: 50, hubOptions: { timings: FAST } });
+  const port = await app.listen();
+  return { mode: 'server', base: `http://127.0.0.1:${port}`, stop: () => app.close() };
+}
+
+const freePort = () =>
+  new Promise((resolve, reject) => {
+    const s = net.createServer();
+    s.listen(0, '127.0.0.1', () => {
+      const { port } = s.address();
+      s.close(() => resolve(port));
+    });
+    s.on('error', reject);
+  });
+
+export async function startP2PSite({ out = 'tmp/dist-p2p' } = {}) {
+  const { PeerServer } = await import('peer');
+  const peerPort = await freePort();
+  const peerServer = PeerServer({ port: peerPort, path: '/peerjs', allow_discovery: false });
+  const dist = path.resolve(ROOT, out);
+  await build(['--out', dist, '--mode', 'p2p', '--peer-host', '127.0.0.1', '--peer-port', String(peerPort), '--peer-path', '/peerjs', '--peer-secure', '0', '--timings', JSON.stringify(FAST)]);
+  const statics = createStaticHandler({ publicDir: dist, sharedDir: path.join(dist, 'shared'), sharedExtensions: ['.mjs', '.js'] });
+  const server = http.createServer((req, res) => statics.serve(req, res, new URL(req.url, 'http://x').pathname));
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  return {
+    mode: 'p2p',
+    base: `http://127.0.0.1:${server.address().port}`,
+    peerPort,
+    stop: async () => {
+      server.closeAllConnections?.();
+      server.close();
+      peerServer.closeAllConnections?.();
+      peerServer.close?.();
+    },
+  };
+}

@@ -39,12 +39,25 @@ describe('static files', () => {
     assert.match(res.headers.get('content-security-policy'), /connect-src 'self' ws: wss:/);
   });
 
-  it('serves the app for QR-code links (/j/ABCD) so the client can join', async () => {
+  it('serves the app for legacy join links (/j/ABCD), with a <base> so relative URLs still resolve', async () => {
     for (const path of ['/j/ABCD', '/j/abcd', '/j/ABCD/']) {
       const res = await get(path);
       assert.equal(res.status, 200, path);
-      assert.match(await res.text(), /<div id="app">/);
+      const html = await res.text();
+      assert.match(html, /<div id="app">/);
+      assert.match(html, /<base href="\/">/);
     }
+    assert.doesNotMatch(await (await get('/')).text(), /<base /, 'the normal page needs no <base>');
+  });
+
+  it('serves ?j=CODE links from the normal page, and redirects directories to their trailing slash', async () => {
+    const res = await get('/?j=ABCD');
+    assert.equal(res.status, 200);
+    assert.match(await res.text(), /<div id="app">/);
+    const redirect = await get('/design-system?x=1');
+    assert.equal(redirect.status, 301);
+    assert.equal(redirect.headers.get('location'), '/design-system/?x=1');
+    assert.equal((await get('/design-system/')).status, 200);
   });
 
   it('does not fall back to the app for unknown files', async () => {
@@ -164,6 +177,18 @@ describe('websocket origin check behind a proxy', () => {
       await assert.rejects(TestClient.connect(configuredPort, { origin: 'https://evil.example' }), (e) => e.status === 403);
     } finally {
       await configured.close();
+    }
+  });
+
+  it('accepts other sites listed in ALLOWED_ORIGINS (a Pages site that uses this server)', async () => {
+    const shared = createApp({ port: 0, host: '127.0.0.1', silent: true, allowedOrigins: ['https://pettersommerseth1994.github.io', 'friend.example'] });
+    const sharedPort = await shared.listen();
+    try {
+      (await TestClient.connect(sharedPort, { origin: 'https://pettersommerseth1994.github.io' })).close();
+      (await TestClient.connect(sharedPort, { origin: 'https://friend.example' })).close();
+      await assert.rejects(TestClient.connect(sharedPort, { origin: 'https://evil.example' }), (e) => e.status === 403);
+    } finally {
+      await shared.close();
     }
   });
 });
