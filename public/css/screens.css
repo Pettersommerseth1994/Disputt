@@ -5,24 +5,24 @@
 
 .screen { gap: var(--s-4); }
 .screen > .grow { min-height: 0; }
-.dock { --page-bg: var(--burgundy-700); background: linear-gradient(to top, var(--page-bg) 62%, transparent); }
 
 /* ---- Page themes: the whole viewport takes the screen's colour ---------------- */
-html[data-theme='impostor'] { --page-bg: var(--red); background: var(--red); }
-html[data-theme='loyal'] { --page-bg: var(--blue); background: var(--blue); }
-html[data-theme='right'] { --page-bg: var(--lime); background: var(--lime); }
-html[data-theme='wrong'] { --page-bg: var(--pink); background: var(--pink); }
-html[data-theme='impostor'] body { background: var(--tex-grain), var(--tex-light), var(--red); }
-html[data-theme='loyal'] body { background: var(--tex-grain), var(--tex-light), var(--blue); }
-html[data-theme='right'] body { background: var(--tex-grain), var(--tex-light), var(--lime); }
-html[data-theme='wrong'] body { background: var(--tex-grain), var(--tex-light), var(--pink); }
+html[data-theme='impostor'] { --theme-bg: var(--red); background: var(--red); }
+html[data-theme='loyal'] { --theme-bg: var(--blue); background: var(--blue); }
+html[data-theme='right'] { --theme-bg: var(--lime); background: var(--lime); }
+html[data-theme='wrong'] { --theme-bg: var(--pink); background: var(--pink); }
+html[data-theme] .dock { --page-bg: var(--theme-bg); }
+html[data-theme='impostor'] body { background: var(--tex-grain), var(--tex-light-soft), var(--red); }
+html[data-theme='loyal'] body { background: var(--tex-grain), var(--tex-light-soft), var(--blue); }
+html[data-theme='right'] body { background: var(--tex-grain), var(--tex-light-soft), var(--lime); }
+html[data-theme='wrong'] body { background: var(--tex-grain), var(--tex-light-soft), var(--pink); }
 html[data-theme='impostor'] .dock,
 html[data-theme='loyal'] .dock,
 html[data-theme='right'] .dock,
-html[data-theme='wrong'] .dock { background: linear-gradient(to top, var(--page-bg) 62%, transparent); }
+html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 
 /* ---- Home ------------------------------------------------------------------- */
-.home { overflow: hidden; }
+.home { overflow: hidden; overflow: clip; } /* clip (no scroll container) where supported, so the sticky dock keeps working */
 .home__hero {
   display: flex;
   flex-direction: column;
@@ -36,8 +36,9 @@ html[data-theme='wrong'] .dock { background: linear-gradient(to top, var(--page-
 .home__notice { color: var(--ink); font-weight: 700; }
 .decor--home-a { top: 1rem; left: -1.5rem; --size: 6.5rem; }
 .decor--home-b { top: 4.4rem; right: -1.8rem; --size: 6rem; }
-.decor--home-c { bottom: 17rem; left: -0.9rem; --size: 4.4rem; }
-.decor--home-d { bottom: 20.5rem; right: -0.6rem; --size: 4.2rem; }
+.decor--home-c { bottom: 15.2rem; left: -0.9rem; --size: 4.4rem; }
+.decor--home-d { bottom: 14rem; right: -0.7rem; --size: 4.2rem; }
+@media (max-height: 740px) { .decor--home-c, .decor--home-d { display: none; } }
 
 /* ---- Lobby ------------------------------------------------------------------ */
 .qr { width: min(62vw, 14rem); aspect-ratio: 1; margin-inline: auto; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 3px var(--ink); }
@@ -87,7 +88,8 @@ html[data-theme='wrong'] .dock { background: linear-gradient(to top, var(--page-
   justify-content: center;
   gap: var(--s-4);
 }
-.role__eyebrow { color: rgba(255, 246, 227, 0.85); }
+.role__eyebrow { color: rgba(255, 246, 227, 0.92); }
+.role .lead, .role__next { text-shadow: 0 1px 0 rgba(20, 4, 10, 0.4), 0 2px 6px rgba(20, 4, 10, 0.25); }
 .role__art { width: min(78vw, 17rem); margin-bottom: calc(var(--s-4) * -0.5); animation: wobble 4s ease-in-out infinite; }
 .role__word {
   font-size: clamp(3rem, 14.5vw, 5.2rem);
@@ -179,7 +181,7 @@ html[data-theme='wrong'] .dock { background: linear-gradient(to top, var(--page-
 .impostor-card__name { margin: 0; font-size: 2rem; line-height: 1.05; overflow-wrap: anywhere; }
 
 /* ---- Finale -------------------------------------------------------------------------------- */
-.finale { position: relative; z-index: 2; }
+.finale { position: relative; z-index: 0; isolation: isolate; }
 .finale__hero { justify-content: center; align-items: center; padding-top: var(--s-6); }
 .finale__hero .avatar--xl { margin-top: 3.2rem; }
 

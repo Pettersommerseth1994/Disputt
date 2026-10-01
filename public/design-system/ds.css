@@ -1,0 +1,95 @@
+/* Style guide chrome only. The components themselves come from /css/*.css, exactly as in the game. */
+
+body.ds { padding: 0; }
+.ds-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1.1rem;
+  background: rgba(61, 10, 24, 0.94);
+  box-shadow: 0 3px 0 var(--edge);
+  backdrop-filter: blur(6px);
+}
+.ds-top .logo-sticker { flex: none; }
+.ds-nav { display: flex; gap: 0.35rem; overflow-x: auto; scrollbar-width: none; }
+.ds-nav::-webkit-scrollbar { display: none; }
+.ds-nav a {
+  flex: none;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--cream);
+  text-decoration: none;
+  background: rgba(255, 246, 227, 0.1);
+}
+.ds-nav a:hover, .ds-nav a:focus-visible { color: var(--ink); background: var(--yellow); }
+
+.ds-wrap { max-width: 74rem; margin: 0 auto; padding: 2rem 1.1rem 5rem; display: grid; gap: 4.5rem; }
+.ds-hero { display: grid; gap: 1.2rem; justify-items: start; padding-top: 1rem; }
+.ds-hero h1 { font-size: clamp(2.8rem, 9vw, 5.4rem); text-shadow: 4px 5px 0 var(--edge); }
+.ds-hero p { max-width: 40rem; }
+.ds-section { display: grid; gap: 1.5rem; scroll-margin-top: 5rem; }
+.ds-section > header { display: grid; gap: 0.5rem; }
+.ds-section > header p { max-width: 44rem; color: var(--fg-muted); }
+.ds-section h2 { font-size: clamp(2rem, 6vw, 3rem); }
+.ds-section h3 { font-size: 1.35rem; margin-top: 0.5rem; }
+.ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1rem; }
+.ds-grid--wide { grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); }
+.ds-grid--tight { grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.ds-stack { display: grid; gap: 1rem; }
+.ds-demo { padding: 1.4rem; border-radius: var(--r-card); background: rgba(20, 4, 10, 0.28); box-shadow: inset 0 0 0 2px rgba(255, 246, 227, 0.08); }
+.ds-demo--light { color: var(--ink); background: var(--tex-grain), var(--cream); }
+.ds-demo--yellow { color: var(--ink); background: var(--tex-grain), var(--tex-light), var(--yellow); }
+.ds-label { font-size: var(--fs-micro); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); }
+.ds-demo--light .ds-label, .ds-demo--yellow .ds-label { color: rgba(28, 10, 16, 0.65); }
+.ds-note { font-size: var(--fs-small); color: var(--fg-muted); max-width: 46rem; }
+code, .ds code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.82em; padding: 0.12em 0.45em; border-radius: 6px; background: rgba(20, 4, 10, 0.45); color: var(--yellow-pale); }
+.ds-demo--light code, .ds-demo--yellow code { color: var(--ink); background: rgba(28, 10, 16, 0.12); }
+pre.ds-code { margin: 0; padding: 1rem 1.2rem; overflow-x: auto; border-radius: var(--r-input); font: 0.82rem/1.55 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; color: var(--yellow-pale); background: rgba(20, 4, 10, 0.55); }
+
+/* swatches */
+.ds-swatch { display: grid; border-radius: var(--r-card); overflow: hidden; background: var(--surface-deep); box-shadow: var(--shadow-2); }
+.ds-swatch__chip { min-height: 5.2rem; background: var(--tex-grain), var(--tex-light), var(--c); box-shadow: inset 0 0 0 2px rgba(255, 246, 227, 0.12); }
+.ds-swatch__meta { display: grid; gap: 0.1rem; padding: 0.65rem 0.8rem 0.8rem; }
+.ds-swatch__meta strong { font-family: var(--font-display); font-weight: 900; font-size: 1.05rem; }
+.ds-swatch__meta span { font-size: 0.8rem; color: var(--fg-muted); }
+.ds-swatch__meta .ds-contrast { display: flex; gap: 0.4rem; margin-top: 0.3rem; font-size: 0.72rem; font-weight: 700; }
+.ds-contrast i { font-style: normal; padding: 0.05rem 0.45rem; border-radius: 99px; }
+.ds-contrast .on-cream { color: var(--cream); background: rgba(255, 246, 227, 0.14); }
+.ds-contrast .on-ink { color: var(--ink); background: var(--cream); }
+
+/* type */
+.ds-type { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; padding: 1rem 0; border-top: 2px dashed rgba(255, 246, 227, 0.14); }
+.ds-type:first-child { border-top: 0; }
+@media (max-width: 40rem) { .ds-type { grid-template-columns: 1fr; gap: 0.3rem; } }
+
+/* shape + shadow + texture demos */
+.ds-shape { display: grid; place-items: center; min-height: 6.5rem; padding: 1rem; font-family: var(--font-display); font-weight: 900; font-size: 1.1rem; color: var(--ink); background: var(--tex-grain), var(--tex-light), var(--yellow); text-align: center; }
+.ds-tex { min-height: 7rem; border-radius: var(--r-card); padding: 0.8rem; font-weight: 700; font-size: var(--fs-small); }
+
+.ds-demo .timer { font-size: 3.6rem; }
+
+/* phone-width preview boxes */
+.ds-phone { width: min(100%, 24rem); display: grid; gap: 0.9rem; }
+.ds-sheet-preview .sheet { position: static; animation: none; width: 100%; max-height: none; border-radius: var(--r-card); box-shadow: var(--shadow-2); }
+.ds-sheet-preview .sheet-backdrop { position: static; animation: none; background: none; display: block; }
+.ds-banner-preview .banner { position: static; margin: 0; border-radius: var(--r-input); }
+.ds-toast-preview .toast { position: static; transform: none; animation: none; width: 100%; }
+
+/* screens gallery */
+.ds-screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 1.4rem 1rem; }
+.ds-screens figure { margin: 0; display: grid; gap: 0.5rem; }
+.ds-screens img { width: 100%; height: auto; border-radius: 22px; box-shadow: 0 0 0 3px rgba(255, 246, 227, 0.12), var(--shadow-2); background: var(--burgundy-900); aspect-ratio: 390 / 844; object-fit: cover; object-position: top; }
+.ds-screens figcaption { font-size: var(--fs-small); color: var(--fg-muted); }
+.ds-screens figcaption strong { display: block; color: var(--cream); }
+
+/* motion demos */
+.ds-motion { display: grid; justify-items: center; gap: 0.6rem; text-align: center; }
+.ds-motion .avatar { cursor: pointer; }
+.ds-do { border-left: 5px solid var(--lime); padding-left: 1rem; }
+.ds-dont { border-left: 5px solid var(--pink); padding-left: 1rem; }

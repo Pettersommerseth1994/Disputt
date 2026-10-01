@@ -1,7 +1,7 @@
 // Name + avatar. Used when joining, and again when someone wants to change their profile in the lobby.
 
 import { AVATARS } from '/shared/avatars.mjs';
-import { html, useEffect, useState } from '../vendor/htm-preact.js';
+import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore } from '../store.js';
 import { Avatar, Button } from '../ui.js';
@@ -14,23 +14,36 @@ export function Profile({ view, editing }) {
   const [name, setName] = useState(you.name ?? '');
   const [avatar, setAvatar] = useState(you.avatar ?? null);
   const [busy, setBusy] = useState(false);
+  const submitted = useRef(false);
 
   // someone else grabbed my avatar while I was choosing
   useEffect(() => {
     if (avatar && takenBy.has(avatar)) setAvatar(null);
   }, [view.players]);
 
-  // the server answered (either way): allow another try
-  useEffect(() => setBusy(false), [view]);
-
   const trimmed = name.trim();
   const ready = trimmed.length > 0 && avatar && !busy;
+
+  // The server accepted the profile: leave edit mode. (A rejection arrives as a toast instead, and we stay here.)
+  useEffect(() => {
+    if (submitted.current && editing && you.name === trimmed && you.avatar === avatar) {
+      submitted.current = false;
+      setStore({ editing: false });
+    }
+    setBusy(false);
+  }, [view]);
+
   const submit = (e) => {
     e.preventDefault();
     if (!ready) return;
+    submitted.current = true;
     setBusy(true);
+    setTimeout(() => setBusy(false), 2500); // a rejection does not change the view, so never stay locked
     actions.profile(trimmed, avatar);
-    if (editing) setStore({ editing: false });
+  };
+  const edit = (fn) => (value) => {
+    setBusy(false);
+    fn(value);
   };
 
   return html`<main class="screen">
@@ -46,7 +59,7 @@ export function Profile({ view, editing }) {
           id="name"
           class="input"
           value=${name}
-          onInput=${(e) => setName(e.currentTarget.value)}
+          onInput=${edit((e) => setName(e.currentTarget.value))}
           maxlength=${NAME_MAX}
           autocomplete="off"
           autocapitalize="words"
@@ -71,7 +84,7 @@ export function Profile({ view, editing }) {
               aria-checked=${avatar === a.id}
               aria-label=${taken ? `${a.name} (tatt av ${takenBy.get(a.id)})` : a.name}
               disabled=${taken}
-              onClick=${() => setAvatar(a.id)}
+              onClick=${edit(() => setAvatar(a.id))}
             >
               <${Avatar} id=${a.id} size="md" />
             </button>`;
@@ -80,7 +93,7 @@ export function Profile({ view, editing }) {
       </div>
 
       <div class="dock">
-        <${Button} block type="submit" disabled=${!ready}>${editing ? 'Lagre' : 'Klar!'}</${Button}>
+        <${Button} block type="submit" disabled=${!ready}>${you.ready ? 'Lagre' : 'Klar!'}</${Button}>
         ${editing && html`<${Button} block variant="ghost" onClick=${() => setStore({ editing: false })}>Avbryt</${Button}>`}
       </div>
     </form>

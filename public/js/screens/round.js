@@ -52,9 +52,8 @@ const PRESETS = [2, 6, 10];
 
 export function Question({ view }) {
   const { you, question } = view;
-  const [sel, setSel] = useState(view.selected);
+  const [sel, setSel] = useState(view.selected); // restored from the server after a reload, then local
   const [preset, setPreset] = useState(6);
-  useEffect(() => setSel(view.selected), [view.selected]);
   const ms = useRemaining(view.discussion.endsAt);
 
   const pick = (i) => {

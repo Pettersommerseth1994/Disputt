@@ -3,6 +3,7 @@
 import { saveSession, setStore, store, toast } from './store.js';
 
 let ws = null;
+let lastMessageAt = Date.now();
 let retry = 0;
 let retryTimer = null;
 let pingTimer = null;
@@ -40,6 +41,8 @@ export function connect() {
     while (outbox.length) sock.send(JSON.stringify(outbox.shift()));
   };
   sock.onmessage = (e) => {
+    if (sock !== ws) return; // a socket we already gave up on
+    lastMessageAt = Date.now();
     let msg;
     try {
       msg = JSON.parse(e.data);
@@ -72,7 +75,21 @@ export function reconnectNow() {
     retry = 0;
     connect();
   } else if (ws.readyState === WebSocket.OPEN) {
-    ping(); // a half-open socket fails to answer; the close handler then reconnects
+    // After a long sleep the socket can look open while being dead. Ask for a pong; if none arrives, start over.
+    const asked = Date.now();
+    ping();
+    setTimeout(() => {
+      if (stopped || lastMessageAt >= asked || ws?.readyState !== WebSocket.OPEN) return;
+      const dead = ws;
+      ws = null; // its handlers now ignore everything
+      try {
+        dead.close();
+      } catch {
+        /* already gone */
+      }
+      retry = 0;
+      connect();
+    }, 2500);
   }
 }
 
@@ -109,7 +126,7 @@ function onMessage(msg) {
     }
     case 'state':
       syncClock(msg.view.now);
-      setStore({ view: msg.view });
+      setStore({ view: msg.view, editing: msg.view.phase === 'lobby' ? store.editing : false });
       break;
     case 'removed': {
       saveSession(null);
@@ -141,13 +158,11 @@ function onError(msg) {
   switch (msg.code) {
     case 'bad_token':
     case 'room_not_found':
-      if (store.session) {
-        saveSession(null);
-        setStore({ session: null, view: null, joining: null, notice: 'Fant ikke spillet ditt igjen. Start et nytt eller skann koden på nytt.', route: { page: 'home' } });
-      } else {
-        setStore({ joining: null });
-        toast(msg.message);
-      }
+      forget(store.session ? 'Fant ikke spillet ditt igjen. Start et nytt eller skann koden på nytt.' : msg.message);
+      break;
+    case 'full':
+    case 'busy':
+      forget(msg.message);
       break;
     case 'started':
       setStore({ joining: null, seats: { code: store.joining ?? store.route.code, seats: msg.seats ?? [] } });

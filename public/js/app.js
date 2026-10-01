@@ -15,12 +15,13 @@ function themeOf(view) {
   if (view.phase === 'reveal' && view.you.isAsker && view.reveal) return view.reveal.correct ? 'right' : 'wrong';
   return '';
 }
-const THEME_COLORS = { '': '#6a1428', impostor: '#d71f2f', loyal: '#2a6fdb', right: '#7eba2d', wrong: '#f48b8f' };
+const THEME_COLORS = { '': '#6a1428', impostor: '#d71f2f', loyal: '#2868d4', right: '#7eba2d', wrong: '#f48b8f' };
 
 function gameScreen(view, s) {
   switch (view.phase) {
     case 'lobby':
-      return !view.you.ready || s.editing ? html`<${Profile} view=${view} editing=${s.editing} />` : html`<${Lobby} view=${view} />`;
+      // Guests pick a profile first. The host lands straight on the QR code and picks theirs from the lobby.
+      return s.editing || (!view.you.ready && !view.you.isHost) ? html`<${Profile} view=${view} editing=${s.editing} />` : html`<${Lobby} view=${view} />`;
     case 'role':
       return html`<${RoleReveal} view=${view} />`;
     case 'question':
@@ -52,6 +53,9 @@ export function App() {
   const s = useStore();
   const { view } = s;
   useWakeLock(Boolean(view));
+
+  // every new screen starts at the top
+  useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.you?.ready, s.editing]);
 
   const theme = themeOf(view);
   useEffect(() => {

@@ -1,6 +1,6 @@
 // Tiny global store: one mutable state object, components subscribe through `useStore()`.
 
-import { useEffect, useState } from './vendor/htm-preact.js';
+import { useEffect, useRef, useState } from './vendor/htm-preact.js';
 
 const SESSION_KEY = 'disputt:session';
 
@@ -46,17 +46,23 @@ export const store = {
 };
 
 const listeners = new Set();
+let version = 0;
 
 export function setStore(patch) {
   Object.assign(store, patch);
+  version++;
   for (const l of listeners) l();
 }
 
 export function useStore() {
   const [, force] = useState(0);
+  const renderedAt = useRef(version);
+  renderedAt.current = version;
   useEffect(() => {
     const l = () => force((n) => n + 1);
     listeners.add(l);
+    // The store may have changed between this render and the subscription (e.g. the socket opened); catch up.
+    if (version !== renderedAt.current) l();
     return () => listeners.delete(l);
   }, []);
   return store;

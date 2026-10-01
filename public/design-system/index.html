@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Disputt – designsystem</title>
+  <meta name="description" content="Disputts designsystem: farger, typografi, kritt-teksturer, avatarer og komponenter.">
+  <meta name="theme-color" content="#3d0a18">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/fraunces-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/lora.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/screens.css">
+  <link rel="stylesheet" href="/design-system/ds.css">
+  <script type="module" src="/design-system/ds.js"></script>
+</head>
+<body class="ds">
+
+<header class="ds-top">
+  <a class="logo-sticker logo-sticker--sm" href="/design-system/" aria-label="Designsystem"><img src="/assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130"></a>
+  <nav class="ds-nav" aria-label="Seksjoner">
+    <a href="#prinsipper">Prinsipper</a>
+    <a href="#logo">Logo</a>
+    <a href="#farger">Farger</a>
+    <a href="#typografi">Typografi</a>
+    <a href="#form">Form og tekstur</a>
+    <a href="#avatarer">Avatarer</a>
+    <a href="#komponenter">Komponenter</a>
+    <a href="#skjermer">Skjermer</a>
+    <a href="#bevegelse">Bevegelse</a>
+    <a href="#tone">Tone</a>
+    <a href="#tilgjengelighet">Tilgjengelighet</a>
+  </nav>
+</header>
+
+<main class="ds-wrap">
+
+  <!-- ================================================================ intro -->
+  <section class="ds-hero">
+    <p class="eyebrow">Designsystem · versjon 1</p>
+    <h1>Kritt på burgunder.</h1>
+    <p class="lead">Disputt er et sosialt spill om å lure – og å avsløre. Utseendet er surrealistisk og lekent, tegnet med fargestifter på mørk burgunder: flate kritt-farger med strek og korn oppå, former som aldri er helt rette, og øyne som ser på deg.</p>
+    <p class="ds-note">Alt på denne siden bruker de samme CSS-filene som spillet (<code>/css/tokens.css</code>, <code>base.css</code>, <code>components.css</code>, <code>screens.css</code>). Endrer du en token, endres både spillet og denne siden.</p>
+  </section>
+
+  <!-- ================================================================ principles -->
+  <section class="ds-section" id="prinsipper">
+    <header><h2>Prinsipper</h2><p>Fire regler som får alt til å høre sammen.</p></header>
+    <div class="ds-grid ds-grid--wide">
+      <article class="card card--tilt-l"><h3 class="card__title">1. Kritt, ikke vektor</h3><p>Hver flate er en flat krittfarge med lag av strek og papirkorn oppå: <code>background: var(--tex-grain), var(--tex-light), var(--farge)</code>. Ingen glatte gradienter.</p></article>
+      <article class="card card--tilt-r"><h3 class="card__title">2. Ingenting er helt rett</h3><p>Hjørner er blobbete (åtte radius-verdier), knapper står litt på skakke (−0,6°), og avatarene puster og vipper. Perfekte rektangler hører ikke hjemme her.</p></article>
+      <article class="card card--tilt-l"><h3 class="card__title">3. Hard skygge, ikke blur</h3><p>Dybde er en fast kritt-kant under elementet (<code>0 5px 0</code>), aldri en uklar skygge. Trykk på en knapp og den synker ned i kanten.</p></article>
+      <article class="card card--tilt-r"><h3 class="card__title">4. Øyne overalt</h3><p>Motivet er øyet: avatarer, rolleskjermer, prikken på i-en i logoen. Alle skal føle seg litt sett.</p></article>
+    </div>
+  </section>
+
+  <!-- ================================================================ logo -->
+  <section class="ds-section" id="logo">
+    <header>
+      <h2>Logo</h2>
+      <p>Ordmerket er skrevet i Fraunces (samme font som overskriftene), svart, og tegnet opp som konturer, så det ser likt ut overalt uten at fonten må lastes. På burgunder står den svarte logoen alltid på et gult kritt-klistremerke.</p>
+    </header>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-demo ds-demo--yellow ds-stack" style="justify-items:center">
+        <span class="ds-label">Hovedlogo · svart</span>
+        <img src="/assets/logo/disputt-logo.svg" alt="Disputt" width="260" height="112" style="width:16rem;height:auto">
+        <a href="/assets/logo/disputt-logo.svg" download>disputt-logo.svg</a>
+      </div>
+      <div class="ds-demo ds-stack" style="justify-items:center">
+        <span class="ds-label">På burgunder · klistremerke</span>
+        <span class="logo-sticker"><img src="/assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130"></span>
+        <span class="ds-note">Klasse <code>.logo-sticker</code> (<code>--sm</code> for topplinjer)</span>
+      </div>
+      <div class="ds-demo ds-stack" style="justify-items:center">
+        <span class="ds-label">Krem · for mørke flater uten klistremerke</span>
+        <img src="/assets/logo/disputt-logo-cream.svg" alt="Disputt" width="260" height="112" style="width:16rem;height:auto">
+        <a href="/assets/logo/disputt-logo-cream.svg" download>disputt-logo-cream.svg</a>
+      </div>
+      <div class="ds-demo ds-demo--yellow ds-stack" style="justify-items:center">
+        <span class="ds-label">Alternativ · øye i i-prikken</span>
+        <img src="/assets/logo/disputt-logo-eye.svg" alt="Disputt" width="260" height="130" style="width:16rem;height:auto">
+        <a href="/assets/logo/disputt-logo-eye.svg" download>disputt-logo-eye.svg</a>
+      </div>
+      <div class="ds-demo ds-stack" style="justify-items:center">
+        <span class="ds-label">Appikon</span>
+        <img src="/assets/icons/icon-512.png" alt="Disputt-ikon" width="144" height="144" style="width:9rem;height:9rem;border-radius:2rem">
+        <span class="ds-note">Svart «D» på gult, med et øye i bukten. Genereres med <code>npm run logo</code>.</span>
+      </div>
+    </div>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-do"><strong>Gjør</strong><p class="ds-note">La logoen puste: minst like mye luft rundt som høyden på bokstaven «D». Minste bredde 96&nbsp;px.</p></div>
+      <div class="ds-dont"><strong>Ikke</strong><p class="ds-note">Ikke farg logoen, ikke legg skygge på den, ikke strekk den, og ikke sett svart logo rett på burgunder (bruk klistremerket eller krem-versjonen).</p></div>
+    </div>
+  </section>
+
+  <!-- ================================================================ colour -->
+  <section class="ds-section" id="farger">
+    <header>
+      <h2>Farger</h2>
+      <p>Paletten er plukket fra referansetegningene (gul papirbunn, rødrosa «kropp», lime, oransje, blå, fiolett og turkis fra briller-damen). Burgunder er scenen. Heksverdi og kontrast leses fra tokens ved innlasting. «AA» betyr at kombinasjonen tåler brødtekst, «stor» at den bare tåler overskrifter.</p>
+    </header>
+    <h3>Burgunder – siden</h3>
+    <div class="ds-grid" id="sw-burgundy"></div>
+    <h3>Kritt – det man tegner med</h3>
+    <div class="ds-grid" id="sw-crayon"></div>
+    <h3>Skjermfarger – hele siden skifter farge</h3>
+    <div class="ds-grid" id="sw-role"></div>
+    <h3>Papir og blekk</h3>
+    <div class="ds-grid" id="sw-paper"></div>
+    <p class="ds-note">Svaralternativene har faste farger: <strong style="color:var(--opt-a)">A lime</strong>, <strong style="color:var(--opt-b)">B oransje</strong>, <strong style="color:var(--opt-c)">C rosa</strong>, <strong style="color:var(--opt-d)">D lyseblå</strong> (<code>--opt-a…d</code>).</p>
+  </section>
+
+  <!-- ================================================================ type -->
+  <section class="ds-section" id="typografi">
+    <header>
+      <h2>Typografi</h2>
+      <p>To skrifter. <strong>Fraunces</strong> (tung kursiv, «soft» og «wonky») er den funky overskriftsfonten: bulkete, retro og litt surrealistisk. <strong>Lora</strong> er en vanlig, varm serif til brødtekst. Begge er selvhostet (SIL OFL) og dekker æøå.</p>
+    </header>
+    <div class="ds-demo">
+      <div class="ds-type"><span class="ds-label">Hero<br><code>--fs-hero</code></span><div class="display" style="font-size:var(--fs-hero);line-height:1;text-shadow:5px 6px 0 var(--ink)">Imposter</div></div>
+      <div class="ds-type"><span class="ds-label">H1<br><code>--fs-h1</code></span><h1>Hvem er du?</h1></div>
+      <div class="ds-type"><span class="ds-label">H2<br><code>--fs-h2</code></span><h2>Gruppa hadde rett!</h2></div>
+      <div class="ds-type"><span class="ds-label">H3<br><code>--fs-h3</code></span><h3>Poengtavle</h3></div>
+      <div class="ds-type"><span class="ds-label">Ingress<br><code>.lead</code></span><p class="lead">Lur dem. Eller avslør lureren.</p></div>
+      <div class="ds-type"><span class="ds-label">Brødtekst<br><code>--fs-body</code></span><p>Én av dere vet svaret og vil lure dere. Hvem kan du stole på? Lytt når Sofie leser spørsmålet, og diskuter dere frem til riktig svar.</p></div>
+      <div class="ds-type"><span class="ds-label">Liten<br><code>.small</code></span><p class="small muted">Ett poeng tar ca. 10 minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</p></div>
+      <div class="ds-type"><span class="ds-label">Overskrift over felt<br><code>.eyebrow</code></span><p class="eyebrow">Les høyt for de andre</p></div>
+      <div class="ds-type"><span class="ds-label">Spørsmål<br><code>.question__text</code></span><p class="question__text" style="color:var(--cream)">Hvilket land har flest turister årlig?</p></div>
+      <div class="ds-type"><span class="ds-label">Tall<br><code>.timer</code></span><div class="timer" style="font-size:4.2rem"><span class="timer__d">0</span><span class="timer__d">6</span><span class="timer__c">:</span><span class="timer__d">0</span><span class="timer__d">0</span></div></div>
+    </div>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-stack"><h3>Regler</h3><p class="ds-note">Fraunces brukes til overskrifter, knapper, tall og navn på store flater. Lora brukes til alt annet. Aldri kursiv på Fraunces (filen er allerede kursiv). Aldri mer enn to linjer i en knapp.</p></div>
+      <div class="ds-stack"><h3>Tall i faste celler</h3><p class="ds-note">Fraunces har proporsjonale sifre, så klokka tegner hvert siffer i en fast celle (<code>.timer__d</code>, 0,66&nbsp;em). Da hopper ikke tallene når sekundene går.</p></div>
+      <div class="ds-stack"><h3>Fontfiler</h3><p class="ds-note"><code>fraunces-italic.woff2</code> (69&nbsp;kB, vekt 600–900, optisk størrelse 48–144) og <code>lora.woff2</code> / <code>lora-italic.woff2</code> (35 + 38&nbsp;kB). Bygges med <code>npm run fonts</code>.</p></div>
+    </div>
+  </section>
+
+  <!-- ================================================================ shape/texture -->
+  <section class="ds-section" id="form">
+    <header><h2>Form og tekstur</h2><p>Teksturene er tre gjennomsiktige PNG-fliser som legges oppå en vanlig farge. Samme flis gir kritt-look på alle farger.</p></header>
+    <h3>Tekstur-oppskrift</h3>
+    <div class="ds-grid">
+      <div class="ds-tex" style="color:var(--ink);background:var(--tex-grain),var(--yellow)">Kun korn<br><code>--tex-grain</code></div>
+      <div class="ds-tex" style="color:var(--ink);background:var(--tex-grain),var(--tex-light),var(--lime)">Korn + lys strek<br><code>--tex-light</code></div>
+      <div class="ds-tex" style="background:var(--tex-grain),var(--tex-dark),var(--burgundy-600)">Korn + mørk strek<br><code>--tex-dark</code></div>
+      <div class="ds-tex" style="color:var(--cream);background:var(--tex-grain),var(--tex-light),var(--blue)">Samme på blå</div>
+      <div class="ds-tex" style="color:var(--ink);background:var(--tex-grain),var(--tex-light),var(--pink)">…og på rosa</div>
+      <div class="ds-tex" style="color:var(--cream);background:var(--tex-grain),var(--tex-light),var(--red)">…og på rød</div>
+    </div>
+    <pre class="ds-code">.flate { background: var(--tex-grain), var(--tex-light), var(--yellow); }  /* øverst = nærmest deg */</pre>
+    <h3>Former</h3>
+    <div class="ds-grid">
+      <div class="ds-shape" style="border-radius:var(--r-btn)">--r-btn<br>knapper</div>
+      <div class="ds-shape" style="border-radius:var(--r-card);background:var(--tex-grain),var(--tex-light),var(--cream)">--r-card<br>kort</div>
+      <div class="ds-shape" style="border-radius:var(--r-input);background:var(--tex-grain),var(--tex-light),var(--lime)">--r-input<br>felt og chips</div>
+      <div class="ds-shape" style="border-radius:var(--r-blob);background:var(--tex-grain),var(--tex-light),var(--pink)">--r-blob<br>blobber</div>
+    </div>
+    <h3>Dybde</h3>
+    <div class="ds-grid">
+      <div class="ds-shape" style="box-shadow:var(--shadow-1);border-radius:var(--r-card)">--shadow-1</div>
+      <div class="ds-shape" style="box-shadow:var(--shadow-2);border-radius:var(--r-card)">--shadow-2</div>
+      <div class="ds-shape" style="box-shadow:var(--shadow-3);border-radius:var(--r-card)">--shadow-3</div>
+    </div>
+  </section>
+
+  <!-- ================================================================ avatars -->
+  <section class="ds-section" id="avatarer">
+    <header>
+      <h2>Avatarer</h2>
+      <p>Ti surrealistiske figurer i samme kritt-uttrykk som referansetegningene, hver med sin egen silhuett og dominerende farge, så spillere kan skilles på et øyeblikk. De er SVG (tegnet prosedyrelt med <code>npm run art</code>), men kan byttes ut 1:1 med ekte illustrasjoner: samme filnavn, <code>viewBox 0 0 400 400</code>, gjennomsiktig bakgrunn. Rosteret ligger i <code>shared/avatars.mjs</code>.</p>
+    </header>
+    <div class="ds-grid ds-grid--tight" id="avatar-grid"></div>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-demo ds-stack"><span class="ds-label">Størrelser</span><div class="ds-row" id="avatar-sizes"></div></div>
+      <div class="ds-demo ds-stack">
+        <span class="ds-label">Tilstander</span>
+        <div class="ds-row">
+          <div class="ds-motion"><span class="avatar avatar--md avatar--offline"><img src="/assets/avatars/blabaer.svg" alt=""></span><code>--offline</code></div>
+          <div class="ds-motion"><span class="avatar avatar--md"><img class="avatar__crown" src="/assets/art/crown.svg" alt=""><img src="/assets/avatars/sol.svg" alt=""></span><code>krone</code></div>
+          <div class="ds-motion"><span class="avatar avatar--md"><img src="/assets/avatars/drue.svg" alt=""><span class="avatar__badge">3</span></span><code>merke</code></div>
+          <div class="ds-motion"><span class="avatar avatar--md avatar--alive"><img src="/assets/avatars/hand.svg" alt=""></span><code>--alive</code></div>
+        </div>
+      </div>
+    </div>
+    <p class="ds-note">Figuren ligger alltid i en rund gul flis (<code>.avatar</code>) og får lov til å stikke litt utenfor kanten. Bildet er plassert absolutt og påvirker aldri layouten.</p>
+  </section>
+
+  <!-- ================================================================ components -->
+  <section class="ds-section" id="komponenter">
+    <header><h2>Komponenter</h2><p>Alt er ekte spill-markup: ingen mockups. Prøv å trykke.</p></header>
+
+    <h3>Knapper</h3>
+    <div class="ds-demo ds-stack">
+      <div class="ds-row">
+        <button class="btn">Start et spill</button>
+        <button class="btn btn--lime">Start Disputt</button>
+        <button class="btn btn--orange">Hopp over</button>
+        <button class="btn btn--pink">Avslutt spillet</button>
+        <button class="btn btn--cream">Gå videre</button>
+        <button class="btn btn--blue">Sekundær</button>
+        <button class="btn btn--ghost">Jeg har en kode</button>
+        <button class="btn" disabled>Deaktivert</button>
+      </div>
+      <div class="ds-row">
+        <button class="btn btn--small">Liten</button>
+        <button class="btn btn--small btn--cream">+1 min</button>
+        <button class="btn btn--small btn--ghost">Poeng</button>
+        <button class="btn btn--cream btn--icon" aria-label="Pluss">+</button>
+        <button class="btn btn--text">Tekstknapp</button>
+      </div>
+      <p class="ds-note">Gul er primær, lime er «gå!» (start, lås svaret), rosa og oransje er sjeldne og farlige. Minst 3,6&nbsp;rem høy (≈ 58&nbsp;px) – lett å treffe med tommel.</p>
+    </div>
+
+    <h3>Felt</h3>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-demo ds-stack">
+        <div class="field"><label class="field__label" for="ds-name">Navn</label><input id="ds-name" class="input" placeholder="Skriv navnet ditt" value="Mandarin"><span class="field__hint">Det er dette de andre ser.</span></div>
+        <div class="field"><label class="field__label" for="ds-code">Spillkode</label><input id="ds-code" class="input input--code" value="KRAP" maxlength="4"></div>
+      </div>
+      <div class="ds-demo ds-stack">
+        <div class="field"><span class="field__label">Hvor mange poeng skal dere spille til?</span>
+          <div class="stepper"><button class="btn btn--cream btn--icon" aria-label="Ett poeng mindre">−</button><input class="input" value="5" inputmode="numeric" aria-label="Poeng"><button class="btn btn--cream btn--icon" aria-label="Ett poeng mer">+</button></div>
+          <span class="field__error">Skriv et tall mellom 1 og 99.</span>
+          <span class="field__hint">Ett poeng tar ca. 10 minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</span>
+        </div>
+      </div>
+      <div class="ds-demo ds-stack">
+        <span class="field__label">Sett klokka</span>
+        <div class="segmented" role="group" aria-label="Tid" data-segmented>
+          <button class="segmented__item" aria-pressed="false">2 <small>min</small></button>
+          <button class="segmented__item" aria-pressed="true">6 <small>min</small></button>
+          <button class="segmented__item" aria-pressed="false">10 <small>min</small></button>
+        </div>
+        <div class="segmented segmented--compact" role="group" aria-label="Tid (kompakt)" data-segmented>
+          <button class="segmented__item" aria-pressed="false">2<small>min</small></button>
+          <button class="segmented__item" aria-pressed="true">6<small>min</small></button>
+          <button class="segmented__item" aria-pressed="false">10<small>min</small></button>
+        </div>
+      </div>
+    </div>
+
+    <h3>Svaralternativer (radioknapper)</h3>
+    <div class="ds-grid ds-grid--wide">
+      <fieldset class="options ds-phone" data-options>
+        <legend class="sr-only">Hvilket land har flest turister årlig?</legend>
+        <label class="option"><input type="radio" name="ds-q"><span class="option__letter">A</span><span class="option__text">USA</span><span class="option__check" aria-hidden="true"></span></label>
+        <label class="option"><input type="radio" name="ds-q"><span class="option__letter">B</span><span class="option__text">Japan</span><span class="option__check" aria-hidden="true"></span></label>
+        <label class="option is-selected"><input type="radio" name="ds-q" checked><span class="option__letter">C</span><span class="option__text">Frankrike</span><span class="option__check" aria-hidden="true"></span></label>
+        <label class="option"><input type="radio" name="ds-q"><span class="option__letter">D</span><span class="option__text">Kina</span><span class="option__check" aria-hidden="true"></span></label>
+      </fieldset>
+      <div class="ds-stack"><p class="ds-note">Ekte <code>&lt;input type="radio"&gt;</code> under panseret, så skjermlesere og tastatur fungerer. Bokstavene har faste farger (A lime, B oransje, C rosa, D lyseblå). Valgt alternativ blir gult og synker ned i kanten.</p></div>
+    </div>
+
+    <h3>Klokke</h3>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-demo center"><span class="ds-label">Går</span><div class="timer" id="timer-live"></div></div>
+      <div class="ds-demo center"><span class="ds-label">Under 30 sek</span><div class="timer timer--low"><span class="timer__d">0</span><span class="timer__d">0</span><span class="timer__c">:</span><span class="timer__d">1</span><span class="timer__d">8</span></div></div>
+      <div class="ds-demo center"><span class="ds-label">Tiden er ute</span><div class="timer timer--out"><span class="timer__d">0</span><span class="timer__d">0</span><span class="timer__c">:</span><span class="timer__d">0</span><span class="timer__d">0</span></div></div>
+    </div>
+
+    <h3>Kort, chips og roller</h3>
+    <div class="ds-grid ds-grid--wide">
+      <div class="card"><h3 class="card__title">Standardkort</h3><p>Burgunder flate med mørk strek. Brukes til innhold på siden.</p></div>
+      <div class="card card--paper"><h3 class="card__title">Papirkort</h3><p>Krem, blekk-tekst. Brukes til QR, spørsmål og avsløringer.</p></div>
+      <div class="card card--yellow"><h3 class="card__title">Gult kort</h3><p>For informasjon som ikke må overses.</p></div>
+      <div class="ds-demo ds-stack">
+        <div class="ds-row"><span class="chip">Runde 3 · først til 5</span><span class="chip chip--yellow">Uavgjort i teten</span><span class="chip chip--impostor">Imposter</span><span class="chip chip--loyal">Lojal</span><span class="chip"><span class="dot"></span> tilkoblet</span><span class="chip"><span class="dot dot--off"></span> frakoblet</span></div>
+      </div>
+    </div>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-phone">
+        <div class="role-strip role-strip--impostor"><span>Du er <strong>IMPOSTER</strong></span><button class="secret" data-hold>Hold for svaret</button></div>
+        <div class="role-strip role-strip--loyal"><span>Du er <strong>LOJAL</strong></span><span>Ikke bli lurt!</span></div>
+      </div>
+      <p class="ds-note">Imposteren kan holde inne knappen for å se riktig svar igjen (slipper du, skjules det). Det hindrer at svaret blir stående åpent når noen kikker over skulderen.</p>
+    </div>
+
+    <h3>Poengtavle og fremdrift</h3>
+    <div class="ds-grid ds-grid--wide">
+      <div class="card ds-phone">
+        <ol class="scoreboard">
+          <li class="score score--leader"><span class="score__rank">1</span><span class="avatar avatar--sm"><img class="avatar__crown" src="/assets/art/crown.svg" alt=""><img src="/assets/avatars/mandarin.svg" alt=""></span><div><div class="score__name">Mari <small>(deg)</small></div><div class="bar" style="--p:.8;--fill:#f8852c"><div class="bar__fill"></div></div></div><span class="score__points">4<span class="score__gain">+1</span></span></li>
+          <li class="score"><span class="score__rank">2</span><span class="avatar avatar--sm"><img src="/assets/avatars/blabaer.svg" alt=""></span><div><div class="score__name">Ola</div><div class="bar" style="--p:.6;--fill:#2e7ece"><div class="bar__fill"></div></div></div><span class="score__points">3</span></li>
+          <li class="score score--offline"><span class="score__rank">3</span><span class="avatar avatar--sm avatar--offline"><img src="/assets/avatars/sky.svg" alt=""></span><div><div class="score__name">Sofie</div><div class="bar bar--zero" style="--p:0;--fill:#88c6db"><div class="bar__fill"></div></div></div><span class="score__points">0</span></li>
+        </ol>
+      </div>
+      <div class="ds-stack"><p class="ds-note">Strekens farge er avatarens aksentfarge. «+1» popper inn etter en halv sekund. Frakoblede spillere blir dempet.</p>
+        <div class="bar bar--countdown" style="--dur:5s;--fill:var(--cream);--delay:0s" data-replay="bar--countdown"><div class="bar__fill"></div></div><span class="ds-note">Nedtellingsstrek (rolleskjermen, 5 sek). Trykk for å spille av igjen.</span></div>
+    </div>
+
+    <h3>Meldinger og overlegg</h3>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-toast-preview"><div class="toast" role="status">Det navnet er tatt – velg et annet.</div></div>
+      <div class="ds-banner-preview"><div class="banner" role="status">Mistet forbindelsen – kobler til igjen</div></div>
+      <div class="ds-stack"><button class="btn btn--small" data-toggle-sheet="ds-sheet">Vis / skjul sheet</button>
+        <div class="ds-sheet-preview" id="ds-sheet" hidden><div class="sheet-backdrop"><div class="sheet"><div class="sheet__head"><h2>Poengtavle</h2><button class="btn btn--ghost btn--small btn--icon" aria-label="Lukk">✕</button></div><p class="muted">Sheets glir opp nedenfra og dekker maks 90&nbsp;% av høyden.</p></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ screens -->
+  <section class="ds-section" id="skjermer">
+    <header>
+      <h2>Skjermer</h2>
+      <p>Bildene er tatt av den ekte appen fra spillmotorens egne data (<code>npm run shots -- --docs</code>), i mobilstørrelse. Hele siden skifter farge på rolle- og avsløringsskjermene.</p>
+    </header>
+    <div class="ds-screens" id="screen-gallery"></div>
+  </section>
+
+  <!-- ================================================================ motion -->
+  <section class="ds-section" id="bevegelse">
+    <header><h2>Bevegelse</h2><p>Små, spretne og aldri i veien. Alt slås av for dem som har «reduser bevegelse» på. Trykk på figurene for å spille av.</p></header>
+    <div class="ds-grid">
+      <div class="ds-motion"><span class="avatar avatar--lg pop-in" data-replay="pop-in"><img src="/assets/avatars/lime.svg" alt=""></span><strong>pop-in</strong><span class="ds-note">Nye spillere, titler. 0,5 s, spretter forbi.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg rise-in" data-replay="rise-in"><img src="/assets/avatars/kirsebaer.svg" alt=""></span><strong>rise-in</strong><span class="ds-note">Tekst og kort som kommer inn. 0,45 s.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg avatar--alive"><img src="/assets/avatars/briller.svg" alt=""></span><strong>wobble</strong><span class="ds-note">Avatarer «puster»: ±2° og lett klem, 5 s sløyfe.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg" style="animation:pulse 1.2s ease-in-out infinite"><img src="/assets/avatars/sol.svg" alt=""></span><strong>pulse</strong><span class="ds-note">Tiden er ute, venter-plasser.</span></div>
+      <div class="ds-motion"><span class="avatar avatar--lg" style="animation:float 5s ease-in-out infinite"><img src="/assets/avatars/hand.svg" alt=""></span><strong>float</strong><span class="ds-note">Dekor som svever.</span></div>
+    </div>
+  </section>
+
+  <!-- ================================================================ tone -->
+  <section class="ds-section" id="tone">
+    <header><h2>Tone</h2><p>Kort, lekent og litt uhyggelig. Vi snakker til gruppa som til venner rundt et bord. Norsk bokmål, aldri teknisk.</p></header>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-do"><strong>Slik</strong><p class="ds-note">«Lur dem. Eller avslør lureren.» · «Én av dere vet svaret og vil lure dere.» · «Se på Sofie – fasiten avsløres på telefonen deres!» · «Gruppa hadde rett!»</p></div>
+      <div class="ds-dont"><strong>Ikke slik</strong><p class="ds-note">«Operasjon feilet.» · «Ugyldig inndata.» · «Vennligst vent mens systemet behandler forespørselen.» Feilmeldinger sier hva som skjedde og hva man kan gjøre: «Det navnet er tatt – velg et annet.»</p></div>
+      <div class="ds-stack"><h3>Navn på ting</h3><p class="ds-note"><strong>Imposter</strong> (han/hun som vet svaret), <strong>lojal</strong> (alle andre), <strong>den som har spørsmålet</strong> (leser høyt og låser svaret), <strong>vert</strong> (startet spillet). Poeng, ikke «score».</p></div>
+    </div>
+  </section>
+
+  <!-- ================================================================ a11y -->
+  <section class="ds-section" id="tilgjengelighet">
+    <header><h2>Tilgjengelighet</h2><p>Spillet spilles i en stue, ofte i dårlig lys, med én hånd. Derfor:</p></header>
+    <ul class="ds-note" style="display:grid;gap:.5rem;padding-left:1.2rem">
+      <li>Trykkflater er minst 44&nbsp;px, primærknapper 58&nbsp;px. Ingen handling krever gester.</li>
+      <li>Tekst har minst 4,5:1 kontrast på sin flate; store overskrifter på lime og rosa har tykk blekk-skygge for å holde seg lesbare.</li>
+      <li>Alle felt har synlig <code>&lt;label&gt;</code>, 16&nbsp;px+ tekst (iOS zoomer ikke), og tydelig fokusring (<code>--focus</code>, gul).</li>
+      <li>Svaralternativene er ekte radioknapper i en <code>fieldset</code>; klokka har <code>role="timer"</code>; statusmeldinger bruker <code>role="status"</code>.</li>
+      <li><code>prefers-reduced-motion</code> slår av alle animasjoner. Farge alene bærer aldri informasjon: roller står skrevet ut, og «tatt» står på opptatte avatarer.</li>
+      <li>Vibrasjon (der den støttes) brukes som ekstra signal ved rolle, nedtelling og avsløring, aldri som eneste.</li>
+    </ul>
+  </section>
+
+</main>
+</body>
+</html>

@@ -9,10 +9,10 @@ export const AVATARS = [
   { id: 'leppa',    name: 'Leppa',         accent: '#f48b8f' },
   { id: 'briller',  name: 'Frøken Briller', accent: '#1b838c' },
   { id: 'drue',     name: 'Drue',          accent: '#b170b4' },
-  { id: 'sol',      name: 'Sol',           accent: '#fae025' },
+  { id: 'sol',      name: 'Sol',           accent: '#fbb631' },
   { id: 'sky',      name: 'Sky',           accent: '#88c6db' },
   { id: 'kirsebaer', name: 'Kirsebær',     accent: '#e55666' },
-  { id: 'hand',     name: 'Hånda',         accent: '#f0c3c5' },
+  { id: 'hand',     name: 'Hånda',         accent: '#f4b8a8' },
 ];
 
 export const AVATAR_IDS = AVATARS.map((a) => a.id);

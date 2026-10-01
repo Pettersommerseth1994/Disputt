@@ -35,7 +35,7 @@ export function cleanName(raw) {
 
 // No I, L or O: easy to confuse when typed by hand.
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
-const BLOCKED = /FUCK|SHIT|CUNT|NAZI|RAPE|PORN|SEXY|SLUT|TITS|DICK|COCK|ANAL|PISS|FAGS|HOMO|NEGR|JEWS|HATE|KILL|DEAD|PUSS|BUTT|CRAP|DAMN|HORE|NAZI|SKIT|JAVL/;
+const BLOCKED = /FUCK|SHIT|CUNT|NAZI|RAPE|PORN|SEXY|SLUT|TITS|DICK|COCK|ANAL|PISS|FAGS|HOMO|NEGR|JEWS|HATE|KILL|DEAD|PUSS|BUTT|CRAP|DAMN|HORE|SKIT|JAVL|KUKK|PIKK|FITT|LORT|DRIT|FAEN/;
 
 export function makeRoomCode(rand = defaultRandom, taken = () => false) {
   for (let attempt = 0; attempt < 200; attempt++) {

@@ -3,15 +3,21 @@
 // Needs Google Chrome (set CHROME_PATH to override) and `npm install` (puppeteer-core).
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
+import sharp from 'sharp';
 import { createApp } from '../../server/index.js';
 import { buildFixtures } from './fixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const OUT = 'tmp/shots';
-const filter = process.argv[2] ?? '';
+const DOCS = process.argv.includes('--docs'); // also write 1x-viewport WebPs for the style guide gallery
+const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
+const DOCS_DIR = 'public/design-system/screens';
+// the screens shown in the style guide gallery (keep in sync with SCREENS in public/design-system/ds.js)
+const DOC_KEYS = new Set(['home', 'profile-new', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-loyal', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-right', 'reveal-wrong', 'summary-wrong-host', 'finished-host', 'sheet-scores']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(OUT, { recursive: true });
+if (DOCS) fs.mkdirSync(DOCS_DIR, { recursive: true });
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars'] });
@@ -26,6 +32,11 @@ const shot = async (name, opts = {}) => {
   if (filter && !name.includes(filter)) return;
   await sleep(opts.wait ?? 800);
   await page.screenshot({ path: `${OUT}/${name}.png`, fullPage: opts.full ?? true });
+  const key = name.replace(/^\d+-/, '');
+  if (DOCS && DOC_KEYS.has(key)) {
+    const png = await page.screenshot({ fullPage: false });
+    await sharp(png).resize(390).webp({ quality: 70, effort: 6 }).toFile(`${DOCS_DIR}/${key}.webp`);
+  }
   console.log('shot', name);
 };
 
@@ -46,7 +57,7 @@ async function show(view, extra = {}) {
 await page.goto(url, { waitUntil: 'networkidle0' });
 await page.evaluate(() => window.__disputt.setStore({ conn: 'open', everOpened: true }));
 await shot('00-home');
-await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Bli med med kode'))?.click());
+await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Jeg har en kode'))?.click());
 await shot('01-join-code', { wait: 400 });
 await page.evaluate(() => window.__disputt.setStore({ sheet: 'rules' }));
 await shot('02-rules', { full: false });
@@ -54,17 +65,26 @@ await page.evaluate(() => window.__disputt.setStore({ sheet: null }));
 
 const f = buildFixtures();
 const order = [
-  'profile-new', 'profile-edit', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
+  'profile-new', 'profile-edit', 'lobby-host-new', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
   'role-impostor', 'role-loyal',
   'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-loyal', 'discussion-low',
   'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wait',
   'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest',
   'finished-host', 'finished-guest',
 ];
+const LONG = new Set(['lobby-host-new', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host']);
 let i = 3;
 for (const key of order) {
   await show(f[key], key === 'profile-edit' ? { editing: true } : {});
-  await shot(`${String(i++).padStart(2, '0')}-${key}`, { wait: key.startsWith('role') || key.startsWith('finished') ? 900 : 650 });
+  const name = `${String(i++).padStart(2, '0')}-${key}`;
+  await shot(name, { wait: key.startsWith('role') || key.startsWith('finished') ? 900 : 650 });
+  // what a phone really shows after scrolling down: the dock sticks to the bottom of the viewport
+  if (LONG.has(key) && (!filter || name.includes(filter))) {
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await sleep(250);
+    await page.screenshot({ path: `${OUT}/${name}-bottom.png`, fullPage: false });
+    await page.evaluate(() => window.scrollTo(0, 0));
+  }
 }
 await show(f['lobby-host-3'], { sheet: 'qr' });
 await shot('90-sheet-qr', { full: false });

@@ -42,8 +42,10 @@ function HostLobby({ view }) {
   const n = Number(text);
   const valid = /^\d{1,2}$/.test(text) && n >= 1 && n <= 99;
 
-  // keep the field in sync if the server value changes (e.g. after "play again")
-  useEffect(() => setText(String(view.target)), [view.target]);
+  // Follow the server (e.g. after "play again"), but never overwrite what the host is typing right now.
+  useEffect(() => {
+    if (document.activeElement?.id !== 'target') setText(String(view.target));
+  }, [view.target]);
 
   const onInput = (e) => {
     const v = e.currentTarget.value.replace(/\D/g, '').slice(0, 2);
@@ -51,6 +53,8 @@ function HostLobby({ view }) {
     clearTimeout(timer.current);
     if (/^\d{1,2}$/.test(v) && Number(v) >= 1) timer.current = setTimeout(() => actions.target(Number(v)), 250);
   };
+  // typing replaces the old number instead of being appended to it
+  const selectAll = (e) => e.currentTarget.setSelectionRange(0, e.currentTarget.value.length);
   const bump = (d) => {
     const next = Math.min(99, Math.max(1, (valid ? n : view.target) + d));
     setText(String(next));
@@ -62,7 +66,7 @@ function HostLobby({ view }) {
   const url = `${base}/j/${view.code}`;
   const shortUrl = base.replace(/^https?:\/\//, '');
   const need = view.limits.min - view.players.length;
-  const canStart = enough && valid && s.conn === 'open';
+  const canStart = enough && valid && view.you.ready && s.conn === 'open';
 
   return html`<main class="screen lobby">
     <header class="row row--between">
@@ -80,12 +84,22 @@ function HostLobby({ view }) {
         </div>
       </section>
 
+      ${!view.you.ready &&
+      html`<button type="button" class="card card--yellow profile-prompt" onClick=${() => setStore({ editing: true })}>
+        <span class="avatar avatar--md avatar--unknown" aria-hidden="true">?</span>
+        <span class="stack stack--tight">
+          <strong class="display">Hvem er du?</strong>
+          <span>Velg navn og avatar, så er du med selv.</span>
+        </span>
+      </button>`}
+
       <section class="stack">
         <h2 class="center">Spillere <span class="muted">${view.players.length}/${view.limits.max}</span></h2>
         <${Players} view=${view} kickable />
-        <div class="row row--center">
+        ${view.you.ready &&
+        html`<div class="row row--center">
           <${Button} variant="text" onClick=${() => setStore({ editing: true })}>Endre navn eller avatar</${Button}>
-        </div>
+        </div>`}
       </section>
 
       <section class="card stack">
@@ -93,7 +107,7 @@ function HostLobby({ view }) {
           <label class="field__label" for="target">Hvor mange poeng skal dere spille til?</label>
           <div class="stepper">
             <${Button} variant="cream" size="icon" onClick=${() => bump(-1)} aria-label="Ett poeng mindre" disabled=${valid && n <= 1}>−</${Button}>
-            <input id="target" class="input" value=${text} onInput=${onInput} inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-describedby="target-hint" />
+            <input id="target" class="input" value=${text} onInput=${onInput} onFocus=${selectAll} onBlur=${() => setText(String(view.target))} inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-describedby="target-hint" />
             <${Button} variant="cream" size="icon" onClick=${() => bump(1)} aria-label="Ett poeng mer" disabled=${valid && n >= 99}>+</${Button}>
           </div>
           ${!valid && html`<span class="field__error">Skriv et tall mellom 1 og 99.</span>`}
@@ -107,9 +121,11 @@ function HostLobby({ view }) {
 
     <div class="dock">
       <p class="center small" role="status">
-        ${enough
-          ? html`Spiller til <strong>${view.target} ${plural(view.target, 'poeng', 'poeng')}</strong> · ${duration(view.target * MINUTES_PER_POINT)}`
-          : html`<span class="muted">Dere må være minst ${view.limits.min}. Vent på ${need} ${plural(need, 'spiller', 'spillere')} til.</span>`}
+        ${!view.you.ready
+          ? html`<span class="muted">Velg navn og avatar først, så kan du starte.</span>`
+          : enough
+            ? html`Spiller til <strong>${view.target} poeng</strong> · ${duration(view.target * MINUTES_PER_POINT)}`
+            : html`<span class="muted">Dere må være minst ${view.limits.min}. Vent på ${need} ${plural(need, 'spiller', 'spillere')} til.</span>`}
       </p>
       <${Button} block variant="lime" onClick=${() => actions.start()} disabled=${!canStart}>Start Disputt</${Button}>
     </div>

@@ -20,7 +20,7 @@ export function Home() {
     </div>
     <div class="dock">
       <${Button} block onClick=${() => actions.create()} disabled=${s.conn !== 'open'}>Start et spill</${Button}>
-      <${Button} block variant="ghost" onClick=${() => setMode('code')}>Bli med med kode</${Button}>
+      <${Button} block variant="ghost" onClick=${() => setMode('code')}>Jeg har en kode</${Button}>
       <div class="row row--center">
         <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
       </div>

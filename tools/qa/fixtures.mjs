@@ -37,6 +37,12 @@ export function buildFixtures() {
 
   // ---- lobby / profile
   {
+    const { room, ids } = makeRoom({ players: 1 });
+    room.players.get(ids[0]).name = '';
+    room.players.get(ids[0]).avatar = null; // the host has not picked a profile yet
+    out['lobby-host-new'] = room.viewFor(ids[0]);
+  }
+  {
     const { room, ids } = makeRoom({ players: 3 });
     out['lobby-host-3'] = room.viewFor(ids[0]);
     out['lobby-guest-3'] = room.viewFor(ids[1]);
@@ -90,10 +96,10 @@ export function buildFixtures() {
   {
     const { room, ids } = makeRoom({ impostor: 2, asker: 0 });
     const [petter, mari, ola] = ids;
+    room.start(petter); // start() resets scores, so set the mid-game scores afterwards
     room.players.get(petter).score = 3;
     room.players.get(mari).score = 2;
     room.players.get(ola).score = 1;
-    room.start(petter);
     tick(room, DEFAULT_TIMINGS.roleMs + 1);
     room.tick(room.clock());
     room.lock(petter, 0); // wrong
@@ -109,9 +115,9 @@ export function buildFixtures() {
   {
     const { room, ids } = makeRoom({ impostor: 2, asker: 0, target: 3 });
     const [petter] = ids;
+    room.start(petter);
     room.players.get(petter).score = 2;
     room.players.get(ids[1]).score = 1;
-    room.start(petter);
     tick(room, DEFAULT_TIMINGS.roleMs + 1);
     room.tick(room.clock());
     room.lock(petter, 2); // right -> everyone but the impostor gets a point; Petter reaches 3

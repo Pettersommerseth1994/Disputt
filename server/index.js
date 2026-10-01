@@ -32,14 +32,16 @@ const SECURITY_HEADERS = {
   ].join('; '),
 };
 
+/** Addresses other devices on the same network can use. Home/office ranges first, VPN-ish ones last. */
 export function lanUrls(port) {
-  const urls = [];
+  const rank = (ip) => (ip.startsWith('192.168.') ? 0 : ip.startsWith('10.') ? 1 : /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2 : 3);
+  const ips = [];
   for (const addrs of Object.values(os.networkInterfaces())) {
     for (const a of addrs ?? []) {
-      if (a.family === 'IPv4' && !a.internal) urls.push(`http://${a.address}:${port}`);
+      if (a.family === 'IPv4' && !a.internal && !a.address.startsWith('169.254.')) ips.push(a.address);
     }
   }
-  return urls;
+  return ips.sort((a, b) => rank(a) - rank(b)).map((ip) => `http://${ip}:${port}`);
 }
 
 export function createApp({

@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "description": "Disputt – et sosialt bløff- og diskusjonsspill for 3+ spillere. Mobile first.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pettersommerseth1994/Disputt.git"
+  },
   "engines": {
     "node": ">=22"
   },
@@ -12,10 +16,11 @@
     "dev": "node --watch server/index.js",
     "test": "node --test \"test/*.test.js\"",
     "shots": "node tools/qa/shots.mjs",
-    "art": "node tools/art/build.mjs",
+    "art": "node tools/art/build.mjs && node tools/art/soften.mjs",
     "logo": "node tools/logo/build.mjs",
     "fonts": "bash tools/fonts/build.sh",
-    "vendor": "node tools/vendor.mjs"
+    "vendor": "node tools/vendor.mjs",
+    "play": "node tools/qa/play.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

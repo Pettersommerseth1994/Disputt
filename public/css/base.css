@@ -25,8 +25,8 @@ body {
   line-height: 1.45;
   font-weight: 500;
   background: var(--tex-grain), var(--tex-dark), var(--bg);
-  background-attachment: fixed;
   overscroll-behavior-y: none;
+  touch-action: manipulation; /* no double-tap zoom; pinch zoom still works */
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -123,12 +123,25 @@ button { touch-action: manipulation; }
 
 /* Sticky action bar at the bottom of a scrolling screen */
 .dock {
+  --page-bg: var(--burgundy-700);
+  --dock-tex: var(--tex-dark);
   position: sticky;
   bottom: 0;
   z-index: 5;
+  isolation: isolate;
   margin: auto calc(var(--page-x) * -1) 0;
   padding: var(--s-5) var(--page-x) var(--page-bottom);
-  background: linear-gradient(to top, var(--burgundy-700) 62%, rgba(106, 20, 40, 0));
+}
+/* The backdrop is the page surface again, faded out upward, so content scrolls away under the buttons. */
+.dock::before {
+  content: '';
+  position: absolute;
+  inset: -1.4rem 0 0;
+  z-index: -1;
+  background: var(--tex-grain), var(--dock-tex), var(--page-bg);
+  -webkit-mask-image: linear-gradient(to top, #000 70%, transparent);
+  mask-image: linear-gradient(to top, #000 70%, transparent);
+  pointer-events: none;
 }
 .dock > * + * { margin-top: var(--s-3); }
 

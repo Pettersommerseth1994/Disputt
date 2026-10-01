@@ -11,7 +11,7 @@ services:
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
-        value: 24
+        value: "24"
       # Optional: set once a custom domain is connected, e.g. https://disputt.no
       - key: PUBLIC_URL
         sync: false

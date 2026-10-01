@@ -102,7 +102,7 @@ describe('a full game over WebSockets', () => {
       await asker.until((c) => c.view.discussion.endsAt - c.view.now > 590_000, 'timer set to 10 minutes');
       asker.send({ t: 'timer.add', seconds: 60 });
       await asker.until((c) => c.view.discussion.endsAt - c.view.now > 650_000, 'one more minute');
-      assert.ok(other.view.discussion.endsAt - other.view.now > 640_000, 'everybody sees the adjusted clock');
+      await other.until((c) => c.view.discussion.endsAt - c.view.now > 640_000, 'everybody sees the adjusted clock');
 
       // alternate right and wrong answers so both impostor and loyal scoring are exercised
       const groupRight = rounds % 2 === 1;
