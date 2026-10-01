@@ -8,6 +8,7 @@
 
 import { isAvatarId } from './avatars.mjs';
 import { LETTERS, QUESTIONS } from './questions.js';
+import { nameKey } from './names.js';
 import { cleanName, defaultRandom, makeId, makeToken, shuffle } from './util.js';
 
 export const PHASE = Object.freeze({
@@ -28,6 +29,8 @@ export const LIMITS = Object.freeze({
   timerMinSec: 30,
   timerMaxSec: 60 * 60,
 });
+
+const MAX_GHOSTS = 2; // abandoned, nameless lobby placeholders kept around at the same time (see addPlayer)
 
 export const DEFAULT_TIMINGS = Object.freeze({
   roleMs: 8000,
@@ -143,13 +146,27 @@ export class Room {
 
   addPlayer({ asHost = false } = {}) {
     const now = this.clock();
+    // Placeholders nobody finished (no name yet) whose phone has gone: a join that never came through, typically a flaky
+    // connection that tried twice, or somebody whose screen locked on the profile page and who may be back in a minute.
+    // A couple may linger (the second chance for the sleeper); beyond that the newcomer takes over the one that has been
+    // gone longest, so retries can neither fill the lobby nor lock real players out.
+    const ghosts = asHost ? [] : [...this.players.values()].filter((p) => !isReady(p) && !p.connected && p.id !== this.hostId && p.id !== this.creatorId);
+    const crowded = ghosts.length >= MAX_GHOSTS || this.players.size >= LIMITS.maxPlayers;
+    const leftover = crowded ? ghosts.sort((a, b) => a.lastSeen - b.lastSeen)[0] ?? null : null;
     if (!asHost) {
       if (this.phase !== PHASE.LOBBY) {
         throw new GameError('started', 'Spillet har allerede startet.', { seats: this.claimableSeats() });
       }
-      if (this.players.size >= LIMITS.maxPlayers) {
+      if (!leftover && this.players.size >= LIMITS.maxPlayers) {
         throw new GameError('full', `Rommet er fullt (maks ${LIMITS.maxPlayers} spillere).`);
       }
+    }
+    if (leftover) {
+      leftover.token = makeToken(); // the abandoned phone, should it ever come back, no longer fits
+      leftover.joinedAt = now;
+      leftover.lastSeen = now;
+      this.touch();
+      return leftover;
     }
     const player = {
       id: makeId(),
@@ -222,7 +239,7 @@ export class Room {
     if (clean.length < 1) throw new GameError('bad_name', 'Skriv inn et navn.');
     if (!isAvatarId(avatar)) throw new GameError('bad_avatar', 'Velg en avatar.');
     const others = [...this.players.values()].filter((o) => o.id !== playerId && isReady(o));
-    if (others.some((o) => o.name.toLowerCase() === clean.toLowerCase())) {
+    if (others.some((o) => nameKey(o.name) === nameKey(clean))) {
       throw new GameError('name_taken', 'Det navnet er tatt – velg et annet.');
     }
     if (others.some((o) => o.avatar === avatar)) {

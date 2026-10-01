@@ -36,7 +36,8 @@ export const NAME_MAX = 14;
 
 /**
  * Strips control characters, zero-width and bidi-override characters (but keeps the zero-width joiner that
- * emoji sequences need), collapses whitespace and caps the name at NAME_MAX characters.
+ * emoji sequences need), collapses whitespace and caps the name at NAME_MAX characters. A name with nothing visible
+ * in it comes back empty.
  */
 export function cleanName(raw) {
   if (typeof raw !== 'string') return '';
@@ -46,7 +47,10 @@ export function cleanName(raw) {
     .replace(/\p{Cf}/gu, (c) => (c === String.fromCodePoint(0x200d) ? c : ''))
     .replace(/\s+/g, ' ')
     .trim();
-  return Array.from(s).slice(0, NAME_MAX).join('').trim();
+  const name = Array.from(s).slice(0, NAME_MAX).join('').trim();
+  // Hangul fillers, the blank braille cell and the like are letters or symbols to Unicode but draw nothing: a name made
+  // only of those would show up as an empty seat nobody can tell from another.
+  return name.replace(/[\p{Default_Ignorable_Code_Point}\p{Z}\u2800]/gu, '') === '' ? '' : name;
 }
 
 // No I, L or O: easy to confuse when typed by hand.

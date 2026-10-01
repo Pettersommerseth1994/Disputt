@@ -12,6 +12,7 @@ import { defaultRandom, makeRoomCode } from '../../shared/util.js';
 import { config } from '../settings.js';
 import { LIMITS, attachDataConnection } from './adapter.js';
 import { hostPeerId, loadPeer, openPeer } from './peer.js';
+import { POOL, connectionsToDrop, oldestUnidentified } from './pool.js';
 import { clearHostSnapshot, saveHostSnapshot } from './snapshot.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -59,29 +60,38 @@ export async function startHost({ restore = null } = {}) {
 
   // ---- guests
   const connections = new Map(); // dc -> hub connection
-  const accept = (dc) => {
-    if (stopped || connections.size >= LIMITS.maxConnections) {
-      dc.on('open', () => dc.close());
-      return;
+  const closeQuietly = (dc) => {
+    try {
+      dc.close();
+    } catch {
+      /* already closed */
     }
-    connections.set(dc, attachDataConnection(hub, dc));
+  };
+  const drop = (dc, conn) => {
+    closeQuietly(dc);
+    hub.close(conn);
+    connections.delete(dc);
+  };
+  const accept = (dc) => {
+    // Our pages always use the plain-text channel ('raw'). Anything else is not one of them, and PeerJS would decode
+    // binary/JSON payloads (and reassemble chunks) before the adapter's size limit ever gets to look at them.
+    if (stopped || dc.serialization !== 'raw') return closeQuietly(dc);
+    if (connections.size >= LIMITS.maxConnections) {
+      // Full: the oldest connection that never became a player makes room, so half-open connections cannot lock out
+      // the phones of real players. If every place belongs to a player, the newcomer waits outside.
+      const stale = oldestUnidentified(connections);
+      if (!stale) return closeQuietly(dc);
+      drop(...stale);
+    }
+    const conn = attachDataConnection(hub, dc);
+    conn.createdAt = Date.now();
+    connections.set(dc, conn);
     dc.on('close', () => connections.delete(dc));
   };
   // A phone that vanished (battery, tunnel, tab killed) never closes its channel properly: drop it after a while of
-  // silence so it shows up as disconnected and its seat can be taken over.
+  // silence so it shows up as disconnected and its seat can be taken over. Connections that never say a word go too.
   const reaper = setInterval(() => {
-    const t = Date.now();
-    for (const [dc, conn] of connections) {
-      if (t - conn.lastSeen > LIMITS.idleCloseMs) {
-        try {
-          dc.close();
-        } catch {
-          /* already closed */
-        }
-        hub.close(conn);
-        connections.delete(dc);
-      }
-    }
+    for (const [dc, conn] of connectionsToDrop(connections, Date.now(), { idleCloseMs: LIMITS.idleCloseMs, helloMs: POOL.helloMs })) drop(dc, conn);
   }, 5000);
 
   // ---- keeping the signalling connection alive (only new and reconnecting guests need it; open channels do not)
@@ -125,6 +135,36 @@ export async function startHost({ restore = null } = {}) {
       }
     }, 1500);
   }
+  /**
+   * After a long sleep, or a switch between Wi-Fi and mobile data, the signalling socket can look open to the browser
+   * while the broker dropped our id long ago (nothing on a dead TCP connection says so). New and returning guests would
+   * then get "game not found" while the host's own screen looks fine. So on waking up, drop the socket and open a fresh
+   * one: the same token claims the same id again. Open data channels to guests are not touched.
+   */
+  function refreshSignalling() {
+    if (stopped || recreating) return;
+    if (!peer || peer.destroyed) return keepSignalling();
+    try {
+      peer.disconnect();
+      peer.reconnect();
+    } catch {
+      /* the usual retry loop below picks it up */
+    }
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(keepSignalling, 5000);
+  }
+  let hiddenAt = null;
+  const onVisibility = () => {
+    if (document.visibilityState === 'hidden') {
+      hiddenAt = Date.now();
+      return;
+    }
+    const away = hiddenAt === null ? 0 : Date.now() - hiddenAt;
+    hiddenAt = null;
+    if (away > 15_000) refreshSignalling(); // short blinks (a notification, the app switcher) leave the socket alone
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  addEventListener('online', refreshSignalling);
   wirePeer(peer);
 
   // ---- engine clock and persistence
@@ -196,6 +236,8 @@ export async function startHost({ restore = null } = {}) {
       clearTimeout(persistTimer);
       clearTimeout(reconnectTimer);
       document.removeEventListener('visibilitychange', onHide);
+      document.removeEventListener('visibilitychange', onVisibility);
+      removeEventListener('online', refreshSignalling);
       removeEventListener('pagehide', persistNow);
       hub.closeAll('expired'); // tells the guests the game is over
       for (const dc of connections.keys()) {

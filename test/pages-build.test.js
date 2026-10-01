@@ -39,7 +39,19 @@ describe('static build', () => {
 
   it('contains no absolute URLs: it must work under /Disputt/ as well as at the root', () => {
     const offenders = [];
-    const patterns = [/(?:src|href|content)="\/(?!\/)/, /url\(\s*['"]?\/(?!\/)/, /^\s*(?:import|export)\b[^;\n]*\bfrom\s+['"]\//m, /import\(\s*['"]\//, /new URL\(\s*['"]\//];
+    const patterns = [
+      /(?:src|href|content)="\/(?!\/)/,
+      /url\(\s*['"]?\/(?!\/)/,
+      /^\s*(?:import|export)\b[^;\n]*\bfrom\s+['"]\//m,
+      /import\(\s*['"]\//,
+      /new URL\(\s*['"]\//,
+      // paths written as JavaScript strings: they would send a Pages visitor to github.io/… instead of github.io/Disputt/…
+      /\bfetch\(\s*['"`]\/(?!\/)/,
+      /\b(?:replaceState|pushState)\([^)]*,\s*['"`]\/(?!\/)/,
+      /\blocation(?:\.href|\.pathname)?\s*=\s*['"`]\/(?!\/)/,
+      /\blocation\.(?:assign|replace)\(\s*['"`]\/(?!\/)/,
+      /\bnew (?:Worker|EventSource|SharedWorker)\(\s*['"`]\/(?!\/)/,
+    ];
     for (const f of files(out, (p) => /\.(html|css|js|mjs|webmanifest)$/.test(p) && !isVendor(p))) {
       // (404.html's <base href="/Disputt/"> is absolute on purpose: it is what makes the relative URLs work there)
       const text = fs.readFileSync(f, 'utf8').replace(/<base\s[^>]*>/g, '');
@@ -95,5 +107,41 @@ describe('build configuration', () => {
     assert.equal(turn.iceServers[0].urls, 'turn:t.example');
     await assert.rejects(buildConfig({ mode: 'p2p', iceServers: '{"not":"an array"}' }), /JSON array/);
     await assert.rejects(buildConfig({ mode: 'server' }), /--server-url/);
+  });
+});
+
+describe('build settings from repository variables are checked, not trusted', () => {
+  const attempt = (argv, env = {}) => build(['--out', path.join(os.tmpdir(), `disputt-bad-${process.pid}`), ...argv], env);
+
+  it('refuses values that could break out of the HTML attributes or the CSP', async () => {
+    for (const bad of [
+      ['--peer-host', 'peer.example.com"><script>alert(1)</script>'],
+      ['--peer-host', "peer.example.com; script-src *"],
+      ['--peer-host', 'peer example.com'],
+      ['--peer-port', '443; img-src *'],
+      ['--peer-port', '70000'],
+      ['--peer-path', '/peerjs"'],
+      ['--base', '/Disputt"><script>x</script>/'],
+      ['--base', '/Disputt'], // must end with a slash
+      ['--base', 'https://evil.example/'],
+      ['--mode', 'server', '--server-url', 'https://example.com/ws'], // not a WebSocket address
+      ['--mode', 'server', '--server-url', 'wss://exa"mple.com/ws'],
+    ]) {
+      await assert.rejects(attempt(bad), Error, `should refuse ${JSON.stringify(bad)}`);
+    }
+    await assert.rejects(attempt(['--peer-host', 'x'], { DISPUTT_PEER_PORT: '1 2' }), Error, 'the same checks apply to environment variables');
+  });
+
+  it('accepts ordinary values and puts them in the CSP', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'disputt-ok-'));
+    try {
+      const r = await build(['--out', dir, '--base', '/Disputt/', '--peer-host', 'peer.example.com', '--peer-port', '9000', '--peer-path', '/peerjs', '--peer-secure', '1'], {});
+      const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+      assert.match(html, /connect-src 'self' wss:\/\/peer\.example\.com:9000 https:\/\/peer\.example\.com:9000/);
+      assert.equal(r.config.peer.host, 'peer.example.com');
+      assert.match(fs.readFileSync(path.join(dir, '404.html'), 'utf8'), /<base href="\/Disputt\/">/);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -28,12 +28,15 @@ Koden ligger i [`public/js/p2p/`](../public/js/p2p) (`host.js`, `guest.js`, `ada
 | En gjest mister nettleserdataene sine | Hen åpner lenken igjen, velger seg selv fra «Spillet har startet» og tar over plassen. |
 | En gjest forsvinner brått (batteri, tunnel) | Verten markerer hen som frakoblet etter ca. 35 s uten ping, og plassen kan overtas. |
 | En gjest får ikke koblet til (verten er funnet, men nettet slipper ikke telefonene i direkte kontakt) | Hen prøver på nytt hvert femtende sekund. Etter to mislykkede forsøk (ca. 30 s) står det et råd på skjermen: sjekk at verten har siden åpen, og bytt mellom Wi‑Fi og mobildata. |
+| Verten låser skjermen en stund, eller bytter mellom Wi‑Fi og mobildata | Når siden er synlig igjen (eller nettleseren sier «online») åpner verten en ny forbindelse til megleren, for den gamle kan være død uten at noen vet det, og da ville nye gjester få «fant ikke spillet». Åpne kanaler til gjestene røres ikke. |
+| En gjest er på «Spillet har startet»-skjermen og mister linjen til verten | Siden kobler seg til igjen av seg selv, så trykket på plassen virker når linjen er tilbake. |
 | Megleren (`0.peerjs.com`) er nede | Nye spill og innmeldinger feiler. Pågående spill fortsetter (kanalene er direkte). |
 
 ## Begrensninger
 
 - **Nettverk.** Direkte tilkobling krever at telefonene finner en vei til hverandre. STUN-serverne fikser det på de fleste hjemmenett og mobilnett, men ikke alle: strenge bedriftsnett og noen mobiloperatører (symmetrisk NAT) slipper ikke gjennom. Da blir en gjest stående på «Blir med …». Det hjelper å legge til en TURN-server (under), bytte til Wi‑Fi, eller bruke servermodus ([DEPLOY.md](DEPLOY.md)).
 - **Verten er serveren.** Alt står og faller med vertens telefon og at siden hennes er åpen.
+- **Hvem som helst med romkoden kan prøve seg.** Verten avviser kanaler av feil type, lukker tilkoblinger som ikke sier noe i løpet av ca. 15–20 s, og slipper alltid ekte spillere til foran slike tilkoblinger (`public/js/p2p/pool.js`, testet av `npm run qa:hostile`). Den som kjenner koden kan også ta over en *frakoblet* plass fra «Spillet har startet»-skjermen, siden en telefon som har mistet nettleserdataene ikke har noen hemmelighet å vise frem. Alle de andre får et varsel når det skjer, og den som tok over slipper plassen sin fra før. Blir dette et problem i vennegjengen, er neste steg at verten må godkjenne overtakelser.
 - **Fusk er mulig.** Verten kan i prinsippet lese alt (spørsmål, hvem som er imposter) med utviklerverktøy, og spørsmålsbanken ligger i den offentlige koden. Det passer for venner, ikke for konkurranser. Servermodus har ikke dette problemet.
 - **IP-adresser.** Slik WebRTC fungerer kan spillerne teknisk se hverandres IP-adresser.
 - **Samme avhengighet til én tjeneste:** `0.peerjs.com` drives gratis av PeerJS-prosjektet, uten garanti. Den kan byttes ut med en egen megler (under).
@@ -60,7 +63,9 @@ npm run pages:preview          # bygger og serverer dist/ på http://localhost:8
 npm run play:p2p -- 4 2        # UI-test: 4 «telefoner» spiller til 2 poeng over WebRTC
 npm run play:live              # samme test mot den publiserte siden (ekte megler og tidtakere)
 npm run qa:stuck               # gjest uten linje til verten får rådet «bytt mellom Wi‑Fi og mobildata»
-npm run qa:signalling          # verten mister kontakten med meglertjenesten: spillet fortsetter, nye gjester kommer inn
+npm run qa:signalling          # kontakten med meglertjenesten faller ut, verten våkner, plassvelgeren mister linjen: alt kommer seg
+npm run qa:hostile             # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn
+npm run play:subpath           # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages
 ```
 
 `play:p2p` starter en lokal PeerJS-megler og serverer den *bygde* siden, så hele flyten (bygget, CSP-en og WebRTC) testes uten internett. `play:live` spiller samme spill mot siden på GitHub Pages og den ekte megleren. Alle «telefonene» sitter da på samme maskin og nett, så den viser at siden og megleren virker, ikke at et gitt mobilnett slipper gjennom. Den tester blant annet at verten kan laste siden på nytt midt i en runde, og at en forsvunnet telefons plass kan overtas. Enhetstestene dekker adapteren ([`test/adapter.test.js`](../test/adapter.test.js)), lagring og gjenoppretting av rom ([`test/game.test.js`](../test/game.test.js)) og selve byggeresultatet ([`test/pages-build.test.js`](../test/pages-build.test.js)).

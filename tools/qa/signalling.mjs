@@ -1,6 +1,10 @@
-// The host's connection to the introduction service (PeerJS broker) drops, as it does on a network blip or when a phone
-// switches between Wi-Fi and mobile data: games in progress must carry on, and new or returning guests must still get in
-// once the host is back on the service.
+// Connections come and go on real phones. This plays through what that does to a peer-to-peer game:
+//  - the host's connection to the introduction service (PeerJS broker) drops, in the lobby and mid-game: games in
+//    progress carry on, new guests still get in once the host is back on the service
+//  - the host wakes up (the browser says "online", or the page has been hidden for a while): it opens a fresh
+//    connection to the broker by itself, because the old one may be silently dead
+//  - a guest on the "game has started, pick your seat" screen loses its line to the host: it reconnects by itself
+//    and the seat can still be taken
 //   node tools/qa/signalling.mjs
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
@@ -18,14 +22,22 @@ async function newPhone(name) {
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
-  // remember every WebSocket, so a test can cut the one that goes to the introduction service
+  // remember every WebSocket and every WebRTC connection, so a test can cut them like a network would
   await page.evaluateOnNewDocument(() => {
     window.__sockets = [];
-    const Native = window.WebSocket;
-    window.WebSocket = class extends Native {
+    window.__pcs = [];
+    const NativeSocket = window.WebSocket;
+    window.WebSocket = class extends NativeSocket {
       constructor(...args) {
         super(...args);
         window.__sockets.push(this);
+      }
+    };
+    const NativePC = window.RTCPeerConnection;
+    window.RTCPeerConnection = class extends NativePC {
+      constructor(...args) {
+        super(...args);
+        window.__pcs.push(this);
       }
     };
   });
@@ -56,6 +68,14 @@ const cutSignalling = (p) =>
     open.forEach((s) => s.close());
     return open.length;
   });
+/** How many connections to the introduction service this page has made so far, and how many are open now. */
+const signallingSockets = (p) =>
+  p.page.evaluate(() => {
+    const all = window.__sockets.filter((s) => s.url.includes('/peerjs'));
+    return { made: all.length, open: all.filter((s) => s.readyState === WebSocket.OPEN).length };
+  });
+/** Ends the phone's WebRTC lines (to the host) the way a lost network would: the other end notices at once. */
+const cutLines = (p) => p.page.evaluate(() => window.__pcs.forEach((pc) => pc.close()));
 
 try {
   const host = await newPhone('Petter');
@@ -89,21 +109,78 @@ try {
   assert.equal(await a.page.$('.banner'), null, 'no "connection lost" banner for a guest whose introduction connection dropped');
   await waitText(host, /Spillere\s+3\/10/);
 
-  // 3. the game starts, the host drops the service again mid-game: play goes on, a newcomer finds the game
+  // 3. the host's phone wakes up: the browser reports "online" and the old socket may be dead without anybody knowing.
+  //    The host must not wait for PeerJS to notice: it opens a fresh connection to the broker by itself.
+  let before = await signallingSockets(host);
+  assert.equal(before.open, 1, 'the host has one open connection to the introduction service');
+  await host.page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await sleep(2000);
+  let after = await signallingSockets(host);
+  assert.ok(after.made > before.made, `"online" made the host open a new connection to the broker (${before.made} -> ${after.made})`);
+  assert.equal(after.open, 1, 'and still exactly one is open');
+  const d = await newPhone('Per');
+  await d.page.goto(`${base}/?j=${code}`);
+  await register(d, 0);
+  await waitText(d, /Du er med/, 30000);
+  await waitText(host, /Spillere\s+4\/10/);
+  log('host woke up ("online") -> opened a fresh broker connection, and Per could join');
+
+  //    ... and after the page has been hidden for a while (a locked screen), coming back does the same
+  before = await signallingSockets(host);
+  await host.page.evaluate(() => {
+    const real = Date.now.bind(Date);
+    window.__skew = 0;
+    Date.now = () => real() + window.__skew;
+    let state = 'hidden';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+    document.dispatchEvent(new Event('visibilitychange'));
+    window.__skew = 16_000; // the screen stayed locked for 16 s (the guests' pings are 15 s apart, the reaper allows 35)
+    state = 'visible';
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await sleep(2000);
+  after = await signallingSockets(host);
+  assert.ok(after.made > before.made, `waking from a long hidden spell made the host open a new connection (${before.made} -> ${after.made})`);
+  assert.equal(after.open, 1);
+  await host.page.evaluate(() => (window.__skew = 0));
+  log('host came back from a long hidden spell -> opened a fresh broker connection');
+
+  // 4. the game starts; the host drops the service again mid-game: play goes on
   await host.page.focus('#target');
   await host.page.keyboard.type('1');
   await sleep(400);
   await clickButton(host, 'Start Disputt');
-  const all = [host, a, b];
-  await Promise.all(all.map((p) => waitText(p, /IMPOSTER|LOJAL/i)));
-  assert.ok((await cutSignalling(host)) >= 1, 'the host re-registered with the introduction service after the first drop');
+  const playing = [host, a, b, d];
+  await Promise.all(playing.map((p) => waitText(p, /IMPOSTER|LOJAL/i)));
+  assert.ok((await cutSignalling(host)) >= 1, 'the host re-registered with the introduction service after the earlier drops');
   await sleep(2500);
+
+  // 5. Ola's phone is gone for good (the line ends cleanly, the page is closed): his seat can be taken over
+  await cutLines(b);
+  await b.page.goto('about:blank');
+  await Promise.all([host, a, d].map((p) => p.page.waitForFunction(() => document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText), { timeout: 15000 })));
+  log('the round carried on without Ola');
+
+  // 6. Kari opens the link, finds the game under way and the seat picker with Ola's seat on it. Her line to the host
+  //    then drops (a locked screen, a network switch). The picker must reconnect by itself, or tapping the seat
+  //    would do nothing at all.
   const c = await newPhone('Kari');
   await c.page.goto(`${base}/?j=${code}`);
   await waitText(c, /Spillet har startet/i, 30000);
-  log('host dropped the introduction service mid-game -> a newcomer still finds the game');
-  await Promise.all(all.map((p) => p.page.waitForFunction(() => document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText), { timeout: 15000 })));
-  log('and the round carried on');
+  const seatShown = () => c.page.evaluate(() => [...document.querySelectorAll('.player')].some((el) => el.innerText.includes('Ola')));
+  for (let tries = 0; !(await seatShown()); tries++) {
+    assert.ok(tries < 15, 'Ola\'s seat became available');
+    await sleep(2000); // the host needs a moment to see that Ola's line is gone
+    if (await seatShown()) break;
+    await clickButton(c, 'Sjekk på nytt');
+    await waitText(c, /Spillet har startet/i);
+  }
+  log('a newcomer found the game and the seat picker');
+  await cutLines(c);
+  await sleep(300);
+  await c.page.evaluate(() => [...document.querySelectorAll('.player')].find((el) => el.innerText.includes('Ola')).click());
+  await waitText(c, /Du er\s+(IMPOSTER|LOJAL)/i, 30000);
+  log('the line to the host dropped on the seat picker -> it reconnected, and the tap took the seat');
 
   log('\nSIGNALLING DROPS: OK');
 } catch (err) {

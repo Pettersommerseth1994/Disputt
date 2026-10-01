@@ -150,7 +150,8 @@ export function connect() {
 /** p2p mode connects per room: there is nothing to connect to until we have a room code. */
 async function connectP2P() {
   const session = store.session;
-  const code = session?.code ?? store.joining;
+  // (the "game has started, pick your seat" screen has neither a session nor `joining`, but it does have a room to go back to)
+  const code = session?.code ?? store.joining ?? store.seats?.code;
   if (!code) {
     setStore({ conn: 'open', everOpened: true }); // idle on the start screen
     return;
@@ -295,6 +296,9 @@ function onMessage(msg) {
         if (isP2P) teardown();
         setStore({ session: null, view: null, notice: 'Spillet er avsluttet.', route: { page: 'home' }, conn: isP2P ? 'open' : store.conn });
       }
+      break;
+    case 'notice':
+      if (typeof msg.text === 'string') toast(msg.text.slice(0, 120), 7000);
       break;
     case 'error':
       onError(msg);

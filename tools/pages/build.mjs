@@ -50,7 +50,30 @@ function copyDir(from, to, filter = () => true) {
   }
 }
 
+// These values come from the command line or from repository variables and end up inside HTML attributes (the CSP
+// <meta>, <base href>) and inside the CSP itself, where a quote or a semicolon would change what they mean.
+const HOST = /^(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*|\[[0-9A-Fa-f:.]+\])$/;
+const URL_PATH = /^\/[A-Za-z0-9._~\-/]*$/;
+function check(what, value, ok) {
+  if (value !== undefined && value !== null && !ok(String(value))) {
+    throw new Error(`${what} has characters that do not belong in it: ${JSON.stringify(value)}`);
+  }
+}
+const escapeAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 export async function buildConfig(opts) {
+  check('peer host (--peer-host / DISPUTT_PEER_HOST)', opts.peerHost, (v) => HOST.test(v));
+  check('peer port (--peer-port / DISPUTT_PEER_PORT)', opts.peerPort, (v) => /^\d{1,5}$/.test(v) && Number(v) >= 1 && Number(v) <= 65535);
+  check('peer path (--peer-path / DISPUTT_PEER_PATH)', opts.peerPath, (v) => URL_PATH.test(v));
+  check('--base', opts.base, (v) => URL_PATH.test(v) && v.endsWith('/'));
+  check('server URL (--server-url / DISPUTT_SERVER_URL)', opts.serverUrl, (v) => {
+    try {
+      const u = new URL(v);
+      return ['ws:', 'wss:'].includes(u.protocol) && HOST.test(u.hostname); // (URL parsing alone lets a quote through in a host name)
+    } catch {
+      return false;
+    }
+  });
   const defaults = (await import(pathToFileURL(path.join(ROOT, 'public', 'config.js')).href)).default;
   const config = { ...defaults, mode: opts.mode === 'server' ? 'server' : 'p2p', serverUrl: opts.serverUrl || null, peer: { ...defaults.peer } };
   if (opts.peerHost) {
@@ -104,7 +127,7 @@ export function contentSecurityPolicy(config) {
 
 function withMeta(html, config, opts, extraHead = '') {
   const tags = [];
-  if (opts.csp) tags.push(`<meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(config)}">`);
+  if (opts.csp) tags.push(`<meta http-equiv="Content-Security-Policy" content="${escapeAttr(contentSecurityPolicy(config))}">`);
   tags.push('<meta name="referrer" content="no-referrer">');
   if (extraHead) tags.push(extraHead);
   return html.replace('<head>', `<head>\n  ${tags.join('\n  ')}`);
@@ -137,7 +160,7 @@ export async function build(argv = [], env = process.env) {
   walk(out);
   for (const page of pages) fs.writeFileSync(page, withMeta(fs.readFileSync(page, 'utf8'), config, opts));
   const index = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
-  fs.writeFileSync(path.join(out, '404.html'), opts.base ? index.replace('<head>', `<head>\n  <base href="${opts.base}">`) : index);
+  fs.writeFileSync(path.join(out, '404.html'), opts.base ? index.replace('<head>', `<head>\n  <base href="${escapeAttr(opts.base)}">`) : index);
   fs.writeFileSync(path.join(out, '.nojekyll'), '');
 
   let files = 0;

@@ -102,6 +102,29 @@ describe('lobby', () => {
     assert.equal(room.readyPlayers().length, players.length + 1);
   });
 
+  it('refuses names with nothing visible in them, and names that only look like somebody else\'s', () => {
+    const { room } = lobby(3);
+    const p = room.addPlayer();
+    for (const invisible of ['\u3164', '\u2800', '\u200b\u200b', '\u3164\u3164 \u2800', '\u00ad']) {
+      throwsCode(() => room.setProfile(p.id, { name: invisible, avatar: AVATAR_IDS[6] }), 'bad_name');
+    }
+    // "Spiller1" is taken: the same name in other clothes is too
+    for (const lookalike of ['SPILLER1', 'spiller\u200b1', '\uff33piller1', 'Spiller 1', 'sріller1' /* Cyrillic і */]) {
+      throwsCode(() => room.setProfile(p.id, { name: lookalike, avatar: AVATAR_IDS[6] }), 'name_taken');
+    }
+    room.setProfile(p.id, { name: 'Spiller11', avatar: AVATAR_IDS[6] }); // a different name is fine
+    assert.equal(byId(room, p.id).name, 'Spiller11');
+  });
+
+  it('keeps emoji, accents and non-Latin names that do show something', () => {
+    const { room } = lobby(3);
+    for (const [i, name] of ['😀', 'Åse', 'Zoë', '李雷', '👨\u200d👩\u200d👧'].entries()) {
+      const p = room.addPlayer();
+      room.setProfile(p.id, { name, avatar: AVATAR_IDS[3 + i] });
+      assert.equal(byId(room, p.id).name, name);
+    }
+  });
+
   it('cleans and truncates names', () => {
     const { room } = lobby(3);
     const p = room.addPlayer();

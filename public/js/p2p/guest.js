@@ -5,32 +5,76 @@ import { PEER_PREFIX, hostPeerId, loadPeer, openPeer } from './peer.js';
 
 let peer = null; // one signalling connection per page, reused when we reconnect to the host
 let current = null; // the link being established (peer-level errors are reported against it)
+let backoffMs = 0; // wait before the next signalling reconnect: none at first, then 1, 2, 4, 8 s while it keeps failing
+let backoffTimer = null;
+let listening = false;
 
 const randomId = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, '0')).join('');
 
-async function guestPeer(config) {
-  const Peer = await loadPeer();
-  if (peer && !peer.destroyed) {
-    if (!peer.disconnected) return peer;
-    peer.reconnect();
-    await new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(Object.assign(new Error('Signalling server did not answer'), { kind: 'offline' })), 10000);
-      peer.once?.('open', () => (clearTimeout(t), resolve()));
-      if (!peer.disconnected) (clearTimeout(t), resolve());
-    });
-    return peer;
-  }
-  peer = await openPeer(Peer, `${PEER_PREFIX}g-${randomId()}`, config);
-  peer.on('error', (err) => {
-    if (err?.type === 'peer-unavailable') current?.fail({ unavailable: true });
+/** Waits until the signalling connection is open. PeerJS silently drops an offer sent before that. */
+function whenOpen(p, ms = 10_000) {
+  return new Promise((resolve, reject) => {
+    if (p.open) return resolve();
+    const onOpen = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(() => {
+      p.off?.('open', onOpen);
+      reject(Object.assign(new Error('Signalling server did not answer'), { kind: 'offline' }));
+    }, ms);
+    p.once('open', onOpen);
   });
-  peer.on('disconnected', () => {
+}
+
+/** Reconnects the signalling socket after it dropped. Patiently: offline, a tight loop hammers the broker and the battery. */
+function scheduleReconnect() {
+  clearTimeout(backoffTimer);
+  const wait = backoffMs;
+  backoffMs = Math.min(8000, backoffMs ? backoffMs * 2 : 1000);
+  backoffTimer = setTimeout(() => {
+    if (!peer || peer.destroyed || !peer.disconnected) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return scheduleReconnect(); // nothing to reach yet
     try {
       peer.reconnect();
     } catch {
       /* the next link attempt will deal with it */
     }
+  }, wait);
+}
+
+const backOnline = () => {
+  backoffMs = 0;
+  if (peer?.disconnected) scheduleReconnect();
+};
+
+async function guestPeer(config) {
+  const Peer = await loadPeer();
+  if (peer && !peer.destroyed) {
+    if (peer.disconnected) {
+      backoffMs = 0;
+      try {
+        peer.reconnect();
+      } catch {
+        /* whenOpen below reports it if nothing comes of it */
+      }
+    }
+    // Reconnecting takes a moment (and `disconnected` is already false by then): an offer sent now would be lost.
+    await whenOpen(peer);
+    return peer;
+  }
+  peer = await openPeer(Peer, `${PEER_PREFIX}g-${randomId()}`, config);
+  peer.on('open', () => {
+    backoffMs = 0;
   });
+  peer.on('error', (err) => {
+    if (err?.type === 'peer-unavailable') current?.fail({ unavailable: true });
+  });
+  peer.on('disconnected', scheduleReconnect);
+  if (!listening && typeof addEventListener === 'function') {
+    listening = true;
+    addEventListener('online', backOnline);
+  }
   return peer;
 }
 
@@ -98,6 +142,8 @@ export function openGuestLink(code, handlers, config) {
 /** Drops the signalling connection (leaving a room for good). */
 export function resetGuest() {
   current = null;
+  clearTimeout(backoffTimer);
+  backoffMs = 0;
   try {
     peer?.destroy();
   } catch {

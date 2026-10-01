@@ -41,6 +41,7 @@ export const store = {
   joining: null, // room code we are trying to join
   creating: false, // p2p: the host is being set up (reserving a room code with the signalling server)
   stuck: 0, // p2p: how many connection attempts in a row failed without ever finding a line to the host
+  wakeLockDenied: false, // the browser refused to keep the screen awake (low-power mode, home-screen app …): tell players to turn auto-lock off
   seats: null, // { code, seats } when the game has already started and a seat can be claimed
   notice: null, // message shown on the home screen (e.g. "game is gone")
   toast: null, // transient error/info

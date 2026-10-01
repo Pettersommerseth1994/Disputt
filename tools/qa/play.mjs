@@ -1,6 +1,7 @@
 // UI end-to-end: several "phones" (isolated browser contexts) play a whole game through the real interface.
-//   node tools/qa/play.mjs [players=4] [target=2] [--p2p] [--url=https://…] [--shots]
+//   node tools/qa/play.mjs [players=4] [target=2] [--p2p] [--subpath] [--url=https://…] [--shots]
 //   --p2p   test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server
+//   --subpath   with --p2p: serve the site below /Disputt/ like GitHub Pages does (catches links that forget the sub-path)
 //   --url   play against an already deployed peer-to-peer site (real PeerJS cloud, real timers), e.g. the GitHub Pages address
 // Needs Google Chrome (CHROME_PATH to override). Exits non-zero on the first thing that does not behave.
 import assert from 'node:assert/strict';
@@ -20,14 +21,15 @@ assert.ok(Number.isInteger(PLAYERS) && PLAYERS >= 3 && PLAYERS <= 10 && Number.i
 const SHOTS = flags.includes('--shots');
 const LIVE_URL = flags.find((f) => f.startsWith('--url='))?.slice('--url='.length);
 const LIVE = Boolean(LIVE_URL);
-const P2P = LIVE || flags.includes('--p2p');
+const SUBPATH = flags.includes('--subpath');
+const P2P = LIVE || SUBPATH || flags.includes('--p2p');
 const SLOW = LIVE ? 2 : 1; // the deployed site runs on the real timers and a real network
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 'Nina', 'Lars'];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(...a);
 
-const site = LIVE ? { base: LIVE_URL.replace(/\/+$/, ''), stop: async () => {} } : P2P ? await startP2PSite() : await startNodeSite();
+const site = LIVE ? { base: LIVE_URL.replace(/\/+$/, ''), stop: async () => {} } : P2P ? await startP2PSite({ prefix: SUBPATH ? '/Disputt/' : '' }) : await startNodeSite();
 const base = site.base;
 log(`${LIVE ? 'deployed peer-to-peer site' : P2P ? 'peer-to-peer build' : 'Node server'} at ${base}`);
 // (loopback WebRTC between two pages of the same browser needs real host candidates, not mDNS names)
@@ -36,12 +38,35 @@ if (SHOTS) fs.mkdirSync('tmp/play', { recursive: true });
 
 // ---------------------------------------------------------------- helpers
 const phones = [];
-async function newPhone(name) {
+const problems = [];
+async function newPhone(name, { wakeLock = 'granted' } = {}) {
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
-  page.on('pageerror', (e) => console.error(`[${name}] PAGE ERROR:`, e.message));
-  page.on('console', (m) => m.type() === 'error' && !/404/.test(m.text()) && console.error(`[${name}] console.error:`, m.text()));
+  // Screen wake lock: most phones grant it, some refuse (low-power mode, home-screen apps). Headless Chrome decides by
+  // itself, so every phone gets a stand-in with a known answer.
+  await page.evaluateOnNewDocument((mode) => {
+    Object.defineProperty(navigator, 'wakeLock', {
+      configurable: true,
+      value: {
+        request: async () => {
+          if (mode === 'denied') throw new DOMException('Denied', 'NotAllowedError');
+          return { release: async () => {}, addEventListener() {} };
+        },
+      },
+    });
+  }, wakeLock);
+  // An uncaught exception or a blocked resource (the built site ships a Content-Security-Policy) is a failure, not a log line.
+  // (Other console errors are printed only: PeerJS logs its own, harmless ones while peers come and go.)
+  page.on('pageerror', (e) => {
+    problems.push(`[${name}] page error: ${e.message}`);
+    console.error(`[${name}] PAGE ERROR:`, e.message);
+  });
+  page.on('console', (m) => {
+    if (m.type() !== 'error' || /404/.test(m.text())) return;
+    if (/Content Security Policy|Refused to (load|connect|execute)/i.test(m.text())) problems.push(`[${name}] blocked by the CSP: ${m.text()}`);
+    console.error(`[${name}] console.error:`, m.text());
+  });
   const phone = { name, ctx, page };
   phones.push(phone);
   return phone;
@@ -73,7 +98,7 @@ async function register(p, name, avatarIndex) {
 
 try {
   // ------------------------------------------------------------ lobby
-  const host = await newPhone(NAMES[0]);
+  const host = await newPhone(NAMES[0], { wakeLock: 'denied' }); // the host's phone refuses to stay awake
   await host.page.goto(`${base}/`);
   await waitText(host, /Diskuter\s+og\s+vinn/);
   await shot(host, '01-home');
@@ -86,6 +111,8 @@ try {
   await host.page.evaluate(() => document.querySelector('.profile-prompt').click());
   await register(host, NAMES[0], 0);
   await waitText(host, /Spillere\s+1\/10/);
+  // a phone that refuses to keep the screen awake must tell its owner to turn auto-lock off by hand
+  await waitText(host, /sett skjermlåsen/i, 5000);
   const code = await host.page.$eval('.lobby__code', (el) => el.textContent.trim());
   assert.match(code, /^[A-Z]{4}$/, 'host sees a four-letter code');
   // the QR code really contains a join link for this room
@@ -119,6 +146,7 @@ try {
     await p.page.goto(`${base}/?j=${code.toLowerCase()}`); // like scanning the QR code
     await register(p, NAMES[i], 0); // taken avatars are disabled, so the first enabled one is always free
     await waitText(p, /Du er med/);
+    assert.doesNotMatch(await bodyText(p), /sett skjermlåsen/i, 'a phone that does keep the screen awake needs no tip');
     others.push(p);
   }
   await waitText(host, new RegExp(`Spillere\\s+${PLAYERS}/10`));
@@ -237,7 +265,9 @@ try {
     });
     await waitText(asker, /Imposteren var|vant!|Delt seier/i, 8000 * SLOW);
     await sleep(300);
-    assert.equal(await asker.page.$('.toast'), null, 'no error toast after a double tap');
+    // (the notice that a seat was taken over by a new phone is a toast too, and is meant to be there)
+    const toasts = await asker.page.$$eval('.toast', (els) => els.map((e) => e.innerText));
+    assert.deepEqual(toasts.filter((t) => !/^Plassen til .* ble tatt over av en ny telefon\.$/.test(t)), [], 'no error toast after a double tap');
 
     // summary (or the winner)
     await Promise.all(all.map((p) => waitText(p, /Imposteren var|vant!|Delt seier/i, 8000 * SLOW)));
@@ -269,7 +299,9 @@ try {
         await waitText(fresh, /Venter på at verten starter neste runde/);
         all[all.indexOf(lost)] = fresh;
         others[others.indexOf(lost)] = fresh;
-        log('a fresh phone took over the lost seat');
+        // everybody else is told that the seat changed phones (claiming a seat needs no secret, so it has to be visible)
+        await waitText(host, new RegExp(`Plassen til ${lost.name} ble tatt over av en ny telefon`), 5000);
+        log('a fresh phone took over the lost seat, and the host was told');
       }
       // a guest has the scoreboard open when the host starts the next round: the role reveal must not be hidden behind it
       const guest = others[0];
@@ -292,6 +324,7 @@ try {
   await clickButton(host, 'Spill igjen');
   await Promise.all(all.map((p) => waitText(p, /Spillere/)));
   log('play again -> lobby ok');
+  assert.deepEqual(problems, [], 'no page errors and nothing blocked by the Content-Security-Policy');
   log('\nUI END-TO-END: OK');
 } catch (err) {
   console.error('\nUI END-TO-END FAILED:', err.message);

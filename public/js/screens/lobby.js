@@ -35,8 +35,8 @@ function KickButton({ player }) {
   </button>`;
 }
 
-const AwakeTip = () =>
-  keepsAwake ? null : html`<p class="small muted center" style="max-width:22rem;margin-inline:auto">Tips: sett skjermlåsen på telefonen til «Aldri» mens dere spiller, så mister du ikke forbindelsen.</p>`;
+const AwakeTip = ({ denied = false }) =>
+  keepsAwake && !denied ? null : html`<p class="small muted center" style="max-width:22rem;margin-inline:auto">Tips: sett skjermlåsen på telefonen til «Aldri» mens dere spiller, så mister du ikke forbindelsen.</p>`;
 
 function Players({ view, kickable = false }) {
   const missing = Math.max(0, view.limits.min - view.players.length);
@@ -142,7 +142,7 @@ function HostLobby({ view }) {
         html`<div class="row row--center">
           <${Button} variant="text" onClick=${() => setStore({ editing: true })}>Endre navn eller avatar</${Button}>
         </div>`}
-        <${AwakeTip} />
+        <${AwakeTip} denied=${s.wakeLockDenied} />
       </section>
 
       <section class="card stack">
@@ -176,6 +176,7 @@ function HostLobby({ view }) {
 }
 
 function GuestLobby({ view }) {
+  const s = useStore();
   const host = view.players.find((p) => p.isHost);
   const me = view.players.find((p) => p.id === view.you.id);
   return html`<main class="screen lobby">
@@ -194,7 +195,7 @@ function GuestLobby({ view }) {
       <section class="stack">
         <h2 class="center">Spillere <span class="muted">${view.players.length}</span></h2>
         <${Players} view=${view} />
-        <${AwakeTip} />
+        <${AwakeTip} denied=${s.wakeLockDenied} />
       </section>
     </div>
 

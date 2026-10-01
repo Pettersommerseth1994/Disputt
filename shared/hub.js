@@ -155,6 +155,10 @@ export class Hub {
 
   join(conn, msg) {
     const entry = this.find(msg.code);
+    // A second "join" on a connection that already sits in this room (a double tap, a retry) is the same seat again,
+    // not a new placeholder.
+    const mine = conn.code === entry.room.code && conn.playerId ? entry.room.players.get(conn.playerId) : null;
+    if (mine) return this.attach(entry, conn, mine);
     this.leaveCurrent(conn);
     const player = entry.room.addPlayer();
     this.attach(entry, conn, player);
@@ -170,6 +174,11 @@ export class Hub {
     const entry = this.find(msg.code);
     const player = entry.room.claimSeat(msg.playerId);
     this.attach(entry, conn, player);
+    // Claiming a seat needs no secret (the phone that lost its browser data has none), so it must at least be visible:
+    // everybody else is told, which is what keeps a friend from quietly peeking at somebody's role.
+    for (const [pid, ws] of entry.sockets) {
+      if (pid !== player.id) send(ws, { t: 'notice', text: `Plassen til ${player.name} ble tatt over av en ny telefon.` });
+    }
   }
 
   find(rawCode) {
@@ -180,6 +189,9 @@ export class Hub {
 
   attach(entry, conn, player) {
     const { room, sockets } = entry;
+    // A connection speaks for one player at a time. Without this, a connection that takes over a second seat (resume or
+    // claim) would keep the first one "connected" for good.
+    if (conn.playerId && (conn.code !== room.code || conn.playerId !== player.id)) this.detach(conn);
     const previous = sockets.get(player.id);
     if (previous && previous !== conn.ws) {
       send(previous, { t: 'closed', reason: 'replaced' });
@@ -193,12 +205,17 @@ export class Hub {
     this.broadcast(entry, { except: player.id });
   }
 
+  /** Lets go of the player this connection speaks for (they show as disconnected), without touching the room itself. */
+  detach(conn) {
+    if (conn.code) this.close(conn);
+    conn.code = null;
+    conn.playerId = null;
+  }
+
   /** A connection that creates/joins a different room first lets go of the one it had. */
   leaveCurrent(conn) {
     const oldCode = conn.code;
-    if (oldCode) this.close(conn);
-    conn.code = null;
-    conn.playerId = null;
+    this.detach(conn);
     // A lobby that has just lost its only visitor is dropped at once instead of lingering for half an hour.
     const old = oldCode && this.rooms.get(oldCode);
     if (old && old.room.empty && old.room.phase === PHASE.LOBBY && old.room.readyPlayers().length < 2) this.rooms.delete(oldCode);

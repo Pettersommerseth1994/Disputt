@@ -29,18 +29,37 @@ const freePort = () =>
     s.on('error', reject);
   });
 
-export async function startP2PSite({ out = 'tmp/dist-p2p' } = {}) {
+/**
+ * `prefix` ('/Disputt/') serves the site below that path and nothing outside it, the way GitHub Pages does for a
+ * project site, so mistakes like a link to "/assets/…" instead of "assets/…" show up in a browser test.
+ */
+export async function startP2PSite({ out = 'tmp/dist-p2p', prefix = '' } = {}) {
   const { PeerServer } = await import('peer');
   const peerPort = await freePort();
   const peerServer = PeerServer({ port: peerPort, path: '/peerjs', allow_discovery: false });
   const dist = path.resolve(ROOT, out);
-  await build(['--out', dist, '--mode', 'p2p', '--peer-host', '127.0.0.1', '--peer-port', String(peerPort), '--peer-path', '/peerjs', '--peer-secure', '0', '--timings', JSON.stringify(FAST)]);
+  await build(['--out', dist, ...(prefix ? ['--base', prefix] : []), '--mode', 'p2p', '--peer-host', '127.0.0.1', '--peer-port', String(peerPort), '--peer-path', '/peerjs', '--peer-secure', '0', '--timings', JSON.stringify(FAST)]);
   const statics = createStaticHandler({ publicDir: dist, sharedDir: path.join(dist, 'shared'), sharedExtensions: ['.mjs', '.js'] });
-  const server = http.createServer((req, res) => statics.serve(req, res, new URL(req.url, 'http://x').pathname));
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url, 'http://x');
+    let pathname = url.pathname;
+    if (prefix) {
+      if (pathname === prefix.slice(0, -1)) {
+        res.writeHead(301, { Location: `${prefix}${url.search}` });
+        return res.end();
+      }
+      if (!pathname.startsWith(prefix)) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('Not found (outside the project path)');
+      }
+      pathname = `/${pathname.slice(prefix.length)}`;
+    }
+    statics.serve(req, res, pathname);
+  });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   return {
     mode: 'p2p',
-    base: `http://127.0.0.1:${server.address().port}`,
+    base: `http://127.0.0.1:${server.address().port}${prefix.slice(0, -1)}`,
     peerPort,
     stop: async () => {
       server.closeAllConnections?.();

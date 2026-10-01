@@ -5,7 +5,7 @@ import { html, useEffect, useMemo, useRef, useState } from './vendor/htm-preact.
 import { qrSvg } from './qr.js';
 import { ROOT, asset } from './paths.js';
 import { config, isP2P } from './settings.js';
-import { toast } from './store.js';
+import { setStore, toast } from './store.js';
 import { clock, cx, ranking, useRemaining } from './util.js';
 
 export const avatarOf = (id) => AVATARS.find((a) => a.id === id);
@@ -232,8 +232,11 @@ export function useWakeLock(active) {
         const l = await navigator.wakeLock.request('screen');
         if (cancelled) l.release();
         else lock.current = l;
+        setStore({ wakeLockDenied: false });
       } catch {
-        /* denied (low battery, insecure context …) – harmless */
+        // Refused (low-power mode, a home-screen app …). The game still works, but the screen will lock by itself, so
+        // the lobby asks players to turn auto-lock off by hand.
+        setStore({ wakeLockDenied: true });
       }
     };
     const onVisible = () => document.visibilityState === 'visible' && acquire();

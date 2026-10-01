@@ -78,7 +78,7 @@ describe('data channel adapter', () => {
     assert.doesNotThrow(() => conn.ws.close());
   });
 
-  it('remembers when it last heard from the phone (for the idle reaper)', () => {
+  it('stamps the time of the last message on the connection (the host\'s idle reaper reads it; its decisions are tested in pool.test.js)', () => {
     const hub = fakeHub();
     const dc = new FakeChannel();
     let t = 5000;

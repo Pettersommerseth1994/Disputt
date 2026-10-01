@@ -8,9 +8,9 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | --- | --- | --- | --- |
 | `ping` | `c` (klokke) | alle | `pong {c, s}`; brukes til å synkronisere klokka |
 | `create` | | ny vert | `welcome` |
-| `join` | `code` | ny spiller | `welcome`, eller feil `room_not_found`, `started` (med `seats`), `full` |
+| `join` | `code` | ny spiller | `welcome`, eller feil `room_not_found`, `started` (med `seats`), `full`. Et nytt `join` på en tilkobling som allerede er med i rommet gir samme plass igjen, ikke en ny. Forlatte plassholdere (ingen navn, frakoblet) blir liggende en stund, så den som lot skjermen låse seg på profilsiden kan komme tilbake. Ligger det mer enn to igjen (eller er rommet fullt av dem), overtar neste som kommer den som har vært borte lengst, så gjentatte forsøk ikke fyller lobbyen med spøkelser |
 | `resume` | `code, playerId, token` | tilbakevendende | `welcome`, eller feil `bad_token` / `room_not_found` |
-| `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser) |
+| `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser). Krever ingen hemmelighet, for en telefon som har mistet nettleserdataene har ingen, så alle andre i rommet får `notice` om at plassen er overtatt. Tilkoblingen slipper plassen den hadde fra før |
 | `profile` | `name, avatar` | lobby | setter/endrer navn og avatar (unike) |
 | `target` | `value` (1–99) | vert, når som helst før spillet er ferdig | poengmål (sjekkes for vinner når runden er ferdig) |
 | `start` | | vert, lobby | starter første runde (min. 3 klare og tilkoblede) |
@@ -35,6 +35,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `error` | `code, message` (norsk, vises direkte), evt. ekstra felt (f.eks. `seats`) |
 | `removed` | `reason`: spilleren er fjernet (`kicked`, `not_ready`, `left`, `timeout`) |
 | `closed` | `reason`: `expired` (rommet er borte) eller `replaced` (samme spiller åpnet en annen fane) |
+| `notice` | `text`: en kort melding alle skal se (nå bare: «Plassen til … ble tatt over av en ny telefon»). Eldre klienter ignorerer den |
 | `pong` | `c, s`: `s` er serverklokka (ms) |
 
 **Utdaterte trykk:** kommer en melding i en fase den ikke hører hjemme i (dobbelttrykk, treg linje), svarer serveren *ikke* med en feil, men sender bare spilleren en fersk `state`, så skjermen rettes opp uten at det dukker opp en feilmelding.
