@@ -16,7 +16,7 @@ const viewports = (process.argv.slice(2).length ? process.argv.slice(2) : ['390x
 // (a key ending in "-held" is the same screen with every hold-to-see button held: the role card and the open role strip)
 const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held', 'discussion-host'];
 // ... and these should at least keep their main action and the text above it in view
-const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
+const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
 
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
@@ -78,6 +78,10 @@ const variant = (key, patch) => {
   return v;
 };
 fixtures['question-asker-longest'] = variant('question-asker-selected', (v) => Object.assign(v.question, { text: longestQ.text, options: LONG_OPTIONS }));
+// ... and the widest answer button the bank really has (the options above are a guess at the worst case)
+const widestOption = (q) => Math.max(...q.options.map((o) => o.length));
+const widestQ = QUESTIONS.reduce((a, b) => (widestOption(b) > widestOption(a) ? b : a));
+fixtures['question-asker-widest-option'] = variant('question-asker-selected', (v) => Object.assign(v.question, { text: widestQ.text, options: [...widestQ.options] }));
 fixtures['reveal-wrong-longest'] = variant('reveal-wrong', (v) => Object.assign(v.reveal, { correctText: 'Bjørnstjerne Bjørnson' }));
 fixtures['role-impostor-longest'] = variant('role-impostor', (v) => Object.assign(v.you.secret, { text: 'Bjørnstjerne Bjørnson' }));
 let failures = 0;

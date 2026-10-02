@@ -67,7 +67,7 @@ Utseendet er surrealistisk og lekent: fargestift/oljepastell på dyp burgunder, 
 
 ## Spørsmål
 
-Spørsmålene ligger i [`shared/questions.js`](shared/questions.js): tekst, fire alternativer og indeksen til riktig svar. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Banken har **54 spørsmål**: de fire første testspørsmålene og 50 om norsk og internasjonal allmennkunnskap, helst ting man egentlig vet men har glemt, så gruppa må diskutere seg frem (og imposteren har noe å spille på). Sjekk fakta mot en kilde, og la riktig svar stå på ulike plasser; `test/questions.test.js` passer på formen.
+Spørsmålene ligger i [`shared/questions.js`](shared/questions.js): tekst, fire alternativer og indeksen til riktig svar. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Banken har **88 spørsmål**: de fire første testspørsmålene, 12 fra et sett trykte spørsmålskort og resten om norsk og internasjonal allmennkunnskap, helst ting man egentlig vet men har glemt, så gruppa må diskutere seg frem (og imposteren har noe å spille på). Sjekk fakta mot en kilde, og la riktig svar stå på ulike plasser; `test/questions.test.js` passer på formen. Vær ekstra nøye med svar som kan bli utdatert (salgstall, rekorder): formuler dem så de holder, slik som «Hvilket *av disse* selger Vinmonopolet mest av i liter?».
 
 ## Struktur
 

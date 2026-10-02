@@ -76,13 +76,6 @@ export const QUESTIONS = [
   { id: 'stortinget', text: 'Hvor mange representanter har Stortinget?', options: ['150', '165', '169', '175'], correct: 2 },
 
   // ---- Norge: natur og kultur
-  {
-    id: 'galdhopiggen',
-    text: 'Hva er Norges høyeste fjell?',
-    options: ['Glittertind', 'Snøhetta', 'Galdhøpiggen', 'Store Skagastølstind'],
-    correct: 2,
-  },
-  { id: 'mjosa', text: 'Hva er Norges største innsjø?', options: ['Mjøsa', 'Femunden', 'Røssvatnet', 'Tyrifjorden'], correct: 0 },
   { id: 'naboland', text: 'Hvor mange land grenser til Norge?', options: ['2', '3', '4', '5'], correct: 1 },
   { id: 'alfabet', text: 'Hvor mange bokstaver har det norske alfabetet?', options: ['26', '27', '29', '31'], correct: 2 },
   {
@@ -127,7 +120,6 @@ export const QUESTIONS = [
   },
 
   // ---- Verden: geografi
-  { id: 'canberra', text: 'Hva er hovedstaden i Australia?', options: ['Sydney', 'Melbourne', 'Perth', 'Canberra'], correct: 3 },
   { id: 'ankara', text: 'Hva er hovedstaden i Tyrkia?', options: ['Istanbul', 'Izmir', 'Antalya', 'Ankara'], correct: 3 },
   { id: 'tidssoner', text: 'Hvor mange tidssoner har Russland?', options: ['6', '9', '11', '13'], correct: 2 },
   { id: 'bajkal', text: 'Hva er verdens dypeste innsjø?', options: ['Bajkal', 'Tanganyika', 'Superior', 'Victoria'], correct: 0 },
@@ -150,12 +142,6 @@ export const QUESTIONS = [
     options: ['Oksygen', 'Karbondioksid', 'Argon', 'Nitrogen'],
     correct: 3,
   },
-  {
-    id: 'sollys',
-    text: 'Hvor lang tid bruker lyset fra sola på å nå Jorden?',
-    options: ['Åtte sekunder', 'Åtte minutter', 'Åtte timer', 'Åtte dager'],
-    correct: 1,
-  },
   { id: 'kromosomer', text: 'Hvor mange kromosomer har et menneske?', options: ['23', '44', '46', '48'], correct: 2 },
   {
     id: 'pilgrimsfalk',
@@ -168,6 +154,120 @@ export const QUESTIONS = [
   // ---- Mat og drikke
   { id: 'safran', text: 'Hvilket krydder er dyrest per kilo?', options: ['Safran', 'Vanilje', 'Kardemomme', 'Kanel'], correct: 0 },
   { id: 'kaffe', text: 'Hvilket land produserer mest kaffe?', options: ['Colombia', 'Vietnam', 'Etiopia', 'Brasil'], correct: 3 },
+
+  // ---- From the printed question cards (each card has its right answer circled in red)
+  // Typos on the cards are fixed ("Amrikansk", "dessert vin", "bred bremmet") and three questions are shorter, to keep the
+  // question card short; the options are in the card's order. The right answers were checked against sources.
+  {
+    id: 'delstat',
+    text: 'I hvilken amerikansk delstat bor det flest mennesker?',
+    options: ['California', 'Washington', 'Texas', 'New York'],
+    correct: 0,
+  },
+  { id: 'dusin', text: 'Hvor mye er et dusin?', options: ['12', '20', '25', '30'], correct: 0 },
+  {
+    id: 'sorligste-hovedstad',
+    text: 'Hva er verdens sørligste hovedstad?',
+    options: ['Wellington', 'Canberra', 'Santiago de Chile', 'Cape Town'],
+    correct: 0,
+  },
+  {
+    id: 'ukraina-hav',
+    text: 'Hvilket hav grenser Ukraina til?',
+    options: ['Det baltiske hav', 'Middelhavet', 'Det kaspiske hav', 'Svartehavet'],
+    correct: 3,
+  },
+  { id: 'gutenberg', text: 'Rundt hvilket år fant Gutenberg opp boktrykkerkunsten?', options: ['1450', '1540', '1630', '1720'], correct: 0 },
+  { id: 'ekvator-storst', text: 'Hva er det største landet ekvator krysser?', options: ['DR Kongo', 'Brasil', 'India', 'Colombia'], correct: 1 },
+  // The card says that Falling Feather is what Vinmonopolet sells most of. In 2025 it came second (1 004 058 litres), just
+  // behind Marqués de Nombrevilla (1 038 717), which is not among the options: hence "av disse", which is right either way.
+  {
+    id: 'vinmonopolet-liter',
+    text: 'Hvilket av disse selger Vinmonopolet mest av i liter?',
+    options: ['Falling Feather (rødvin)', 'Dworek Vodka', 'Jägermeister', 'Baileys'],
+    correct: 0,
+  },
+  { id: 'franz-ferdinand', text: 'I hvilken by ble Franz Ferdinand skutt i 1914?', options: ['Moskva', 'Dallas', 'Berlin', 'Sarajevo'], correct: 3 },
+  { id: 'afrika-land', text: 'Hvor mange land består Afrika av?', options: ['22', '34', '46', '54'], correct: 3 },
+  { id: 'ekvator-land', text: 'Hvor mange land går ekvator gjennom?', options: ['3', '6', '9', '13'], correct: 3 },
+  {
+    id: 'mosambik',
+    text: 'Hva er avbildet i flagget til Mosambik?',
+    options: ['En løve med vinger', 'En naken dame', 'En AK-47-rifle', 'Et skipsratt'],
+    correct: 2,
+  },
+  {
+    id: 'kanari',
+    text: 'Hummer og kanari er et kjent uttrykk, men hva er kanari?',
+    options: ['En rotgrønnsak', 'En dessertvin', 'En teaterkikkert', 'En bredbremmet hatt'],
+    correct: 1,
+  },
+
+  // ---- More in the same style: Norge
+  {
+    id: 'sognefjorden',
+    text: 'Hva er Norges lengste fjord?',
+    options: ['Hardangerfjorden', 'Sognefjorden', 'Trondheimsfjorden', 'Oslofjorden'],
+    correct: 1,
+  },
+  { id: 'riksvapen', text: 'Hvilket dyr har Norge i riksvåpenet?', options: ['Ulv', 'Løve', 'Bjørn', 'Ørn'], correct: 1 },
+  {
+    id: 'trygve-lie',
+    text: 'Hvilken nordmann var FNs første generalsekretær?',
+    options: ['Halvdan Koht', 'Gro Harlem Brundtland', 'Trygve Lie', 'Thorvald Stoltenberg'],
+    correct: 2,
+  },
+  { id: 'nato', text: 'Hvilket år ble Norge med i NATO?', options: ['1945', '1949', '1952', '1957'], correct: 1 },
+  { id: 'vinmonopolet-1922', text: 'Hvilket år ble Vinmonopolet opprettet?', options: ['1916', '1922', '1927', '1939'], correct: 1 },
+
+  // ---- More in the same style: geografi og flagg
+  { id: 'nigeria', text: 'Hvilket land har flest innbyggere i Afrika?', options: ['Etiopia', 'Egypt', 'Sør-Afrika', 'Nigeria'], correct: 3 },
+  { id: 'rabat', text: 'Hva er hovedstaden i Marokko?', options: ['Casablanca', 'Marrakech', 'Rabat', 'Fès'], correct: 2 },
+  { id: 'kilimanjaro', text: 'I hvilket land ligger Kilimanjaro?', options: ['Kenya', 'Tanzania', 'Uganda', 'Etiopia'], correct: 1 },
+  { id: 'angkor-wat', text: 'I hvilket land ligger Angkor Wat?', options: ['Thailand', 'Vietnam', 'Kambodsja', 'Laos'], correct: 2 },
+  { id: 'petra', text: 'I hvilket land ligger ruinbyen Petra?', options: ['Egypt', 'Syria', 'Israel', 'Jordan'], correct: 3 },
+  {
+    id: 'angel-falls',
+    text: 'Hva er verdens høyeste foss?',
+    options: ['Niagarafallene', 'Victoriafallene', 'Angel Falls', 'Iguazú'],
+    correct: 2,
+  },
+  { id: 'timbuktu', text: 'I hvilket land ligger byen Timbuktu?', options: ['Niger', 'Mali', 'Mauritania', 'Tsjad'], correct: 1 },
+  { id: 'nepal', text: 'Hvilket land har et flagg som ikke er firkantet?', options: ['Nepal', 'Bhutan', 'Brunei', 'Sri Lanka'], correct: 0 },
+  { id: 'libanon', text: 'Hvilket land har et grønt sedertre i flagget?', options: ['Syria', 'Libanon', 'Kypros', 'Jordan'], correct: 1 },
+
+  // ---- More in the same style: historie
+  { id: 'revolusjonen', text: 'Hvilket år brøt den franske revolusjonen ut?', options: ['1689', '1776', '1789', '1815'], correct: 2 },
+  { id: 'sovjet', text: 'Hvilket år ble Sovjetunionen oppløst?', options: ['1985', '1987', '1989', '1991'], correct: 3 },
+  { id: 'augustus', text: 'Hvem var Romerrikets første keiser?', options: ['Julius Cæsar', 'Augustus', 'Nero', 'Konstantin'], correct: 1 },
+  {
+    id: 'mayflower',
+    text: 'Hva het skipet pilegrimsfedrene seilte med i 1620?',
+    options: ['Mayflower', 'Santa Maria', 'Beagle', 'Endeavour'],
+    correct: 0,
+  },
+  { id: 'tsjernobyl', text: 'Hvilket år skjedde Tsjernobyl-ulykken?', options: ['1976', '1979', '1983', '1986'], correct: 3 },
+
+  // ---- More in the same style: mat og drikke
+  { id: 'pilsner', text: 'Hvilket land stammer ølsorten pilsner fra?', options: ['Tsjekkia', 'Tyskland', 'Belgia', 'Danmark'], correct: 0 },
+  { id: 'tequila', text: 'Hva lages tequila av?', options: ['Kaktus', 'Sukkerrør', 'Mais', 'Agave'], correct: 3 },
+  {
+    id: 'chianti',
+    text: 'Hvilken drue er rødvinen Chianti hovedsakelig laget av?',
+    options: ['Merlot', 'Nebbiolo', 'Sangiovese', 'Barbera'],
+    correct: 2,
+  },
+  {
+    id: 'gravlaks',
+    text: 'Hva er opphavet til navnet gravlaks?',
+    options: ['Røkt i en jordhule', 'Oppkalt etter en kokk', 'Servert ved begravelser', 'Gravd ned i bakken'],
+    correct: 3,
+  },
+
+  // ---- More in the same style: kropp og verdensrom
+  { id: 'bein', text: 'Hvor mange bein har en voksen person?', options: ['106', '156', '206', '256'], correct: 2 },
+  { id: 'blodtype', text: 'Hvilken blodtype er universell giver?', options: ['A positiv', 'AB positiv', 'O negativ', 'B negativ'], correct: 2 },
+  { id: 'maaner', text: 'Hvilken planet har flest kjente måner?', options: ['Saturn', 'Jupiter', 'Uranus', 'Neptun'], correct: 0 },
 ];
 
 export const LETTERS = ['A', 'B', 'C', 'D'];
