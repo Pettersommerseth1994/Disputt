@@ -58,7 +58,7 @@ async function show(view, extra = {}) {
 await page.goto(url, { waitUntil: 'networkidle0' });
 await page.evaluate(() => window.__disputt.setStore({ conn: 'open', everOpened: true }));
 await shot('00-home');
-await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Jeg har en kode'))?.click());
+await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Bli med i spill'))?.click());
 await shot('01-join-code', { wait: 400 });
 await page.evaluate(() => window.__disputt.setStore({ sheet: 'rules' }));
 await shot('02-rules', { full: false });
@@ -68,7 +68,7 @@ const f = buildFixtures();
 const order = [
   'profile-new', 'profile-edit', 'lobby-host-new', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
   'role-impostor', 'role-impostor-held', 'role-loyal', 'role-loyal-held',
-  'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-low',
+  'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-host', 'discussion-low',
   'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wait',
   'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest',
   'finished-host', 'finished-guest',
@@ -95,6 +95,10 @@ await show(f['summary-wrong-host'], { sheet: 'scores' });
 await shot('91-sheet-scores', { full: false });
 await show(f['summary-wrong-host'], { sheet: 'host' });
 await shot('92-sheet-host', { full: false });
+await show(f['lobby-host-3'], { sheet: 'home' });
+await shot('93-sheet-home-host', { full: false });
+await show(f['lobby-guest-3'], { sheet: 'home' });
+await shot('94-sheet-home-guest', { full: false });
 
 await browser.close();
 await app.close();

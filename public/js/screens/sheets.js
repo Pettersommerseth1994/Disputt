@@ -31,7 +31,6 @@ function HostControls({ view }) {
   const offline = view.players.filter((p) => !p.connected && !p.isHost);
   const bump = (d) => actions.target(Math.min(99, Math.max(1, view.target + d)));
   return html`<section class="stack">
-    <h3>Vertsvalg</h3>
     ${canTarget &&
     html`<div class="field">
       <span class="field__label">Poengmål</span>
@@ -64,14 +63,19 @@ export function ScoresSheet({ view }) {
         <${Scoreboard} view=${view} />
         <p class="small muted center">Først til ${view.target} poeng vinner.</p>
       </div>
-      ${view.you.isHost && html`<${HostControls} view=${view} />`}
-      <${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
+      ${!view.you.isHost && html`<${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>`}
     </div>
   </${Sheet}>`;
 }
 
+/** What used to hang under the scoreboard for the host: the gear in the header of the round screens opens it. */
 export function HostSheet({ view }) {
-  return html`<${Sheet} title="Vertsvalg" onClose=${close}><${HostControls} view=${view} /></${Sheet}>`;
+  return html`<${Sheet} title="Vertsvalg" onClose=${close}>
+    <div class="stack stack--loose">
+      <${HostControls} view=${view} />
+      <${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
+    </div>
+  </${Sheet}>`;
 }
 
 /** What used to be three loose links under the player list: change name or avatar, show the QR code, leave. */

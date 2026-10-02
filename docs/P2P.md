@@ -10,7 +10,7 @@ GitHub Pages kan bare vise filer, så der finnes ingen spillserver. Derfor kjør
    └────── megler (PeerJS) ◀──────┘   introduserer telefonene for hverandre; ser ikke spilltrafikken
 ```
 
-1. Verten trykker **Start et spill**. Siden velger en spillkode og reserverer den hos PeerJS' gratis, offentlige meglertjeneste (`0.peerjs.com`) som en peer kalt `disputt1-<KODE>`. Er koden tatt, prøves en ny.
+1. Verten trykker **Opprett spill**. Siden velger en spillkode og reserverer den hos PeerJS' gratis, offentlige meglertjeneste (`0.peerjs.com`) som en peer kalt `disputt1-<KODE>`. Er koden tatt, prøves en ny.
 2. Gjester åpner `…/?j=KODE` (det er dette QR-koden inneholder) eller skriver koden inn. De ber megleren om å bli koblet til `disputt1-<KODE>`, og får en **direkte, kryptert datakanal** (WebRTC, DTLS) til verten. Megleren hjelper bare med å finne hverandre; spillmeldingene går telefon til telefon.
 3. Over datakanalen går de samme JSON-meldingene som over WebSocket (se [PROTOCOL.md](PROTOCOL.md)). Verten bruker en intern «loopback»-kobling til motoren i samme side.
 4. Motoren tar vare på rommet i `sessionStorage` etter hver endring ([`public/js/p2p/snapshot.js`](../public/js/p2p/snapshot.js)).

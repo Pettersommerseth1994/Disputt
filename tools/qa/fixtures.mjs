@@ -83,6 +83,7 @@ export function buildFixtures({ stress = false } = {}) {
     out['question-asker'] = room.viewFor(sofie);
     out['discussion-impostor'] = room.viewFor(mari);
     out['discussion-loyal'] = room.viewFor(ola);
+    out['discussion-host'] = room.viewFor(petter); // the host's header has a gear next to "Poeng"
 
     room.select(sofie, 2);
     out['question-asker-selected'] = room.viewFor(sofie);
@@ -116,6 +117,7 @@ export function buildFixtures({ stress = false } = {}) {
     room.players.get(ola).score = 1;
     tick(room, DEFAULT_TIMINGS.roleMs + 1);
     room.tick(room.clock());
+    out['question-host'] = room.viewFor(petter); // the host is the asker: the densest screen, with the gear in the header
     room.lock(petter, 0); // wrong
     tick(room, 20_000);
     room.tick(room.clock());

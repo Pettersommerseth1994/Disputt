@@ -511,6 +511,9 @@
 .logo-sticker img { width: min(62vw, 15rem); height: auto; }
 .logo-sticker--sm { padding: 0.45rem 1rem 0.6rem; box-shadow: 0 4px 0 var(--yellow-deep), 0 4px 0 1px var(--edge); }
 .logo-sticker--sm img { width: 6.4rem; }
+/* the logo as a button (the lobby: back to the start screen) */
+.logo-sticker--button { border: 0; cursor: pointer; font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; transition: transform var(--dur-1) var(--ease-bounce), box-shadow var(--dur-1) ease; }
+.logo-sticker--button:active { transform: translateY(3px) rotate(-3deg); box-shadow: 0 1px 0 var(--yellow-deep), 0 1px 0 1px var(--edge); }
 
 /* ---- Role strip --------------------------------------------------------------------
    Reminds you of your role above the game screens. It is the same for everybody (a quiet strip that says "your role") until a

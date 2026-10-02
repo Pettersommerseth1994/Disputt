@@ -39,10 +39,11 @@ export function Button({ variant, size, block, class: cls, children, ...rest }) 
   </button>`;
 }
 
-export function Logo({ small = false }) {
-  return html`<span class=${cx('logo-sticker', small && 'logo-sticker--sm')}>
-    <img src=${asset('assets/logo/disputt-logo.svg')} alt="Disputt" width="300" height="130" />
-  </span>`;
+/** The logo sticker; with an `onClick` it is a button (the lobby uses it to go back to the start screen). */
+export function Logo({ small = false, onClick }) {
+  const cls = cx('logo-sticker', small && 'logo-sticker--sm', onClick && 'logo-sticker--button');
+  const img = html`<img src=${asset('assets/logo/disputt-logo.svg')} alt="Disputt" width="300" height="130" />`;
+  return onClick ? html`<button type="button" class=${cls} onClick=${onClick} aria-label="Til hjemskjermen">${img}</button>` : html`<span class=${cls}>${img}</span>`;
 }
 
 export const CloseIcon = () => html`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>`;

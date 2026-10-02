@@ -10,7 +10,7 @@ Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de
 
 ### Test med venner (fra hvilket som helst nett)
 
-1. **Verten** åpner lenken over, trykker *Start et spill* og velger navn og avatar.
+1. **Verten** åpner lenken over, trykker *Opprett spill* og velger navn og avatar. De andre trykker *Bli med i spill* og skriver koden (eller skanner QR-koden).
 2. De andre **skanner QR-koden** på vertens skjerm, eller verten trykker *Del lenke* og sender den i en chat. Man kan også gå til siden og skrive den firebokstavers koden.
 3. Verten trykker *Start Disputt* når alle er med (minst tre).
 
@@ -25,7 +25,7 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 5. Alle **diskuterer**. Imposteren prøver å lure de andre til å svare feil. Hvordan man blir enige er opp til gruppa.
 6. Spilleren med spørsmålet **krysser av** svaret dere ble enige om og låser det. Så telles det ned **5-4-3-2-1**, og fasiten avsløres **kun på den telefonen**.
 7. **Riktig svar:** alle lojale får 1 poeng. **Feil svar:** bare imposteren får 1 poeng. Ny runde med ny imposter, ny spiller og nytt spørsmål.
-8. Først til målet vinner. Poengtavlen kan åpnes når som helst, og verten kan justere poengmålet underveis.
+8. Først til målet vinner. Poengtavlen kan åpnes når som helst. Verten har et tannhjul ved siden av «Poeng» med vertsvalg: justere poengmålet, hoppe over runden, fjerne frakoblede spillere og avslutte spillet.
 
 ### Valg som er tatt (og kan endres)
 
@@ -33,6 +33,7 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 - **Imposter og spørsmålsstiller er rent tilfeldige** (kryptografisk tilfeldig), uavhengig av hverandre. Samme spiller kan være begge deler, og samme person kan bli imposter flere ganger på rad.
 - **Poengene telles først når spilleren som svarte trykker «Gå videre»**, så poengtavlen ikke røper utfallet før avsløringen.
 - **Rollen (og imposterens riktige svar) kan sees igjen** under runden ved å holde inne knappen i stripen øverst («Hold for å se»). Slipper man, skjules den. Stripen, tipset under klokka og vibrasjonen er like for begge roller, så ingenting på skjermen røper hvem som er imposter.
+- **Logoen i lobbyen er en knapp** som tar deg tilbake til hjemskjermen, etter en bekreftelse. En gjest forlater spillet (og kan bli med igjen med koden så lenge spillet ikke har startet). Verten av et spill på GitHub Pages avslutter spillet for alle, fordi vertens side *er* spillet.
 - **Mistet forbindelsen?** Telefoner som sovner eller laster siden på nytt kommer rett tilbake til samme sted. Har en spiller mistet nettleseren helt, kan hen velge seg selv fra «Spillet har startet»-skjermen. Faller verten ut, overtar en annen spiller vertsrollen (etter 3 minutter under spillet, 10 minutter i lobbyen). Verten kan hoppe over en runde som står fast, eller fjerne en frakoblet spiller.
 - **Bare de som er med i runden kan score på den.** Er en spiller borte når runden starter, får hen verken rolle eller poeng for den runden, så ingen kan «vinne» ved å være fraværende.
 - **Skjermlås:** på vanlig `http` (f.eks. lokalt Wi‑Fi) kan ikke nettsiden holde skjermen våken. Appen kobler seg til igjen av seg selv når telefonen våkner, men det er smidigere om dere setter skjermlåsen til «Aldri» mens dere spiller. Over `https` (Render, tunnel) holdes skjermen våken automatisk.

@@ -92,7 +92,7 @@ if (sizes) {
 
 // ---- screen gallery (images come from `npm run shots -- --docs`; missing ones are dropped silently)
 const SCREENS = [
-  ['home', 'Hjem', 'Start et spill, eller bli med med kode.'],
+  ['home', 'Hjem', 'Opprett spill, eller bli med i et spill med koden.'],
   ['profile-new', 'Profil', 'Navn og avatar. Tatte avatarer er utilgjengelige.'],
   ['lobby-host-3', 'Lobby – vert', 'QR-kode, spillere, poengmål og Start Disputt.'],
   ['lobby-guest-3', 'Lobby – spiller', 'Venter på verten. Kan se hvem som er med.'],
@@ -105,7 +105,7 @@ const SCREENS = [
   ['reveal-wrong', 'Avsløring: feil', 'Med riktig svar.'],
   ['summary-wrong-host', 'Oppsummering', 'Imposteren avsløres, poeng deles ut, verten går videre.'],
   ['finished-host', 'Vinner', 'Konfetti og krone. Spill igjen?'],
-  ['sheet-scores', 'Poengtavle', 'Åpnes fra alle skjermer. Verten får vertsvalg.'],
+  ['sheet-scores', 'Poengtavle', 'Åpnes fra alle skjermer. Verten har vertsvalg bak tannhjulet ved siden av «Poeng».'],
 ];
 const gallery = document.getElementById('screen-gallery');
 if (gallery) {

@@ -2,6 +2,7 @@ import { html, useEffect } from './vendor/htm-preact.js';
 import { Finished } from './screens/finale.js';
 import { Connecting, Home, SeatPicker } from './screens/home.js';
 import { Lobby } from './screens/lobby.js';
+import { HomeSheet } from './screens/leave.js';
 import { Profile } from './screens/profile.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
 import { HostSheet, QrSheet, RulesSheet, ScoresSheet, SettingsSheet } from './screens/sheets.js';
@@ -85,6 +86,7 @@ export function App() {
   else if (view && s.sheet === 'host') sheet = html`<${HostSheet} view=${view} />`;
   else if (view && s.sheet === 'qr') sheet = html`<${QrSheet} view=${view} />`;
   else if (view && s.sheet === 'settings') sheet = html`<${SettingsSheet} />`;
+  else if (view && s.sheet === 'home') sheet = html`<${HomeSheet} view=${view} />`;
 
   return html`
     ${offline && html`<div class="banner" role="status">${s.everOpened ? 'Mistet forbindelsen – kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}

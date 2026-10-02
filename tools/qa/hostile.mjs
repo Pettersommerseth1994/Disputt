@@ -36,7 +36,7 @@ try {
   // ---- the host
   const host = await newPage();
   await host.goto(`${base}/`);
-  await clickButton(host, 'Start et spill');
+  await clickButton(host, 'Opprett spill');
   await host.waitForSelector('.lobby__code', { timeout: 20000 });
   const code = await host.$eval('.lobby__code', (el) => el.textContent.trim());
   await host.evaluate(() => document.querySelector('.profile-prompt').click());

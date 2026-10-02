@@ -14,9 +14,9 @@ const viewports = (process.argv.slice(2).length ? process.argv.slice(2) : ['390x
 
 // screens that must be readable without scrolling (the others are lists or forms and are scrollable by nature)
 // (a key ending in "-held" is the same screen with every hold-to-see button held: the role card and the open role strip)
-const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held'];
+const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held', 'discussion-host'];
 // ... and these should at least keep their main action and the text above it in view
-const NICE_TO_FIT = ['question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
+const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
 
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
@@ -26,6 +26,8 @@ page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
 async function show(view, qaHold = false) {
+  // (unmounted first: a screen keeps its own state, such as the answer that is selected, from the screen shown before it)
+  await page.evaluate(() => window.__disputt.setStore({ view: null }));
   await page.evaluate((view, qaHold) => {
     window.__realNow ??= Date.now.bind(Date);
     const delta = view.now - window.__realNow();

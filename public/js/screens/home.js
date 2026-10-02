@@ -19,8 +19,8 @@ export function Home() {
       ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${s.notice}</p>`}
     </div>
     <div class="dock">
-      <${Button} block onClick=${() => actions.create()} disabled=${s.conn !== 'open'}>Start et spill</${Button}>
-      <${Button} block variant="ghost" onClick=${() => setMode('code')}>Jeg har en kode</${Button}>
+      <${Button} block onClick=${() => actions.create()} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
+      <${Button} block variant="ghost" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
       <div class="row row--center">
         <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
       </div>

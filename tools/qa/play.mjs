@@ -123,7 +123,7 @@ try {
   await host.page.goto(`${base}/`);
   await waitText(host, /Diskuter\s+og\s+vinn/);
   await shot(host, '01-home');
-  await clickButton(host, 'Start et spill');
+  await clickButton(host, 'Opprett spill');
   // the host sees the QR code straight away and picks their own profile from the lobby
   await waitText(host, /Skann for å bli med/i);
   await shot(host, '01b-lobby-host-first-view');
@@ -213,7 +213,31 @@ try {
     await waitText(leaver, /Diskuter\s+og\s+vinn/);
     await waitText(host, new RegExp(`Spillere\\s+${PLAYERS}/10`));
     log('the gear menu works: QR code, change profile, and leaving (two taps)');
+
+    // the logo is a button in the lobby: back to the start screen, after asking (and the same name can come back in again)
+    const leaver2 = await newPhone(NAMES[PLAYERS]);
+    await leaver2.page.goto(`${base}/?j=${code}`);
+    await register(leaver2, NAMES[PLAYERS], 0);
+    await waitText(leaver2, /Du er med/);
+    await waitText(host, new RegExp(`Spillere\\s+${PLAYERS + 1}/10`));
+    await clickLabel(leaver2, 'Til hjemskjermen');
+    await waitText(leaver2, /Tilbake til hjemskjermen\?/);
+    assert.match(await bodyText(leaver2), /Du forlater spillet/);
+    await clickButton(leaver2, 'Forlat spillet');
+    await waitText(leaver2, /Diskuter\s+og\s+vinn/);
+    await waitText(host, new RegExp(`Spillere\\s+${PLAYERS}/10`));
+    log('the logo asks first, and a guest who says yes is back on the start screen');
   }
+  // the same question for the host, and "stay" really stays (a guest and the host, both in the lobby)
+  for (const [p, said] of [[menuGuest, /Du forlater spillet/], [host, P2P ? /avsluttes for alle/ : /en annen spiller blir vert/]]) {
+    await clickLabel(p, 'Til hjemskjermen');
+    await waitText(p, /Tilbake til hjemskjermen\?/);
+    assert.match(await bodyText(p), said);
+    await clickButton(p, 'Bli i spillet');
+    await p.page.waitForFunction(() => !document.querySelector('.sheet'));
+  }
+  await waitText(menuGuest, /Du er med/);
+  assert.match(await bodyText(host), /Skann for å bli med/i, 'the host is still in the lobby after choosing to stay');
 
   // removing a friend takes two taps: the first only arms the button
   await host.page.evaluate(() => document.querySelector('.player__kick').click());
@@ -296,6 +320,21 @@ try {
       }
       await shot(asker, '06-question-asker');
       await shot(all.find((p) => p !== asker), '07-discussion');
+
+      // the host's options are behind the gear in the header (not under the scoreboard), and only the host has the gear
+      for (const p of others) assert.equal(await p.page.$('button[aria-label="Vertsvalg"]'), null, `${p.name} is not the host and has no gear`);
+      await clickLabel(host, 'Vertsvalg');
+      await waitText(host, /Poengmål/);
+      const options = await bodyText(host);
+      for (const label of [/Hopp over denne runden/, /Avslutt spillet nå/, /Slik spiller du/]) assert.match(options, label);
+      await clickLabel(host, 'Lukk');
+      await host.page.waitForFunction(() => !document.querySelector('.sheet'));
+      await clickLabel(host, 'Se poengtavle');
+      await waitText(host, /Poengtavle/);
+      assert.doesNotMatch(await bodyText(host), /Vertsvalg|Poengmål|Hopp over denne runden|Avslutt spillet nå|Slik spiller du/, 'under the scoreboard there is only the scoreboard');
+      await clickLabel(host, 'Lukk');
+      await host.page.waitForFunction(() => !document.querySelector('.sheet'));
+      log('the host options sit behind the gear next to "Poeng"');
     }
 
     // asker: adjust the clock, then reload the page to prove the session survives, then answer
@@ -404,6 +443,14 @@ try {
   await clickButton(host, 'Spill igjen');
   await Promise.all(all.map((p) => waitText(p, /Spillere/)));
   log('play again -> lobby ok');
+
+  // the host's logo ends the game for everybody when the host's page is the game; with a server the host just leaves
+  await clickLabel(host, 'Til hjemskjermen');
+  await waitText(host, /Tilbake til hjemskjermen\?/);
+  await clickButton(host, P2P ? 'Avslutt spillet' : 'Forlat spillet');
+  await waitText(host, /Diskuter\s+og\s+vinn/);
+  if (P2P) for (const p of others) await waitText(p, /Spillet er avsluttet/, 15000 * SLOW);
+  log(P2P ? 'the host chose "end the game" behind the logo: everybody else is told it is over' : 'the host left through the logo');
   assert.deepEqual(problems, [], 'no page errors and nothing blocked by the Content-Security-Policy');
   log('\nUI END-TO-END: OK');
 } catch (err) {

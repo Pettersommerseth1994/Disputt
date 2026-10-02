@@ -85,12 +85,14 @@ function screensFor(fixtures) {
     ['sheet-host-offline', () => put({ view: fixtures['summary-offline-host'], sheet: 'host' })],
     ['sheet-qr', () => put({ view: fixtures['lobby-host-3'], sheet: 'qr' })],
     ['sheet-settings', () => put({ view: fixtures['lobby-guest-3'], sheet: 'settings' })],
+    ['sheet-home-host', () => put({ view: fixtures['lobby-host-3'], sheet: 'home' })],
+    ['sheet-home-guest', () => put({ view: fixtures['lobby-guest-3'], sheet: 'home' })],
     // last: this one lives in the start page's own state, and only another screen leaves it
     [
       'join-by-code',
       async () => {
         await put({});
-        await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Jeg har en kode')).click());
+        await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Bli med i spill')).click());
       },
     ],
   ];

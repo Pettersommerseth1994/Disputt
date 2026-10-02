@@ -80,7 +80,7 @@ const cutLines = (p) => p.page.evaluate(() => window.__pcs.forEach((pc) => pc.cl
 try {
   const host = await newPhone('Petter');
   await host.page.goto(`${base}/`);
-  await clickButton(host, 'Start et spill');
+  await clickButton(host, 'Opprett spill');
   await host.page.waitForSelector('.lobby__code', { timeout: 20000 });
   const code = await host.page.$eval('.lobby__code', (el) => el.textContent.trim());
   await host.page.evaluate(() => document.querySelector('.profile-prompt').click());

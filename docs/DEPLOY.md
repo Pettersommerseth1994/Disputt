@@ -44,7 +44,7 @@ Gratis, ingen kredittkort for testing, og får en `https://…onrender.com`-adre
 
 1. Logg inn på [render.com](https://render.com) med GitHub-kontoen.
 2. **New + → Blueprint**, velg repoet `Disputt` (gi Render tilgang til repoet hvis det er privat). Render leser [`render.yaml`](../render.yaml).
-3. Vent 1–2 minutter på bygget. Åpne adressen på telefonen og trykk **Start et spill**.
+3. Vent 1–2 minutter på bygget. Åpne adressen på telefonen og trykk **Opprett spill**.
 
 Gode å vite:
 

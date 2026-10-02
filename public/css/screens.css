@@ -76,6 +76,7 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 
 /* ---- In-round header ---------------------------------------------------------- */
 .gamebar { gap: var(--s-3); }
+.gamebar__actions { gap: var(--s-2); }
 
 /* ---- Role reveal ----------------------------------------------------------------
    Nothing about the role is on the screen until a finger holds the button. The rest of the time the screen looks the same on

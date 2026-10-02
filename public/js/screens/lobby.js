@@ -109,7 +109,7 @@ function HostLobby({ view }) {
 
   return html`<main class="screen lobby">
     <header class="row row--between">
-      <${Logo} small />
+      <${Logo} small onClick=${() => setStore({ sheet: 'home' })} />
       <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller du"><${HelpIcon} /></${Button}>
     </header>
 
@@ -181,7 +181,7 @@ function GuestLobby({ view }) {
   const me = view.players.find((p) => p.id === view.you.id);
   return html`<main class="screen screen--padded lobby">
     <header class="row row--between">
-      <${Logo} small />
+      <${Logo} small onClick=${() => setStore({ sheet: 'home' })} />
       <div class="row">
         <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'settings' })} aria-label="Innstillinger"><${GearIcon} /></${Button}>
         <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller du"><${HelpIcon} /></${Button}>

@@ -6,15 +6,18 @@ import { actions } from '../net.js';
 import { serverNow } from '../net.js';
 import { asset } from '../paths.js';
 import { setStore } from '../store.js';
-import { Avatar, Button, RoleStrip, Scoreboard, Timer, TrophyIcon } from '../ui.js';
+import { Avatar, Button, GearIcon, RoleStrip, Scoreboard, Timer, TrophyIcon } from '../ui.js';
 import { cx, letter, playerById, useRemaining, vibrate } from '../util.js';
 
-/** Round number + score shortcut, shown above the in-round screens. */
+/** Round number + score shortcut, shown above the in-round screens. The host also has the gear with the host's options. */
 export function GameBar({ view }) {
   const round = view.turn?.number ?? view.summary?.round ?? view.round;
   return html`<header class="gamebar row row--between">
     <span class="chip">Runde ${round} · først til ${view.target}</span>
-    <${Button} variant="ghost" size="small" onClick=${() => setStore({ sheet: 'scores' })} aria-label="Se poengtavle"><${TrophyIcon} /> Poeng</${Button}>
+    <div class="row gamebar__actions">
+      <${Button} variant="ghost" size="small" onClick=${() => setStore({ sheet: 'scores' })} aria-label="Se poengtavle"><${TrophyIcon} /> Poeng</${Button}>
+      ${view.you.isHost && html`<${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'host' })} aria-label="Vertsvalg"><${GearIcon} /></${Button}>`}
+    </div>
   </header>`;
 }
 
@@ -253,9 +256,6 @@ export function Summary({ view }) {
     ${isHost
       ? html`<div class="dock">
           <${Button} block variant="lime" onClick=${() => actions.next()}>Neste runde</${Button}>
-          <div class="row row--center row--wrap">
-            <${Button} variant="text" onClick=${() => setStore({ sheet: 'host' })}>Vertsvalg</${Button}>
-          </div>
         </div>`
       : html`<p class="foot center muted" role="status">Venter på at verten starter neste runde …</p>`}
   </main>`;
