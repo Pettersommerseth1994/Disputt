@@ -11,7 +11,7 @@ import { createStaticHandler } from '../../server/static.js';
 import { build } from '../pages/build.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-export const FAST = { roleMs: 1600, countdownMs: 1600 };
+export const FAST = { roleMs: 2600, countdownMs: 1600 }; // (the role screen is where the phones hold their button to see the role)
 
 export async function startNodeSite() {
   const app = createApp({ port: 0, host: '127.0.0.1', silent: true, tickMs: 50, hubOptions: { timings: FAST } });

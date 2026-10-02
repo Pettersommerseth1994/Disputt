@@ -151,7 +151,7 @@ try {
   await sleep(400);
   await clickButton(host, 'Start Disputt');
   const playing = [host, a, b, d];
-  await Promise.all(playing.map((p) => waitText(p, /IMPOSTER|LOJAL/i)));
+  await Promise.all(playing.map((p) => waitText(p, /din rolle/i)));
   assert.ok((await cutSignalling(host)) >= 1, 'the host re-registered with the introduction service after the earlier drops');
   await sleep(2500);
 
@@ -179,7 +179,7 @@ try {
   await cutLines(c);
   await sleep(300);
   await c.page.evaluate(() => [...document.querySelectorAll('.player')].find((el) => el.innerText.includes('Ola')).click());
-  await waitText(c, /Du er\s+(IMPOSTER|LOJAL)/i, 30000);
+  await waitText(c, /din rolle/i, 30000);
   log('the line to the host dropped on the seat picker -> it reconnected, and the tap took the seat');
 
   log('\nSIGNALLING DROPS: OK');

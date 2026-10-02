@@ -9,16 +9,18 @@ import { isP2P } from './settings.js';
 import { useStore } from './store.js';
 import { Button, useWakeLock } from './ui.js';
 
-/** Which colour the whole page (and the browser chrome) takes on for the current screen. */
+/**
+ * Which colour the whole page (and the browser chrome) takes on for the current screen. Only the asker's verdict does: the
+ * role screens stay the ordinary colour, since a red or blue phone would tell the people around you what you are.
+ */
 function themeOf(view) {
   if (!view) return '';
-  if (view.phase === 'role') return view.you.role === 'impostor' ? 'impostor' : 'loyal';
   if (view.phase === 'reveal' && view.you.isAsker && view.reveal) return view.reveal.correct ? 'right' : 'wrong';
   return '';
 }
 // Two failed attempts in a row (about 30 s): most likely a network that does not let phones talk to each other directly.
 const STUCK_HINT = 'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.';
-const THEME_COLORS = { '': '#6a1428', impostor: '#c61a2b', loyal: '#2261c6', right: '#7eba2d', wrong: '#f48b8f' };
+const THEME_COLORS = { '': '#6a1428', right: '#7eba2d', wrong: '#f48b8f' };
 
 function gameScreen(view, s) {
   switch (view.phase) {

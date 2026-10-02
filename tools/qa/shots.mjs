@@ -14,7 +14,7 @@ const DOCS = process.argv.includes('--docs'); // also write 1x-viewport WebPs fo
 const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
 const DOCS_DIR = 'public/design-system/screens';
 // the screens shown in the style guide gallery (keep in sync with SCREENS in public/design-system/ds.js)
-const DOC_KEYS = new Set(['home', 'profile-new', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-loyal', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-right', 'reveal-wrong', 'summary-wrong-host', 'finished-host', 'sheet-scores']);
+const DOC_KEYS = new Set(['home', 'profile-new', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-right', 'reveal-wrong', 'summary-wrong-host', 'finished-host', 'sheet-scores']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(OUT, { recursive: true });
@@ -47,7 +47,7 @@ async function show(view, extra = {}) {
     const delta = view.now - window.__realNow();
     Date.now = () => window.__realNow() + delta; // make the injected timestamps line up with "now"
     window.__disputt.setStore({
-      conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null,
+      conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null, qaHold: false,
       session: { code: view.code, playerId: view.you.id, token: 'qa' },
       info: { publicUrl: null, lanUrls: ['http://192.168.100.59:3000'] },
       ...extra,
@@ -67,8 +67,8 @@ await page.evaluate(() => window.__disputt.setStore({ sheet: null }));
 const f = buildFixtures();
 const order = [
   'profile-new', 'profile-edit', 'lobby-host-new', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
-  'role-impostor', 'role-loyal',
-  'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-loyal', 'discussion-low',
+  'role-impostor', 'role-impostor-held', 'role-loyal', 'role-loyal-held',
+  'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-low',
   'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wait',
   'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest',
   'finished-host', 'finished-guest',
@@ -76,7 +76,9 @@ const order = [
 const LONG = new Set(['lobby-host-new', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host']);
 let i = 3;
 for (const key of order) {
-  await show(f[key], key === 'profile-edit' ? { editing: true } : {});
+  // (a key ending in "-held" is the same screen with every hold-to-see button held, as with a finger on the screen)
+  const held = key.endsWith('-held');
+  await show(f[held ? key.slice(0, -'-held'.length) : key], { ...(key === 'profile-edit' ? { editing: true } : {}), ...(held ? { qaHold: true } : {}) });
   const name = `${String(i++).padStart(2, '0')}-${key}`;
   await shot(name, { wait: key.startsWith('role') || key.startsWith('finished') ? 900 : 650 });
   // what a phone really shows after scrolling down: the dock sticks to the bottom of the viewport

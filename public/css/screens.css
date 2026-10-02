@@ -1,26 +1,20 @@
 /* ==========================================================================
    DISPUTT DESIGN SYSTEM — screens
-   Layout and mood per screen. Whole-page colour changes (role / verdict) use html[data-theme].
+   Layout and mood per screen. Whole-page colour changes (the asker's verdict) use html[data-theme].
    ========================================================================== */
 
 .screen { gap: var(--s-4); }
 .screen > .grow { min-height: 0; }
 
 /* ---- Page themes: the whole viewport takes the screen's colour ---------------- */
-html[data-theme='impostor'] { --theme-bg: var(--red); background: var(--red); }
-html[data-theme='loyal'] { --theme-bg: var(--blue); background: var(--blue); }
 html[data-theme='right'] { --theme-bg: var(--lime); background: var(--lime); }
 html[data-theme='wrong'] { --theme-bg: var(--pink); background: var(--pink); }
 /* (The attribute is also present, but empty, on the ordinary screens, where --theme-bg does not exist. Without a fallback the
    variable became "invalid at computed-value time" and the bar's whole background silently vanished, which is what let the
    content scroll through the buttons and text of the bar.) */
 html[data-theme] .dock { --page-bg: var(--theme-bg, var(--burgundy-700)); }
-html[data-theme='impostor'] body { background: var(--tex-grain), var(--tex-light-soft), var(--red); }
-html[data-theme='loyal'] body { background: var(--tex-grain), var(--tex-light-soft), var(--blue); }
 html[data-theme='right'] body { background: var(--tex-grain), var(--tex-light-soft), var(--lime); }
 html[data-theme='wrong'] body { background: var(--tex-grain), var(--tex-light-soft), var(--pink); }
-html[data-theme='impostor'] .dock,
-html[data-theme='loyal'] .dock,
 html[data-theme='right'] .dock,
 html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 
@@ -83,37 +77,86 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 /* ---- In-round header ---------------------------------------------------------- */
 .gamebar { gap: var(--s-3); }
 
-/* ---- Role reveal ---------------------------------------------------------------- */
-.role { text-align: center; color: var(--cream); }
-.role__body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-4);
-}
-.role__eyebrow { color: var(--cream); }
-.role .lead, .role__next { text-shadow: 0 1px 0 rgb(var(--shadow-rgb) / 0.4), 0 2px 6px rgb(var(--shadow-rgb) / 0.25); }
-.role__art { width: min(78vw, 17rem, 36vh, 36dvh); height: auto; margin-bottom: calc(var(--s-4) * -0.5); animation: wobble 4s ease-in-out infinite; }
-.role__word {
-  font-size: clamp(3rem, 14.5vw, 5.2rem);
-  text-transform: uppercase;
-  letter-spacing: 0.005em;
-  color: var(--cream);
-  text-shadow: 5px 6px 0 var(--ink);
-}
-.role__secret {
+/* ---- Role reveal ----------------------------------------------------------------
+   Nothing about the role is on the screen until a finger holds the button. The rest of the time the screen looks the same on
+   every phone (an empty, dashed place for the card), so a glance at someone else's phone tells you nothing. The card that
+   appears has the same size for both roles. */
+.role { text-align: center; }
+.role__eyebrow { padding-top: var(--s-5); }
+/* the card's place takes whatever height is left and centres the card in it, so a card that is a little taller (a long answer)
+   never pushes the button away from under the finger that is holding it */
+.role__mid { flex: 1 1 0; min-height: 0; display: grid; place-items: center; }
+.role__hold { display: grid; gap: var(--s-3); }
+.role__hint { margin: 0; min-height: 2.9em; font-size: var(--fs-small); color: var(--fg-muted); }
+.role__next { margin: 0; font-size: var(--fs-small); color: var(--fg-muted); }
+.role__bar { padding: var(--s-4) 0 var(--page-bottom); }
+.role .bar { height: 1.1rem; background: rgb(var(--shadow-rgb) / 0.3); }
+
+.slot { display: grid; width: min(17.5rem, 100%); min-height: 9.2rem; transform: rotate(-1.6deg); }
+.slot > * { grid-area: 1 / 1; min-width: 0; }
+.slot__closed {
   display: grid;
-  gap: 0.15rem;
-  min-width: 14rem;
-  padding: var(--s-3) var(--s-5) var(--s-4);
+  place-content: center;
+  justify-items: center;
+  gap: 0.35rem;
+  border: 3px dashed rgb(var(--cream-rgb) / 0.42);
+  border-radius: var(--r-card);
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+}
+.slot__closed p { margin: 0; }
+.slot__eye { width: 4.4rem; height: auto; opacity: 0.85; }
+
+.hold-btn {
+  --tilt: 0deg;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.hold-btn.is-held { transform: translateY(4px); box-shadow: 0 1px 0 var(--btn-edge), 0 1px 0 1px var(--edge); }
+
+.rolecard {
+  display: grid;
+  align-content: space-between;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem 0.95rem;
   border-radius: var(--r-card);
   color: var(--ink);
   background: var(--tex-grain), var(--cream);
   box-shadow: var(--shadow-2);
-  transform: rotate(-1.5deg);
+  text-align: left;
 }
-.role__secret .eyebrow { color: rgb(var(--ink-rgb) / 0.75); }
+.rolecard__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.75rem; }
+.rolecard__eye { flex: none; width: 3.1rem; height: auto; }
+.rolecard__word { min-width: 0; font-size: 1.85rem; line-height: 1; letter-spacing: 0.005em; text-transform: uppercase; }
+.rolecard__word--impostor { color: var(--red); }
+.rolecard__word--loyal { color: var(--blue); }
+.rolecard__answer { display: grid; gap: 0.25rem; padding-top: 0.55rem; border-top: 2px dashed rgb(var(--ink-rgb) / 0.28); }
+.rolecard__label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(var(--ink-rgb) / 0.75); }
+.rolecard__pill {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.rolecard__pill span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50% 46% 54% 48% / 48% 52% 48% 52%;
+  background: var(--tex-grain), var(--tex-light), var(--lime);
+  box-shadow: 0 3px 0 rgb(var(--ink-rgb) / 0.25);
+}
+
+/* the verdict screen shows the right answer the same way */
 .role__answer {
   display: inline-flex;
   align-items: center;
@@ -135,9 +178,6 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   background: var(--tex-grain), var(--tex-light), var(--lime);
   box-shadow: 0 3px 0 rgb(var(--ink-rgb) / 0.25);
 }
-.role__next { margin: 0; font-size: var(--fs-small); color: var(--cream); }
-.role__bar { padding: var(--s-4) 0 var(--page-bottom); }
-.role .bar { height: 1.1rem; background: rgb(var(--shadow-rgb) / 0.3); }
 
 /* ---- Question / discussion -------------------------------------------------- */
 .timer-block { padding: var(--s-2) 0; }
@@ -230,7 +270,7 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   .discussion .timer { font-size: clamp(3.4rem, 17vw, 4.6rem); }
 }
 @media (max-height: 620px) {
-  .role__body, .reveal__body { gap: var(--s-3); }
+  .reveal__body { gap: var(--s-3); }
   .reveal__word { font-size: clamp(3rem, 16vw, 4.6rem); }
 }
 @media (max-height: 580px) {

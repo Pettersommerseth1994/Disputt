@@ -1,6 +1,7 @@
 // The screens of one round: role reveal -> question/discussion -> countdown -> reveal -> summary.
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
+import { useHold } from '../hold.js';
 import { actions } from '../net.js';
 import { serverNow } from '../net.js';
 import { asset } from '../paths.js';
@@ -19,26 +20,60 @@ export function GameBar({ view }) {
 
 // ------------------------------------------------------------------ 1. role reveal (8 s)
 
+// Nothing about the role is on the screen until a finger holds the button, and it is gone when the finger lifts. The rest of
+// the time every phone shows the same thing, so a neighbour who glances at your screen learns nothing from it.
+
+const EYES = { impostor: 'assets/art/eye-impostor.svg', loyal: 'assets/art/eye-loyal.svg' };
+const TIPS = {
+  impostor: 'Få de andre til å svare feil – uten å bli avslørt.',
+  loyal: 'Finn ut hva som er riktig svar sammen – og ikke la imposteren lure dere.',
+};
+
+/** The card that appears while the button is held. Both roles get a card of the same size: the loyal player's answer is a "?". */
+function RoleCard({ you }) {
+  const impostor = you.role === 'impostor';
+  return html`<article class="rolecard pop-in">
+    <div class="rolecard__head">
+      <img class="rolecard__eye" src=${asset(EYES[you.role])} alt="" width="400" height="300" />
+      <h1 class=${cx('rolecard__word', impostor ? 'rolecard__word--impostor' : 'rolecard__word--loyal')}>${impostor ? 'Imposter' : 'Lojal'}</h1>
+    </div>
+    <div class="rolecard__answer">
+      <span class="rolecard__label">Riktig svar</span>
+      <p class="rolecard__pill"><span>${impostor ? you.secret.letter : '?'}</span>${impostor ? you.secret.text : 'Finn det sammen'}</p>
+    </div>
+  </article>`;
+}
+
 export function RoleReveal({ view }) {
   const { you } = view;
-  const impostor = you.role === 'impostor';
   const asker = playerById(view, view.turn.askerId);
   const total = view.timings.roleMs;
   const left = useRef(Math.max(0, Math.min(total, view.roleEndsAt - serverNow())));
-  useEffect(() => vibrate(impostor ? [90, 70, 90] : 70), []);
+  const { held, bind } = useHold();
+  // the same short buzz for everybody: a different pattern per role would give the role away to whoever feels or hears it
+  useEffect(() => vibrate(70), []);
+  // fetch the picture on the card now, so that the first hold does not show a half-drawn card
+  useEffect(() => {
+    new Image().src = asset(EYES[you.role]);
+  }, [you.role]);
 
-  return html`<main class=${cx('screen role', impostor ? 'role--impostor' : 'role--loyal')}>
-    <div class="role__body grow">
-      <p class="eyebrow role__eyebrow">Din rolle</p>
-      <img class="role__art" src=${asset(impostor ? 'assets/art/eye-impostor.svg' : 'assets/art/eye-loyal.svg')} alt="" width="400" height="300" />
-      <h1 class="role__word pop-in">${impostor ? 'Imposter' : 'Lojal'}</h1>
-      ${impostor
-        ? html`<div class="role__secret rise-in">
-              <p class="eyebrow">Riktig svar</p>
-              <p class="role__answer"><span>${you.secret.letter}</span>${you.secret.text}</p>
-            </div>
-            <p class="lead">Få de andre til å svare feil – uten å bli avslørt.</p>`
-        : html`<p class="lead rise-in">Finn ut hva som er riktig svar sammen – og ikke la imposteren lure dere.</p>`}
+  return html`<main class="screen role">
+    <p class="eyebrow role__eyebrow">Din rolle</p>
+    <div class="role__mid">
+      <div class="slot" role="status">
+        ${held
+          ? html`<${RoleCard} you=${you} />`
+          : html`<div class="slot__closed">
+              <img class="slot__eye" src=${asset('assets/art/eye-wait.svg')} alt="" width="300" height="200" />
+              <p>Rollen din er skjult</p>
+            </div>`}
+      </div>
+    </div>
+    <div class="role__hold">
+      <p class="role__hint">${held ? TIPS[you.role] : 'Hold telefonen inntil deg og dekk til med hånda.'}</p>
+      <button type="button" class=${cx('btn btn--block hold-btn', held && 'is-held')} ...${bind} aria-label="Hold inne for å se rollen din">
+        ${held ? 'Slipp for å skjule' : 'Hold for å se rollen din'}
+      </button>
       <p class="role__next">${asker ? html`<strong>${asker.name}</strong> får spørsmålet …` : ''}</p>
     </div>
     <div class="role__bar" aria-hidden="true">
@@ -124,11 +159,7 @@ export function Discussion({ view }) {
       ${ms <= 0 && html`<p class="timeup">Tiden er ute – bli enige! ${asker?.name} låser svaret.</p>`}
     </section>
 
-    <p class="card card--deep center discussion__tip">
-      ${you.role === 'impostor'
-        ? 'Du vet svaret. Overbevis de andre om noe annet – men vær litt subtil.'
-        : 'Én av dere vet svaret og vil lure dere. Hvem kan du stole på?'}
-    </p>
+    <p class="card card--deep center discussion__tip">Diskuter, og bli enige før tiden går ut.</p>
   </main>`;
 }
 

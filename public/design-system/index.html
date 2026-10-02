@@ -271,10 +271,10 @@
     </div>
     <div class="ds-grid ds-grid--wide">
       <div class="ds-phone">
-        <div class="role-strip role-strip--impostor"><span>Du er <strong>IMPOSTER</strong></span><button class="secret" data-hold>Hold for svaret</button></div>
-        <div class="role-strip role-strip--loyal"><span>Du er <strong>LOJAL</strong></span><span>Ikke bli lurt!</span></div>
+        <div class="role-strip role-strip--hidden" data-role-strip="IMPOSTER|role-strip__impostor|C: Frankrike"><span data-label>Din rolle</span><button class="secret" type="button">Hold for å se</button></div>
+        <div class="role-strip role-strip--hidden" data-role-strip="LOJAL|role-strip__loyal|Ikke bli lurt!"><span data-label>Din rolle</span><button class="secret" type="button">Hold for å se</button></div>
       </div>
-      <p class="ds-note">Imposteren kan holde inne knappen for å se riktig svar igjen (slipper du, skjules det). Det hindrer at svaret blir stående åpent når noen kikker over skulderen.</p>
+      <p class="ds-note">De to stripene er helt like til en finger holder knappen. Da blir stripen kremhvit og viser rollen (imposteren ser også riktig svar), og slipper du, skjules den igjen. Rollen står aldri fremme for de som kikker over skulderen. Det gjelder også rolleskjermen, som er en tom plass til du holder knappen. Prøv selv.</p>
     </div>
 
     <h3>Poengtavle og fremdrift</h3>
@@ -287,7 +287,7 @@
         </ol>
       </div>
       <div class="ds-stack"><p class="ds-note">Strekens farge er avatarens aksentfarge. «+1» popper inn etter en halv sekund. Frakoblede spillere blir dempet.</p>
-        <div class="bar bar--countdown" style="--dur:5s;--fill:var(--cream);--delay:0s" data-replay="bar--countdown"><div class="bar__fill"></div></div><span class="ds-note">Nedtellingsstrek (rolleskjermen, 5 sek). Trykk for å spille av igjen.</span></div>
+        <div class="bar bar--countdown" style="--dur:8s;--fill:var(--cream);--delay:0s" data-replay="bar--countdown"><div class="bar__fill"></div></div><span class="ds-note">Nedtellingsstrek (rolleskjermen, 8 sek). Trykk for å spille av igjen.</span></div>
     </div>
 
     <h3>Meldinger og overlegg</h3>
@@ -304,7 +304,7 @@
   <section class="ds-section" id="skjermer">
     <header>
       <h2>Skjermer</h2>
-      <p>Bildene er tatt av den ekte appen fra spillmotorens egne data (<code>npm run shots -- --docs</code>), i mobilstørrelse. Hele siden skifter farge på rolle- og avsløringsskjermene.</p>
+      <p>Bildene er tatt av den ekte appen fra spillmotorens egne data (<code>npm run shots -- --docs</code>), i mobilstørrelse. Hele siden skifter farge bare på avsløringsskjermen til den som svarer. Rolleskjermen er ikke farget, for en rød eller blå telefon ville røpet rollen.</p>
     </header>
     <div class="ds-screens" id="screen-gallery"></div>
   </section>

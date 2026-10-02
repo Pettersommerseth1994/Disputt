@@ -13,9 +13,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const viewports = (process.argv.slice(2).length ? process.argv.slice(2) : ['390x664', '375x553', '360x640', '430x740']).map((v) => v.split('x').map(Number));
 
 // screens that must be readable without scrolling (the others are lists or forms and are scrollable by nature)
-const MUST_FIT = ['role-impostor', 'role-impostor-longest', 'role-loyal', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-loyal'];
+// (a key ending in "-held" is the same screen with every hold-to-see button held: the role card and the open role strip)
+const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held'];
 // ... and these should at least keep their main action and the text above it in view
-const NICE_TO_FIT = ['question-asker-selected', 'question-asker-longest', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
+const NICE_TO_FIT = ['question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
 
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
@@ -24,17 +25,17 @@ const page = await browser.newPage();
 page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
-async function show(view) {
-  await page.evaluate((view) => {
+async function show(view, qaHold = false) {
+  await page.evaluate((view, qaHold) => {
     window.__realNow ??= Date.now.bind(Date);
     const delta = view.now - window.__realNow();
     Date.now = () => window.__realNow() + delta;
     window.__disputt.setStore({
-      conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null,
+      conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null, qaHold,
       session: { code: view.code, playerId: view.you.id, token: 'qa' },
       info: { publicUrl: null, lanUrls: ['http://192.168.100.59:3000'] },
     });
-  }, view);
+  }, view, qaHold);
 }
 
 /** How much of the screen is hidden: text under the sticky bar, and how far the page scrolls. */
@@ -82,7 +83,8 @@ for (const [w, h] of viewports) {
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const rows = [];
   for (const key of [...MUST_FIT, ...NICE_TO_FIT]) {
-    await show(fixtures[key]);
+    const held = key.endsWith('-held');
+    await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held);
     await sleep(key.startsWith('role') ? 1300 : 900); // let the entrance animations settle
     const m = await measure();
     const must = MUST_FIT.includes(key);

@@ -56,6 +56,11 @@ async function newPhone(name, { wakeLock = 'granted' } = {}) {
       },
     });
   }, wakeLock);
+  // Vibration: remember what the game asks the phone to do, so that a test can see that both roles feel the same thing.
+  await page.evaluateOnNewDocument(() => {
+    window.__vibrations = [];
+    Object.defineProperty(navigator, 'vibrate', { configurable: true, value: (pattern) => (window.__vibrations.push(pattern), true) });
+  });
   // An uncaught exception or a blocked resource (the built site ships a Content-Security-Policy) is a failure, not a log line.
   // (Other console errors are printed only: PeerJS logs its own, harmless ones while peers come and go.)
   page.on('pageerror', (e) => {
@@ -87,6 +92,22 @@ const clickButton = async (p, label, timeout = 10000) => {
   await p.page.evaluate((l) => [...document.querySelectorAll('button')].find((b) => b.innerText.trim().includes(l) && !b.disabled).click(), label);
 };
 const shot = async (p, label) => SHOTS && p.page.screenshot({ path: `tmp/play/${label}.png` });
+
+// The role is only on the screen while a finger holds a button: first on the role screen, later in the strip above the round.
+// Presses it, reads what the screen says while it is held, lets go, and checks that the role is hidden again.
+const ROLE_WORD = /\b(IMPOSTER|LOJAL)\b/; // (uppercase on screen; "imposteren" inside a sentence is not the role)
+const holdAndRead = async (p, label) => {
+  const button = await p.page.waitForSelector('.hold-btn, .role-strip .secret', { visible: true, timeout: 5000 * SLOW });
+  const box = await button.boundingBox();
+  await p.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await p.page.mouse.down();
+  await p.page.waitForFunction((src) => new RegExp(src).test(document.body.innerText), { timeout: 3000 }, ROLE_WORD.source);
+  if (label) await shot(p, label);
+  const text = await bodyText(p);
+  await p.page.mouse.up();
+  await p.page.waitForFunction((src) => !new RegExp(src).test(document.body.innerText), { timeout: 3000 }, ROLE_WORD.source);
+  return text;
+};
 
 async function register(p, name, avatarIndex) {
   await p.page.waitForSelector('#name', { timeout: 10000 });
@@ -211,20 +232,32 @@ try {
   let finished = false;
   while (!finished && round < 30) {
     round++;
-    // role reveal: exactly one impostor; only the impostor sees the answer
-    await Promise.all(all.map((p) => waitText(p, /IMPOSTER|LOJAL/i, 10000 * SLOW)));
+    // role reveal: nothing about the role is on anybody's screen until a finger holds the button, and every phone looks the same
+    await Promise.all(all.map((p) => waitText(p, /din rolle/i, 10000 * SLOW)));
     const roleSeenAt = Date.now();
-    const roles = await Promise.all(all.map(async (p) => ((await p.page.$('.role__secret')) ? 'impostor' : 'loyal')));
+    const idleScreens = await Promise.all(all.map((p) => p.page.$eval('main', (el) => `${el.className}|${el.innerText.replace(/\s+/g, ' ')}`)));
+    idleScreens.forEach((text, i) => assert.doesNotMatch(text, ROLE_WORD, `round ${round}: ${all[i].name}'s screen says nothing about the role before the button is held`));
+    assert.equal(new Set(idleScreens).size, 1, `round ${round}: every phone shows the same role screen until its button is held`);
+    for (const p of all) assert.equal(await p.page.$('.rolecard'), null, 'no role card before the button is held');
+    if (round === 1) {
+      // (the buzz is asked for in an effect, a moment after the screen is drawn)
+      const buzzes = await Promise.all(
+        all.map(async (p) => {
+          await p.page.waitForFunction(() => window.__vibrations.length > 0, { timeout: 3000 });
+          return p.page.evaluate(() => JSON.stringify(window.__vibrations));
+        }),
+      );
+      assert.equal(new Set(buzzes).size, 1, `the role screen buzzes the same on every phone (${[...new Set(buzzes)].join(' / ')})`);
+    }
+    // hold: exactly one impostor, and only the impostor sees the answer (every phone at once: the role screen is short)
+    const peeks = await Promise.all(all.map((p) => holdAndRead(p, SHOTS && round === 1 ? `04-role-held-${p.name}` : null)));
+    const roles = peeks.map((text) => (/\bIMPOSTER\b/.test(text) ? 'impostor' : 'loyal'));
+    peeks.forEach((text, i) => assert.match(text, roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${all[i].name} sees ${roles[i]}`));
     assert.equal(roles.filter((r) => r === 'impostor').length, 1, `round ${round}: exactly one impostor, got ${roles}`);
     const impostor = all[roles.indexOf('impostor')];
-    const impostorText = await bodyText(impostor);
-    assert.match(impostorText, /IMPOSTER/i);
-    assert.match(impostorText, /\b[A-D]\s*\n?\s*[A-Za-zÆØÅæøå ]+/, 'impostor sees letter + answer');
-    for (const p of all.filter((x) => x !== impostor)) assert.match(await bodyText(p), /LOJAL/i);
-    if (round === 1) {
-      await shot(impostor, '04-role-impostor');
-      await shot(all.find((p) => p !== impostor), '05-role-loyal');
-    }
+    assert.match(peeks[roles.indexOf('impostor')], /\b[A-D]\s*\n?\s*[A-Za-zÆØÅæøå ]+/, 'impostor sees letter + answer');
+    for (const [i, p] of all.entries()) if (p !== impostor) assert.match(peeks[i], /\?/, 'the loyal player gets a "?" where the impostor gets the answer');
+    assert.equal(await impostor.page.$('.rolecard'), null, 'the card is gone when the button is let go');
 
     // discussion: one asker holds the question, the others only see who
     await Promise.all(
@@ -250,7 +283,17 @@ try {
       assert.ok(!(await bodyText(p)).includes(q.text));
       await waitText(p, /har spørsmålet/);
     }
+    // what looks different between the roles is what the neighbours would see: the strip above the round, and the tip under the clock
+    const strips = await Promise.all(all.map((p) => p.page.$eval('.role-strip', (el) => `${el.className}|${el.innerText.replace(/\s+/g, ' ')}`)));
+    assert.equal(new Set(strips).size, 1, `round ${round}: the role strip looks the same on every phone (${[...new Set(strips)].join(' / ')})`);
+    assert.doesNotMatch(strips[0], ROLE_WORD, 'the strip says nothing about the role before its button is held');
+    const tips = await Promise.all(all.filter((p) => p !== asker).map((p) => p.page.$eval('.discussion__tip', (el) => el.innerText)));
+    assert.equal(new Set(tips).size, 1, `round ${round}: the tip under the clock is the same for both roles`);
     if (round === 1) {
+      // held, the strip gives the same role as the role screen did
+      for (const [i, p] of all.entries()) {
+        assert.match(await holdAndRead(p), roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${p.name}'s role strip agrees with the role screen`);
+      }
       await shot(asker, '06-question-asker');
       await shot(all.find((p) => p !== asker), '07-discussion');
     }
@@ -264,8 +307,7 @@ try {
       const bystander = all.find((p) => p !== asker && p !== host) ?? host;
       await bystander.page.reload();
       await waitText(bystander, /har spørsmålet/);
-      const again = await bodyText(bystander);
-      assert.match(again, bystander === impostor ? /IMPOSTER/i : /LOJAL/i, 'role restored after reload');
+      assert.match(await holdAndRead(bystander), bystander === impostor ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'role restored after reload');
       log('reload restored the session');
       if (P2P) {
         // the game lives in the host's page: reloading it must not end the game, and guests must find their way back
@@ -275,7 +317,7 @@ try {
           // back in the round: no "connection lost" banner, and the screen is the asker's or the discussion screen again
           await p.page.waitForFunction(() => !document.querySelector('.banner') && (document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText)), { timeout: 40000 });
         }
-        assert.match(await bodyText(host), host === impostor ? /IMPOSTER/i : /LOJAL/i, 'host role restored after reload');
+        assert.match(await holdAndRead(host), host === impostor ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'host role restored after reload');
         log('the host reloaded and everybody is back in the same round');
       }
     }
@@ -346,7 +388,7 @@ try {
       await guest.page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Poeng')).click());
       await guest.page.waitForSelector('.sheet-backdrop');
       await clickButton(host, 'Neste runde');
-      await waitText(guest, /IMPOSTER|LOJAL/i);
+      await waitText(guest, /din rolle/i);
       assert.equal(await guest.page.$('.sheet-backdrop'), null, 'sheets close when a new round starts');
     }
   }

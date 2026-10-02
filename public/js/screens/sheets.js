@@ -99,7 +99,7 @@ export function QrSheet({ view }) {
 }
 
 const STEPS = [
-  ['Alle får en rolle', 'De fleste er lojale. Én er imposter – og bare imposteren får vite riktig svar.'],
+  ['Alle får en rolle', 'De fleste er lojale. Én er imposter, og bare imposteren får vite riktig svar. Hold en finger på knappen for å se rollen din. Slipp, så skjules den igjen.'],
   ['Én spiller får spørsmålet', 'Hen leser spørsmålet og alternativene høyt for de andre.'],
   ['Diskuter!', 'Imposteren prøver å lure dere til å svare feil. Alle andre må finne ut hva som er riktig.'],
   ['Bli enige og lås svaret', 'Spilleren med spørsmålet krysser av. Så telles det ned fra 5 – og fasiten avsløres.'],

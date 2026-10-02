@@ -21,10 +21,10 @@ const GROUPS = {
     ['--teal', 'Briller-avataren'],
   ],
   'sw-role': [
-    ['--red', 'Imposter-skjermen'],
-    ['--blue', 'Lojal-skjermen'],
-    ['--lime', 'Riktig-skjermen'],
-    ['--pink', 'Feil-skjermen'],
+    ['--red', 'Ordet IMPOSTER på rollekortet'],
+    ['--blue', 'Ordet LOJAL på rollekortet'],
+    ['--lime', 'Riktig-skjermen (kun den som svarer)'],
+    ['--pink', 'Feil-skjermen (kun den som svarer)'],
   ],
   'sw-paper': [
     ['--cream', 'Tekst på burgunder, papirkort, input'],
@@ -96,10 +96,10 @@ const SCREENS = [
   ['profile-new', 'Profil', 'Navn og avatar. Tatte avatarer er utilgjengelige.'],
   ['lobby-host-3', 'Lobby – vert', 'QR-kode, spillere, poengmål og Start Disputt.'],
   ['lobby-guest-3', 'Lobby – spiller', 'Venter på verten. Kan se hvem som er med.'],
-  ['role-impostor', 'Rolle: imposter', 'Rød skjerm. Kun imposteren får se riktig svar. 8 sekunder.'],
-  ['role-loyal', 'Rolle: lojal', 'Blå skjerm. 8 sekunder.'],
+  ['role-impostor', 'Rolle: skjult', 'Lik på alles telefon til en finger holder knappen. Lojal og imposter ser det samme. 8 sekunder.'],
+  ['role-impostor-held', 'Rolle: mens du holder', 'Kortet vises bare mens knappen holdes. Imposteren ser også riktig svar; lojale ser «?».'],
   ['question-asker-selected', 'Spørsmål', 'Den som svarer: klokke, 2/6/10 min, spørsmål, alternativer og lås.'],
-  ['discussion-impostor', 'Diskusjon', 'Alle andre: hvem som har spørsmålet, klokka og rolle-påminnelse.'],
+  ['discussion-impostor', 'Diskusjon', 'Alle andre: hvem som har spørsmålet, klokka og en rollestripe som er lik for alle til den holdes.'],
   ['countdown-asker', 'Nedtelling', '5 – 4 – 3 – 2 – 1 etter at svaret er låst.'],
   ['reveal-right', 'Avsløring: riktig', 'Kun på telefonen til den som svarte.'],
   ['reveal-wrong', 'Avsløring: feil', 'Med riktig svar.'],
@@ -133,11 +133,19 @@ document.querySelectorAll('[data-segmented]').forEach((group) => {
     group.querySelectorAll('.segmented__item').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
   });
 });
-document.querySelectorAll('[data-hold]').forEach((btn) => {
-  const open = (e) => { e.preventDefault(); btn.classList.add('secret--open'); btn.textContent = 'C: Frankrike'; };
-  const close = () => { btn.classList.remove('secret--open'); btn.textContent = 'Hold for svaret'; };
-  ['pointerdown'].forEach((ev) => btn.addEventListener(ev, open));
-  ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach((ev) => btn.addEventListener(ev, close));
+document.querySelectorAll('[data-role-strip]').forEach((strip) => {
+  // "ORD|klasse|tekst på knappen mens den holdes": stripen er lik for alle til en finger holder knappen
+  const [word, cls, openText] = strip.dataset.roleStrip.split('|');
+  const btn = strip.querySelector('.secret');
+  const label = strip.querySelector('[data-label]');
+  const set = (open) => {
+    strip.classList.toggle('role-strip--open', open);
+    strip.classList.toggle('role-strip--hidden', !open);
+    label.innerHTML = open ? `Du er <strong class="${cls}">${word}</strong>` : 'Din rolle';
+    btn.textContent = open ? openText : 'Hold for å se';
+  };
+  btn.addEventListener('pointerdown', (e) => { e.preventDefault(); set(true); });
+  ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach((ev) => btn.addEventListener(ev, () => set(false)));
   btn.addEventListener('contextmenu', (e) => e.preventDefault());
 });
 document.querySelectorAll('[data-toggle-sheet]').forEach((btn) => {

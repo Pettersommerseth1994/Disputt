@@ -512,41 +512,43 @@
 .logo-sticker--sm { padding: 0.45rem 1rem 0.6rem; box-shadow: 0 4px 0 var(--yellow-deep), 0 4px 0 1px var(--edge); }
 .logo-sticker--sm img { width: 6.4rem; }
 
-/* ---- Role strip & secret-answer reminder ------------------------------------- */
+/* ---- Role strip --------------------------------------------------------------------
+   Reminds you of your role above the game screens. It is the same for everybody (a quiet strip that says "your role") until a
+   finger holds its button: then it turns into a cream strip with the role, and for the imposter the right answer. */
 .role-strip {
   display: flex;
-  flex-wrap: wrap; /* with big text the "hold to see the answer" button drops to a second line instead of leaving the screen */
+  flex-wrap: wrap; /* with big text the button drops to a second line instead of leaving the screen */
   align-items: center;
   justify-content: space-between;
   gap: var(--s-2) var(--s-3);
-  padding: 0.55rem 0.9rem;
+  padding: 0.4rem 0.9rem; /* (as tall as the strip was before it had a button for both roles: the asker's screen is the densest one) */
   border-radius: var(--r-input);
   font-weight: 700;
   font-size: var(--fs-small);
-  color: var(--cream);
 }
 .role-strip strong { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; letter-spacing: 0.01em; }
-.role-strip--impostor { background: var(--tex-grain), var(--tex-light-soft), var(--red); box-shadow: 0 3px 0 var(--red-deep); }
-.role-strip--loyal { background: var(--tex-grain), var(--tex-light-soft), var(--blue); box-shadow: 0 3px 0 var(--blue-deep); }
+.role-strip--hidden { color: var(--cream); background: var(--tex-grain), var(--tex-dark), var(--surface-deep); box-shadow: inset 0 0 0 2px rgb(var(--cream-rgb) / 0.14), 0 3px 0 var(--edge); }
+.role-strip--open { color: var(--ink); background: var(--tex-grain), var(--cream); box-shadow: 0 3px 0 var(--edge); }
+.role-strip__impostor { color: var(--red); }
+.role-strip__loyal { color: var(--blue); }
 
 .secret {
   flex: none;
   min-width: 8.5rem;
-  padding: 0.35rem 0.8rem;
+  padding: 0.3rem 0.8rem;
   border: 0;
   border-radius: var(--r-pill);
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 1.05rem;
   color: var(--ink);
-  background: var(--tex-grain), var(--cream);
-  box-shadow: 0 3px 0 rgb(var(--shadow-rgb) / 0.3);
+  background: var(--tex-grain), var(--tex-light), var(--yellow);
+  box-shadow: 0 3px 0 var(--yellow-deep);
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: none;
 }
-.secret--open { background: var(--tex-grain), var(--yellow); }
 
 /* ---- Confetti ------------------------------------------------------------------ */
 .confetti { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; } /* behind the text, inside the screen's own stacking context */

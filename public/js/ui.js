@@ -1,7 +1,8 @@
 // Shared UI components (the JS half of the design system; styles live in /css/components.css).
 
 import { AVATARS } from '../shared/avatars.mjs';
-import { html, useEffect, useMemo, useRef, useState } from './vendor/htm-preact.js';
+import { useHold } from './hold.js';
+import { html, useEffect, useMemo, useRef } from './vendor/htm-preact.js';
 import { qrSvg } from './qr.js';
 import { ROOT, asset } from './paths.js';
 import { config, isP2P } from './settings.js';
@@ -81,48 +82,20 @@ export function Sheet({ title, onClose, children }) {
   </div>`;
 }
 
-/** Press and hold to peek at the impostor's secret answer; letting go hides it again. */
-export function HoldToReveal({ secret }) {
-  const [open, setOpen] = useState(false);
-  const down = (e) => {
-    e.preventDefault();
-    setOpen(true);
-  };
-  const up = () => setOpen(false);
-  const key = (on) => (e) => {
-    if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      setOpen(on);
-    }
-  };
-  return html`<button
-    type="button"
-    class=${cx('secret', open && 'secret--open')}
-    onPointerDown=${down}
-    onPointerUp=${up}
-    onPointerLeave=${up}
-    onPointerCancel=${up}
-    onKeyDown=${key(true)}
-    onKeyUp=${key(false)}
-    onBlur=${up}
-    onContextMenu=${(e) => e.preventDefault()}
-    aria-label="Hold inne for å se riktig svar"
-  >
-    ${open ? `${secret.letter}: ${secret.text}` : 'Hold for svaret'}
-  </button>`;
-}
-
-/** The slim "you are X" reminder shown above the game screens. */
+/**
+ * The slim "your role" reminder shown above the game screens. Like the role screen it says nothing about the role until a
+ * finger holds the button, and the strip looks the same for everybody until then (the imposter also sees the right answer).
+ */
 export function RoleStrip({ you }) {
-  if (you.role === 'impostor') {
-    return html`<div class="role-strip role-strip--impostor">
-      <span>Du er <strong>IMPOSTER</strong></span>
-      <${HoldToReveal} secret=${you.secret} />
-    </div>`;
-  }
-  return html`<div class="role-strip role-strip--loyal">
-    <span>Du er <strong>LOJAL</strong></span>
-    <span>Ikke bli lurt!</span>
+  const { held, bind } = useHold();
+  const impostor = you.role === 'impostor';
+  return html`<div class=${cx('role-strip', held ? 'role-strip--open' : 'role-strip--hidden')}>
+    ${held
+      ? html`<span>Du er <strong class=${impostor ? 'role-strip__impostor' : 'role-strip__loyal'}>${impostor ? 'IMPOSTER' : 'LOJAL'}</strong></span>`
+      : html`<span>Din rolle</span>`}
+    <button type="button" class="secret" ...${bind} aria-label="Hold inne for å se rollen din">
+      ${held ? (impostor ? `${you.secret.letter}: ${you.secret.text}` : 'Ikke bli lurt!') : 'Hold for å se'}
+    </button>
   </div>`;
 }
 

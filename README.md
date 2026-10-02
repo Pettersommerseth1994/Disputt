@@ -20,7 +20,7 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 
 1. **Verten** åpner Disputt og starter et spill. Hen får en QR-kode som de andre skanner.
 2. Alle skriver inn **navn** og velger en av ti **avatarer**. Verten ser spillerne komme inn, velger hvor mange **poeng** man spiller til (ett poeng tar ca. 10 min, vi anbefaler minst 5) og trykker **Start Disputt**.
-3. **Roller:** én tilfeldig spiller blir **imposter** (rød skjerm, får se riktig svar, f.eks. «C: Frankrike»). Alle andre er **lojale** (blå skjerm). Vises i 8 sekunder.
+3. **Roller:** én tilfeldig spiller blir **imposter** (får se riktig svar, f.eks. «C: Frankrike»). Alle andre er **lojale**. Rollen vises bare mens du holder en finger på knappen («Hold for å se rollen din») og er borte igjen når du slipper, så ingen kan se den over skulderen din. Resten av tiden er skjermen lik på alles telefon. Rolleskjermen varer i 8 sekunder.
 4. En tilfeldig spiller (kan også være imposteren) får **spørsmålet** med fire alternativer og leser det høyt. Klokka starter med en gang; hen kan sette den til **2, 6 eller 10 minutter** og legge til tid underveis.
 5. Alle **diskuterer**. Imposteren prøver å lure de andre til å svare feil. Hvordan man blir enige er opp til gruppa.
 6. Spilleren med spørsmålet **krysser av** svaret dere ble enige om og låser det. Så telles det ned **5-4-3-2-1**, og fasiten avsløres **kun på den telefonen**.
@@ -32,7 +32,7 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 - **Uavgjort på toppen:** vinneren krones først når noen har nådd målet *og* leder alene. Står flere likt, spiller man videre til én drar fra. Verten kan også avslutte spillet og kåre den som leder.
 - **Imposter og spørsmålsstiller er rent tilfeldige** (kryptografisk tilfeldig), uavhengig av hverandre. Samme spiller kan være begge deler, og samme person kan bli imposter flere ganger på rad.
 - **Poengene telles først når spilleren som svarte trykker «Gå videre»**, så poengtavlen ikke røper utfallet før avsløringen.
-- **Imposteren kan se riktig svar igjen** ved å holde inne en knapp (slipper man, skjules det). Svaret ligger ikke åpent på skjermen mens de andre sitter ved siden av.
+- **Rollen (og imposterens riktige svar) kan sees igjen** under runden ved å holde inne knappen i stripen øverst («Hold for å se»). Slipper man, skjules den. Stripen, tipset under klokka og vibrasjonen er like for begge roller, så ingenting på skjermen røper hvem som er imposter.
 - **Mistet forbindelsen?** Telefoner som sovner eller laster siden på nytt kommer rett tilbake til samme sted. Har en spiller mistet nettleseren helt, kan hen velge seg selv fra «Spillet har startet»-skjermen. Faller verten ut, overtar en annen spiller vertsrollen (etter 3 minutter under spillet, 10 minutter i lobbyen). Verten kan hoppe over en runde som står fast, eller fjerne en frakoblet spiller.
 - **Bare de som er med i runden kan score på den.** Er en spiller borte når runden starter, får hen verken rolle eller poeng for den runden, så ingen kan «vinne» ved å være fraværende.
 - **Skjermlås:** på vanlig `http` (f.eks. lokalt Wi‑Fi) kan ikke nettsiden holde skjermen våken. Appen kobler seg til igjen av seg selv når telefonen våkner, men det er smidigere om dere setter skjermlåsen til «Aldri» mens dere spiller. Over `https` (Render, tunnel) holdes skjermen våken automatisk.
