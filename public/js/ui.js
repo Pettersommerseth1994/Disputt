@@ -91,16 +91,19 @@ export function Sheet({ title, onClose, children }) {
 export function RoleStrip({ you, impostors = 1 }) {
   const { held, bind } = useHold();
   const impostor = you.role === 'impostor';
+  // What the hold reveals stands beside the button, never in it or under it: the finger covers what is there.
   return html`<div class=${cx('role-strip', held ? 'role-strip--open' : 'role-strip--hidden')}>
-    ${held
-      ? html`<span>Du er <strong class=${impostor ? 'role-strip__impostor' : 'role-strip__loyal'}>${impostor ? 'IMPOSTER' : 'LOJAL'}</strong></span>`
-      : html`<span>Din rolle</span>`}
-    <button type="button" class="secret" ...${bind} aria-label="Hold inne for å se rollen din">
-      ${held ? (impostor ? `${you.secret.letter}: ${you.secret.text}` : 'Ikke bli lurt!') : 'Hold for å se'}
-    </button>
-    ${held &&
-    impostors > 1 &&
-    html`<span class="role-strip__row">${impostor ? `Sammen med ${joinNames(matesOf(you).map((m) => m.name))}` : 'Det er to imposterer blant dere'}</span>`}
+    <div class="role-strip__info">
+      ${held
+        ? html`<span class="role-strip__who">Du er <strong class=${impostor ? 'role-strip__impostor' : 'role-strip__loyal'}>${impostor ? 'Imposter' : 'Lojal'}</strong></span>
+            ${impostor
+              ? html`<span class="role-strip__line role-strip__line--answer"><span>Riktig svar:</span><span class="role-strip__answer">${you.secret.letter}:\u00a0${you.secret.text}</span></span>`
+              : html`<span class="role-strip__line">Ikke bli lurt!</span>`}
+            ${impostors > 1 &&
+            html`<span class="role-strip__line">${impostor ? `Sammen med ${joinNames(matesOf(you).map((m) => m.name))}` : 'To av dere er imposterer'}</span>`}`
+        : html`<span>Din rolle</span>`}
+    </div>
+    <button type="button" class=${cx('secret', held && 'secret--held')} ...${bind} aria-label="Hold inne for å se rollen din">Hold for å se</button>
   </div>`;
 }
 

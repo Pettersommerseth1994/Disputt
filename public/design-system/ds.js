@@ -135,15 +135,18 @@ document.querySelectorAll('[data-segmented]').forEach((group) => {
   });
 });
 document.querySelectorAll('[data-role-strip]').forEach((strip) => {
-  // "ORD|klasse|tekst på knappen mens den holdes": stripen er lik for alle til en finger holder knappen
-  const [word, cls, openText] = strip.dataset.roleStrip.split('|');
+  // "ord|klasse|svar": stripen er lik for alle til en finger holder knappen. Det som kommer fram står ved siden av knappen
+  // (aldri i den eller under den, der dekker fingeren det), og knappen endrer ikke tekst.
+  const [word, cls, answer] = strip.dataset.roleStrip.split('|');
   const btn = strip.querySelector('.secret');
-  const label = strip.querySelector('[data-label]');
+  const info = strip.querySelector('.role-strip__info');
   const set = (open) => {
     strip.classList.toggle('role-strip--open', open);
     strip.classList.toggle('role-strip--hidden', !open);
-    label.innerHTML = open ? `Du er <strong class="${cls}">${word}</strong>` : 'Din rolle';
-    btn.textContent = open ? openText : 'Hold for å se';
+    btn.classList.toggle('secret--held', open);
+    info.innerHTML = open
+      ? `<span class="role-strip__who">Du er <strong class="${cls}">${word}</strong></span>${answer ? `<span class="role-strip__line role-strip__line--answer"><span>Riktig svar:</span><span class="role-strip__answer">${answer.replace(': ', ':&nbsp;')}</span></span>` : '<span class="role-strip__line">Ikke bli lurt!</span>'}`
+      : '<span>Din rolle</span>';
   };
   btn.addEventListener('pointerdown', (e) => { e.preventDefault(); set(true); });
   ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach((ev) => btn.addEventListener(ev, () => set(false)));

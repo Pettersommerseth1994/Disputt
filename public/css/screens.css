@@ -130,11 +130,11 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 }
 .rolecard__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.75rem; }
 .rolecard__eye { flex: none; width: 3.1rem; height: auto; }
-.rolecard__word { min-width: 0; font-size: 1.85rem; line-height: 1; letter-spacing: 0.005em; text-transform: uppercase; }
+.rolecard__word { min-width: 0; font-size: 2.1rem; line-height: 1; letter-spacing: 0.005em; }
 .rolecard__word--impostor { color: var(--red); }
 .rolecard__word--loyal { color: var(--blue); }
 .rolecard__answer { display: grid; gap: 0.25rem; padding-top: 0.55rem; border-top: 2px dashed rgb(var(--ink-rgb) / 0.28); }
-.rolecard__label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(var(--ink-rgb) / 0.75); }
+.rolecard__label { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.02em; color: rgb(var(--ink-rgb) / 0.75); }
 .rolecard__pill {
   display: flex;
   align-items: center;
@@ -222,7 +222,7 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 .reveal { color: var(--ink); text-align: center; }
 .reveal__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4); }
 .reveal__art { width: min(70vw, 15rem, 32vh, 32dvh); height: auto; animation: wobble 3.5s ease-in-out infinite; }
-.reveal__word { font-size: clamp(3.4rem, 18vw, 6rem); text-transform: uppercase; color: var(--cream); text-shadow: 5px 6px 0 var(--ink); }
+.reveal__word { font-size: clamp(3.4rem, 18vw, 6rem); color: var(--cream); text-shadow: 5px 6px 0 var(--ink); }
 .reveal__answer { width: min(100%, 20rem); }
 .reveal .lead { font-weight: 700; }
 

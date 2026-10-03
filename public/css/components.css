@@ -157,7 +157,7 @@
 
 /* Compact variant: number with a tiny unit underneath, for tight spaces */
 .segmented--compact .segmented__item { min-height: 2.9rem; padding: 0.3rem 0.2rem; font-size: 1.3rem; }
-.segmented--compact .segmented__item small { margin-top: 0.1rem; font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.segmented--compact .segmented__item small { margin-top: 0.1rem; font-size: 0.72rem; letter-spacing: 0.02em; }
 
 /* ---- Avatar ------------------------------------------------------------------ */
 .avatar {
@@ -251,7 +251,7 @@
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
-.player__tag { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--yellow); }
+.player__tag { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; color: var(--yellow); }
 .player--empty .avatar { background: transparent; box-shadow: inset 0 0 0 3px rgb(var(--cream-rgb) / 0.3); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
 .player--empty { animation: none; opacity: 0.85; }
 .player-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s-4) var(--s-3); }
@@ -281,10 +281,9 @@
   content: 'tatt';
   position: absolute;
   inset: auto 0 -0.2rem;
-  font-size: 0.66rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--cream);
   text-align: center;
 }
@@ -517,10 +516,13 @@
 
 /* ---- Role strip --------------------------------------------------------------------
    Reminds you of your role above the game screens. It is the same for everybody (a quiet strip that says "your role") until a
-   finger holds its button: then it turns into a cream strip with the role, and for the imposter the right answer. */
+   finger holds its button. Then it turns cream and says who you are, and for an imposter the right answer and who the other
+   impostor is. All of that stands BESIDE the button, on its left, and never in it or under it: the finger covers what is there.
+   The button itself never changes its text, and stays at the top, so it does not move away from under the finger when the text
+   beside it grows. */
 .role-strip {
   display: flex;
-  flex-wrap: wrap; /* with big text the button drops to a second line instead of leaving the screen */
+  flex-wrap: wrap; /* with extreme text sizes the button drops to a line of its own instead of leaving the screen */
   align-items: center;
   justify-content: space-between;
   gap: var(--s-2) var(--s-3);
@@ -529,22 +531,28 @@
   font-weight: 700;
   font-size: var(--fs-small);
 }
+.role-strip__info { flex: 1 1 9rem; min-width: 0; display: grid; }
 .role-strip strong { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; letter-spacing: 0.01em; }
 .role-strip--hidden { color: var(--cream); background: var(--tex-grain), var(--tex-dark), var(--surface-deep); box-shadow: inset 0 0 0 2px rgb(var(--cream-rgb) / 0.14), 0 3px 0 var(--edge); }
-.role-strip--open { color: var(--ink); background: var(--tex-grain), var(--cream); box-shadow: 0 3px 0 var(--edge); }
+.role-strip--open { align-items: flex-start; color: var(--ink); background: var(--tex-grain), var(--cream); box-shadow: 0 3px 0 var(--edge); }
+/* the first line sits level with the button, whatever comes below it */
+.role-strip__who { line-height: 2.05rem; } /* (as tall as the button) */
 .role-strip__impostor { color: var(--red); }
-.role-strip__row { flex: 1 1 100%; font-size: 0.85rem; font-weight: 600; } /* with two impostors: who the other one is */
 .role-strip__loyal { color: var(--blue); }
+.role-strip__line { font-size: 0.85rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+/* "Riktig svar:" and the answer stay together as long as they fit, and otherwise the answer moves to the next line as a whole */
+.role-strip__line--answer { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.35rem; line-height: 1.2; }
+.role-strip__answer { font-family: var(--font-display); font-weight: 900; font-size: 1.05rem; }
 
 .secret {
   flex: none;
-  min-width: 8.5rem;
-  padding: 0.3rem 0.8rem;
+  min-width: 7rem;
+  padding: 0.3rem 0.7rem;
   border: 0;
   border-radius: var(--r-pill);
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: var(--ink);
   background: var(--tex-grain), var(--tex-light), var(--yellow);
   box-shadow: 0 3px 0 var(--yellow-deep);
@@ -553,6 +561,7 @@
   -webkit-touch-callout: none;
   touch-action: none;
 }
+.secret--held { transform: translateY(2px); box-shadow: 0 1px 0 var(--yellow-deep); }
 
 /* ---- Confetti ------------------------------------------------------------------ */
 .confetti { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; } /* behind the text, inside the screen's own stacking context */

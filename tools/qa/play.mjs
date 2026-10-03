@@ -12,6 +12,7 @@ import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { QUESTIONS } from '../../shared/questions.js';
 import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
+import { underTheFinger } from './underfinger.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -96,7 +97,7 @@ const shot = async (p, label) => SHOTS && p.page.screenshot({ path: `tmp/play/${
 
 // The role is only on the screen while a finger holds a button: first on the role screen, later in the strip above the round.
 // Presses it, reads what the screen says while it is held, lets go, and checks that the role is hidden again.
-const ROLE_WORD = /\b(IMPOSTER|LOJAL)\b/; // (uppercase on screen; "imposteren" inside a sentence is not the role)
+const ROLE_WORD = /\b(Imposter|Lojal)\b/; // (as a word of its own: "Imposteren" or "lojale" inside a sentence is not the role)
 const holdAndRead = async (p, label) => {
   const button = await p.page.waitForSelector('.hold-btn, .role-strip .secret', { visible: true, timeout: 5000 * SLOW });
   const box = await button.boundingBox();
@@ -107,9 +108,13 @@ const holdAndRead = async (p, label) => {
   const text = await bodyText(p);
   // just the card (or, on the other screens, the strip), with the spaces and line breaks squeezed together
   const card = await p.page.evaluate(() => (document.querySelector('.rolecard, .role-strip')?.innerText ?? '').replace(/\s+/g, ' '));
+  // the text on the button itself, and whatever the hold reveals that lies where the finger is: there must be nothing
+  const buttonText = await p.page.evaluate(() => (document.querySelector('.hold-btn, .role-strip .secret')?.innerText ?? '').trim());
+  const covered = await p.page.evaluate(underTheFinger);
+  assert.deepEqual(covered, [], `${p.name}: nothing that the hold reveals sits on or under the button, where the finger covers it`);
   await p.page.mouse.up();
   await p.page.waitForFunction((src) => !new RegExp(src).test(document.body.innerText), { timeout: 3000 }, ROLE_WORD.source);
-  return { text, card };
+  return { text, card, buttonText };
 };
 
 async function register(p, name, avatarIndex) {
@@ -278,8 +283,8 @@ try {
     }
     // hold: one impostor (two from six players), and only the impostors see the answer (every phone at once: the role screen is short)
     const peeks = await Promise.all(all.map((p) => holdAndRead(p, SHOTS && round === 1 ? `04-role-held-${p.name}` : null)));
-    const roles = peeks.map(({ text }) => (/\bIMPOSTER\b/.test(text) ? 'impostor' : 'loyal'));
-    peeks.forEach(({ text }, i) => assert.match(text, roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${all[i].name} sees ${roles[i]}`));
+    const roles = peeks.map(({ text }) => (/\bImposter\b/.test(text) ? 'impostor' : 'loyal'));
+    peeks.forEach(({ text }, i) => assert.match(text, roles[i] === 'impostor' ? /\bImposter\b/ : /\bLojal\b/, `${all[i].name} sees ${roles[i]}`));
     const expectedImpostors = all.length >= 6 ? 2 : 1;
     assert.equal(roles.filter((r) => r === 'impostor').length, expectedImpostors, `round ${round}: ${expectedImpostors} impostor(s) among ${all.length}, got ${roles}`);
     const impostors = all.filter((_, i) => roles[i] === 'impostor');
@@ -330,12 +335,14 @@ try {
     if (round === 1) {
       // held, the strip gives the same role as the role screen did
       for (const [i, p] of all.entries()) {
-        const { text, card } = await holdAndRead(p);
-        assert.match(text, roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${p.name}'s role strip agrees with the role screen`);
+        const { text, card, buttonText } = await holdAndRead(p);
+        assert.equal(buttonText, 'Hold for å se', 'the strip\'s button keeps its text (the answer is not in it, under the finger)');
+        if (roles[i] === 'impostor') assert.match(card, /Riktig svar: [A-D]: /, `${p.name}'s strip shows the right answer, beside the button`);
+        assert.match(text, roles[i] === 'impostor' ? /\bImposter\b/ : /\bLojal\b/, `${p.name}'s role strip agrees with the role screen`);
         if (expectedImpostors === 2) {
           if (roles[i] === 'impostor') assert.match(card, new RegExp(`Sammen med ${impostors.find((o) => o !== p).name}\\b`), `${p.name}'s strip names the other impostor`);
-          else assert.match(card, /Det er to imposterer blant dere/);
-        } else assert.doesNotMatch(card, /Sammen med|to imposterer/);
+          else assert.match(card, /To av dere er imposterer/);
+        } else assert.doesNotMatch(card, /Sammen med|er imposterer/);
       }
       await shot(asker, '06-question-asker');
       await shot(all.find((p) => p !== asker), '07-discussion');
@@ -365,7 +372,7 @@ try {
       const bystander = all.find((p) => p !== asker && p !== host) ?? host;
       await bystander.page.reload();
       await waitText(bystander, /har spørsmålet/);
-      assert.match((await holdAndRead(bystander)).text, isImpostor(bystander) ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'role restored after reload');
+      assert.match((await holdAndRead(bystander)).text, isImpostor(bystander) ? /\bImposter\b/ : /\bLojal\b/, 'role restored after reload');
       log('reload restored the session');
       if (P2P) {
         // the game lives in the host's page: reloading it must not end the game, and guests must find their way back
@@ -375,7 +382,7 @@ try {
           // back in the round: no "connection lost" banner, and the screen is the asker's or the discussion screen again
           await p.page.waitForFunction(() => !document.querySelector('.banner') && (document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText)), { timeout: 40000 });
         }
-        assert.match((await holdAndRead(host)).text, isImpostor(host) ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'host role restored after reload');
+        assert.match((await holdAndRead(host)).text, isImpostor(host) ? /\bImposter\b/ : /\bLojal\b/, 'host role restored after reload');
         log('the host reloaded and everybody is back in the same round');
       }
     }

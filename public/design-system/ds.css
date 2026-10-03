@@ -45,7 +45,7 @@ body.ds { padding: 0; }
 .ds-demo { padding: 1.4rem; border-radius: var(--r-card); background: rgb(var(--shadow-rgb) / 0.28); box-shadow: inset 0 0 0 2px rgb(var(--cream-rgb) / 0.08); }
 .ds-demo--light { color: var(--ink); background: var(--tex-grain), var(--cream); }
 .ds-demo--yellow { color: var(--ink); background: var(--tex-grain), var(--tex-light), var(--yellow); }
-.ds-label { font-size: var(--fs-micro); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); }
+.ds-label { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.02em; color: var(--fg-muted); }
 .ds-demo--light .ds-label, .ds-demo--yellow .ds-label { color: rgb(var(--ink-rgb) / 0.65); }
 .ds-note { font-size: var(--fs-small); color: var(--fg-muted); max-width: 46rem; }
 code, .ds code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.82em; padding: 0.12em 0.45em; border-radius: 6px; background: rgb(var(--shadow-rgb) / 0.45); color: var(--yellow-pale); }

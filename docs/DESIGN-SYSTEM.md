@@ -24,7 +24,7 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 
 **Aldri ren hvit eller svart.** «Hvitt» er en smørkrem (`--cream`, `#f8e6b8`) og «svart» en mørk sjokoladebrun (`--ink`, `#3a2012`): all tekst, logoen, papirkort, kremknapper og QR-koden (brune moduler på kremfarget bunn) bruker dem. Gjennomsiktige varianter lages av kanalene (`rgb(var(--cream-rgb) / .5)`, `--ink-rgb`, og `--shadow-rgb` for de harde kritt-skyggene), så paletten står ett sted. Rollefargene som tekst på kremfarget kort skal holde minst 4,5:1 i kontrast, og det er derfor `--red` og `--blue` er så dype som de er. Stilguiden (`/design-system/`) viser kontrasten for alle fargene.
 
-**Typografi:** `--font-display` (Fraunces, tung kursiv, *soft + wonky*) til overskrifter, knapper, tall og navn på store flater; `--font-text` (Lora) til alt annet. Skala: `--fs-hero --fs-h1 --fs-h2 --fs-h3 --fs-lead --fs-body --fs-small --fs-micro`.
+**Typografi:** ingen tekst står i STORE BOKSTAVER, heller ikke etiketter over felt (`.eyebrow`) eller rolleordet: `text-transform: uppercase` brukes ikke, bortsett fra i feltet der man skriver spillkoden, siden en kode skrives med store bokstaver. `--font-display` (Fraunces, tung kursiv, *soft + wonky*) til overskrifter, knapper, tall og navn på store flater; `--font-text` (Lora) til alt annet. Skala: `--fs-hero --fs-h1 --fs-h2 --fs-h3 --fs-lead --fs-body --fs-small --fs-micro`.
 
 **Rom:** 4 px-rutenett (`--s-1…7`), `--page-x/top/bottom` tar hensyn til hakk og hjemmelinje (`env(safe-area-inset-*)`).
 
@@ -63,11 +63,11 @@ En flate = en flat farge + korn + strek:
 
 ## Roller skal ikke synes for andre
 
-En telefon som er rød eller blå, eller som viser et stort «IMPOSTER», røper rollen til alle i rommet. Derfor:
+En telefon som er rød eller blå, eller som viser et stort «Imposter», røper rollen til alle i rommet. Derfor:
 
 - **Rolleskjermen (8 s) viser ingenting om rollen før en finger holder knappen.** Resten av tiden er den en tom, stiplet plass for kortet, helt lik for lojale og imposter. Kortet (øye, rollens navn i `--red`/`--blue`, riktig svar eller «?») er like stort for begge roller, og forsvinner når fingeren løftes (`public/js/hold.js`). Plassen tar resten av høyden i skjermen, så et høyere kort aldri skyver knappen bort fra under fingeren.
-- **Stripen under runden** (`RoleStrip`) er lik for alle («Din rolle · Hold for å se») og viser rollen, og for imposteren svaret, bare mens den holdes.
-- **To imposterer (fra seks spillere):** kortet har en tredje del, «Imposterne». Imposterne ser «Du og Kari» med Karis avatar, de lojale et «?» med «Finn dem sammen», så kortene er like store for begge roller. Stripen får en ekstra linje mens den holdes («Sammen med Kari» / «Det er to imposterer blant dere»). Rundens antall imposterer er ingen hemmelighet og står i `view.turn.impostors`; hvem de er står bare i imposterens egen visning (`you.mates`).
+- **Stripen under runden** (`RoleStrip`) er lik for alle («Din rolle · Hold for å se») og viser rollen, og for imposteren svaret, bare mens den holdes. **Det som kommer fram står til venstre for knappen, aldri i den eller under den**, for der dekker fingeren det: knappen endrer ikke tekst og flytter seg ikke når teksten ved siden av vokser. Det samme gjelder rollekortet, som står over knappen. `npm run qa:overlap` sjekker det (regel 6, med selvtest).
+- **To imposterer (fra seks spillere):** kortet har en tredje del, «Imposterne». Imposterne ser «Du og Kari» med Karis avatar, de lojale et «?» med «Finn dem sammen», så kortene er like store for begge roller. Stripen får en ekstra linje mens den holdes («Sammen med Kari» / «To av dere er imposterer»). Rundens antall imposterer er ingen hemmelighet og står i `view.turn.impostors`; hvem de er står bare i imposterens egen visning (`you.mates`).
 - **Alt annet som ellers kunne røpet rollen er likt:** vibrasjonen ved rolleskjermen, tipset under klokka, og nettleserfargen (`theme-color`). Sidetemaer (`html[data-theme]`) finnes bare for dommen til den som svarer.
 - QA kan vise alt som «holdt» uten finger: `setStore({ qaHold: true })` (se `useHold`).
 

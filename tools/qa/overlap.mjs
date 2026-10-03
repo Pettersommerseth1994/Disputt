@@ -5,6 +5,8 @@
 //   3. No two pieces of visible text overlap, wherever the page is scrolled to.
 //   4. No text runs off the edge of the screen (the app clips sideways overflow, so it would just be cut off).
 //   5. No text is cut off by its own box (a long name clipped at the edge).
+//   6. What a hold-to-see button reveals is not on or under that button, where the finger that holds it would cover it
+//      (checked on every screen that is shown "held").
 // The solid-background rule is checked on pixels: the bar is photographed as it is, then again with everything else on
 // the page hidden. If the two pictures differ, something showed through.
 //
@@ -14,12 +16,13 @@
 //   node tools/qa/overlap.mjs                 the whole plan (a minute or two)
 //   node tools/qa/overlap.mjs 390x664 …       the same plan, on just these screen sizes
 //   node tools/qa/overlap.mjs --font=150      just the friendly and the worst-case data, with the text 150% larger
-//   node tools/qa/overlap.mjs --self-test     breaks the layout on purpose, three ways, and checks that the rules notice
+//   node tools/qa/overlap.mjs --self-test     breaks the layout on purpose, four ways, and checks that the rules notice
 //   exits non-zero when a screen breaks a rule
 import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { createApp } from '../../server/index.js';
 import { buildFixtures } from './fixtures.mjs';
+import { underTheFinger } from './underfinger.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -201,6 +204,7 @@ if (process.argv.includes('--self-test')) {
     ['names pushed into each other', () => put({ view: stress['lobby-host-3'] }), '.player { margin-inline: -1.6rem !important; }', everywhere((m) => m.overlapping)],
     ['a name cut off by its box', () => put({ view: stress['lobby-host-3'] }), '.player__name { display: block !important; width: 2.2rem !important; overflow: hidden !important; text-overflow: clip !important; white-space: nowrap !important; }', everywhere((m) => m.clipped)],
     ['a page wider than the screen (the app clips it, so text just runs off the edge)', () => put({ view: stress['lobby-host-3'] }), 'main { width: 125vw !important; }', everywhere((m) => m.offscreen)],
+    ['what a hold reveals ends up under the button that is held', () => put({ view: stress['discussion-impostor-duo'], qaHold: true }), '.role-strip__info { order: 2 !important; flex: 1 1 100% !important; }', async () => (await page.evaluate(underTheFinger)).length],
   ];
   let missed = 0;
   for (const [what, setup, css, count] of faults) {
@@ -252,6 +256,8 @@ for (const plan of PLAN) {
       // (rule 4 is part of measureText; a page that scrolls sideways is also a problem)
       const sideways = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       if (sideways > 1) problems.push(`${key}: the page is ${sideways}px wider than the screen`);
+      // rule 6
+      if (key.endsWith('-held')) for (const text of await page.evaluate(underTheFinger)) problems.push(`${key}: ${text} sits on or under the hold button, where the finger covers it`);
       // rules 1 and 2
       const facts = await page.evaluate(() => {
         const dock = document.querySelector('main .dock');

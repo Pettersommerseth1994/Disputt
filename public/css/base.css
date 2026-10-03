@@ -107,12 +107,12 @@ button { touch-action: manipulation; }
 .center { text-align: center; }
 .muted { color: var(--fg-muted); }
 .lead { font-size: var(--fs-lead); line-height: 1.35; }
+/* (ordinary lower-case text: no capitals, and no wide letter-spacing, which only made sense for capitals) */
 .eyebrow {
   font-family: var(--font-text);
-  font-size: var(--fs-micro);
+  font-size: 0.88rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
   color: var(--fg-muted);
 }
 .sr-only {
