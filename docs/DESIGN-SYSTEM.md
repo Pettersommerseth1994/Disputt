@@ -100,3 +100,5 @@ Valg som gjelder deg selv (endre navn eller avatar, vis QR-koden, forlat spillet
 ## Logo
 
 `public/assets/logo/`: `disputt-logo.svg` (mørk brun, hovedlogo), `-cream` (for mørke flater), `-eye` (alternativ med øye i i-prikken). Tegnet opp som konturer av Fraunces med `npm run logo` (fargene står øverst i `tools/logo/build.mjs` og må følge `--ink` og `--cream`). På burgunder brukes den mørke logoen alltid i et gult klistremerke (`.logo-sticker`).
+
+**Ikoner:** faviconen (fanen i nettleseren, `public/favicon.svg` og `assets/icons/favicon-32.png`) er limen fra startsiden i gult i stedet for grønt, laget av tegningen `assets/avatars/lime.svg` med `node tools/logo/favicon.mjs` (grønntonene flyttes mot gult, resten beholdes). Hjemskjermikonene (`assets/icons/apple-touch-icon.png`, `icon-*.png`) er den svarte «D»-en på gult, laget med `node tools/logo/icons.mjs`. Nettlesere husker ikon-filer lenge, så adressen til faviconen har `?v=…` bakpå: øk tallet i `index.html` når ikonet byttes.

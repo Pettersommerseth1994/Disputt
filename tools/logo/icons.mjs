@@ -1,4 +1,5 @@
-// App icons: the "D" of the wordmark in ink on crayon yellow, with a small eye in its bowl.
+// Home-screen icons: the "D" of the wordmark in ink on crayon yellow, with a small eye in its bowl.
+// (The favicon, the little icon in a browser tab, is the yellow lime and is made by favicon.mjs.)
 // Usage: node tools/logo/icons.mjs   (needs tmp/fonts/fraunces-display.ttf from tools/fonts/build.sh)
 import fs from 'node:fs';
 import * as fontkit from 'fontkit';
@@ -38,7 +39,6 @@ function iconSvg({ pad, radius }) {
 const out = 'public/assets/icons';
 fs.mkdirSync(out, { recursive: true });
 const rounded = iconSvg({ pad: 0.1, radius: 112 });
-fs.writeFileSync('public/favicon.svg', rounded);
 const jobs = [
   ['icon-192.png', rounded, 192],
   ['icon-512.png', rounded, 512],
