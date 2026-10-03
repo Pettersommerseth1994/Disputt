@@ -4,6 +4,7 @@ import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { useHold } from '../hold.js';
 import { actions } from '../net.js';
 import { serverNow } from '../net.js';
+import { impostorCount, joinNames, matesOf, summaryImpostors } from '../impostors.js';
 import { asset } from '../paths.js';
 import { setStore } from '../store.js';
 import { Avatar, Button, GearIcon, RoleStrip, Scoreboard, Timer, TrophyIcon } from '../ui.js';
@@ -29,21 +30,37 @@ export function GameBar({ view }) {
 const EYES = { impostor: 'assets/art/eye-impostor.svg', loyal: 'assets/art/eye-loyal.svg' };
 const TIPS = {
   impostor: 'Få de andre til å svare feil – uten å bli avslørt.',
+  impostorDuo: 'Hjelp hverandre med å få de andre til å svare feil – uten å bli avslørt.',
   loyal: 'Finn ut hva som er riktig svar sammen – og ikke la imposteren lure dere.',
+  loyalDuo: 'Finn ut hva som er riktig svar sammen – og ikke la imposterne lure dere.',
 };
 
-/** The card that appears while the button is held. Both roles get a card of the same size: the loyal player's answer is a "?". */
-function RoleCard({ you }) {
+/**
+ * The card that appears while the button is held. Both roles get a card of the same size: the loyal player's answer is a "?".
+ * With two impostors the card has a third part, "Imposterne": the impostors see who they are, the loyal players a "?".
+ */
+function RoleCard({ you, count }) {
   const impostor = you.role === 'impostor';
-  return html`<article class="rolecard pop-in">
+  const mates = matesOf(you);
+  return html`<article class=${cx('rolecard pop-in', count > 1 && 'rolecard--duo')}>
     <div class="rolecard__head">
       <img class="rolecard__eye" src=${asset(EYES[you.role])} alt="" width="400" height="300" />
       <h1 class=${cx('rolecard__word', impostor ? 'rolecard__word--impostor' : 'rolecard__word--loyal')}>${impostor ? 'Imposter' : 'Lojal'}</h1>
     </div>
     <div class="rolecard__answer">
       <span class="rolecard__label">Riktig svar</span>
-      <p class="rolecard__pill"><span>${impostor ? you.secret.letter : '?'}</span>${impostor ? you.secret.text : 'Finn det sammen'}</p>
+      <p class="rolecard__pill"><span class="rolecard__dot">${impostor ? you.secret.letter : '?'}</span>${impostor ? you.secret.text : 'Finn det sammen'}</p>
     </div>
+    ${count > 1 &&
+    html`<div class="rolecard__answer">
+      <span class="rolecard__label">Imposterne</span>
+      <p class="rolecard__pill">
+        ${impostor && mates.length > 0
+          ? html`<${Avatar} id=${mates[0].avatar} size="xs" class="rolecard__mate" label=${mates[0].name} />`
+          : html`<span class="rolecard__dot">?</span>`}
+        ${impostor ? joinNames(['Du', ...mates.map((m) => m.name)]) : 'Finn dem sammen'}
+      </p>
+    </div>`}
   </article>`;
 }
 
@@ -53,6 +70,7 @@ export function RoleReveal({ view }) {
   const total = view.timings.roleMs;
   const left = useRef(Math.max(0, Math.min(total, view.roleEndsAt - serverNow())));
   const { held, bind } = useHold();
+  const count = impostorCount(view);
   // the same short buzz for everybody: a different pattern per role would give the role away to whoever feels or hears it
   useEffect(() => vibrate(70), []);
   // fetch the picture on the card now, so that the first hold does not show a half-drawn card
@@ -65,7 +83,7 @@ export function RoleReveal({ view }) {
     <div class="role__mid">
       <div class="slot" role="status">
         ${held
-          ? html`<${RoleCard} you=${you} />`
+          ? html`<${RoleCard} you=${you} count=${count} />`
           : html`<div class="slot__closed">
               <img class="slot__eye" src=${asset('assets/art/eye-wait.svg')} alt="" width="300" height="200" />
               <p>Rollen din er skjult</p>
@@ -73,7 +91,7 @@ export function RoleReveal({ view }) {
       </div>
     </div>
     <div class="role__hold">
-      <p class="role__hint">${held ? TIPS[you.role] : 'Hold telefonen inntil deg og dekk til med hånda.'}</p>
+      <p class="role__hint">${held ? TIPS[you.role + (count > 1 ? 'Duo' : '')] : 'Hold telefonen inntil deg og dekk til med hånda.'}</p>
       <button type="button" class=${cx('btn btn--block hold-btn', held && 'is-held')} ...${bind} aria-label="Hold inne for å se rollen din">
         ${held ? 'Slipp for å skjule' : 'Hold for å se rollen din'}
       </button>
@@ -106,7 +124,7 @@ export function Question({ view }) {
 
   return html`<main class="screen question">
     <${GameBar} view=${view} />
-    <${RoleStrip} you=${you} />
+    <${RoleStrip} you=${you} impostors=${impostorCount(view)} />
 
     <div class="timebar">
       <${Timer} endsAt=${view.discussion.endsAt} small />
@@ -148,7 +166,7 @@ export function Discussion({ view }) {
   const ms = useRemaining(view.discussion.endsAt);
   return html`<main class="screen discussion">
     <${GameBar} view=${view} />
-    <${RoleStrip} you=${you} />
+    <${RoleStrip} you=${you} impostors=${impostorCount(view)} />
 
     <section class="center stack" style="align-items:center;margin-top:var(--s-4)">
       <${Avatar} id=${asker?.avatar} size="lg" alive offline=${asker && !asker.connected} />
@@ -200,7 +218,7 @@ export function RevealAsker({ view }) {
         <p class="eyebrow" style="color:var(--ink);opacity:.78">Riktig svar</p>
         <p class="role__answer"><span>${r.correctLetter}</span>${r.correctText}</p>
       </div>
-      <p class="lead">${r.correct ? 'Gruppa lot seg ikke lure.' : 'Imposteren lurte dere.'} Si det høyt til de andre – og trykk så på knappen.</p>
+      <p class="lead">${r.correct ? 'Gruppa lot seg ikke lure.' : impostorCount(view) > 1 ? 'Imposterne lurte dere.' : 'Imposteren lurte dere.'} Si det høyt til de andre – og trykk så på knappen.</p>
     </div>
     <div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>Gå videre</${Button}></div>
   </main>`;
@@ -211,7 +229,7 @@ export function WaitReveal({ view }) {
   const stuck = view.you.isHost && asker && !asker.connected;
   return html`<main class="screen">
     <${GameBar} view=${view} />
-    <${RoleStrip} you=${view.you} />
+    <${RoleStrip} you=${view.you} impostors=${impostorCount(view)} />
     <div class="grow center stack stack--loose" style="justify-content:center;align-items:center">
       <${Avatar} id=${asker?.avatar} size="xl" alive />
       <h2>Se på ${asker?.name}!</h2>
@@ -225,10 +243,18 @@ export function WaitReveal({ view }) {
 
 export function Summary({ view }) {
   const s = view.summary;
-  const impostor = playerById(view, s.impostorId) ?? s.impostor; // the impostor may have been removed since
+  const impostors = summaryImpostors(view); // (an impostor may have been removed since)
+  const names = impostors.map((i) => i.name);
+  const many = impostors.length > 1;
   const isHost = view.you.isHost;
-  const headline = s.skipped ? 'Runden ble hoppet over' : s.correct ? 'Gruppa hadde rett!' : 'Imposteren lurte dere!';
-  const sub = s.skipped ? 'Ingen fikk poeng.' : s.correct ? 'Alle lojale fikk 1 poeng.' : `${impostor?.name ?? 'Imposteren'} fikk 1 poeng.`;
+  const headline = s.skipped ? 'Runden ble hoppet over' : s.correct ? 'Gruppa hadde rett!' : many ? 'Imposterne lurte dere!' : 'Imposteren lurte dere!';
+  const sub = s.skipped
+    ? 'Ingen fikk poeng.'
+    : s.correct
+      ? 'Alle lojale fikk 1 poeng.'
+      : many
+        ? `${joinNames(names)} fikk 1 poeng hver.`
+        : `${names[0] ?? 'Imposteren'} fikk 1 poeng.`;
 
   return html`<main class="screen summary">
     <${GameBar} view=${view} />
@@ -238,10 +264,10 @@ export function Summary({ view }) {
     </header>
 
     <section class="card card--paper impostor-card row pop-in">
-      <${Avatar} id=${impostor?.avatar} size="md" alive />
+      <span class="impostor-card__faces">${impostors.map((i) => html`<${Avatar} id=${i.avatar} size="md" alive key=${i.id} />`)}</span>
       <div>
-        <p class="eyebrow" style="color:var(--ink);opacity:.78">Imposteren var</p>
-        <p class="display impostor-card__name">${impostor?.name}</p>
+        <p class="eyebrow" style="color:var(--ink);opacity:.78">${many ? 'Imposterne var' : 'Imposteren var'}</p>
+        <p class=${cx('display impostor-card__name', many && 'impostor-card__name--duo')}>${joinNames(names)}</p>
       </div>
     </section>
 

@@ -264,6 +264,178 @@ describe('roles', () => {
   });
 });
 
+describe('two impostors from six players', () => {
+  const started = (n, opts) => {
+    const ctx = lobby(n, opts);
+    ctx.room.start(ctx.host.id);
+    return ctx;
+  };
+  const nameOf = (ctx, id) => byId(ctx.room, id).name;
+  const toDiscussion = (ctx) => {
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+  };
+
+  it('has one impostor up to five players and two from six, never the same player twice', () => {
+    for (const [n, expected] of [[3, 1], [4, 1], [5, 1], [6, 2], [7, 2], [10, 2]]) {
+      for (let seed = 1; seed <= 25; seed++) {
+        const ctx = started(n, { seed });
+        const { impostorIds, impostorId } = ctx.room.current;
+        assert.equal(impostorIds.length, expected, `${n} players: ${expected} impostor(s)`);
+        assert.equal(new Set(impostorIds).size, expected, 'two different players');
+        for (const id of impostorIds) assert.ok(ctx.room.players.has(id));
+        assert.equal(impostorId, impostorIds[0], 'the first impostor is also kept under the old name');
+        for (const p of ctx.players) assert.equal(ctx.room.viewFor(p.id).turn.impostors, expected, 'everybody is told how many there are');
+      }
+    }
+  });
+
+  it('counts the players who are in the round: somebody whose phone is away has no role and does not count', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const six = lobby(6, { seed });
+      six.room.disconnect(six.players[5].id); // six in the lobby, five in the round
+      six.room.start(six.host.id);
+      assert.equal(six.room.current.impostorIds.length, 1);
+
+      const seven = lobby(7, { seed });
+      seven.room.disconnect(seven.players[6].id); // seven in the lobby, six in the round
+      seven.room.start(seven.host.id);
+      assert.equal(seven.room.current.impostorIds.length, 2);
+      assert.ok(!seven.room.current.impostorIds.includes(seven.players[6].id));
+    }
+  });
+
+  it('picks every seat as an impostor equally often', () => {
+    const counts = new Array(6).fill(0);
+    const N = 3000;
+    for (let i = 0; i < N; i++) {
+      const ctx = started(6, { seed: i + 1 });
+      for (const id of ctx.room.current.impostorIds) counts[ctx.players.findIndex((p) => p.id === id)]++;
+    }
+    for (const c of counts) assert.ok(Math.abs(c - N / 3) < N * 0.05, `each seat is an impostor in about a third of the rounds (${counts})`);
+  });
+
+  it('tells each impostor who the other one is, and tells nobody else', () => {
+    const ctx = started(6, { seed: 3 });
+    const { impostorIds, question } = ctx.room.current;
+    const secret = { index: question.correct, letter: 'ABCD'[question.correct], text: question.options[question.correct] };
+    for (const p of ctx.players) {
+      const v = ctx.room.viewFor(p.id);
+      if (impostorIds.includes(p.id)) {
+        const otherId = impostorIds.find((id) => id !== p.id);
+        const other = byId(ctx.room, otherId);
+        assert.equal(v.you.role, 'impostor');
+        assert.deepEqual(v.you.secret, secret, 'both impostors know the answer');
+        assert.deepEqual(v.you.mates, [{ id: otherId, name: other.name, avatar: other.avatar }], 'and who the other impostor is');
+      } else {
+        const wire = JSON.stringify(v);
+        assert.equal(v.you.role, 'loyal');
+        assert.equal(v.you.mates, undefined);
+        assert.equal(v.you.secret, undefined);
+        assert.ok(!wire.includes('mates') && !/impostorIds?"/.test(wire), 'a loyal view carries nothing about who the impostors are');
+        assert.ok(!wire.includes(question.options[question.correct]), 'nor the answer');
+      }
+    }
+  });
+
+  it('tells a lone impostor nothing about "the other one"', () => {
+    const ctx = started(5, { seed: 3 });
+    const v = ctx.room.viewFor(ctx.room.current.impostorId);
+    assert.equal(v.you.role, 'impostor');
+    assert.equal(v.you.mates, undefined);
+  });
+
+  it('gives every loyal player a point for a right answer, and neither impostor', () => {
+    const ctx = started(7, { seed: 2 });
+    const cur = ctx.room.current;
+    toDiscussion(ctx);
+    finishRound(ctx, true);
+    for (const p of ctx.players) assert.equal(byId(ctx.room, p.id).score, cur.impostorIds.includes(p.id) ? 0 : 1);
+    const s = ctx.room.viewFor(ctx.host.id).summary;
+    assert.deepEqual(Object.keys(s.gained).sort(), ctx.players.filter((p) => !cur.impostorIds.includes(p.id)).map((p) => p.id).sort());
+  });
+
+  it('gives both impostors a point, and nobody else, when the group is wrong', () => {
+    const ctx = started(7, { seed: 2 });
+    const cur = ctx.room.current;
+    toDiscussion(ctx);
+    finishRound(ctx, false);
+    for (const p of ctx.players) assert.equal(byId(ctx.room, p.id).score, cur.impostorIds.includes(p.id) ? 1 : 0);
+    const s = ctx.room.viewFor(ctx.host.id).summary;
+    assert.deepEqual(Object.keys(s.gained).sort(), [...cur.impostorIds].sort());
+  });
+
+  it('names both impostors in the summary, also under the old names for a phone that has not updated', () => {
+    const ctx = started(6, { seed: 4 });
+    const cur = ctx.room.current;
+    toDiscussion(ctx);
+    finishRound(ctx, false);
+    const s = ctx.room.viewFor(ctx.players[1].id).summary;
+    assert.deepEqual(s.impostorIds, cur.impostorIds);
+    assert.deepEqual(s.impostors.map((i) => i.name), cur.impostorIds.map((id) => nameOf(ctx, id)));
+    assert.equal(s.impostorId, cur.impostorIds[0]);
+    assert.equal(s.impostor.name, nameOf(ctx, cur.impostorIds[0]));
+  });
+
+  it('carries on when one of the two impostors is removed, and ends the round when the last one is', () => {
+    const ctx = roundWhere(6, (cur, c) => {
+      const [a, b] = cur.impostorIds;
+      return cur.impostorIds.length === 2 && ![a, b].includes(cur.askerId) && ![a, b].includes(c.host.id);
+    });
+    const cur = ctx.room.current;
+    const [first, second] = cur.impostorIds;
+    const firstName = nameOf(ctx, first);
+    ctx.room.disconnect(first);
+    ctx.room.kick(ctx.host.id, first);
+    assert.equal(ctx.room.phase, PHASE.ROLE, 'the round carries on with the impostor who is left');
+    assert.equal(cur.skipped, false);
+    assert.equal(ctx.room.viewFor(second).you.role, 'impostor');
+    assert.equal(ctx.room.viewFor(second).you.mates[0].name, firstName, 'the one who stayed still knows who the other was');
+
+    toDiscussion(ctx);
+    finishRound(ctx, false); // the group is fooled: the impostor who is left scores, the one who left cannot
+    assert.equal(byId(ctx.room, second).score, 1);
+    const s = ctx.room.viewFor(ctx.host.id).summary;
+    assert.deepEqual(Object.keys(s.gained), [second]);
+    assert.deepEqual(s.impostors.map((i) => i.name), cur.impostorIds.map((id) => (id === first ? firstName : nameOf(ctx, id))), 'the summary still names the one who left');
+
+    const again = roundWhere(6, (c2, c) => c2.impostorIds.length === 2 && !c2.impostorIds.includes(c2.askerId) && !c2.impostorIds.includes(c.host.id));
+    for (const id of again.room.current.impostorIds) {
+      again.room.disconnect(id);
+      again.room.kick(again.host.id, id);
+    }
+    assert.equal(again.room.phase, PHASE.SUMMARY, 'with no impostor left there is no round');
+    assert.equal(again.room.current.skipped, true);
+  });
+
+  it('is saved and restored like any other round, and an old save with a single impostor still loads', () => {
+    const ctx = started(6, { seed: 5 });
+    const snapshot = JSON.parse(JSON.stringify(ctx.room));
+    const copy = Room.fromJSON(snapshot, { now: ctx.clock.now });
+    for (const p of ctx.players) {
+      const was = ctx.room.viewFor(p.id);
+      const now = copy.viewFor(p.id);
+      assert.deepEqual(now.you, was.you);
+      assert.deepEqual(now.turn, was.turn);
+    }
+
+    const old = JSON.parse(JSON.stringify(ctx.room));
+    delete old.current.impostorIds; // what a game saved by the version before this one looks like
+    delete old.current.impostors;
+    const loaded = Room.fromJSON(old, { now: ctx.clock.now });
+    assert.deepEqual(loaded.current.impostorIds, [old.current.impostorId]);
+    assert.equal(loaded.viewFor(old.current.impostorId).you.role, 'impostor');
+    assert.equal(loaded.viewFor(old.current.impostorId).you.mates, undefined);
+    assert.equal(loaded.viewFor(old.current.impostorId).turn.impostors, 1);
+  });
+
+  it('tells the players from which size there are two impostors', () => {
+    const ctx = lobby(3);
+    assert.equal(ctx.room.viewFor(ctx.host.id).limits.twoImpostorsFrom, 6);
+    assert.equal(LIMITS.twoImpostorsFrom, 6);
+  });
+});
+
 describe('question phase', () => {
   it('shows the question and options only to the asker, and the timer to everyone', () => {
     const ctx = lobby(4);

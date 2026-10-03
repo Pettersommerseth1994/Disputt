@@ -1,5 +1,6 @@
 // UI end-to-end: several "phones" (isolated browser contexts) play a whole game through the real interface.
 //   node tools/qa/play.mjs [players=4] [target=2] [--p2p] [--subpath] [--url=https://…] [--shots]
+//   (with six players or more there are two impostors, who must be told about each other: try `play.mjs 6 2`)
 //   --p2p   test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server
 //   --subpath   with --p2p: serve the site below /Disputt/ like GitHub Pages does (catches links that forget the sub-path)
 //   --url   play against an already deployed peer-to-peer site (real PeerJS cloud, real timers), e.g. the GitHub Pages address
@@ -104,9 +105,11 @@ const holdAndRead = async (p, label) => {
   await p.page.waitForFunction((src) => new RegExp(src).test(document.body.innerText), { timeout: 3000 }, ROLE_WORD.source);
   if (label) await shot(p, label);
   const text = await bodyText(p);
+  // just the card (or, on the other screens, the strip), with the spaces and line breaks squeezed together
+  const card = await p.page.evaluate(() => (document.querySelector('.rolecard, .role-strip')?.innerText ?? '').replace(/\s+/g, ' '));
   await p.page.mouse.up();
   await p.page.waitForFunction((src) => !new RegExp(src).test(document.body.innerText), { timeout: 3000 }, ROLE_WORD.source);
-  return text;
+  return { text, card };
 };
 
 async function register(p, name, avatarIndex) {
@@ -273,15 +276,26 @@ try {
       );
       assert.equal(new Set(buzzes).size, 1, `the role screen buzzes the same on every phone (${[...new Set(buzzes)].join(' / ')})`);
     }
-    // hold: exactly one impostor, and only the impostor sees the answer (every phone at once: the role screen is short)
+    // hold: one impostor (two from six players), and only the impostors see the answer (every phone at once: the role screen is short)
     const peeks = await Promise.all(all.map((p) => holdAndRead(p, SHOTS && round === 1 ? `04-role-held-${p.name}` : null)));
-    const roles = peeks.map((text) => (/\bIMPOSTER\b/.test(text) ? 'impostor' : 'loyal'));
-    peeks.forEach((text, i) => assert.match(text, roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${all[i].name} sees ${roles[i]}`));
-    assert.equal(roles.filter((r) => r === 'impostor').length, 1, `round ${round}: exactly one impostor, got ${roles}`);
-    const impostor = all[roles.indexOf('impostor')];
-    assert.match(peeks[roles.indexOf('impostor')], /\b[A-D]\s*\n?\s*[A-Za-zÆØÅæøå ]+/, 'impostor sees letter + answer');
-    for (const [i, p] of all.entries()) if (p !== impostor) assert.match(peeks[i], /\?/, 'the loyal player gets a "?" where the impostor gets the answer');
-    assert.equal(await impostor.page.$('.rolecard'), null, 'the card is gone when the button is let go');
+    const roles = peeks.map(({ text }) => (/\bIMPOSTER\b/.test(text) ? 'impostor' : 'loyal'));
+    peeks.forEach(({ text }, i) => assert.match(text, roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${all[i].name} sees ${roles[i]}`));
+    const expectedImpostors = all.length >= 6 ? 2 : 1;
+    assert.equal(roles.filter((r) => r === 'impostor').length, expectedImpostors, `round ${round}: ${expectedImpostors} impostor(s) among ${all.length}, got ${roles}`);
+    const impostors = all.filter((_, i) => roles[i] === 'impostor');
+    const isImpostor = (p) => impostors.includes(p);
+    for (const [i, p] of all.entries()) {
+      if (isImpostor(p)) assert.match(peeks[i].text, /\b[A-D]\s*\n?\s*[A-Za-zÆØÅæøå ]+/, 'an impostor sees letter + answer');
+      else assert.match(peeks[i].text, /\?/, 'the loyal player gets a "?" where the impostor gets the answer');
+    }
+    // with two impostors each is told who the other is, in the card's third part; the loyal players get a "?" there
+    for (const [i, p] of all.entries()) {
+      const card = peeks[i].card;
+      if (expectedImpostors === 1) assert.doesNotMatch(card, /imposterne/i, 'a lone impostor has no "Imposterne" row');
+      else if (isImpostor(p)) assert.match(card, new RegExp(`imposterne .*Du og ${impostors.find((o) => o !== p).name}\\b`, 'i'), `${p.name}'s card names the other impostor`);
+      else assert.match(card, /imposterne \? Finn dem sammen/i, `${p.name}'s card has a "?" where the impostors are named`);
+    }
+    for (const p of impostors) assert.equal(await p.page.$('.rolecard'), null, 'the card is gone when the button is let go');
 
     // discussion: one asker holds the question, the others only see who
     await Promise.all(
@@ -316,7 +330,12 @@ try {
     if (round === 1) {
       // held, the strip gives the same role as the role screen did
       for (const [i, p] of all.entries()) {
-        assert.match(await holdAndRead(p), roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${p.name}'s role strip agrees with the role screen`);
+        const { text, card } = await holdAndRead(p);
+        assert.match(text, roles[i] === 'impostor' ? /\bIMPOSTER\b/ : /\bLOJAL\b/, `${p.name}'s role strip agrees with the role screen`);
+        if (expectedImpostors === 2) {
+          if (roles[i] === 'impostor') assert.match(card, new RegExp(`Sammen med ${impostors.find((o) => o !== p).name}\\b`), `${p.name}'s strip names the other impostor`);
+          else assert.match(card, /Det er to imposterer blant dere/);
+        } else assert.doesNotMatch(card, /Sammen med|to imposterer/);
       }
       await shot(asker, '06-question-asker');
       await shot(all.find((p) => p !== asker), '07-discussion');
@@ -346,7 +365,7 @@ try {
       const bystander = all.find((p) => p !== asker && p !== host) ?? host;
       await bystander.page.reload();
       await waitText(bystander, /har spørsmålet/);
-      assert.match(await holdAndRead(bystander), bystander === impostor ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'role restored after reload');
+      assert.match((await holdAndRead(bystander)).text, isImpostor(bystander) ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'role restored after reload');
       log('reload restored the session');
       if (P2P) {
         // the game lives in the host's page: reloading it must not end the game, and guests must find their way back
@@ -356,7 +375,7 @@ try {
           // back in the round: no "connection lost" banner, and the screen is the asker's or the discussion screen again
           await p.page.waitForFunction(() => !document.querySelector('.banner') && (document.querySelector('.question__text') || /har spørsmålet/i.test(document.body.innerText)), { timeout: 40000 });
         }
-        assert.match(await holdAndRead(host), host === impostor ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'host role restored after reload');
+        assert.match((await holdAndRead(host)).text, isImpostor(host) ? /\bIMPOSTER\b/ : /\bLOJAL\b/, 'host role restored after reload');
         log('the host reloaded and everybody is back in the same round');
       }
     }
@@ -374,7 +393,8 @@ try {
       assert.ok(!/Riktig!|Feil!/i.test(t), 'others do not see the verdict');
       assert.match(t, /Se på/);
     }
-    assert.match(await bodyText(asker), new RegExp(q.options[q.correct]));
+    // (as text, not as a pattern: an answer such as "Falling Feather (rødvin)" has characters that mean something in one)
+    assert.ok((await bodyText(asker)).includes(q.options[q.correct]), `the asker's verdict screen shows the right answer "${q.options[q.correct]}"`);
     if (round === 1) await shot(asker, '08-reveal');
     // a double tap on "Gå videre": the second tap hits a screen that is already out of date, and must not show an error
     await asker.page.evaluate(() => {
@@ -382,19 +402,23 @@ try {
       b.click();
       b.click();
     });
-    await waitText(asker, /Imposteren var|vant!|Delt seier/i, 8000 * SLOW);
+    await waitText(asker, /Imposter(en|ne) var|vant!|Delt seier/i, 8000 * SLOW);
     await sleep(300);
     // (the notice that a seat was taken over by a new phone is a toast too, and is meant to be there)
     const toasts = await asker.page.$$eval('.toast', (els) => els.map((e) => e.innerText));
     assert.deepEqual(toasts.filter((t) => !/^Plassen til .* ble tatt over av en ny telefon\.$/.test(t)), [], 'no error toast after a double tap');
 
     // summary (or the winner)
-    await Promise.all(all.map((p) => waitText(p, /Imposteren var|vant!|Delt seier/i, 8000 * SLOW)));
+    await Promise.all(all.map((p) => waitText(p, /Imposter(en|ne) var|vant!|Delt seier/i, 8000 * SLOW)));
     const hostText = await bodyText(host);
     finished = /vant!|Delt seier/i.test(hostText);
     if (round === 1) await shot(host, '09-summary');
     if (!finished) {
-      assert.match(hostText, /Gruppa hadde rett|Imposteren lurte dere/);
+      assert.match(hostText, /Gruppa hadde rett|Imposter(en|ne) lurte dere/);
+      // the summary names every impostor, in the singular or the plural
+      const impostorCard = await host.page.$eval('.impostor-card', (el) => el.innerText.replace(/\s+/g, ' '));
+      assert.match(impostorCard, expectedImpostors === 2 ? /imposterne var/i : /imposteren var/i);
+      for (const p of impostors) assert.ok(impostorCard.includes(p.name), `the summary names ${p.name} (${impostorCard})`);
       assert.match(await bodyText(others[0]), /Venter på at verten starter neste runde/);
 
       // a phone loses its browser data mid-game: the player re-enters through the QR link and takes their old seat
@@ -455,6 +479,8 @@ try {
   log('\nUI END-TO-END: OK');
 } catch (err) {
   console.error('\nUI END-TO-END FAILED:', err.message);
+  // (an assertion says what was wrong; anything else, such as a browser error, also needs to say where)
+  if (err.name !== 'AssertionError') console.error(String(err.stack).split('\n').slice(1, 7).join('\n'));
   if (SHOTS) for (const p of phones) await p.page.screenshot({ path: `tmp/play/FAIL-${p.name}.png` }).catch(() => {});
   process.exitCode = 1;
 } finally {

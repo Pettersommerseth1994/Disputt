@@ -24,11 +24,15 @@ export const PHASE = Object.freeze({
 export const LIMITS = Object.freeze({
   minPlayers: 3,
   maxPlayers: 10,
+  twoImpostorsFrom: 6, // a round with this many players or more has two impostors instead of one
   targetMin: 1,
   targetMax: 99,
   timerMinSec: 30,
   timerMaxSec: 60 * 60,
 });
+
+/** How many impostors a round with this many players has. */
+export const impostorCount = (players) => (players >= LIMITS.twoImpostorsFrom ? 2 : 1);
 
 const MAX_GHOSTS = 2; // abandoned, nameless lobby placeholders kept around at the same time (see addPlayer)
 
@@ -132,6 +136,11 @@ export class Room {
     room.winnerIds = copy.winnerIds ?? [];
     room.history = copy.history ?? [];
     room.current = copy.current ?? null;
+    if (room.current && !room.current.impostorIds) {
+      // a game saved before there could be two impostors
+      room.current.impostorIds = [room.current.impostorId];
+      room.current.impostors = [room.current.impostor];
+    }
     room.hostAwaySince = null;
     // deck positions only make sense for the same question bank
     const sameBank = copy.questionCount === room.questions.length;
@@ -274,7 +283,9 @@ export class Room {
       throw new GameError('bad_phase', 'Du kan bare fjerne spillere som er frakoblet.');
     }
     const cur = this.current;
-    const inCurrentRound = cur && IN_ROUND.includes(this.phase) && (cur.impostorId === targetId || cur.askerId === targetId);
+    // (with two impostors the round carries on when only one of them is gone)
+    const lastImpostorGone = cur && cur.impostorIds.includes(targetId) && cur.impostorIds.every((id) => id === targetId || !this.players.has(id));
+    const inCurrentRound = cur && IN_ROUND.includes(this.phase) && (lastImpostorGone || cur.askerId === targetId);
     // Once the answer is locked the result is decided: removing someone must not wipe out a round that was already won or lost.
     const decided = this.phase === PHASE.LOCKED || this.phase === PHASE.REVEAL;
     this.removePlayer(targetId, 'kicked');
@@ -466,12 +477,22 @@ export class Room {
   beginRound() {
     const pool = this.connectedReadyPlayers();
     const now = this.clock();
-    const impostor = pool[this.rand.int(pool.length)];
-    const asker = pool[this.rand.int(pool.length)]; // may be the impostor too
+    const first = pool[this.rand.int(pool.length)];
+    const asker = pool[this.rand.int(pool.length)]; // may be an impostor too
+    const impostors = [first];
+    while (impostors.length < impostorCount(pool.length)) {
+      const rest = pool.filter((p) => !impostors.includes(p));
+      impostors.push(rest[this.rand.int(rest.length)]);
+    }
+    const info = (p) => ({ id: p.id, name: p.name, avatar: p.avatar });
     this.current = {
       number: ++this.round,
-      impostorId: impostor.id,
-      impostor: { id: impostor.id, name: impostor.name, avatar: impostor.avatar }, // survives the impostor being removed later
+      impostorIds: impostors.map((p) => p.id),
+      impostors: impostors.map(info), // (these survive an impostor being removed later: the summary names them)
+      // The first impostor also under the old names: a phone that has not reloaded since an update, and a game saved by
+      // this version and read by an older one, only know one impostor.
+      impostorId: first.id,
+      impostor: info(first),
       askerId: asker.id,
       participants: pool.map((p) => p.id), // only players who were in this round can score from it
       question: this.nextQuestion(),
@@ -506,20 +527,23 @@ export class Room {
     if (cur.correct) {
       for (const id of cur.participants) {
         const p = this.players.get(id);
-        if (p && isReady(p) && id !== cur.impostorId) {
+        if (p && isReady(p) && !cur.impostorIds.includes(id)) {
           p.score += 1;
           gained[id] = 1;
         }
       }
     } else {
-      const impostor = this.players.get(cur.impostorId);
-      if (impostor) {
-        impostor.score += 1;
-        gained[impostor.id] = 1;
+      // the group was fooled: every impostor scores
+      for (const id of cur.impostorIds) {
+        const impostor = this.players.get(id);
+        if (impostor) {
+          impostor.score += 1;
+          gained[impostor.id] = 1;
+        }
       }
     }
     cur.summary = { round: cur.number, correct: cur.correct, skipped: false, gained, tiebreak: false };
-    this.history.push({ round: cur.number, impostorId: cur.impostorId, askerId: cur.askerId, correct: cur.correct });
+    this.history.push({ round: cur.number, impostorId: cur.impostorId, impostorIds: cur.impostorIds, askerId: cur.askerId, correct: cur.correct });
     this.phase = PHASE.SUMMARY;
     this.finishIfDecided();
     this.touch();
@@ -618,7 +642,7 @@ export class Room {
       target: this.target,
       hostId: this.hostId,
       now: this.clock(),
-      limits: { min: LIMITS.minPlayers, max: LIMITS.maxPlayers },
+      limits: { min: LIMITS.minPlayers, max: LIMITS.maxPlayers, twoImpostorsFrom: LIMITS.twoImpostorsFrom },
       timings: { roleMs: this.timings.roleMs, countdownMs: this.timings.countdownMs },
       players: ready.map((p) => ({
         id: p.id,
@@ -640,14 +664,17 @@ export class Room {
 
     if (inRound) {
       const q = cur.question;
-      const isImpostor = cur.impostorId === playerId;
+      const isImpostor = cur.impostorIds.includes(playerId);
       const isAsker = cur.askerId === playerId;
       view.you.role = isImpostor ? 'impostor' : 'loyal';
       view.you.isAsker = isAsker;
       if (isImpostor) {
         view.you.secret = { index: q.correct, letter: LETTERS[q.correct], text: q.options[q.correct] };
+        // with two impostors, each learns who the other is (and nobody else is told)
+        if (cur.impostors.length > 1) view.you.mates = cur.impostors.filter((m) => m.id !== playerId).map((m) => ({ ...m }));
       }
-      view.turn = { number: cur.number, askerId: cur.askerId };
+      // (how many impostors there are is no secret: it follows from how many are playing)
+      view.turn = { number: cur.number, askerId: cur.askerId, impostors: cur.impostorIds.length };
 
       if (this.phase === PHASE.ROLE) view.roleEndsAt = cur.roleEndsAt;
       if (this.phase === PHASE.QUESTION) {
@@ -681,6 +708,8 @@ export class Room {
         ...cur.summary,
         impostorId: cur.impostorId,
         impostor: cur.impostor,
+        impostorIds: cur.impostorIds,
+        impostors: cur.impostors,
         askerId: cur.askerId,
       };
     }

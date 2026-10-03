@@ -14,7 +14,9 @@ const viewports = (process.argv.slice(2).length ? process.argv.slice(2) : ['390x
 
 // screens that must be readable without scrolling (the others are lists or forms and are scrollable by nature)
 // (a key ending in "-held" is the same screen with every hold-to-see button held: the role card and the open role strip)
-const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held', 'discussion-host'];
+const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held', 'discussion-host',
+  // two impostors (six players): the role card has a third part and the open strip a second line
+  'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held', 'discussion-loyal-duo-held', 'reveal-duo-wrong'];
 // ... and these should at least keep their main action and the text above it in view
 const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
 

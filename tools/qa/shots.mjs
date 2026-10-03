@@ -14,7 +14,7 @@ const DOCS = process.argv.includes('--docs'); // also write 1x-viewport WebPs fo
 const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
 const DOCS_DIR = 'public/design-system/screens';
 // the screens shown in the style guide gallery (keep in sync with SCREENS in public/design-system/ds.js)
-const DOC_KEYS = new Set(['home', 'profile-new', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-right', 'reveal-wrong', 'summary-wrong-host', 'finished-host', 'sheet-scores']);
+const DOC_KEYS = new Set(['home', 'profile-new', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'role-impostor-duo-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-right', 'reveal-wrong', 'summary-wrong-host', 'finished-host', 'sheet-scores']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(OUT, { recursive: true });
@@ -67,10 +67,10 @@ await page.evaluate(() => window.__disputt.setStore({ sheet: null }));
 const f = buildFixtures();
 const order = [
   'profile-new', 'profile-edit', 'lobby-host-new', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
-  'role-impostor', 'role-impostor-held', 'role-loyal', 'role-loyal-held',
+  'role-impostor', 'role-impostor-held', 'role-loyal', 'role-loyal-held', 'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held',
   'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-host', 'discussion-low',
   'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wait',
-  'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest',
+  'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'lobby-host-6',
   'finished-host', 'finished-guest',
 ];
 const LONG = new Set(['lobby-host-new', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host']);

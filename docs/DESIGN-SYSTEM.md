@@ -59,6 +59,7 @@ En flate = en flat farge + korn + strek:
 
 - 10 avatarer i `public/assets/avatars/<id>.svg` (`viewBox 0 0 400 400`, gjennomsiktig bakgrunn). Rosteret styres av `shared/avatars.mjs`; legg du til en avatar, legg til både filen og linjen der (serveren validerer mot rosteret og håndhever at hver avatar bare kan velges av én).
 - Rolleskjerm-øyne, krone, dekor og teksturer ligger i `public/assets/art` og `public/assets/textures`.
+- Alt genereres deterministisk med `npm run art` (kilde i `tools/art`). Vil du bruke håndtegnede illustrasjoner, overskriv SVG-ene med samme filnavn.
 
 ## Roller skal ikke synes for andre
 
@@ -66,9 +67,9 @@ En telefon som er rød eller blå, eller som viser et stort «IMPOSTER», røper
 
 - **Rolleskjermen (8 s) viser ingenting om rollen før en finger holder knappen.** Resten av tiden er den en tom, stiplet plass for kortet, helt lik for lojale og imposter. Kortet (øye, rollens navn i `--red`/`--blue`, riktig svar eller «?») er like stort for begge roller, og forsvinner når fingeren løftes (`public/js/hold.js`). Plassen tar resten av høyden i skjermen, så et høyere kort aldri skyver knappen bort fra under fingeren.
 - **Stripen under runden** (`RoleStrip`) er lik for alle («Din rolle · Hold for å se») og viser rollen, og for imposteren svaret, bare mens den holdes.
+- **To imposterer (fra seks spillere):** kortet har en tredje del, «Imposterne». Imposterne ser «Du og Kari» med Karis avatar, de lojale et «?» med «Finn dem sammen», så kortene er like store for begge roller. Stripen får en ekstra linje mens den holdes («Sammen med Kari» / «Det er to imposterer blant dere»). Rundens antall imposterer er ingen hemmelighet og står i `view.turn.impostors`; hvem de er står bare i imposterens egen visning (`you.mates`).
 - **Alt annet som ellers kunne røpet rollen er likt:** vibrasjonen ved rolleskjermen, tipset under klokka, og nettleserfargen (`theme-color`). Sidetemaer (`html[data-theme]`) finnes bare for dommen til den som svarer.
 - QA kan vise alt som «holdt» uten finger: `setStore({ qaHold: true })` (se `useHold`).
-- Alt genereres deterministisk med `npm run art` (kilde i `tools/art`). Vil du bruke håndtegnede illustrasjoner, overskriv SVG-ene med samme filnavn.
 
 ## Små skjermer
 

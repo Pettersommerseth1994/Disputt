@@ -533,6 +533,7 @@
 .role-strip--hidden { color: var(--cream); background: var(--tex-grain), var(--tex-dark), var(--surface-deep); box-shadow: inset 0 0 0 2px rgb(var(--cream-rgb) / 0.14), 0 3px 0 var(--edge); }
 .role-strip--open { color: var(--ink); background: var(--tex-grain), var(--cream); box-shadow: 0 3px 0 var(--edge); }
 .role-strip__impostor { color: var(--red); }
+.role-strip__row { flex: 1 1 100%; font-size: 0.85rem; font-weight: 600; } /* with two impostors: who the other one is */
 .role-strip__loyal { color: var(--blue); }
 
 .secret {

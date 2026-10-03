@@ -106,6 +106,8 @@ function HostLobby({ view }) {
   const shortUrl = joinSite(s.info).replace(/^https?:\/\//, '').replace(/\/$/, '');
   const need = view.limits.min - view.players.length;
   const canStart = enough && (valid || emptied) && view.you.ready && s.conn === 'open';
+  // from six players in the round there are two impostors (the round counts the players whose phones are connected)
+  const twoImpostors = view.players.filter((p) => p.connected).length >= (view.limits.twoImpostorsFrom ?? Infinity);
 
   return html`<main class="screen lobby">
     <header class="row row--between">
@@ -167,7 +169,7 @@ function HostLobby({ view }) {
         ${!view.you.ready
           ? html`<span class="muted">Velg navn og avatar først, så kan du starte.</span>`
           : enough
-            ? html`Spiller til <strong>${view.target} poeng</strong> · ${duration(view.target * MINUTES_PER_POINT)}`
+            ? html`Spiller til <strong>${view.target} poeng</strong> · ${duration(view.target * MINUTES_PER_POINT)}${twoImpostors ? ' · to imposterer' : ''}`
             : html`<span class="muted">Dere må være minst ${view.limits.min}. Vent på ${need} ${plural(need, 'spiller', 'spillere')} til.</span>`}
       </p>
       <${Button} block variant="lime" onClick=${start} disabled=${!canStart}>Start Disputt</${Button}>

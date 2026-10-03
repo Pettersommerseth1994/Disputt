@@ -103,12 +103,12 @@ export function QrSheet({ view }) {
 }
 
 const STEPS = [
-  ['Alle får en rolle', 'De fleste er lojale. Én er imposter, og bare imposteren får vite riktig svar. Hold en finger på knappen for å se rollen din. Slipp, så skjules den igjen.'],
+  ['Alle får en rolle', 'De fleste er lojale. Én er imposter, og er dere seks eller flere, er det to imposterer. Bare imposterne får vite riktig svar, og de to vet hvem den andre er. Hold en finger på knappen for å se rollen din. Slipp, så skjules den igjen.'],
   ['Én spiller får spørsmålet', 'Hen leser spørsmålet og alternativene høyt for de andre.'],
-  ['Diskuter!', 'Imposteren prøver å lure dere til å svare feil. Alle andre må finne ut hva som er riktig.'],
+  ['Diskuter!', 'Imposterne prøver å lure dere til å svare feil. Alle andre må finne ut hva som er riktig.'],
   ['Bli enige og lås svaret', 'Spilleren med spørsmålet krysser av. Så telles det ned fra 5 – og fasiten avsløres.'],
-  ['Poeng', 'Riktig svar: alle lojale får 1 poeng. Feil svar: imposteren får 1 poeng.'],
-  ['Ny runde', 'Ny imposter, ny spiller og nytt spørsmål. Først til målet vinner. Uavgjort? Da spiller dere videre.'],
+  ['Poeng', 'Riktig svar: alle lojale får 1 poeng. Feil svar: imposteren får 1 poeng, og er det to, får begge 1 poeng.'],
+  ['Ny runde', 'Nye roller, ny spiller og nytt spørsmål. Først til målet vinner. Uavgjort? Da spiller dere videre.'],
 ];
 
 export function RulesSheet() {

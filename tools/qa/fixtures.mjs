@@ -2,26 +2,33 @@
 // Used by tools/qa/shots.mjs (visual QA) — the views are exactly what the server would send.
 
 import { AVATAR_IDS } from '../../shared/avatars.mjs';
-import { DEFAULT_TIMINGS, Room } from '../../shared/game.js';
+import { DEFAULT_TIMINGS, LIMITS, Room } from '../../shared/game.js';
 import { QUESTIONS } from '../../shared/questions.js';
 
-const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas'];
+const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida'];
 // The worst the lobby accepts: 14 characters of the widest letters, long compound names, accents, an emoji sequence.
 const STRESS_NAMES = ['WWWWWWWWWWWWWW', 'Bjørnstjerne-Bj', 'Åse-Marie Ødega', 'MMMMMMMMMMMMMM', 'Wolfgang Amade', 'Sigurd Jorsalfa', 'Kristin Lavran', '👨\u200d👩\u200d👧 Familien', 'Nordmann-Hanse', 'Olav den Helli'];
 
-/** Randomness that picks [impostorIndex, askerIndex] first, then zeros (=> the tourists question comes first). */
+/**
+ * Randomness that picks [impostorIndex, askerIndex, ...] first, then zeros (=> the tourists question comes first). With six players
+ * or more the third pick is the second impostor, as an index among the players who are not the first impostor.
+ */
 function scripted(first) {
   const queue = [...first];
   return { int: (n) => (queue.length ? queue.shift() % n : 0) };
 }
 
-function makeRoom({ players = 5, impostor = 1, asker = 3, target = 5, stress = false, exact = false } = {}) {
-  const room = new Room({ code: 'KRAP', rand: scripted([impostor, asker]), now: () => Date.now() });
-  const ids = [];
+// `mate` is the seat of the second impostor in a round of six or more (the full stress rooms always have two)
+function makeRoom({ players = 5, impostor = 1, asker = 3, mate = 4, target = 5, stress = false, exact = false } = {}) {
   if (stress && !exact) players = Math.max(players, 10); // stress rooms are full unless a screen needs a free seat
+  // (a third pick only when the round has a second impostor: otherwise the question shuffle would use it up, and the first
+  // question would no longer be the one that every fixture and test counts on)
+  const picks = players >= LIMITS.twoImpostorsFrom ? [impostor, asker, mate > impostor ? mate - 1 : mate] : [impostor, asker];
+  const room = new Room({ code: 'KRAP', rand: scripted(picks), now: () => Date.now() });
+  const ids = [];
   for (let i = 0; i < players; i++) {
     const p = room.addPlayer({ asHost: i === 0 });
-    room.setProfile(p.id, { name: stress ? STRESS_NAMES[i] : NAMES[i], avatar: AVATAR_IDS[stress ? i : [0, 1, 2, 4, 6][i]] });
+    room.setProfile(p.id, { name: stress ? STRESS_NAMES[i] : NAMES[i], avatar: AVATAR_IDS[stress ? i : [0, 1, 2, 4, 6, 8][i]] });
     room.connect(p.id);
     ids.push(p.id);
   }
@@ -107,6 +114,30 @@ export function buildFixtures({ stress = false } = {}) {
     out['summary-right-guest'] = room.viewFor(ola);
   }
 
+  // ---- a round with two impostors (six players, or ten in the stress rooms): Mari (1) and Jonas (4), asker Sofie (3)
+  {
+    const { room, ids } = room0({ players: 6, impostor: 1, asker: 3, mate: 4 });
+    const [petter, mari, ola, sofie, jonas, ida] = ids;
+    room.start(petter);
+    out['role-impostor-duo'] = room.viewFor(mari); // sees Jonas as the other impostor
+    out['role-loyal-duo'] = room.viewFor(ola);
+    tick(room, DEFAULT_TIMINGS.roleMs + 1);
+    room.tick(room.clock());
+    out['discussion-impostor-duo'] = room.viewFor(jonas);
+    out['discussion-loyal-duo'] = room.viewFor(ida);
+    room.lock(sofie, 0); // wrong
+    tick(room, 20_000);
+    room.tick(room.clock());
+    out['reveal-duo-wrong'] = room.viewFor(sofie);
+    room.continueRound(sofie);
+    out['summary-duo-wrong-host'] = room.viewFor(petter);
+    out['summary-duo-wrong-guest'] = room.viewFor(ola);
+  }
+  {
+    const { room, ids } = room0({ players: 6 });
+    out['lobby-host-6'] = room.viewFor(ids[0]); // the host's lobby says "to imposterer"
+  }
+
   // ---- wrong answer + mid-game scores, impostor = Ola (2)
   {
     const { room, ids } = room0({ impostor: 2, asker: 0 });
@@ -148,6 +179,12 @@ export function buildFixtures({ stress = false } = {}) {
     const offline = structuredClone(out['summary-wrong-host']);
     offline.players.forEach((p, i) => i >= 1 && i % 2 === 1 && !p.isHost && (p.connected = false));
     out['summary-offline-host'] = offline;
+  }
+
+  // A guard: every fixture counts on the first question being the tourists question (right answer "Frankrike"), which only
+  // holds while the scripted randomness is used up by exactly the picks the engine makes. The "right" verdict must be right.
+  if (out['role-impostor'].you.secret.text !== 'Frankrike' || out['reveal-right'].reveal.correct !== true || out['reveal-wrong'].reveal.correct !== false) {
+    throw new Error('the fixtures no longer start with the tourists question: check scripted() and makeRoom()');
   }
 
   if (stress) {

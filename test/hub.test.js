@@ -333,3 +333,31 @@ describe('hub: one connection speaks for one player', () => {
     assert.equal(hub.rooms.get(code).room.players.get(b.playerId).connected, true);
   });
 });
+
+describe('two impostors over the wire', () => {
+  it('sends the name of the other impostor to the impostors and to nobody else', () => {
+    const { hub, join } = setup();
+    const conns = Array.from({ length: 6 }, () => ({ ws: fakeSocket(), code: null, playerId: null }));
+    join(conns[0], { t: 'create' });
+    const code = conns[0].code;
+    join(conns[0], { t: 'profile', name: 'Vert', avatar: AVATAR_IDS[0] });
+    for (const [i, c] of conns.slice(1).entries()) {
+      join(c, { t: 'join', code });
+      join(c, { t: 'profile', name: `Gjest${i + 1}`, avatar: AVATAR_IDS[i + 1] });
+    }
+    join(conns[0], { t: 'start' });
+
+    const lastView = (c) => c.ws.sent.filter((m) => m.t === 'state').at(-1).view;
+    const impostors = conns.filter((c) => lastView(c).you.role === 'impostor');
+    assert.equal(impostors.length, 2, 'six players: two impostors');
+    for (const c of conns) {
+      const v = lastView(c);
+      if (impostors.includes(c)) {
+        const other = impostors.find((o) => o !== c);
+        assert.deepEqual(v.you.mates.map((m) => m.id), [other.playerId], 'an impostor is told who the other one is');
+      } else {
+        assert.equal(JSON.stringify(v).includes('mates'), false, 'a loyal player is told nothing about the impostors');
+      }
+    }
+  });
+});

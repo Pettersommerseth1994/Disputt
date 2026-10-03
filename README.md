@@ -2,7 +2,7 @@
 
 > **Diskuter og vinn.**
 
-Disputt er et sosialt bløff- og diskusjonsspill for **3–10 spillere**. Alle spiller på sin egen telefon, samlet i samme rom. Én av dere er imposter og vet svaret på spørsmålet. De andre må finne ut hva som er riktig, uten å bli lurt.
+Disputt er et sosialt bløff- og diskusjonsspill for **3–10 spillere**. Alle spiller på sin egen telefon, samlet i samme rom. Én av dere er imposter (to hvis dere er seks eller flere) og vet svaret på spørsmålet. De andre må finne ut hva som er riktig, uten å bli lurt.
 
 Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de andre skanner en QR-kode (eller får lenken sendt med «Del lenke»).
 
@@ -20,17 +20,18 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 
 1. **Verten** åpner Disputt og starter et spill. Hen får en QR-kode som de andre skanner.
 2. Alle skriver inn **navn** og velger en av ti **avatarer**. Verten ser spillerne komme inn, velger hvor mange **poeng** man spiller til (ett poeng tar ca. 10 min, vi anbefaler minst 5) og trykker **Start Disputt**.
-3. **Roller:** én tilfeldig spiller blir **imposter** (får se riktig svar, f.eks. «C: Frankrike»). Alle andre er **lojale**. Rollen vises bare mens du holder en finger på knappen («Hold for å se rollen din») og er borte igjen når du slipper, så ingen kan se den over skulderen din. Resten av tiden er skjermen lik på alles telefon. Rolleskjermen varer i 8 sekunder.
+3. **Roller:** én tilfeldig spiller blir **imposter** (får se riktig svar, f.eks. «C: Frankrike»), og er dere **seks eller flere, blir to imposterer**, som får vite hvem den andre er. Alle andre er **lojale**. Rollen vises bare mens du holder en finger på knappen («Hold for å se rollen din») og er borte igjen når du slipper, så ingen kan se den over skulderen din. Resten av tiden er skjermen lik på alles telefon. Rolleskjermen varer i 8 sekunder.
 4. En tilfeldig spiller (kan også være imposteren) får **spørsmålet** med fire alternativer og leser det høyt. Klokka starter med en gang; hen kan sette den til **2, 6 eller 10 minutter** og legge til tid underveis.
-5. Alle **diskuterer**. Imposteren prøver å lure de andre til å svare feil. Hvordan man blir enige er opp til gruppa.
+5. Alle **diskuterer**. Imposteren (eller imposterne) prøver å lure de andre til å svare feil. Hvordan man blir enige er opp til gruppa.
 6. Spilleren med spørsmålet **krysser av** svaret dere ble enige om og låser det. Så telles det ned **5-4-3-2-1**, og fasiten avsløres **kun på den telefonen**.
-7. **Riktig svar:** alle lojale får 1 poeng. **Feil svar:** bare imposteren får 1 poeng. Ny runde med ny imposter, ny spiller og nytt spørsmål.
+7. **Riktig svar:** alle lojale får 1 poeng. **Feil svar:** bare imposteren får 1 poeng (er det to, får begge 1 poeng hver). Ny runde med nye roller, ny spiller og nytt spørsmål.
 8. Først til målet vinner. Poengtavlen kan åpnes når som helst. Verten har et tannhjul ved siden av «Poeng» med vertsvalg: justere poengmålet, hoppe over runden, fjerne frakoblede spillere og avslutte spillet.
 
 ### Valg som er tatt (og kan endres)
 
 - **Uavgjort på toppen:** vinneren krones først når noen har nådd målet *og* leder alene. Står flere likt, spiller man videre til én drar fra. Verten kan også avslutte spillet og kåre den som leder.
 - **Imposter og spørsmålsstiller er rent tilfeldige** (kryptografisk tilfeldig), uavhengig av hverandre. Samme spiller kan være begge deler, og samme person kan bli imposter flere ganger på rad.
+- **To imposterer fra seks spillere.** Antallet regnes ved starten av hver runde, blant spillerne som er med i runden (en telefon som er borte teller ikke). Fra seks er det to ulike imposterer, som begge får vite riktig svar og hvem den andre er; på rolleskjermen står det «Du og Kari», mens lojale ser et «?» på samme sted, så kortene er like store. Poengene gis til alle på vinnersiden: riktig svar gir de lojale 1 poeng hver, feil svar gir begge imposterne 1 poeng hver. Faller én imposter ut midt i en runde (verten fjerner en frakoblet spiller), fortsetter runden med den som er igjen; er ingen igjen, hoppes runden over. Verten ser «to imposterer» i lobbyen når det blir seks tilkoblede.
 - **Poengene telles først når spilleren som svarte trykker «Gå videre»**, så poengtavlen ikke røper utfallet før avsløringen.
 - **Rollen (og imposterens riktige svar) kan sees igjen** under runden ved å holde inne knappen i stripen øverst («Hold for å se»). Slipper man, skjules den. Stripen, tipset under klokka og vibrasjonen er like for begge roller, så ingenting på skjermen røper hvem som er imposter.
 - **Logoen i lobbyen er en knapp** som tar deg tilbake til hjemskjermen, etter en bekreftelse. En gjest forlater spillet (og kan bli med igjen med koden så lenge spillet ikke har startet). Verten av et spill på GitHub Pages avslutter spillet for alle, fordi vertens side *er* spillet.

@@ -53,7 +53,7 @@ Overgangene `role → question` og `locked → reveal` skjer av seg selv på ser
 ```jsonc
 {
   "code": "KRAP", "phase": "question", "round": 3, "target": 5, "hostId": "…", "now": 1790000000000,
-  "limits": { "min": 3, "max": 10 },
+  "limits": { "min": 3, "max": 10, "twoImpostorsFrom": 6 },   // fra så mange spillere i runden er det to imposterer
   "timings": { "roleMs": 8000, "countdownMs": 5000 },
   "players": [{ "id": "…", "name": "Mari", "avatar": "mandarin", "score": 2, "connected": true, "isHost": false }],
   "pending": 0,                       // tilkoblede som ikke har valgt profil ennå
@@ -61,19 +61,22 @@ Overgangene `role → question` og `locked → reveal` skjer av seg selv på ser
     "id": "…", "isHost": false, "ready": true, "name": "Mari", "avatar": "mandarin",
     "role": "impostor",               // i runde: "impostor" | "loyal"
     "isAsker": false,
-    "secret": { "index": 2, "letter": "C", "text": "Frankrike" }   // KUN for imposteren
+    "secret": { "index": 2, "letter": "C", "text": "Frankrike" },  // KUN for imposterne
+    "mates": [{ "id": "…", "name": "Kari", "avatar": "sky" }]      // KUN for en imposter i en runde med to: den andre
   },
-  "turn": { "number": 3, "askerId": "…" },
+  "turn": { "number": 3, "askerId": "…", "impostors": 1 },   // antall imposterer er ingen hemmelighet
   "roleEndsAt": 0,                    // fase role
   "discussion": { "endsAt": 0 },      // fase question (alle)
   "question": { "text": "…", "options": ["…","…","…","…"] },   // KUN den som svarer
   "selected": 2,                      // KUN den som svarer
   "countdown": { "endsAt": 0 },       // fase locked
   "reveal": { "correct": true, "chosen": 2, "correctIndex": 2, "correctLetter": "C", "correctText": "Frankrike", "question": {} }, // KUN den som svarer, fase reveal
-  "summary": { "round": 3, "correct": true, "skipped": false, "gained": { "<id>": 1 }, "tiebreak": false, "impostorId": "…", "impostor": { "id": "…", "name": "Ola", "avatar": "blabaer" }, "askerId": "…" },
+  "summary": { "round": 3, "correct": true, "skipped": false, "gained": { "<id>": 1 }, "tiebreak": false, "impostorId": "…", "impostor": { "id": "…", "name": "Ola", "avatar": "blabaer" }, "impostorIds": ["…"], "impostors": [{ "id": "…", "name": "Ola", "avatar": "blabaer" }], "askerId": "…" },
   "winners": ["<id>"]                 // fase finished
 }
 ```
+
+Én imposter blir to når runden har seks spillere eller flere (de som er tilkoblet ved rundestart). `impostorId`/`impostor` er den første av dem og finnes for klienter som ikke er oppdatert; nyere klienter leser `impostorIds`/`impostors`. `you.mates` og `turn.impostors` er nye felt (alt nytt er lagt til, ingenting er endret), så en klient og en vert som ikke er like nye virker fortsatt sammen: den eldre ser bare én imposter.
 
 Alle tidspunkter er serverens epoch-millisekunder. Klienten regner ut `serverNow = Date.now() + offset`, der `offset` måles med `ping`/`pong` (lavest RTT vinner), så klokka er lik på alle telefoner uansett hva de viser.
 

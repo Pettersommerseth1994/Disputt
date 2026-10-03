@@ -2,6 +2,7 @@
 
 import { AVATARS } from '../shared/avatars.mjs';
 import { useHold } from './hold.js';
+import { joinNames, matesOf } from './impostors.js';
 import { html, useEffect, useMemo, useRef } from './vendor/htm-preact.js';
 import { qrSvg } from './qr.js';
 import { ROOT, asset } from './paths.js';
@@ -87,7 +88,7 @@ export function Sheet({ title, onClose, children }) {
  * The slim "your role" reminder shown above the game screens. Like the role screen it says nothing about the role until a
  * finger holds the button, and the strip looks the same for everybody until then (the imposter also sees the right answer).
  */
-export function RoleStrip({ you }) {
+export function RoleStrip({ you, impostors = 1 }) {
   const { held, bind } = useHold();
   const impostor = you.role === 'impostor';
   return html`<div class=${cx('role-strip', held ? 'role-strip--open' : 'role-strip--hidden')}>
@@ -97,6 +98,9 @@ export function RoleStrip({ you }) {
     <button type="button" class="secret" ...${bind} aria-label="Hold inne for å se rollen din">
       ${held ? (impostor ? `${you.secret.letter}: ${you.secret.text}` : 'Ikke bli lurt!') : 'Hold for å se'}
     </button>
+    ${held &&
+    impostors > 1 &&
+    html`<span class="role-strip__row">${impostor ? `Sammen med ${joinNames(matesOf(you).map((m) => m.name))}` : 'Det er to imposterer blant dere'}</span>`}
   </div>`;
 }
 
