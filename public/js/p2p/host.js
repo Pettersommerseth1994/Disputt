@@ -226,6 +226,22 @@ export async function startHost({ restore = null } = {}) {
     /** Called when the phone wakes up: make sure new guests can still find us. */
     ensureOnline: keepSignalling,
 
+    /** Sends a message to every guest's phone, past the engine ("the host is away for a moment"). Returns how many it reached. */
+    announce(msg) {
+      const text = JSON.stringify(msg);
+      let reached = 0;
+      for (const dc of connections.keys()) {
+        try {
+          if (!dc.open) continue;
+          dc.send(text);
+          reached++;
+        } catch {
+          /* closed under us */
+        }
+      }
+      return reached;
+    },
+
     /** Ends the game for everybody and forgets the saved room. */
     stop() {
       if (stopped) return;

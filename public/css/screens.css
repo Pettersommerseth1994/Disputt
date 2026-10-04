@@ -41,6 +41,18 @@
   box-shadow: 0 5px 0 var(--yellow-deep);
   transform: rotate(-2deg);
 }
+/* ---- The packages (the paywall) ------------------------------------------------------------------------------------
+   Shown when the host presses "Neste runde" after the free rounds, or from "Min tilgang" and "Logg inn". */
+.paywall { gap: var(--s-3); }
+.paywall__top { display: flex; align-items: center; min-height: 2.1rem; }
+.paywall__top .btn--text { min-height: 2.1rem; margin-left: -0.6rem; }
+.paywall__have { align-self: flex-start; }
+.plans__detail { margin: 0; min-height: 2.4em; }
+.paywall__fine { margin: 0; line-height: 1.35; }
+.paywall__fine a { color: inherit; }
+.accesscode { gap: var(--s-2); }
+.accesscode .eyebrow { margin: 0; color: var(--ink); opacity: 0.78; } /* (on the paper card: the usual cream would not show) */
+
 /* ---- The host's set-up: three steps -------------------------------------------------
    1 who you are, 2 how long to play, 3 the invitation. A bar of three segments and "Steg 2 av 3" tell where you are. */
 .setup { gap: var(--s-3); }
@@ -320,4 +332,11 @@
 }
 @media (max-height: 580px) {
   .discussion__hint { display: none; } /* "who has the question" already says it; the sentence under it is the first thing to go */
+}
+/* The packages on a short screen: the three cards and the buttons are the screen. The sentence under the title goes first, then air. */
+@media (max-height: 650px) {
+  .paywall { gap: var(--s-2); }
+  .paywall .lead { display: none; }
+  .paywall .plans { gap: var(--s-2); }
+  .plan { padding-block: 0.5rem; }
 }

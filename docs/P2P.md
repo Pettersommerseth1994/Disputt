@@ -24,6 +24,7 @@ Koden ligger i [`public/js/p2p/`](../public/js/p2p) (`host.js`, `guest.js`, `ada
 | Verten laster siden på nytt, eller nettleseren kaster fanen | Rommet gjenopprettes fra `sessionStorage`, samme kode. Gjestene kobler til igjen av seg selv og er tilbake i samme runde. |
 | Verten bytter til en annen app en stund (iOS fryser siden) | Spillet står stille til verten kommer tilbake. Skjermen holdes våken mens siden er åpen (Wake Lock, krever HTTPS, som Pages har). |
 | Verten lukker fanen for godt | Spillet er over. Gjestene prøver å koble til igjen i ca. ett minutt og får så beskjed om at verten er borte. |
+| Verten går til betaling hos Stripe (betalingen er slått på, [BETALING.md](BETALING.md)) | Før siden forlates sender verten `away` til gjestene. De viser «Verten betaler – spillet fortsetter straks» og venter i opptil ti minutter (Vipps må godkjennes i appen innen fem minutter). Rommet ligger i `sessionStorage` og kommer tilbake når Stripe sender verten hjem. |
 | En gjest mister forbindelsen eller laster siden på nytt | Kommer tilbake automatisk (`resume`), akkurat som med server. |
 | En gjest mister nettleserdataene sine | Hen åpner lenken igjen, velger seg selv fra «Spillet har startet» og tar over plassen. |
 | En gjest forsvinner brått (batteri, tunnel) | Verten markerer hen som frakoblet etter ca. 35 s uten ping, og plassen kan overtas. |
@@ -51,6 +52,8 @@ Siden bygges av [`tools/pages/build.mjs`](../tools/pages/build.mjs), som skriver
 | `DISPUTT_ICE_SERVERS` | JSON-liste med WebRTC-servere, f.eks. TURN: `[{"urls":"stun:stun.l.google.com:19302"},{"urls":"turn:turn.example.com:443?transport=tcp","username":"…","credential":"…"}]`. Erstatter standardlisten, så ta med STUN-serverne også. |
 | `DISPUTT_PEER_HOST`, `DISPUTT_PEER_PORT`, `DISPUTT_PEER_PATH`, `DISPUTT_PEER_SECURE` | Egen [PeerJS-megler](https://github.com/peers/peerjs-server) i stedet for `0.peerjs.com`. |
 
+| `DISPUTT_PAYMENTS_URL`, `DISPUTT_PAYMENTS_KEY` (+ `DISPUTT_PAYMENTS_METHODS`, `DISPUTT_FREE_ROUNDS`, `DISPUTT_TERMS_URL`, `DISPUTT_PRIVACY_URL`) | Slår betaling på: adressen til betalingsserveren og den offentlige nøkkelen som sjekker tilgangen. Uten dem er spillet gratis og ingenting om betaling vises. Se [BETALING.md](BETALING.md). |
+
 Etter å ha satt en variabel: Actions → **Pages** → *Run workflow* (eller push en endring).
 
 Gratis TURN finnes (f.eks. fra Metered eller Cloudflare), men krever en konto hos dem, så det har jeg ikke satt opp.
@@ -66,6 +69,8 @@ npm run qa:stuck               # gjest uten linje til verten får rådet «bytt 
 npm run qa:signalling          # kontakten med meglertjenesten faller ut, verten våkner, plassvelgeren mister linjen: alt kommer seg
 npm run qa:hostile             # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn
 npm run play:subpath           # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages
+npm run play:pay               # med betaling: verten møter pakkene etter runde 2, angrer, betaler med «Vipps» hos en falsk Stripe og spiller videre (og et kjøp fra forsiden, med hjemreise via tilbakeknappen)
+npm run play:pay-slow          # det samme, men verten er borte i 75 s mens han betaler: gjestene må vente på ham
 ```
 
 `play:p2p` starter en lokal PeerJS-megler og serverer den *bygde* siden, så hele flyten (bygget, CSP-en og WebRTC) testes uten internett. `play:live` spiller samme spill mot siden på GitHub Pages og den ekte megleren. Alle «telefonene» sitter da på samme maskin og nett, så den viser at siden og megleren virker, ikke at et gitt mobilnett slipper gjennom. Den tester blant annet at verten kan laste siden på nytt midt i en runde, og at en forsvunnet telefons plass kan overtas. Enhetstestene dekker adapteren ([`test/adapter.test.js`](../test/adapter.test.js)), lagring og gjenoppretting av rom ([`test/game.test.js`](../test/game.test.js)) og selve byggeresultatet ([`test/pages-build.test.js`](../test/pages-build.test.js)).

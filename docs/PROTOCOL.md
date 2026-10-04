@@ -36,6 +36,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `removed` | `reason`: spilleren er fjernet (`kicked`, `not_ready`, `left`, `timeout`) |
 | `closed` | `reason`: `expired` (rommet er borte) eller `replaced` (samme spiller åpnet en annen fane) |
 | `notice` | `text`: en kort melding alle skal se (nå bare: «Plassen til … ble tatt over av en ny telefon»). Eldre klienter ignorerer den |
+| `away` | `why` (nå bare `pay`), `ms`: verten forlater siden en stund for å betale (hos Stripe) og kommer tilbake. Gjestene venter så lenge (høyst 15 minutter) i stedet for å gi opp etter ca. ett minutt, og skjermen sier «Verten betaler». Bare peer-to-peer: vertens side sender den direkte på datakanalene, ikke motoren. Eldre klienter ignorerer den |
 | `pong` | `c, s`: `s` er serverklokka (ms) |
 
 **Utdaterte trykk:** kommer en melding i en fase den ikke hører hjemme i (dobbelttrykk, treg linje), svarer serveren *ikke* med en feil, men sender bare spilleren en fersk `state`, så skjermen rettes opp uten at det dukker opp en feilmelding.

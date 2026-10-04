@@ -106,6 +106,10 @@ const SCREENS = [
   ['sheet-fasit', 'Fasit', 'Riktig svar, hva dere låste og hvem imposteren var, til når gruppa er uenig.'],
   ['finished-host', 'Vinner', 'Konfetti og krone. Spill igjen?'],
   ['sheet-scores', 'Poengtavle', 'Åpnes fra alle skjermer. Verten har vertsvalg bak tannhjulet ved siden av «Poeng».'],
+  ['pay-gate', 'Pakkene', 'Betalingsmuren: verten får den når «Neste runde» trykkes etter de to gratis rundene. De andre ser den aldri.'],
+  ['pay-guest-host-away', 'Verten betaler', 'Gjestene venter mens verten er hos Stripe, og kobler til igjen av seg selv.'],
+  ['pay-thanks', 'Takk!', 'Tilgangen, koden og én knapp som starter runden verten ba om.'],
+  ['pay-login', 'Logg inn', 'Ingen konto: koden fra kvitteringen gir tilgangen tilbake på en ny telefon.'],
 ];
 const gallery = document.getElementById('screen-gallery');
 if (gallery) {
@@ -125,6 +129,9 @@ document.querySelectorAll('[data-options]').forEach((group) => {
       o.querySelector('input').checked = o === opt;
     });
   });
+});
+document.querySelectorAll('[data-plans]').forEach((group) => {
+  group.addEventListener('change', () => group.querySelectorAll('.plan').forEach((p) => p.classList.toggle('is-selected', p.querySelector('input').checked)));
 });
 document.querySelectorAll('[data-segmented]').forEach((group) => {
   group.addEventListener('click', (e) => {

@@ -7,6 +7,7 @@ import { actions } from '../net.js';
 import { serverNow } from '../net.js';
 import { impostorCount, joinNames, matesOf, summaryImpostors } from '../impostors.js';
 import { asset } from '../paths.js';
+import { requestNextRound } from '../pay/gate.js';
 import { setStore } from '../store.js';
 import { Avatar, Button, GearIcon, RoleStrip, Scoreboard, Timer, TrophyIcon } from '../ui.js';
 import { cx, letter, playerById, useRemaining, vibrate } from '../util.js';
@@ -263,7 +264,7 @@ export function Summary({ view }) {
 
     ${view.you.isHost
       ? html`<div class="dock">
-          <${Button} block variant="lime" onClick=${() => actions.next()}>Neste runde</${Button}>
+          <${Button} block variant="lime" onClick=${() => requestNextRound(view)}>Neste runde</${Button}>
         </div>`
       : html`<p class="foot center muted" role="status">Venter på at verten starter neste runde …</p>`}
   </main>`;

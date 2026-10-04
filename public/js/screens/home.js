@@ -2,6 +2,7 @@
 
 import { html, useState } from '../vendor/htm-preact.js';
 import { actions, forget } from '../net.js';
+import { isActive } from '../pay/pass.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, Logo } from '../ui.js';
 
@@ -22,7 +23,11 @@ export function Home() {
       <${Button} block onClick=${() => actions.create()} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
       <${Button} block variant="ghost" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
       <div class="row row--center">
-        <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
+        ${!s.payments?.enabled
+          ? html`<${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>`
+          : isActive(s.pass)
+            ? html`<span class="muted">Du har tilgang</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`
+            : html`<span class="muted">Allerede kunde?</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>Logg inn</${Button}>`}
       </div>
     </div>
   </main>`;

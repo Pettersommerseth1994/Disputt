@@ -4,9 +4,13 @@
 //   node tools/pages/build.mjs [--out dist] [--base /Disputt/] [--mode p2p|server] [--server-url wss://host/ws]
 //                              [--peer-host h] [--peer-port 443] [--peer-path /peerjs] [--peer-secure 1]
 //                              [--ice-servers '<json array>'] [--timings '<json object>'] [--no-csp]
+//                              [--payments-url https://pay.example.workers.dev --payments-key <base64> [--payments-methods vipps,applepay]
+//                               [--free-rounds 2] [--terms-url https://…] [--privacy-url https://…]]
 //
 // The same settings can come from the environment (handy in CI): DISPUTT_MODE, DISPUTT_SERVER_URL, DISPUTT_PEER_HOST,
-// DISPUTT_PEER_PORT, DISPUTT_PEER_PATH, DISPUTT_PEER_SECURE, DISPUTT_ICE_SERVERS.
+// DISPUTT_PEER_PORT, DISPUTT_PEER_PATH, DISPUTT_PEER_SECURE, DISPUTT_ICE_SERVERS, and for payments (docs/BETALING.md)
+// DISPUTT_PAYMENTS_URL, DISPUTT_PAYMENTS_KEY, DISPUTT_PAYMENTS_METHODS, DISPUTT_FREE_ROUNDS, DISPUTT_TERMS_URL, DISPUTT_PRIVACY_URL.
+// Payments are off unless both the URL and the key are given.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -35,6 +39,12 @@ function options(argv, env) {
     peerSecure: pick('peer-secure', 'DISPUTT_PEER_SECURE'),
     iceServers: pick('ice-servers', 'DISPUTT_ICE_SERVERS'),
     timings: pick('timings', 'DISPUTT_TIMINGS'),
+    paymentsUrl: pick('payments-url', 'DISPUTT_PAYMENTS_URL'),
+    paymentsKey: pick('payments-key', 'DISPUTT_PAYMENTS_KEY'),
+    paymentsMethods: pick('payments-methods', 'DISPUTT_PAYMENTS_METHODS'),
+    freeRounds: pick('free-rounds', 'DISPUTT_FREE_ROUNDS'),
+    termsUrl: pick('terms-url', 'DISPUTT_TERMS_URL'),
+    privacyUrl: pick('privacy-url', 'DISPUTT_PRIVACY_URL'),
     csp: !flags['no-csp'],
   };
 }
@@ -74,6 +84,24 @@ export async function buildConfig(opts) {
       return false;
     }
   });
+  // payments: the payment server's address goes into the CSP and the key is a public key, so both are checked like the rest
+  const httpsUrl = (v, { path: pathOk = false } = {}) => {
+    if (/["'`<>\;\s]/.test(v)) return false; // (nothing that means something in HTML, in the CSP or in a URL's own syntax)
+    try {
+      const u = new URL(v);
+      const local = u.protocol === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(u.hostname); // (the tests run a payment server on localhost)
+      return (u.protocol === 'https:' || local) && HOST.test(u.hostname) && !u.username && !u.password && !u.search && !u.hash && (pathOk || u.pathname === '/');
+    } catch {
+      return false;
+    }
+  };
+  check('payments URL (--payments-url / DISPUTT_PAYMENTS_URL)', opts.paymentsUrl, (v) => httpsUrl(v));
+  check('payments key (--payments-key / DISPUTT_PAYMENTS_KEY)', opts.paymentsKey, (v) => /^[A-Za-z0-9+/]{80,200}={0,2}$/.test(v));
+  check('payment methods (--payments-methods / DISPUTT_PAYMENTS_METHODS)', opts.paymentsMethods, (v) => /^(vipps|applepay)(,(vipps|applepay))*$/.test(v));
+  check('free rounds (--free-rounds / DISPUTT_FREE_ROUNDS, 1 to 99: the first round is always free)', opts.freeRounds, (v) => /^[1-9]\d?$/.test(v));
+  check('terms URL (--terms-url / DISPUTT_TERMS_URL)', opts.termsUrl, (v) => httpsUrl(v, { path: true }) && v.startsWith('https:'));
+  check('privacy URL (--privacy-url / DISPUTT_PRIVACY_URL)', opts.privacyUrl, (v) => httpsUrl(v, { path: true }) && v.startsWith('https:'));
+  if (Boolean(opts.paymentsUrl) !== Boolean(opts.paymentsKey)) throw new Error('Payments need both --payments-url and --payments-key (or neither)');
   const defaults = (await import(pathToFileURL(path.join(ROOT, 'public', 'config.js')).href)).default;
   const config = { ...defaults, mode: opts.mode === 'server' ? 'server' : 'p2p', serverUrl: opts.serverUrl || null, peer: { ...defaults.peer } };
   if (opts.peerHost) {
@@ -90,6 +118,19 @@ export async function buildConfig(opts) {
     config.iceServers = parsed;
   }
   if (opts.timings) config.timings = JSON.parse(opts.timings);
+  if (opts.paymentsUrl && opts.paymentsKey) {
+    config.payments = {
+      apiUrl: new URL(opts.paymentsUrl).origin,
+      publicKey: opts.paymentsKey,
+      methods: opts.paymentsMethods ? [...new Set(opts.paymentsMethods.split(','))] : ['applepay'],
+      freeRounds: opts.freeRounds === undefined ? 2 : Number(opts.freeRounds),
+      ...(opts.termsUrl ? { termsUrl: opts.termsUrl } : {}),
+      ...(opts.privacyUrl ? { privacyUrl: opts.privacyUrl } : {}),
+    };
+  }
+  // The host goes to Stripe and comes back, with the room kept in the tab and the guests told to wait: that is how the page hosts a game.
+  // A Disputt server gives a host that leaves only a few minutes before somebody else takes over, so the two do not go together.
+  if (config.payments && config.mode === 'server') throw new Error('Payments work with the peer-to-peer build (GitHub Pages), not with DISPUTT_SERVER_URL');
   // A remote server only makes sense in server mode; without one, a "server" build would have nobody to talk to.
   if (config.mode === 'server' && !config.serverUrl) throw new Error('Server mode on static hosting needs --server-url');
   return config;
@@ -112,6 +153,7 @@ export function contentSecurityPolicy(config) {
   } else if (config.serverUrl) {
     connect.add(new URL(config.serverUrl).origin.replace(/^http/, 'ws'));
   }
+  if (config.payments?.apiUrl) connect.add(new URL(config.payments.apiUrl).origin);
   return [
     "default-src 'self'",
     "script-src 'self'",

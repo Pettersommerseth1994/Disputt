@@ -14,6 +14,7 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 | `public/css/screens.css` | Layout og stemning per skjerm. |
 | `public/js/hold.js` | `useHold()`: trykk og hold, slik hemmeligheter skjules (rollen vises bare mens en finger holder knappen). |
 | `public/js/ui.js` | JS-komponentene (`Avatar`, `Button`, `Timer`, `Sheet`, `Scoreboard`, `QR`, `RoleStrip`, …) som bruker klassene over. |
+| `public/js/screens/pay.js`, `public/js/pay/` | Pakkene, «Logg inn», «Takk!», «Min tilgang» og logikken bak (tilgang, kode, kall til betalingsserveren). Av som standard, se [BETALING.md](BETALING.md). |
 | `public/design-system/` | Stilguide-siden. |
 | `shared/avatars.mjs` | Avatar-rosteret (id, navn, aksentfarge). |
 | `public/config.js`, `public/js/paths.js` | Distribusjonsinnstillinger og stedsuavhengige stier (alle URL-er er relative, så siden virker både på `/` og under `/Disputt/`). |
@@ -86,6 +87,18 @@ Verten går gjennom tre steg, ett valg per skjerm: 1 «Hvem er du?» (`Profile` 
 - `Steps` viser tre striper, «‹ Tilbake» til venstre (fra steg 2) og «Steg 2 av 3» til høyre. `store.step` husker hvor verten er (1–3). `hostStep` gir steg 1 til en vert uten profil og steg 3 etter en omlasting.
 - Invitasjonen har en liten QR-kode (trykk for å forstørre, det eksisterende arket «Bli med»), koden og «Del lenke», og under dem poengmålet med «Endre». **Hvem som er med vises i bunnfeltet** som en rad med overlappende ansikter (`.facepile`) og en kort tekst over Start-knappen, siden spillerlisten ellers havner under bunnfeltet på en 664 px høy skjerm. Listen med navn og fjerning ligger lenger ned.
 - Ett poeng tar ca. 6 minutter (`MINUTES_PER_POINT` i `setup.js`). Tallet står også i spillereglene, vertsvalget, README og stilguiden.
+
+## Pakker og betaling
+
+Betaling er av som standard ([BETALING.md](BETALING.md)). Når den er på, kommer tre ting til: pakkene, «Logg inn» og «Takk!». Skjermene ligger i `public/js/screens/pay.js`, og tallene og teksten om pakkene i `public/js/pay/plans.js`.
+
+- **Pakkekort** (`.plans`, `.plan`) er radiokort, som svaralternativene: det valgte kortet blir gult, prisen står alltid til høyre, og merkelappen («Mest populær», «Best verdi») sitter på kortets øvre kant, så teksten inni holder seg på to korte linjer. Et kort er en `label` rundt en usynlig radioknapp, så tastatur og skjermleser virker.
+- **Pakkeskjermen** (`Paywall`) har tittel, tre kort, en linje om den valgte pakken, «Dette får du» og et bunnfelt med én knapp per betalingsmåte (den første er den store). Kortene og knappene skal vises uten å rulle på 390×664 og 375×553: under 650 px høyde forsvinner setningen under tittelen og luften mellom kortene krymper. `npm run qa:fit` sjekker det (`pay-gate`).
+- **Koden** (`.passcode`, `.input--passcode`) står i visningsfonten, i store bokstaver. Innskrivingen setter inn bindestreker mens man skriver, og små bokstaver og O/I/L godtas.
+- **«Takk!»** (`ThanksSheet`) viser tilgangen, koden og én knapp som starter runden verten ba om («Start runde 3»). Mens gjestene er på vei tilbake står det «Venter på at … kommer tilbake …».
+- **Gjestene** får bannerteksten «Verten betaler – spillet fortsetter straks» i stedet for «Mistet forbindelsen» mens verten er hos Stripe.
+- **Forsiden** sier «Allerede kunde? Logg inn» der «Slik spiller du» stod, og «Du har tilgang · Min tilgang» på en telefon som har tilgang.
+- Alle betalingsskjermene ligger i `tools/qa/payfixtures.mjs` og er med i `qa:overlap`, `qa:fit` og `shots`.
 
 ## Små skjermer
 

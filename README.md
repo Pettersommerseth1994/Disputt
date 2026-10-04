@@ -58,6 +58,10 @@ Terminalen skriver ut to adresser. Åpne **adressen merket «På mobilen (Wi‑F
 
 **3. Egen server på nett (Render, Fly, Docker).** Mest robust: en server som alltid står, og ingen avhengighet til vertens telefon. Se **[docs/DEPLOY.md](docs/DEPLOY.md)**. GitHub Pages kan også settes til å bruke en slik server.
 
+## Betaling (av som standard)
+
+Spillet er gratis. Koden kan også ta betalt, men det er **slått av** helt til to variabler settes på GitHub: tre pakker bare verten kjøper (**En kveld** 149 kr, **For ett år** 399 kr, **Livstid** 499 kr), en betalingsmur etter to gratis runder, betaling med **Vipps eller Apple Pay** hos Stripe, ingen innlogging (en kode fra kvitteringen gir tilgangen tilbake på en ny telefon). Betalingsserveren er én Cloudflare Worker ([`payments/worker.js`](payments/worker.js)) som ikke lagrer noe. **Oppsettet, steg for steg: [docs/BETALING.md](docs/BETALING.md).**
+
 ## Designsystem
 
 Utseendet er surrealistisk og lekent: fargestift/oljepastell på dyp burgunder, med funky overskrifter (Fraunces) og en vanlig serif til brødtekst (Lora).
@@ -79,9 +83,10 @@ server/    Node-serveren (HTTP + WebSocket): index.js og static.js.
 shared/    Spillmotoren (game.js = ren tilstandsmaskin, hub.js, questions.js, util.js) og avatar-rosteret.
            Kjører både i Node-serveren og, i peer-to-peer-modus, i vertens nettleser.
 public/    Klienten: Preact + htm uten byggesteg (css/, js/, js/p2p/, assets/, design-system/).
+payments/  Betalingsserveren (én Cloudflare Worker mot Stripe). Av som standard, se docs/BETALING.md.
 tools/     Generatorer (art, logo, fonter), byggeverktøy for GitHub Pages (pages/) og QA-verktøy (qa/).
 test/      Enhets-, server-, QR-, bygge- og ende-til-ende-tester.
-docs/      Protokoll, drift, peer-to-peer, designsystem.
+docs/      Protokoll, drift, peer-to-peer, betaling, designsystem.
 ```
 
 Spillrommene ligger i minnet (ingen database, ingen kontoer). Motoren eier all spillogikk og sender hver spiller *kun det hen skal se*: ingen hemmeligheter (imposterens svar, spørsmålet, fasiten) ligger i andres data. Protokollen er beskrevet i [docs/PROTOCOL.md](docs/PROTOCOL.md).
@@ -89,7 +94,7 @@ Spillrommene ligger i minnet (ingen database, ingen kontoer). Motoren eier all s
 ## Tester og kvalitetssikring
 
 ```bash
-npm test               # motor, lagring/gjenoppretting, WebSocket-ende-til-ende, QR-koden dekodes, statiske ruter, bygget for Pages
+npm test               # motor, lagring/gjenoppretting, WebSocket-ende-til-ende, QR-koden dekodes, statiske ruter, bygget for Pages, betalingsserveren og sidens betalingsflyt
 npm run play           # UI-test: flere "telefoner" i ekte nettleser spiller et helt spill (krever Google Chrome)
 npm run play -- 6 3    # …med 6 spillere, til 3 poeng
 npm run play:p2p -- 4 2  # det samme over WebRTC (peer-to-peer-bygget + lokal megler, uten internett)
@@ -98,6 +103,8 @@ npm run qa:stuck       # en gjest som ikke får linje til verten får et råd p�
 npm run qa:signalling  # kontakten med meglertjenesten faller ut (også midt i et spill), verten våkner, plassvelgeren mister linjen: alt kommer seg
 npm run qa:hostile     # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn (ca. 30 s)
 npm run play:subpath   # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages
+npm run play:pay       # med betaling: pakkene etter runde 2, avbrutt og gjennomført betaling hos en falsk Stripe, runde 3, kjøp fra forsiden og innlogging på en ny telefon
+npm run play:pay-slow  # det samme, men verten er borte i 75 s mens han betaler: gjestene må vente på ham
 npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/ (VIEWPORT=390x664 for en nettleser med verktøylinjer)
 npm run qa:fit         # får skjermene plass uten scrolling på de synlige skjermstørrelsene (390×664, 375×553 …)?
 npm run qa:overlap     # alle skjermer, også med ti spillere, de bredeste navnene og 125 % større tekst: ingen tekst oppå annen tekst eller skåret av, bunnlinjer ugjennomsiktige, bare linjer med en knapp frosset
@@ -106,7 +113,7 @@ npm run pages:preview  # bygg og vis GitHub Pages-versjonen lokalt (http://local
 
 ## Personvern
 
-Ingen kontoer, ingen cookies, ingen sporing. Navn og avatar finnes bare i spillets minne (serverens, eller vertens nettleser i peer-to-peer-modus) mens spillet pågår, og identiteten i nettleseren ligger i `sessionStorage` for den ene fanen. I peer-to-peer-modus kobler PeerJS' offentlige meglertjeneste telefonene sammen (den ser ikke spilltrafikken), og slik WebRTC fungerer kan spillerne teknisk se hverandres IP-adresser.
+Ingen kontoer, ingen cookies, ingen sporing. Navn og avatar finnes bare i spillets minne (serverens, eller vertens nettleser i peer-to-peer-modus) mens spillet pågår, og identiteten i nettleseren ligger i `sessionStorage` for den ene fanen. I peer-to-peer-modus kobler PeerJS' offentlige meglertjeneste telefonene sammen (den ser ikke spilltrafikken), og slik WebRTC fungerer kan spillerne teknisk se hverandres IP-adresser. Er betaling slått på, kommer ett tillegg: betalingen skjer hos Stripe (vi ser aldri kortnummeret), og tilgangen og koden ligger i nettleserens lokale lagring på vertens telefon. Betalingsserveren lagrer ingenting.
 
 ## Veikart
 

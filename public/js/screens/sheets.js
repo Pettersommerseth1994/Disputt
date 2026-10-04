@@ -70,9 +70,11 @@ export function ScoresSheet({ view }) {
 
 /** What used to hang under the scoreboard for the host: the gear in the header of the round screens opens it. */
 export function HostSheet({ view }) {
+  const s = useStore();
   return html`<${Sheet} title="Vertsvalg" onClose=${close}>
     <div class="stack stack--loose">
       <${HostControls} view=${view} />
+      ${s.payments?.enabled && html`<${Button} block variant="cream" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`}
       <${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
     </div>
   </${Sheet}>`;

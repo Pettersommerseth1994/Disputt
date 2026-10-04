@@ -14,6 +14,11 @@ export default {
   // p2p mode only: override the engine's timings (milliseconds), e.g. { roleMs: 1600, countdownMs: 1600 }. null = the real game.
   timings: null,
 
+  // Payments. null = the game is free. The Pages build fills this in when the repository variables DISPUTT_PAYMENTS_URL and
+  // DISPUTT_PAYMENTS_KEY are set (docs/BETALING.md): { apiUrl, publicKey, methods: ['vipps', 'applepay'], freeRounds: 2,
+  // termsUrl, privacyUrl }.
+  payments: null,
+
   // p2p mode only: STUN servers help phones find each other across networks. Add a TURN server here
   // ({ urls: 'turn:…', username: '…', credential: '…' }) if some networks refuse direct connections.
   iceServers: [

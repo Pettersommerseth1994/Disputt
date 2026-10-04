@@ -110,6 +110,71 @@ describe('build configuration', () => {
   });
 });
 
+describe('payments in the build', () => {
+  const KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE' + 'A'.repeat(86) + '=='; // (the shape of a P-256 public key; only the shape is checked here)
+
+  it('are off unless the payment server and its key are both given, and then only add that server to the CSP', async () => {
+    const off = await buildConfig({ mode: 'p2p' });
+    assert.equal(off.payments, null);
+    assert.doesNotMatch(contentSecurityPolicy(off), /workers\.dev/);
+
+    const on = await buildConfig({ mode: 'p2p', paymentsUrl: 'https://disputt-pay.example.workers.dev', paymentsKey: KEY });
+    assert.deepEqual(on.payments, { apiUrl: 'https://disputt-pay.example.workers.dev', publicKey: KEY, methods: ['applepay'], freeRounds: 2 });
+    assert.match(contentSecurityPolicy(on), /connect-src 'self' wss:\/\/0\.peerjs\.com https:\/\/0\.peerjs\.com https:\/\/disputt-pay\.example\.workers\.dev(;|$)/);
+    assert.match(contentSecurityPolicy(on), /script-src 'self'(;|$)/);
+
+    const more = await buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com/', paymentsKey: KEY, paymentsMethods: 'vipps,applepay', freeRounds: '3', termsUrl: 'https://example.com/vilkar', privacyUrl: 'https://example.com/personvern' });
+    assert.deepEqual(more.payments, { apiUrl: 'https://pay.example.com', publicKey: KEY, methods: ['vipps', 'applepay'], freeRounds: 3, termsUrl: 'https://example.com/vilkar', privacyUrl: 'https://example.com/personvern' });
+  });
+
+  it('refuse half a set-up and anything that could break out of the CSP', async () => {
+    await assert.rejects(buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com' }), /both/);
+    await assert.rejects(buildConfig({ mode: 'p2p', paymentsKey: KEY }), /both/);
+    for (const bad of [
+      { paymentsUrl: 'http://pay.example.com' }, // not https (only localhost may be plain http)
+      { paymentsUrl: 'https://pay.example.com/path' },
+      { paymentsUrl: 'https://pay.example.com/?x=1' },
+      { paymentsUrl: 'https://user:pw@pay.example.com' },
+      { paymentsUrl: 'https://pay.example.com; script-src *' },
+      { paymentsUrl: 'https://pa"y.example.com' },
+      { paymentsKey: 'not base64!' },
+      { paymentsKey: 'abc' },
+      { paymentsMethods: 'vipps,bitcoin' },
+      { paymentsMethods: 'vipps;applepay' },
+      { freeRounds: '-1' },
+      { freeRounds: 'two' },
+      { freeRounds: '0' }, // (the packages come at "Neste runde", so the first round is free whatever is set)
+      { freeRounds: '100' },
+      { termsUrl: 'http://example.com/vilkar' },
+      { termsUrl: 'javascript:alert(1)' },
+      { privacyUrl: 'https://example.com/"onmouseover=x' },
+    ]) {
+      await assert.rejects(buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com', paymentsKey: KEY, ...bad }), Error, `should refuse ${JSON.stringify(bad)}`);
+    }
+    // the same method twice is one button, not two
+    const twice = await buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com', paymentsKey: KEY, paymentsMethods: 'vipps,vipps,applepay' });
+    assert.deepEqual(twice.payments.methods, ['vipps', 'applepay']);
+    // and not with a Disputt server, where a host who leaves for a few minutes is replaced
+    await assert.rejects(buildConfig({ mode: 'server', serverUrl: 'wss://disputt.example/ws', paymentsUrl: 'https://pay.example.com', paymentsKey: KEY }), /peer-to-peer/);
+    // a payment server on localhost may be plain http (the tests use one)
+    const local = await buildConfig({ mode: 'p2p', paymentsUrl: 'http://127.0.0.1:8787', paymentsKey: KEY });
+    assert.equal(local.payments.apiUrl, 'http://127.0.0.1:8787');
+  });
+
+  it('can come from the environment, like the other settings, and is written to config.js', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'disputt-pay-'));
+    try {
+      await build(['--out', dir, '--base', '/Disputt/'], { DISPUTT_PAYMENTS_URL: 'https://pay.example.com', DISPUTT_PAYMENTS_KEY: KEY, DISPUTT_PAYMENTS_METHODS: 'vipps,applepay' });
+      const config = fs.readFileSync(path.join(dir, 'config.js'), 'utf8');
+      assert.match(config, /"payments": \{/);
+      assert.match(config, /"apiUrl": "https:\/\/pay\.example\.com"/);
+      assert.match(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'), /connect-src [^;"]*https:\/\/pay\.example\.com/);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('build settings from repository variables are checked, not trusted', () => {
   const attempt = (argv, env = {}) => build(['--out', path.join(os.tmpdir(), `disputt-bad-${process.pid}`), ...argv], env);
 

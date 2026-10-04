@@ -20,6 +20,8 @@ Repoet bygger og publiserer siden til GitHub Pages ved hver push til `main` ([`.
 
 Gratis GitHub-kontoer får bare Pages fra *offentlige* repoer.
 
+**Betaling** (tre pakker, Vipps og Apple Pay hos Stripe) er av som standard og slås på med to variabler til: se [BETALING.md](BETALING.md).
+
 ### Pages + Render (alltid-på server)
 
 Vil du ha en server som alltid står (og slippe at alt henger på vertens telefon), kan Pages-siden bruke Render-serveren:

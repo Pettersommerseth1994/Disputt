@@ -6,6 +6,7 @@ import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { createApp } from '../../server/index.js';
 import { buildFixtures } from './fixtures.mjs';
+import { PAY_BASE, payScreens } from './payfixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const [VW, VH] = (process.env.VIEWPORT ?? '390x844').split('x').map(Number); // e.g. VIEWPORT=375x667 for an iPhone SE
@@ -14,7 +15,7 @@ const DOCS = process.argv.includes('--docs'); // also write 1x-viewport WebPs fo
 const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
 const DOCS_DIR = 'public/design-system/screens';
 // the screens shown in the style guide gallery (keep in sync with SCREENS in public/design-system/ds.js)
-const DOC_KEYS = new Set(['home', 'profile-new', 'setup-points', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'role-impostor-duo-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-wait', 'summary-wrong-host', 'finished-host', 'sheet-scores', 'sheet-fasit']);
+const DOC_KEYS = new Set(['home', 'profile-new', 'setup-points', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'role-impostor-duo-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-wait', 'summary-wrong-host', 'finished-host', 'sheet-scores', 'sheet-fasit', 'pay-gate', 'pay-thanks', 'pay-login', 'pay-guest-host-away']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(OUT, { recursive: true });
@@ -103,6 +104,15 @@ await show(f['summary-duo-wrong-host'], { sheet: 'fasit' });
 await shot('96-sheet-fasit-duo', { full: false });
 await show(f['lobby-guest-3'], { sheet: 'home' });
 await shot('94-sheet-home-guest', { full: false });
+
+// payments: the packages the host meets after the free rounds, the sheets that belong to them, and what a guest sees while the host pays
+let n = 97;
+for (const [key, patch] of payScreens(f)) {
+  const { view, ...rest } = patch;
+  if (view) await show(view, { ...PAY_BASE, ...rest });
+  else await page.evaluate((state) => window.__disputt.setStore({ view: null, session: null, sheet: null, editing: false, seats: null, joining: null, creating: false, notice: null, qaHold: false, step: null, conn: 'open', everOpened: true, ...state }), { ...PAY_BASE, ...rest });
+  await shot(`${n++}-${key}`, { full: false });
+}
 
 await browser.close();
 await app.close();

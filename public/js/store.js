@@ -41,13 +41,19 @@ export const store = {
   joining: null, // room code we are trying to join
   creating: false, // p2p: the host is being set up (reserving a room code with the signalling server)
   stuck: 0, // p2p: how many connection attempts in a row failed without ever finding a line to the host
+  hostAwayUntil: 0, // p2p guest: the host said it was going away (to pay) and is expected back before this time (ms since 1970)
   wakeLockDenied: false, // the browser refused to keep the screen awake (low-power mode, home-screen app …): tell players to turn auto-lock off
   seats: null, // { code, seats } when the game has already started and a seat can be claimed
   notice: null, // message shown on the home screen (e.g. "game is gone")
   toast: null, // transient error/info
-  sheet: null, // 'scores' | 'rules' | 'host' | 'qr' | 'settings' | 'home' | 'fasit' | null
+  sheet: null, // 'scores' | 'rules' | 'host' | 'qr' | 'settings' | 'home' | 'fasit' | 'login' | 'thanks' | 'access' | null
   editing: false, // lobby: changing name/avatar
   step: null, // the host's set-up: 1 profile, 2 points, 3 invitation (null: see hostStep in screens/setup.js)
+  payments: null, // what the page knows about payments (pay/payments.js): { enabled, apiUrl, publicKey, methods, freeRounds }
+  pass: null, // the verified access pass on this phone (pay/pass.js), or null
+  passCode: null, // the restore code that goes with it
+  paywall: false, // the packages are on screen (screens/pay.js)
+  payBusy: false, // a payment is being checked after Stripe sent the host back
   replaced: false, // the same player opened the game in another tab
   info: null, // /api/info (LAN urls etc.)
 };

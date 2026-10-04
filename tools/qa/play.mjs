@@ -4,6 +4,8 @@
 //   --p2p   test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server
 //   --subpath   with --p2p: serve the site below /Disputt/ like GitHub Pages does (catches links that forget the sub-path)
 //   --url   play against an already deployed peer-to-peer site (real PeerJS cloud, real timers), e.g. the GitHub Pages address
+//   --pay   payments switched on (with --p2p; needs a target of 3 or more): after the second round the host has to pay, through a pretend
+//           Stripe (tools/qa/payments-stack.mjs, tools/qa/payflow.mjs); --pay-slow also keeps the host away for 75 s while paying
 // Needs Google Chrome (CHROME_PATH to override). Exits non-zero on the first thing that does not behave.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -11,6 +13,8 @@ import jsQR from 'jsqr';
 import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { QUESTIONS } from '../../shared/questions.js';
+import { buyAndComeBackByTheBackButton, checkHome, payAfterFreeRounds, restoreOnNewPhone } from './payflow.mjs';
+import { startPaymentsStack } from './payments-stack.mjs';
 import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
 
@@ -24,15 +28,25 @@ const SHOTS = flags.includes('--shots');
 const LIVE_URL = flags.find((f) => f.startsWith('--url='))?.slice('--url='.length);
 const LIVE = Boolean(LIVE_URL);
 const SUBPATH = flags.includes('--subpath');
+const PAY_SLOW = flags.includes('--pay-slow');
+const PAY = flags.includes('--pay') || PAY_SLOW;
+const FREE_ROUNDS = 2; // (the page's default)
 const P2P = LIVE || SUBPATH || flags.includes('--p2p');
 const SLOW = LIVE ? 2 : 1; // the deployed site runs on the real timers and a real network
+if (PAY) assert.ok(!LIVE && TARGET >= 3, '--pay needs a local site and a target of 3 or more, so that there is a third round to pay for');
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 'Nina', 'Lars'];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(...a);
 
-const site = LIVE ? { base: LIVE_URL.replace(/\/+$/, ''), stop: async () => {} } : P2P ? await startP2PSite({ prefix: SUBPATH ? '/Disputt/' : '' }) : await startNodeSite();
+const stack = PAY ? await startPaymentsStack() : null; // the payment server with a pretend Stripe
+const site = LIVE
+  ? { base: LIVE_URL.replace(/\/+$/, ''), stop: async () => {} }
+  : P2P
+    ? await startP2PSite({ prefix: SUBPATH ? '/Disputt/' : '', payments: stack && { url: stack.apiUrl, key: stack.publicKey, methods: 'vipps,applepay' } })
+    : await startNodeSite();
 const base = site.base;
+stack?.setSite(`${base}/`); // Stripe sends the host back to the game
 log(`${LIVE ? 'deployed peer-to-peer site' : P2P ? 'peer-to-peer build' : 'Node server'} at ${base}`);
 // (loopback WebRTC between two pages of the same browser needs real host candidates, not mDNS names)
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars', '--disable-features=WebRtcHideLocalIpsWithMdns'] });
@@ -44,6 +58,11 @@ const problems = [];
 async function newPhone(name, { wakeLock = 'granted' } = {}) {
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();
+  // (what only reads from the page is asked again if the page happened to be in the middle of a navigation: see `steady`)
+  for (const method of ['$eval', '$$eval', '$', '$$', 'waitForFunction', 'waitForSelector']) {
+    const original = page[method].bind(page);
+    page[method] = (...args) => steady(() => original(...args));
+  }
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   // Screen wake lock: most phones grant it, some refuse (low-power mode, home-screen apps). Headless Chrome decides by
   // itself, so every phone gets a stand-in with a known answer.
@@ -78,20 +97,29 @@ async function newPhone(name, { wakeLock = 'granted' } = {}) {
   phones.push(phone);
   return phone;
 }
-const bodyText = (p) => p.page.evaluate(() => document.body.innerText);
+// A page that is in the middle of a navigation (the host leaving for Stripe, or coming back) answers "detached frame" or "context
+// destroyed" to whoever asks at that very moment. That is the test being quicker than the page, not a failure: ask again.
+const NAVIGATING = /detached Frame|Execution context was destroyed|Cannot find context/i;
+async function steady(ask) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await ask();
+    } catch (err) {
+      if (attempt >= 5 || !NAVIGATING.test(String(err?.message))) throw err;
+      await sleep(250);
+    }
+  }
+}
+const bodyText = (p) => steady(() => p.page.evaluate(() => document.body.innerText));
 const waitText = (p, re, timeout = 10000) =>
-  p.page
-    .waitForFunction((src, flags) => new RegExp(src, flags).test(document.body.innerText), { timeout }, re.source, re.flags)
-    .catch(async () => {
-      throw new Error(`[${p.name}] timed out waiting for ${re}. Screen says:\n${(await bodyText(p)).slice(0, 500)}`);
-    });
+  steady(() => p.page.waitForFunction((src, flags) => new RegExp(src, flags).test(document.body.innerText), { timeout }, re.source, re.flags)).catch(async () => {
+    throw new Error(`[${p.name}] timed out waiting for ${re}. Screen says:\n${(await bodyText(p)).slice(0, 500)}`);
+  });
 const clickButton = async (p, label, timeout = 10000) => {
-  await p.page
-    .waitForFunction((l) => [...document.querySelectorAll('button')].some((b) => b.innerText.trim().includes(l) && !b.disabled), { timeout }, label)
-    .catch(async () => {
-      throw new Error(`[${p.name}] no enabled button "${label}". Screen says:\n${(await bodyText(p)).slice(0, 500)}`);
-    });
-  await p.page.evaluate((l) => [...document.querySelectorAll('button')].find((b) => b.innerText.trim().includes(l) && !b.disabled).click(), label);
+  await steady(() => p.page.waitForFunction((l) => [...document.querySelectorAll('button')].some((b) => b.innerText.trim().includes(l) && !b.disabled), { timeout }, label)).catch(async () => {
+    throw new Error(`[${p.name}] no enabled button "${label}". Screen says:\n${(await bodyText(p)).slice(0, 500)}`);
+  });
+  await steady(() => p.page.evaluate((l) => [...document.querySelectorAll('button')].find((b) => b.innerText.trim().includes(l) && !b.disabled).click(), label));
 };
 const shot = async (p, label) => SHOTS && p.page.screenshot({ path: `tmp/play/${label}.png` });
 
@@ -130,6 +158,7 @@ try {
   const host = await newPhone(NAMES[0], { wakeLock: 'denied' }); // the host's phone refuses to stay awake
   await host.page.goto(`${base}/`);
   await waitText(host, /Diskuter\s+og\s+vinn/);
+  if (PAY) await checkHome({ waitText, bodyText }, host);
   await shot(host, '01-home');
   await clickButton(host, 'Opprett spill');
   // the host sets the game up in three steps: who you are, how long to play, and last the invitation
@@ -272,6 +301,8 @@ try {
   await clickButton(host, 'Start Disputt');
 
   // ------------------------------------------------------------ rounds
+  const tools = { clickButton, waitText, bodyText, newPhone, shot, sleep, log };
+  let payment = null;
   let round = 0;
   let finished = false;
   while (!finished && round < 30) {
@@ -513,7 +544,10 @@ try {
       const guest = others[0];
       await guest.page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Poeng')).click());
       await guest.page.waitForSelector('.sheet-backdrop');
-      await clickButton(host, 'Neste runde');
+      if (PAY && round === FREE_ROUNDS) {
+        // the host has to pay before the third round (and the first round of the paid part starts from the thank-you sheet)
+        payment = await payAfterFreeRounds(tools, { host, others, stack, holdMs: PAY_SLOW ? 75_000 : 0 });
+      } else await clickButton(host, 'Neste runde');
       await waitText(guest, /din rolle/i);
       assert.equal(await guest.page.$('.sheet-backdrop'), null, 'sheets close when a new round starts');
     }
@@ -525,6 +559,13 @@ try {
   const finalText = await bodyText(host);
   assert.match(finalText, /Sluttresultat/);
   log(`game finished after ${round} rounds: ${finalText.match(/(\S+ vant!|Delt seier!)/)?.[1]}`);
+
+  if (PAY) {
+    assert.ok(payment, 'the host was asked to pay after the free rounds');
+    // (no more packages after that: the host has paid, and every round up to the winner started without asking again)
+    await buyAndComeBackByTheBackButton(tools, { base, stack });
+    await restoreOnNewPhone(tools, { base, code: payment.code });
+  }
 
   // play again returns everyone to the lobby with scores reset
   await clickButton(host, 'Spill igjen');
@@ -549,5 +590,6 @@ try {
 } finally {
   await browser.close().catch(() => {});
   await Promise.race([site.stop(), sleep(4000)]);
+  await stack?.stop();
   process.exit(process.exitCode ?? 0); // the local PeerJS server may keep sockets open; do not hang on them
 }

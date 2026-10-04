@@ -7,6 +7,7 @@ import puppeteer from 'puppeteer-core';
 import { createApp } from '../../server/index.js';
 import { QUESTIONS } from '../../shared/questions.js';
 import { buildFixtures } from './fixtures.mjs';
+import { PAY_BASE, payScreens } from './payfixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -18,7 +19,9 @@ const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-
   // two impostors (six players): the role card has a third part and the open strip a second line
   'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held', 'discussion-loyal-duo-held', 'reveal-duo-asker', 'reveal-duo-wait',
   // the reveal with the role strip held open (the strip is three lines tall for an impostor in a round with two)
-  'reveal-wait-held', 'reveal-asker-held', 'reveal-duo-wait-held', 'reveal-duo-asker-held'];
+  'reveal-wait-held', 'reveal-asker-held', 'reveal-duo-wait-held', 'reveal-duo-asker-held',
+  // the packages the host meets after the free rounds: the three cards, what the chosen one means, and the buttons to pay with
+  'pay-gate', 'pay-gate-applepay-only'];
 // ... and these should at least keep their main action and the text above it in view
 const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3',
   // the host's second step: the number, what it comes to, and Neste
@@ -34,7 +37,7 @@ await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'network
 async function show(view, qaHold = false, step = null) {
   // (unmounted first: a screen keeps its own state, such as the answer that is selected, from the screen shown before it)
   await page.evaluate(() => window.__disputt.setStore({ view: null }));
-  await page.evaluate((view, qaHold, step) => {
+  await page.evaluate((view, qaHold, step, payBase) => {
     window.__realNow ??= Date.now.bind(Date);
     const delta = view.now - window.__realNow();
     Date.now = () => window.__realNow() + delta;
@@ -42,9 +45,40 @@ async function show(view, qaHold = false, step = null) {
       conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null, qaHold, step,
       session: { code: view.code, playerId: view.you.id, token: 'qa' },
       info: { publicUrl: null, lanUrls: ['http://192.168.100.59:3000'] },
+      ...payBase, // (the packages from the screen before must not stay on top of this one)
     });
-  }, view, qaHold, step);
+  }, view, qaHold, step, PAY_BASE);
 }
+
+/** A payment screen: a patch for the store, on top of a game view where there is one. */
+async function showPay(patch) {
+  await page.evaluate(() => window.__disputt.setStore({ view: null }));
+  await page.evaluate((patch, base) => {
+    const { view, ...rest } = patch;
+    window.__realNow ??= Date.now.bind(Date);
+    if (view) {
+      const delta = view.now - window.__realNow();
+      Date.now = () => window.__realNow() + delta;
+    }
+    window.__disputt.setStore({
+      conn: 'open', everOpened: true, sheet: null, editing: false, seats: null, qaHold: false, step: null, ...base,
+      ...(view ? { view, session: { code: view.code, playerId: view.you.id, token: 'qa' }, info: { publicUrl: null, lanUrls: ['http://192.168.100.59:3000'] } } : {}),
+      ...rest,
+    });
+  }, patch, PAY_BASE);
+}
+
+/** The packages: the cards and the line about the chosen one must be above the sticky bar (the perks below them may scroll). */
+const measurePay = () =>
+  page.evaluate(() => {
+    window.scrollTo(0, 0);
+    const dock = document.querySelector('main .dock');
+    const dockTop = dock ? dock.getBoundingClientRect().top : innerHeight;
+    const range = document.createRange();
+    range.selectNodeContents(document.querySelector('.plans__detail') ?? document.querySelector('.plans')); // (the text, not the box that keeps room for two lines)
+    const bottom = Math.max(0, ...[...range.getClientRects()].map((r) => r.bottom));
+    return { overflow: Math.round(document.documentElement.scrollHeight - innerHeight), hidden: Math.round(bottom - (dock ? dockTop - 8 : innerHeight)), hasDock: Boolean(dock) };
+  });
 
 /** How much of the screen is hidden: text under the sticky bar, and how far the page scrolls. */
 const measure = () =>
@@ -92,15 +126,17 @@ fixtures['question-asker-widest-option'] = variant('question-asker-selected', (v
 const widestText = widestQ.options.reduce((a, b) => (b.length > a.length ? b : a));
 fixtures['countdown-other-longest'] = variant('countdown-other', (v) => Object.assign(v.countdown.chosen, { letter: 'D', text: widestText }));
 fixtures['role-impostor-longest'] = variant('role-impostor', (v) => Object.assign(v.you.secret, { text: 'Bjørnstjerne Bjørnson' }));
+const pay = Object.fromEntries(payScreens(fixtures));
 let failures = 0;
 for (const [w, h] of viewports) {
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const rows = [];
   for (const key of [...MUST_FIT, ...NICE_TO_FIT]) {
     const held = key.endsWith('-held');
-    await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held, key === 'setup-points' ? 2 : null);
+    if (key.startsWith('pay-')) await showPay(pay[key]);
+    else await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held, key === 'setup-points' ? 2 : null);
     await sleep(key.startsWith('role') ? 1300 : 900); // let the entrance animations settle
-    const m = await measure();
+    const m = key.startsWith('pay-') ? await measurePay() : await measure();
     const must = MUST_FIT.includes(key);
     const ok = m.hidden <= 0 && (m.hasDock || m.overflow <= 1);
     if (!ok && must) failures++;

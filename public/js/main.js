@@ -1,6 +1,7 @@
 import { App } from './app.js';
 import { actions, connect, dropSession, reconnectNow } from './net.js';
 import { asset } from './paths.js';
+import { initPayments, handlePaymentReturn } from './pay/payments.js';
 import { config, isP2P } from './settings.js';
 import { html, render } from './vendor/htm-preact.js';
 import { setStore, store } from './store.js';
@@ -13,6 +14,11 @@ if (store.route.page === 'join') {
 
 const debug = new URLSearchParams(location.search).get('debug'); // QA only: ?debug (hook) or ?debug=offline (no socket)
 if (debug !== 'offline') connect();
+
+// Payments (off unless the build switched them on): check the pass on this phone, and take care of a host who is back from Stripe.
+initPayments(config.payments)
+  .then(() => handlePaymentReturn())
+  .catch(() => {});
 
 // Phones sleep and drop sockets: come back to life as soon as the page is visible or online again.
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && reconnectNow());

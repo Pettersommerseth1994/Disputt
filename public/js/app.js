@@ -7,6 +7,7 @@ import { Profile } from './screens/profile.js';
 import { PointsStep, hostStep } from './screens/setup.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
 import { FasitSheet } from './screens/fasit.js';
+import { AccessSheet, LoginSheet, Paywall, ThanksSheet } from './screens/pay.js';
 import { HostSheet, QrSheet, RulesSheet, ScoresSheet, SettingsSheet } from './screens/sheets.js';
 import { isP2P } from './settings.js';
 import { useStore } from './store.js';
@@ -64,6 +65,7 @@ export function App() {
   const hint = isP2P && s.stuck >= 2 ? STUCK_HINT : null;
   let screen;
   if (s.replaced) screen = html`<${Replaced} />`;
+  else if (s.paywall && s.payments?.enabled) screen = html`<${Paywall} view=${view} />`;
   else if (view) screen = gameScreen(view, s);
   else if (s.seats) screen = html`<${SeatPicker} />`;
   else if (s.creating) screen = html`<${Connecting} text="Starter spillet …" />`;
@@ -72,8 +74,12 @@ export function App() {
   else screen = html`<${Home} />`;
 
   const offline = s.conn !== 'open' && !s.replaced && (s.everOpened || s.conn === 'closed');
+  const hostAway = s.hostAwayUntil > Date.now(); // p2p guest: the host said it was going away to pay
   let sheet = null;
   if (s.sheet === 'rules') sheet = html`<${RulesSheet} />`;
+  else if (s.payments?.enabled && s.sheet === 'login') sheet = html`<${LoginSheet} />`;
+  else if (s.payments?.enabled && s.sheet === 'thanks') sheet = html`<${ThanksSheet} />`;
+  else if (s.payments?.enabled && s.sheet === 'access') sheet = html`<${AccessSheet} />`;
   else if (view && s.sheet === 'scores') sheet = html`<${ScoresSheet} view=${view} />`;
   else if (view && s.sheet === 'host') sheet = html`<${HostSheet} view=${view} />`;
   else if (view && s.sheet === 'qr') sheet = html`<${QrSheet} view=${view} />`;
@@ -82,7 +88,8 @@ export function App() {
   else if (view && s.sheet === 'home') sheet = html`<${HomeSheet} view=${view} />`;
 
   return html`
-    ${offline && html`<div class="banner" role="status">${s.everOpened ? 'Mistet forbindelsen – kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}
+    ${s.payBusy && html`<div class="banner" role="status">Sjekker betalingen</div>`}
+    ${offline && html`<div class="banner" role="status">${hostAway ? 'Verten betaler – spillet fortsetter straks' : s.everOpened ? 'Mistet forbindelsen – kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}
     ${screen}
     ${sheet}
     ${s.toast && html`<div class="toast" role="alert" key=${s.toast}>${s.toast}</div>`}

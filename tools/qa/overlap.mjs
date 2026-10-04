@@ -22,6 +22,7 @@ import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { createApp } from '../../server/index.js';
 import { buildFixtures } from './fixtures.mjs';
+import { PAY_BASE, payScreens } from './payfixtures.mjs';
 import { underTheFinger } from './underfinger.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -51,7 +52,7 @@ page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
 /** Put the app in a state: everything not mentioned goes back to "nothing special". */
-const BASE = { view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' } };
+const BASE = { view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' }, ...PAY_BASE };
 const put = (patch) =>
   page.evaluate(
     (base, patch) => {
@@ -77,6 +78,8 @@ function screensFor(fixtures) {
     ...Object.entries(fixtures)
       .filter(([key]) => /^(role|question|discussion|reveal)/.test(key))
       .map(([key, view]) => [`${key}-held`, () => put({ view, qaHold: true })]),
+    // payments: the start screen for customers, the packages, and the sheets and banners that belong to them
+    ...payScreens(fixtures).map(([key, patch]) => [key, () => put(patch)]),
     ['connecting-join', () => put({ joining: 'ABCD', conn: 'closed', stuck: 2, route: { page: 'join', code: 'ABCD' } })],
     ['connecting-create', () => put({ creating: true })],
     ['seat-picker', () => put({ seats: { code: 'KRAP', seats: seatsOf(fixtures['lobby-host-3']) } })],
@@ -180,7 +183,15 @@ const measureText = () =>
         if (a.el === b.el || a.el.contains(b.el) || b.el.contains(a.el)) continue;
         const w = Math.min(a.r.right, b.r.right) - Math.max(a.r.left, b.r.left);
         const h = Math.min(a.r.bottom, b.r.bottom) - Math.max(a.r.top, b.r.top);
-        if (w > 2 && h > 2 && (w * h) / Math.min(a.r.width * a.r.height, b.r.width * b.r.height) > 0.2) overlapping.push(`"${a.text}" over "${b.text}"`);
+        if (w > 2 && h > 2 && (w * h) / Math.min(a.r.width * a.r.height, b.r.width * b.r.height) > 0.2) {
+          // Where something solid lies on top of one of the two, that one is covered, not overlapped: a bar that sticks to the top hides
+          // the heading that scrolls under it, like the bottom bar does (rule 1 sees to it that the bar is solid). The same bar made
+          // see-through is not exempt (the self-test checks both).
+          const x = Math.min(innerWidth - 1, Math.max(0, Math.max(a.r.left, b.r.left) + w / 2));
+          const y = Math.min(innerHeight - 1, Math.max(0, Math.max(a.r.top, b.r.top) + h / 2));
+          if (hiddenUnder(a.el, x, y) || hiddenUnder(b.el, x, y)) continue;
+          overlapping.push(`"${a.text}" over "${b.text}"`);
+        }
       }
     }
     return { overlapping: [...new Set(overlapping)], clipped: [...new Set(clipped)], offscreen: [...new Set(offscreen)] };
@@ -219,6 +230,21 @@ if (process.argv.includes('--self-test')) {
     console.log(`${found > 0 ? 'noticed' : 'MISSED '}  ${what}${found > 0 ? ` (${found})` : ''}`);
     if (!found) missed++;
   }
+  // The other way round: something solid on top is covering, not overlap, and the same thing made see-through is overlap. (The "checking
+  // the payment" banner at the top hides the points heading that scrolls under it; that must not be called text over text, and a
+  // banner that let the heading show through must not be let off.)
+  await put(Object.fromEntries(payScreens(buildFixtures({ stress: false })))['pay-checking']);
+  await page.evaluate(() => (document.documentElement.style.fontSize = '125%'));
+  await sleep(900);
+  await page.evaluate(() => window.scrollTo(0, Math.round((document.documentElement.scrollHeight - innerHeight) / 2)));
+  await sleep(250);
+  const solid = (await measureText()).overlapping.length;
+  await page.addStyleTag({ content: '.banner { background: transparent !important; } /* qa-fault */' });
+  await sleep(150);
+  const seeThrough = (await measureText()).overlapping.length;
+  const rightWay = solid === 0 && seeThrough > 0;
+  console.log(`${rightWay ? 'right  ' : 'WRONG '}  a solid bar over scrolled text covers it (${solid} overlaps), the same bar see-through does not (${seeThrough})`);
+  if (!rightWay) missed++;
   await browser.close();
   await app.close();
   if (missed) {

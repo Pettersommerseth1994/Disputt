@@ -8,6 +8,7 @@
 
 import { goHome } from './paths.js';
 import { loadHostSnapshot } from './p2p/snapshot.js';
+import { setAwayAnnouncer } from './pay/away.js';
 import { openGuestLink, resetGuest } from './p2p/guest.js';
 import { config, isP2P } from './settings.js';
 import { saveSession, setStore, store, toast } from './store.js';
@@ -25,11 +26,16 @@ let stopped = false;
 const outbox = [];
 
 const UNREACHABLE_LIMIT = 15; // ~1 minute of backoff: long enough for a host who is reloading, short enough to give up
+const AWAY_MAX_MS = 15 * 60_000; // ...unless the host said it was going away (to pay): then as long as the host asked for, within reason
+const hostIsAway = () => store.hostAwayUntil > Date.now();
 
 // serverNow() = Date.now() + clockOffset. Refined by ping round-trips (lowest RTT wins).
 let clockOffset = 0;
 let bestRtt = Infinity;
 export const serverNow = () => Date.now() + clockOffset;
+
+// the payment page can tell the guests that this host is going away for a while (pay/away.js)
+setAwayAnnouncer((msg) => host?.announce?.(msg) ?? 0);
 
 // ------------------------------------------------------------------ links
 
@@ -74,7 +80,7 @@ function handleOpen() {
   retry = 0;
   unreachable = 0;
   bestRtt = Infinity;
-  setStore({ conn: 'open', everOpened: true, stuck: 0 });
+  setStore({ conn: 'open', everOpened: true, stuck: 0, hostAwayUntil: 0 });
   if (store.session) rawSend({ t: 'resume', ...store.session });
   // A join sent on a link that died before the welcome arrived is sent again, exactly once.
   for (let i = outbox.length - 1; i >= 0; i--) if (outbox[i].t === 'join') outbox.splice(i, 1);
@@ -94,7 +100,7 @@ function handleClose(info) {
     // p2p: nobody is hosting that room right now
     unreachable++;
     if (!store.session) return forget('Fant ikke dette spillet. Sjekk koden, og at verten har siden åpen.');
-    if (unreachable > UNREACHABLE_LIMIT) return forget('Verten er ikke å nå lenger, så spillet er trolig avsluttet.');
+    if (unreachable > UNREACHABLE_LIMIT && !hostIsAway()) return forget('Verten er ikke å nå lenger, så spillet er trolig avsluttet.');
   }
   // p2p: the host was found but no line could be set up (timeout), or the introduction service did not answer (offline)
   setStore({ conn: 'closed', stuck: info.timeout || info.offline ? store.stuck + 1 : store.stuck });
@@ -300,6 +306,12 @@ function onMessage(msg) {
     case 'notice':
       if (typeof msg.text === 'string') toast(msg.text.slice(0, 120), 7000);
       break;
+    case 'away': {
+      // p2p: the host is leaving the page for a while (to pay) and will be back: wait for them instead of giving up
+      const ms = Number(msg.ms);
+      if (Number.isFinite(ms) && ms > 0) setStore({ hostAwayUntil: Date.now() + Math.min(ms, AWAY_MAX_MS) });
+      break;
+    }
     case 'error':
       onError(msg);
       break;
