@@ -18,7 +18,9 @@ const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-
   // two impostors (six players): the role card has a third part and the open strip a second line
   'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held', 'discussion-loyal-duo-held', 'reveal-duo-wrong'];
 // ... and these should at least keep their main action and the text above it in view
-const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3'];
+const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3',
+  // the host's second step: the number, what it comes to, and Neste
+  'setup-points'];
 
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
@@ -27,19 +29,19 @@ const page = await browser.newPage();
 page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
-async function show(view, qaHold = false) {
+async function show(view, qaHold = false, step = null) {
   // (unmounted first: a screen keeps its own state, such as the answer that is selected, from the screen shown before it)
   await page.evaluate(() => window.__disputt.setStore({ view: null }));
-  await page.evaluate((view, qaHold) => {
+  await page.evaluate((view, qaHold, step) => {
     window.__realNow ??= Date.now.bind(Date);
     const delta = view.now - window.__realNow();
     Date.now = () => window.__realNow() + delta;
     window.__disputt.setStore({
-      conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null, qaHold,
+      conn: 'open', everOpened: true, view, sheet: null, editing: false, seats: null, qaHold, step,
       session: { code: view.code, playerId: view.you.id, token: 'qa' },
       info: { publicUrl: null, lanUrls: ['http://192.168.100.59:3000'] },
     });
-  }, view, qaHold);
+  }, view, qaHold, step);
 }
 
 /** How much of the screen is hidden: text under the sticky bar, and how far the page scrolls. */
@@ -92,7 +94,7 @@ for (const [w, h] of viewports) {
   const rows = [];
   for (const key of [...MUST_FIT, ...NICE_TO_FIT]) {
     const held = key.endsWith('-held');
-    await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held);
+    await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held, key === 'setup-points' ? 2 : null);
     await sleep(key.startsWith('role') ? 1300 : 900); // let the entrance animations settle
     const m = await measure();
     const must = MUST_FIT.includes(key);

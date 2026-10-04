@@ -60,6 +60,11 @@ export function buildFixtures({ stress = false } = {}) {
     out['lobby-host-new'] = room.viewFor(ids[0]);
   }
   {
+    const { room, ids } = room0({ players: 1 });
+    out['lobby-host-1'] = room.viewFor(ids[0]); // the invitation, with nobody there yet
+    out['setup-points'] = room.viewFor(ids[0]); // the host's second step (shown with `step: 2`)
+  }
+  {
     const { room, ids } = room0({ players: 3 });
     out['lobby-host-3'] = room.viewFor(ids[0]);
     out['lobby-guest-3'] = room.viewFor(ids[1]);

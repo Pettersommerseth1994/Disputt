@@ -94,7 +94,8 @@ if (sizes) {
 const SCREENS = [
   ['home', 'Hjem', 'Opprett spill, eller bli med i et spill med koden.'],
   ['profile-new', 'Profil', 'Navn og avatar. Tatte avatarer er utilgjengelige.'],
-  ['lobby-host-3', 'Lobby – vert', 'QR-kode, spillere, poengmål og Start Disputt.'],
+  ['setup-points', 'Oppsett – poeng', 'Vertens andre steg (av tre): hvor mange poeng. Første steg er profilen.'],
+  ['lobby-host-3', 'Invitasjon – vert', 'Siste steg: QR-koden, koden og «Del lenke». Hvem som er med står over Start Disputt.'],
   ['lobby-guest-3', 'Lobby – spiller', 'Venter på verten. Kan se hvem som er med.'],
   ['role-impostor', 'Rolle: skjult', 'Lik på alles telefon til en finger holder knappen. Lojal og imposter ser det samme. 8 sekunder.'],
   ['role-impostor-held', 'Rolle: mens du holder', 'Kortet vises bare mens knappen holdes. Imposteren ser også riktig svar; lojale ser «?».'],

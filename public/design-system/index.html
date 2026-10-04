@@ -131,7 +131,7 @@
       <div class="ds-type"><span class="ds-label">H3<br><code>--fs-h3</code></span><h3>Poengtavle</h3></div>
       <div class="ds-type"><span class="ds-label">Ingress<br><code>.lead</code></span><p class="lead">Diskuter og vinn.</p></div>
       <div class="ds-type"><span class="ds-label">Brødtekst<br><code>--fs-body</code></span><p>Én av dere vet svaret og vil lure dere. Hvem kan du stole på? Lytt når Sofie leser spørsmålet, og diskuter dere frem til riktig svar.</p></div>
-      <div class="ds-type"><span class="ds-label">Liten<br><code>.small</code></span><p class="small muted">Ett poeng tar ca. 10 minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</p></div>
+      <div class="ds-type"><span class="ds-label">Liten<br><code>.small</code></span><p class="small muted">Ett poeng tar ca. 6 minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</p></div>
       <div class="ds-type"><span class="ds-label">Overskrift over felt<br><code>.eyebrow</code></span><p class="eyebrow">Les høyt for de andre</p></div>
       <div class="ds-type"><span class="ds-label">Spørsmål<br><code>.question__text</code></span><p class="question__text" style="color:var(--cream)">Hvilket land har flest turister årlig?</p></div>
       <div class="ds-type"><span class="ds-label">Tall<br><code>.timer</code></span><div class="timer" style="font-size:4.2rem"><span class="timer__d">0</span><span class="timer__d">6</span><span class="timer__c">:</span><span class="timer__d">0</span><span class="timer__d">0</span></div></div>
@@ -229,7 +229,7 @@
         <div class="field"><span class="field__label">Hvor mange poeng skal dere spille til?</span>
           <div class="stepper"><button class="btn btn--cream btn--icon" aria-label="Ett poeng mindre">−</button><input class="input" value="5" inputmode="numeric" aria-label="Poeng"><button class="btn btn--cream btn--icon" aria-label="Ett poeng mer">+</button></div>
           <span class="field__error">Skriv et tall mellom 1 og 99.</span>
-          <span class="field__hint">Ett poeng tar ca. 10 minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</span>
+          <span class="field__hint">Ett poeng tar ca. 6 minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</span>
         </div>
       </div>
       <div class="ds-demo ds-stack">
@@ -244,6 +244,29 @@
           <button class="segmented__item" aria-pressed="true">6<small>min</small></button>
           <button class="segmented__item" aria-pressed="false">10<small>min</small></button>
         </div>
+      </div>
+    </div>
+
+    <h3>Steg og ansikter</h3>
+    <div class="ds-grid ds-grid--wide">
+      <div class="ds-demo ds-stack">
+        <div class="steps">
+          <ol class="steps__bar" aria-hidden="true"><li class="steps__seg steps__seg--done"></li><li class="steps__seg steps__seg--done"></li><li class="steps__seg"></li></ol>
+          <div class="steps__row"><button class="btn btn--text">‹ Tilbake</button><p class="eyebrow">Steg 2 av 3</p></div>
+        </div>
+        <p class="ds-note">Vertens oppsett går i tre steg. «Tilbake» står til venstre fra steg 2, «Steg 2 av 3» til høyre. Klasse <code>.steps</code>, laget av <code>Steps</code> i <code>screens/setup.js</code>.</p>
+      </div>
+      <div class="ds-demo ds-stack">
+        <div class="dock__status" style="justify-content:flex-start">
+          <span class="facepile" aria-hidden="true">
+            <span class="avatar avatar--xs facepile__face"><img src="../assets/avatars/mandarin.svg" alt=""></span>
+            <span class="avatar avatar--xs facepile__face"><img src="../assets/avatars/lime.svg" alt=""></span>
+            <span class="avatar avatar--xs facepile__face"><img src="../assets/avatars/blabaer.svg" alt=""></span>
+            <span class="facepile__more">+4</span>
+          </span>
+          <p class="small">7 spillere er med</p>
+        </div>
+        <p class="ds-note">Hvem som er med, som overlappende ansikter over Start-knappen (<code>.facepile</code>). Navnene står i spillerlisten lenger ned.</p>
       </div>
     </div>
 

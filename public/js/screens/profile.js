@@ -1,14 +1,16 @@
-// Name + avatar. Used when joining, and again when someone wants to change their profile in the lobby.
+// Name + avatar. Used when joining, and again when someone wants to change their profile in the lobby. For the host it is
+// also the first step of the set-up (`wizard`).
 
 import { AVATARS } from '../../shared/avatars.mjs';
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore } from '../store.js';
 import { Avatar, Button } from '../ui.js';
+import { SetupHeader, Steps } from './setup.js';
 
 const NAME_MAX = 14;
 
-export function Profile({ view, editing }) {
+export function Profile({ view, editing, wizard = false }) {
   const you = view.you;
   const takenBy = new Map(view.players.filter((p) => p.id !== you.id).map((p) => [p.avatar, p.name]));
   const [name, setName] = useState(you.name ?? '');
@@ -24,11 +26,11 @@ export function Profile({ view, editing }) {
   const trimmed = name.trim();
   const ready = trimmed.length > 0 && avatar && !busy;
 
-  // The server accepted the profile: leave edit mode. (A rejection arrives as a toast instead, and we stay here.)
+  // The server accepted the profile: leave edit mode, or go on to the next step. (A rejection arrives as a toast instead, and we stay here.)
   useEffect(() => {
-    if (submitted.current && editing && you.name === trimmed && you.avatar === avatar) {
+    if (submitted.current && (editing || wizard) && you.name === trimmed && you.avatar === avatar) {
       submitted.current = false;
-      setStore({ editing: false });
+      setStore(wizard ? { step: 2 } : { editing: false });
     }
     setBusy(false);
   }, [view]);
@@ -36,7 +38,11 @@ export function Profile({ view, editing }) {
   const submit = (e) => {
     e.preventDefault();
     if (!ready) return;
+    if (wizard && you.ready && you.name === trimmed && you.avatar === avatar) return setStore({ step: 2 }); // nothing to tell the game
     submitted.current = true;
+    // (a host who has no profile yet loses this screen the moment the game accepts one, so the next step is set now; the
+    // screen stays until then, and a rejection - a toast - leaves it where it is)
+    if (wizard && !you.ready) setStore({ step: 2 });
     setBusy(true);
     setTimeout(() => setBusy(false), 2500); // a rejection does not change the view, so never stay locked
     actions.profile(trimmed, avatar);
@@ -46,10 +52,11 @@ export function Profile({ view, editing }) {
     fn(value);
   };
 
-  return html`<main class="screen">
+  return html`<main class=${wizard ? 'screen setup' : 'screen'}>
+    ${wizard && html`<${SetupHeader} /><${Steps} current=${1} />`}
     <form class="stack stack--loose grow" onSubmit=${submit}>
       <header class="stack stack--tight">
-        <p class="eyebrow">Spill ${view.code}</p>
+        ${!wizard && html`<p class="eyebrow">Spill ${view.code}</p>`}
         <h1 class="rise-in">Hvem er du?</h1>
       </header>
 
@@ -93,7 +100,7 @@ export function Profile({ view, editing }) {
       </div>
 
       <div class="dock">
-        <${Button} block type="submit" disabled=${!ready}>${you.ready ? 'Lagre' : 'Klar!'}</${Button}>
+        <${Button} block type="submit" disabled=${!ready}>${wizard ? 'Neste' : you.ready ? 'Lagre' : 'Klar!'}</${Button}>
         ${editing && html`<${Button} block variant="ghost" onClick=${() => setStore({ editing: false })}>Avbryt</${Button}>`}
       </div>
     </form>

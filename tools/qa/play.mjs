@@ -117,12 +117,12 @@ const holdAndRead = async (p, label) => {
   return { text, card, buttonText };
 };
 
-async function register(p, name, avatarIndex) {
+async function register(p, name, avatarIndex, button = 'Klar!') {
   await p.page.waitForSelector('#name', { timeout: 10000 });
   await p.page.type('#name', name);
   await p.page.evaluate((i) => document.querySelectorAll('.picker__item:not([disabled])')[i].click(), avatarIndex);
   await shot(p, `profile-${name}`);
-  await clickButton(p, 'Klar!');
+  await clickButton(p, button);
 }
 
 try {
@@ -132,13 +132,28 @@ try {
   await waitText(host, /Diskuter\s+og\s+vinn/);
   await shot(host, '01-home');
   await clickButton(host, 'Opprett spill');
-  // the host sees the QR code straight away and picks their own profile from the lobby
-  await waitText(host, /Skann for å bli med/i);
-  await shot(host, '01b-lobby-host-first-view');
-  assert.match(await bodyText(host), /Velg navn og avatar først/);
-  assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), true, 'cannot start before choosing a profile');
-  await host.page.evaluate(() => document.querySelector('.profile-prompt').click());
-  await register(host, NAMES[0], 0);
+  // the host sets the game up in three steps: who you are, how long to play, and last the invitation
+  await waitText(host, /Steg 1 av 3/);
+  await shot(host, '01b-setup-1-profile');
+  assert.match(await bodyText(host), /Hvem er du\?/);
+  assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), true, 'Neste waits for a name and an avatar');
+  await register(host, NAMES[0], 0, 'Neste');
+  await waitText(host, /Steg 2 av 3/);
+  assert.match(await bodyText(host), /Hvor lenge skal dere spille\?/);
+  // "back" keeps the profile, and going on again is possible
+  await clickButton(host, 'Tilbake');
+  await waitText(host, /Steg 1 av 3/);
+  assert.equal(await host.page.$eval('#name', (i) => i.value), NAMES[0], 'the profile is still there after going back');
+  await clickButton(host, 'Neste');
+  await waitText(host, /Steg 2 av 3/);
+  await shot(host, '01c-setup-2-points');
+  // the points go in the free-text field (focusing selects the old value, so typing replaces it), and a point takes six minutes
+  await host.page.focus('#target');
+  await host.page.keyboard.type(String(TARGET));
+  await sleep(500);
+  if (TARGET * 6 < 90) assert.match(await bodyText(host), new RegExp(`ca\\. ${TARGET * 6} min`), 'six minutes a point');
+  await clickButton(host, 'Neste');
+  await waitText(host, /Steg 3 av 3/);
   await waitText(host, /Spillere\s+1\/10/);
   // a phone that refuses to keep the screen awake must tell its owner to turn auto-lock off by hand
   await waitText(host, /sett skjermlåsen/i, 5000);
@@ -245,17 +260,14 @@ try {
     await p.page.waitForFunction(() => !document.querySelector('.sheet'));
   }
   await waitText(menuGuest, /Du er med/);
-  assert.match(await bodyText(host), /Skann for å bli med/i, 'the host is still in the lobby after choosing to stay');
+  assert.match(await bodyText(host), /Få med vennene dine/, 'the host is still at the invitation after choosing to stay');
 
   // removing a friend takes two taps: the first only arms the button
   await host.page.evaluate(() => document.querySelector('.player__kick').click());
   await waitText(host, /Fjern\?/);
   assert.match(await bodyText(host), new RegExp(NAMES[PLAYERS - 1]), 'one tap does not remove anyone');
 
-  // host sets the target via the free-text field and starts
-  await host.page.focus('#target'); // focusing selects the old value, so typing replaces it
-  await host.page.keyboard.type(String(TARGET));
-  await sleep(500);
+  // the invitation says what the second step set, and the host starts
   await waitText(host, new RegExp(`Spiller til ${TARGET} poeng`));
   await clickButton(host, 'Start Disputt');
 

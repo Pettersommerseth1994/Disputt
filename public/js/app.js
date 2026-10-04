@@ -4,6 +4,7 @@ import { Connecting, Home, SeatPicker } from './screens/home.js';
 import { Lobby } from './screens/lobby.js';
 import { HomeSheet } from './screens/leave.js';
 import { Profile } from './screens/profile.js';
+import { PointsStep, hostStep } from './screens/setup.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
 import { HostSheet, QrSheet, RulesSheet, ScoresSheet, SettingsSheet } from './screens/sheets.js';
 import { isP2P } from './settings.js';
@@ -26,8 +27,14 @@ const THEME_COLORS = { '': '#6a1428', right: '#7eba2d', wrong: '#f48b8f' };
 function gameScreen(view, s) {
   switch (view.phase) {
     case 'lobby':
-      // Guests pick a profile first. The host lands straight on the QR code and picks theirs from the lobby.
-      return s.editing || (!view.you.ready && !view.you.isHost) ? html`<${Profile} view=${view} editing=${s.editing} />` : html`<${Lobby} view=${view} />`;
+      // Everybody picks a profile first. The host then goes on to the points, and last to the invitation, where the game waits.
+      if (view.you.isHost && !s.editing) {
+        const step = hostStep(view, s.step);
+        if (step === 1) return html`<${Profile} view=${view} wizard />`;
+        if (step === 2) return html`<${PointsStep} view=${view} />`;
+        return html`<${Lobby} view=${view} />`;
+      }
+      return s.editing || !view.you.ready ? html`<${Profile} view=${view} editing=${s.editing} />` : html`<${Lobby} view=${view} />`;
     case 'role':
       return html`<${RoleReveal} view=${view} />`;
     case 'question':
@@ -61,7 +68,7 @@ export function App() {
   useWakeLock(Boolean(view));
 
   // every new screen starts at the top
-  useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.you?.ready, s.editing]);
+  useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.you?.ready, s.editing, s.step]);
 
   const theme = themeOf(view);
   useEffect(() => {

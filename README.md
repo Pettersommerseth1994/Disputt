@@ -10,7 +10,7 @@ Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de
 
 ### Test med venner (fra hvilket som helst nett)
 
-1. **Verten** åpner lenken over, trykker *Opprett spill* og velger navn og avatar. De andre trykker *Bli med i spill* og skriver koden (eller skanner QR-koden).
+1. **Verten** åpner lenken over, trykker *Opprett spill* og går gjennom tre steg: navn og avatar, hvor mange poeng man spiller til, og så invitasjonen. De andre trykker *Bli med i spill* og skriver koden (eller skanner QR-koden).
 2. De andre **skanner QR-koden** på vertens skjerm, eller verten trykker *Del lenke* og sender den i en chat. Man kan også gå til siden og skrive den firebokstavers koden.
 3. Verten trykker *Start Disputt* når alle er med (minst tre).
 
@@ -19,7 +19,7 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 ## Slik spilles det
 
 1. **Verten** åpner Disputt og starter et spill. Hen får en QR-kode som de andre skanner.
-2. Alle skriver inn **navn** og velger en av ti **avatarer**. Verten ser spillerne komme inn, velger hvor mange **poeng** man spiller til (ett poeng tar ca. 10 min, vi anbefaler minst 5) og trykker **Start Disputt**.
+2. Alle skriver inn **navn** og velger en av ti **avatarer**. Verten gjør det først, velger så hvor mange **poeng** man spiller til (ett poeng tar ca. 6 min, vi anbefaler minst 5) og kommer til invitasjonen: en QR-kode (trykk for å forstørre), koden og «Del lenke», mens spillerne kommer inn. Så trykker verten **Start Disputt**.
 3. **Roller:** én tilfeldig spiller blir **imposter** (får se riktig svar, f.eks. «C: Frankrike»), og er dere **seks eller flere, blir to imposterer**, som får vite hvem den andre er. Alle andre er **lojale**. Rollen vises bare mens du holder en finger på knappen («Hold for å se rollen din») og er borte igjen når du slipper, så ingen kan se den over skulderen din. Resten av tiden er skjermen lik på alles telefon. Rolleskjermen varer i 8 sekunder.
 4. En tilfeldig spiller (kan også være imposteren) får **spørsmålet** med fire alternativer og leser det høyt. Klokka starter med en gang; hen kan sette den til **2, 6 eller 10 minutter** og legge til tid underveis.
 5. Alle **diskuterer**. Imposteren (eller imposterne) prøver å lure de andre til å svare feil. Hvordan man blir enige er opp til gruppa.

@@ -51,7 +51,7 @@ page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
 /** Put the app in a state: everything not mentioned goes back to "nothing special". */
-const BASE = { view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' } };
+const BASE = { view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' } };
 const put = (patch) =>
   page.evaluate(
     (base, patch) => {
@@ -72,7 +72,7 @@ function screensFor(fixtures) {
   const list = [
     ['home', () => put({})],
     ['home-notice', () => put({ notice: 'Spillet er avsluttet.' })],
-    ...Object.entries(fixtures).map(([key, view]) => [key, () => put({ view, editing: key === 'profile-edit' })]),
+    ...Object.entries(fixtures).map(([key, view]) => [key, () => put({ view, editing: key === 'profile-edit', step: key === 'setup-points' ? 2 : null })]),
     // the screens with a hold-to-see button, with every such button held: the role card, and the role strip turned cream
     ...Object.entries(fixtures)
       .filter(([key]) => /^(role|question|discussion|reveal-wait)/.test(key))

@@ -37,13 +37,14 @@ try {
   const host = await newPage();
   await host.goto(`${base}/`);
   await clickButton(host, 'Opprett spill');
-  await host.waitForSelector('.lobby__code', { timeout: 20000 });
-  const code = await host.$eval('.lobby__code', (el) => el.textContent.trim());
-  await host.evaluate(() => document.querySelector('.profile-prompt').click());
-  await host.waitForSelector('#name');
+  await host.waitForSelector('#name', { timeout: 20000 }); // the first of the host's three steps
   await host.type('#name', 'Petter');
   await host.evaluate(() => document.querySelectorAll('.picker__item:not([disabled])')[0].click());
-  await clickButton(host, 'Klar!');
+  await clickButton(host, 'Neste');
+  await waitText(host, /Steg 2 av 3/);
+  await clickButton(host, 'Neste');
+  await host.waitForSelector('.lobby__code', { timeout: 20000 });
+  const code = await host.$eval('.lobby__code', (el) => el.textContent.trim());
   await waitText(host, /Spillere\s+1\/10/);
   log(`game ${code} is open`);
 

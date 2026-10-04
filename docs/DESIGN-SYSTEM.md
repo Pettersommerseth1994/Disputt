@@ -71,6 +71,14 @@ En telefon som er rød eller blå, eller som viser et stort «Imposter», røper
 - **Alt annet som ellers kunne røpet rollen er likt:** vibrasjonen ved rolleskjermen, tipset under klokka, og nettleserfargen (`theme-color`). Sidetemaer (`html[data-theme]`) finnes bare for dommen til den som svarer.
 - QA kan vise alt som «holdt» uten finger: `setStore({ qaHold: true })` (se `useHold`).
 
+## Vertens oppsett i tre steg
+
+Verten går gjennom tre steg, ett valg per skjerm: 1 «Hvem er du?» (`Profile` med `wizard`, knappen heter «Neste»), 2 «Hvor lenge skal dere spille?» (`PointsStep`) og 3 «Få med vennene dine» (`Lobby`, der spillet venter på spillerne). Komponentene ligger i `public/js/screens/setup.js`.
+
+- `Steps` viser tre striper, «‹ Tilbake» til venstre (fra steg 2) og «Steg 2 av 3» til høyre. `store.step` husker hvor verten er (1–3). `hostStep` gir steg 1 til en vert uten profil og steg 3 etter en omlasting.
+- Invitasjonen har en liten QR-kode (trykk for å forstørre, det eksisterende arket «Bli med»), koden og «Del lenke», og under dem poengmålet med «Endre». **Hvem som er med vises i bunnfeltet** som en rad med overlappende ansikter (`.facepile`) og en kort tekst over Start-knappen, siden spillerlisten ellers havner under bunnfeltet på en 664 px høy skjerm. Listen med navn og fjerning ligger lenger ned.
+- Ett poeng tar ca. 6 minutter (`MINUTES_PER_POINT` i `setup.js`). Tallet står også i spillereglene, vertsvalget, README og stilguiden.
+
 ## Små skjermer
 
 En nettleser sine verktøylinjer tar 150–300 px, så en telefon viser ofte bare ca. 550–660 px høyde, ikke de 844 px skjermen har. Skjermene man skal se på et øyeblikk (rolle, nedtelling, fasit, diskusjon) må derfor få plass uten scrolling, og knappen nederst skal ikke dekke tekst. Illustrasjonene skalerer med synlig høyde (`dvh`, og `height: auto` slik at `<img height>` ikke holder av tom plass), og `screens.css` strammer inn avstander på lave skjermer. `npm run qa:fit` måler det på flere størrelser, også med lengste spørsmål og svar i banken.

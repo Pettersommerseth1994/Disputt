@@ -55,11 +55,11 @@ const clickButton = async (p, label) => {
   await p.page.waitForFunction((l) => [...document.querySelectorAll('button')].some((b) => b.innerText.includes(l) && !b.disabled), { timeout: 10000 }, label);
   await p.page.evaluate((l) => [...document.querySelectorAll('button')].find((b) => b.innerText.includes(l) && !b.disabled).click(), label);
 };
-async function register(p, avatarIndex) {
+async function register(p, avatarIndex, button = 'Klar!') {
   await p.page.waitForSelector('#name', { timeout: 30000 });
   await p.page.type('#name', p.name);
   await p.page.evaluate((i) => document.querySelectorAll('.picker__item:not([disabled])')[i].click(), avatarIndex);
-  await clickButton(p, 'Klar!');
+  await clickButton(p, button);
 }
 /** Closes the phone's open connection(s) to the introduction service; returns how many it closed. */
 const cutSignalling = (p) =>
@@ -81,10 +81,14 @@ try {
   const host = await newPhone('Petter');
   await host.page.goto(`${base}/`);
   await clickButton(host, 'Opprett spill');
+  await register(host, 0, 'Neste'); // the host's first step
+  await waitText(host, /Steg 2 av 3/);
+  await host.page.focus('#target'); // one point, so that a game is over after a single round
+  await host.page.keyboard.type('1');
+  await sleep(400);
+  await clickButton(host, 'Neste');
   await host.page.waitForSelector('.lobby__code', { timeout: 20000 });
   const code = await host.page.$eval('.lobby__code', (el) => el.textContent.trim());
-  await host.page.evaluate(() => document.querySelector('.profile-prompt').click());
-  await register(host, 0);
   await waitText(host, /Spillere\s+1\/10/);
 
   const a = await newPhone('Mari');
@@ -146,9 +150,6 @@ try {
   log('host came back from a long hidden spell -> opened a fresh broker connection');
 
   // 4. the game starts; the host drops the service again mid-game: play goes on
-  await host.page.focus('#target');
-  await host.page.keyboard.type('1');
-  await sleep(400);
   await clickButton(host, 'Start Disputt');
   const playing = [host, a, b, d];
   await Promise.all(playing.map((p) => waitText(p, /din rolle/i)));

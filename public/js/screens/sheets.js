@@ -39,7 +39,7 @@ function HostControls({ view }) {
         <output class="input input--number" aria-live="polite">${view.target}</output>
         <${Button} variant="cream" size="icon" onClick=${() => bump(1)} aria-label="Ett poeng mer" disabled=${view.target >= 99}>+</${Button}>
       </div>
-      <span class="field__hint">Ett poeng tar ca. 10 minutter. Du kan justere underveis.</span>
+      <span class="field__hint">Ett poeng tar ca. 6 minutter. Du kan justere underveis.</span>
     </div>`}
     ${inRound && html`<${ConfirmButton} block variant="orange" onConfirm=${() => { actions.skip(); close(); }}>Hopp over denne runden</${ConfirmButton}>`}
     ${offline.length > 0 &&
@@ -121,6 +121,6 @@ export function RulesSheet() {
         </li>`,
       )}
     </ol>
-    <p class="small muted center" style="margin-top:var(--s-5)">Minst 3 spillere. Ett poeng tar ca. 10 minutter.</p>
+    <p class="small muted center" style="margin-top:var(--s-5)">Minst 3 spillere. Ett poeng tar ca. 6 minutter.</p>
   </${Sheet}>`;
 }

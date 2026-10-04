@@ -47,6 +47,7 @@ export const store = {
   toast: null, // transient error/info
   sheet: null, // 'scores' | 'rules' | 'host' | null
   editing: false, // lobby: changing name/avatar
+  step: null, // the host's set-up: 1 profile, 2 points, 3 invitation (null: see hostStep in screens/setup.js)
   replaced: false, // the same player opened the game in another tab
   info: null, // /api/info (LAN urls etc.)
 };
