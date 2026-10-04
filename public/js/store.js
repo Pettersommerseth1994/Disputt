@@ -45,7 +45,7 @@ export const store = {
   seats: null, // { code, seats } when the game has already started and a seat can be claimed
   notice: null, // message shown on the home screen (e.g. "game is gone")
   toast: null, // transient error/info
-  sheet: null, // 'scores' | 'rules' | 'host' | null
+  sheet: null, // 'scores' | 'rules' | 'host' | 'qr' | 'settings' | 'home' | 'fasit' | null
   editing: false, // lobby: changing name/avatar
   step: null, // the host's set-up: 1 profile, 2 points, 3 invitation (null: see hostStep in screens/setup.js)
   replaced: false, // the same player opened the game in another tab

@@ -520,6 +520,52 @@ describe('locking, countdown and reveal', () => {
     }
   });
 
+  it('tells every phone what was locked during the countdown, and only then', () => {
+    const ctx = lobby(4);
+    const { asker, q } = toQuestion(ctx);
+    for (const p of ctx.players) assert.equal(ctx.room.viewFor(p.id).countdown, undefined, 'nothing is locked yet');
+    const picked = (q.correct + 1) % 4;
+    ctx.room.lock(asker.id, picked);
+    for (const p of ctx.players) {
+      const c = ctx.room.viewFor(p.id).countdown.chosen;
+      assert.deepEqual(c, { index: picked, letter: 'ABCD'[picked], text: q.options[picked] });
+    }
+    // it is what the group chose, not whether that is right: a loyal phone learns nothing from it
+    const v = ctx.room.viewFor(ctx.players.find((p) => p.id !== asker.id).id);
+    assert.equal(v.reveal, undefined);
+    assert.equal(v.summary, undefined);
+  });
+
+  it('gives everyone the answer key once the round is over, and not before', () => {
+    const ctx = lobby(4);
+    const { asker, q } = toQuestion(ctx);
+    const picked = (q.correct + 2) % 4;
+    ctx.room.lock(asker.id, picked);
+    ctx.clock.advance(DEFAULT_TIMINGS.countdownMs);
+    ctx.room.tick(ctx.clock.now());
+    for (const p of ctx.players) assert.equal(ctx.room.viewFor(p.id).summary, undefined, 'the points are not out yet');
+    ctx.room.continueRound(asker.id);
+    for (const p of ctx.players) {
+      const a = ctx.room.viewFor(p.id).summary.answer;
+      assert.deepEqual(a, {
+        correctIndex: q.correct,
+        correctLetter: 'ABCD'[q.correct],
+        correctText: q.options[q.correct],
+        chosenIndex: picked,
+        chosenLetter: 'ABCD'[picked],
+        chosenText: q.options[picked],
+      });
+    }
+  });
+
+  it('has no answer key for a round that was skipped before anything was locked', () => {
+    const ctx = lobby(4);
+    toQuestion(ctx);
+    ctx.room.skipRound(ctx.host.id);
+    assert.equal(ctx.room.viewFor(ctx.host.id).summary.skipped, true);
+    assert.equal(ctx.room.viewFor(ctx.host.id).summary.answer, undefined);
+  });
+
   it('reports a wrong answer together with the right one', () => {
     const ctx = lobby(4);
     const { asker, q } = toQuestion(ctx);

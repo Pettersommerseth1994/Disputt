@@ -18,7 +18,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `timer.set` | `seconds` (30–3600) | den som svarer | setter gjenstående tid (2/6/10 min i UI) |
 | `timer.add` | `seconds` | den som svarer | legger til tid (starter fra nå hvis tiden er ute) |
 | `lock` | `index` | den som svarer | låser svaret, starter 5-sekunders nedtelling |
-| `continue` | | den som svarte, eller verten | teller poeng, viser oppsummering (eller vinner) |
+| `continue` | | den som svarte, eller verten | teller poeng, viser poengene (eller vinner). Sendes når imposteren har sagt riktig svar høyt: knappen «Det er sagt – vis poengene» |
 | `next` | | vert, oppsummering | neste runde |
 | `skip` | | vert, under en runde | hopper over runden uten poeng |
 | `end` | | vert | avslutter spillet; de som leder vinner |
@@ -48,6 +48,8 @@ Feilkoder: `room_not_found`, `bad_token`, `started`, `full`, `busy`, `bad_name`,
 
 Overgangene `role → question` og `locked → reveal` skjer av seg selv på serveren. Resten utløses av meldinger.
 
+I `reveal` vises ingenting om utfallet: imposterne sier riktig svar høyt, og skjermene er like for alle. Den som svarer går videre med `continue`.
+
 ## Visningen (`view`)
 
 ```jsonc
@@ -69,9 +71,10 @@ Overgangene `role → question` og `locked → reveal` skjer av seg selv på ser
   "discussion": { "endsAt": 0 },      // fase question (alle)
   "question": { "text": "…", "options": ["…","…","…","…"] },   // KUN den som svarer
   "selected": 2,                      // KUN den som svarer
-  "countdown": { "endsAt": 0 },       // fase locked
-  "reveal": { "correct": true, "chosen": 2, "correctIndex": 2, "correctLetter": "C", "correctText": "Frankrike", "question": {} }, // KUN den som svarer, fase reveal
-  "summary": { "round": 3, "correct": true, "skipped": false, "gained": { "<id>": 1 }, "tiebreak": false, "impostorId": "…", "impostor": { "id": "…", "name": "Ola", "avatar": "blabaer" }, "impostorIds": ["…"], "impostors": [{ "id": "…", "name": "Ola", "avatar": "blabaer" }], "askerId": "…" },
+  "countdown": { "endsAt": 0, "chosen": { "index": 1, "letter": "B", "text": "Japan" } }, // fase locked (alle); chosen er det gruppa låste, og sier ikke om det er riktig
+  "reveal": { "correct": true, "chosen": 2, "correctIndex": 2, "correctLetter": "C", "correctText": "Frankrike", "question": {} }, // KUN den som svarer, fase reveal. Vises ikke av den nåværende klienten (avsløringen sies høyt), men sendes fortsatt for telefoner som ikke er oppdatert
+  "summary": { "round": 3, "correct": true, "skipped": false, "gained": { "<id>": 1 }, "tiebreak": false, "impostorId": "…", "impostor": { "id": "…", "name": "Ola", "avatar": "blabaer" }, "impostorIds": ["…"], "impostors": [{ "id": "…", "name": "Ola", "avatar": "blabaer" }], "askerId": "…",
+               "answer": { "correctIndex": 2, "correctLetter": "C", "correctText": "Frankrike", "chosenIndex": 1, "chosenLetter": "B", "chosenText": "Japan" } },  // answer: fasit til alle når runden er over (ikke for en runde som ble hoppet over før låsing); «Se fasit» viser den
   "winners": ["<id>"]                 // fase finished
 }
 ```

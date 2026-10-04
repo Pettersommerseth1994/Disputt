@@ -106,8 +106,9 @@ const STEPS = [
   ['Alle får en rolle', 'De fleste er lojale. Én er imposter, og er dere seks eller flere, er det to imposterer. Bare imposterne får vite riktig svar, og de to vet hvem den andre er. Hold en finger på knappen for å se rollen din. Slipp, så skjules den igjen.'],
   ['Én spiller får spørsmålet', 'Hen leser spørsmålet og alternativene høyt for de andre.'],
   ['Diskuter!', 'Imposterne prøver å lure dere til å svare feil. Alle andre må finne ut hva som er riktig.'],
-  ['Bli enige og lås svaret', 'Spilleren med spørsmålet krysser av. Så telles det ned fra 5 – og fasiten avsløres.'],
-  ['Poeng', 'Riktig svar: alle lojale får 1 poeng. Feil svar: imposteren får 1 poeng, og er det to, får begge 1 poeng.'],
+  ['Bli enige og lås svaret', 'Spilleren med spørsmålet krysser av. Så telles det ned fra 5.'],
+  ['Imposteren avslører seg', 'Imposteren sier riktig svar høyt, og er det to, sier de det sammen. Da ser dere om dere hadde rett. Spilleren med spørsmålet trykker videre.'],
+  ['Poeng', 'Riktig svar: alle lojale får 1 poeng. Feil svar: imposteren får 1 poeng, og er det to, får begge 1 poeng. Er dere uenige, har poengskjermen en fasit.'],
   ['Ny runde', 'Nye roller, ny spiller og nytt spørsmål. Først til målet vinner. Uavgjort? Da spiller dere videre.'],
 ];
 

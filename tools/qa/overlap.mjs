@@ -75,7 +75,7 @@ function screensFor(fixtures) {
     ...Object.entries(fixtures).map(([key, view]) => [key, () => put({ view, editing: key === 'profile-edit', step: key === 'setup-points' ? 2 : null })]),
     // the screens with a hold-to-see button, with every such button held: the role card, and the role strip turned cream
     ...Object.entries(fixtures)
-      .filter(([key]) => /^(role|question|discussion|reveal-wait)/.test(key))
+      .filter(([key]) => /^(role|question|discussion|reveal)/.test(key))
       .map(([key, view]) => [`${key}-held`, () => put({ view, qaHold: true })]),
     ['connecting-join', () => put({ joining: 'ABCD', conn: 'closed', stuck: 2, route: { page: 'join', code: 'ABCD' } })],
     ['connecting-create', () => put({ creating: true })],
@@ -86,6 +86,8 @@ function screensFor(fixtures) {
     ['sheet-scores-guest', () => put({ view: fixtures['summary-wrong-guest'], sheet: 'scores' })],
     ['sheet-host', () => put({ view: fixtures['summary-wrong-host'], sheet: 'host' })],
     ['sheet-host-offline', () => put({ view: fixtures['summary-offline-host'], sheet: 'host' })],
+    ['sheet-fasit', () => put({ view: fixtures['summary-wrong-host'], sheet: 'fasit' })],
+    ['sheet-fasit-duo', () => put({ view: fixtures['summary-duo-wrong-host'], sheet: 'fasit' })],
     ['sheet-qr', () => put({ view: fixtures['lobby-host-3'], sheet: 'qr' })],
     ['sheet-settings', () => put({ view: fixtures['lobby-guest-3'], sheet: 'settings' })],
     ['sheet-home-host', () => put({ view: fixtures['lobby-host-3'], sheet: 'home' })],

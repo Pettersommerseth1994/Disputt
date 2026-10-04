@@ -11,7 +11,7 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 | `public/css/tokens.css` | Fonter (`@font-face`), farger, typografiskala, rom, former, skygger, bevegelse. **Eneste sted med råverdier.** |
 | `public/css/base.css` | Reset, side, overskrifter, skjermskall (`.screen`, `.dock`), animasjoner (`pop`, `rise`, `wobble`, `float`, `pulse`, …). |
 | `public/css/components.css` | Knapper, kort, felt, stepper, segmentert valg, avatar, spillerrutenett, avatarvelger, chips, klokke, svaralternativer, fremdriftsstrek, poengtavle, sheet, toast, banner, logo-klistremerke, rollestripe, konfetti. |
-| `public/css/screens.css` | Layout og stemning per skjerm, og sidetemaer for dommen (`html[data-theme]`: riktig/feil). |
+| `public/css/screens.css` | Layout og stemning per skjerm. |
 | `public/js/hold.js` | `useHold()`: trykk og hold, slik hemmeligheter skjules (rollen vises bare mens en finger holder knappen). |
 | `public/js/ui.js` | JS-komponentene (`Avatar`, `Button`, `Timer`, `Sheet`, `Scoreboard`, `QR`, `RoleStrip`, …) som bruker klassene over. |
 | `public/design-system/` | Stilguide-siden. |
@@ -20,7 +20,7 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 
 ## Tokens i korte trekk
 
-**Farger:** burgunder (`--burgundy-950…500`, siden er `700`), kritt (`--yellow --lime --orange --coral --pink --violet --blue --blue-light --teal`), skjermfarger for dommen (`--lime` riktig, `--pink` feil), papir/blekk (`--cream --ink`) og rollefargene `--red` (imposter) og `--blue` (lojal), som bare brukes som fargen på *ordet* på rollekortet og aldri fyller en hel skjerm. Kritt-fargene er trukket ut av referansetegningene.
+**Farger:** burgunder (`--burgundy-950…500`, siden er `700`), kritt (`--yellow --lime --orange --coral --pink --violet --blue --blue-light --teal`), papir/blekk (`--cream --ink`) og rollefargene `--red` (imposter) og `--blue` (lojal), som bare brukes som fargen på *ordet* på rollekortet og aldri fyller en hel skjerm. Kritt-fargene er trukket ut av referansetegningene.
 
 **Aldri ren hvit eller svart.** «Hvitt» er en smørkrem (`--cream`, `#f8e6b8`) og «svart» en mørk sjokoladebrun (`--ink`, `#3a2012`): all tekst, logoen, papirkort, kremknapper og QR-koden (brune moduler på kremfarget bunn) bruker dem. Gjennomsiktige varianter lages av kanalene (`rgb(var(--cream-rgb) / .5)`, `--ink-rgb`, og `--shadow-rgb` for de harde kritt-skyggene), så paletten står ett sted. Rollefargene som tekst på kremfarget kort skal holde minst 4,5:1 i kontrast, og det er derfor `--red` og `--blue` er så dype som de er. Stilguiden (`/design-system/`) viser kontrasten for alle fargene.
 
@@ -68,8 +68,16 @@ En telefon som er rød eller blå, eller som viser et stort «Imposter», røper
 - **Rolleskjermen (8 s) viser ingenting om rollen før en finger holder knappen.** Resten av tiden er den en tom, stiplet plass for kortet, helt lik for lojale og imposter. Kortet (øye, rollens navn i `--red`/`--blue`, riktig svar eller «?») er like stort for begge roller, og forsvinner når fingeren løftes (`public/js/hold.js`). Plassen tar resten av høyden i skjermen, så et høyere kort aldri skyver knappen bort fra under fingeren.
 - **Stripen under runden** (`RoleStrip`) er lik for alle («Din rolle · Hold for å se») og viser rollen, og for imposteren svaret, bare mens den holdes. **Det som kommer fram står til venstre for knappen, aldri i den eller under den**, for der dekker fingeren det: knappen endrer ikke tekst og flytter seg ikke når teksten ved siden av vokser. Det samme gjelder rollekortet, som står over knappen. `npm run qa:overlap` sjekker det (regel 6, med selvtest).
 - **To imposterer (fra seks spillere):** kortet har en tredje del, «Imposterne». Imposterne ser «Du og Kari» med Karis avatar, de lojale et «?» med «Finn dem sammen», så kortene er like store for begge roller. Stripen får en ekstra linje mens den holdes («Sammen med Kari» / «To av dere er imposterer»). Rundens antall imposterer er ingen hemmelighet og står i `view.turn.impostors`; hvem de er står bare i imposterens egen visning (`you.mates`).
-- **Alt annet som ellers kunne røpet rollen er likt:** vibrasjonen ved rolleskjermen, tipset under klokka, og nettleserfargen (`theme-color`). Sidetemaer (`html[data-theme]`) finnes bare for dommen til den som svarer.
+- **Alt annet som ellers kunne røpet rollen er likt:** vibrasjonen ved rolleskjermen, tipset under klokka, og nettleserfargen (`theme-color`). Hele siden skifter aldri farge: det finnes ingen sidetemaer.
 - QA kan vise alt som «holdt» uten finger: `setStore({ qaHold: true })` (se `useHold`).
+
+## Mobilen er et støtteverktøy: avsløringen sies høyt
+
+Spillet er til for at folk skal se på, snakke med og diskutere med hverandre, ikke på telefonen. Telefonen leser opp spørsmålet, trekker imposterne og holder styr på poengene. **Nye skjermer skal kreve så få trykk og blikk som mulig.**
+
+- **Fasit, utfall og hvem imposteren er står aldri på en skjerm før imposteren har sagt det høyt.** Etter at svaret er låst telles det ned på alle telefoner («Svaret er låst · 5 · Dere låste B: Japan. Se på hverandre!»), og så viser alle samme skjerm, «Imposteren avslører seg!» (`.stage`: leppene, rollestripen og én linje tekst). Bare den som hadde spørsmålet har en knapp, «Det er sagt – vis poengene». Imposteren kan slå opp svaret i rollestripen (hold) hvis hen har glemt det. Teksten sier ikke at imposteren «må reise seg», for det er opp til dem.
+- **Poengene** (`Summary`) er en poengtavle med +1 og én linje om hvordan runden gikk, uten kort som navngir imposteren. Under står en liten tekstknapp, «Uenige? Se fasit», som åpner et ark (`FasitSheet`, `public/js/screens/fasit.js`) med riktig svar, hva dere låste og hvem imposteren var, til når gruppa er uenig om det som ble sagt. Telefonen regner ut poengene selv, så en imposter som lyver høyt får det ikke til å stå på poengtavlen.
+- Telefonen kan ikke få en iPhone til å vibrere, så nedtellingen må stå på skjermen.
 
 ## Vertens oppsett i tre steg
 

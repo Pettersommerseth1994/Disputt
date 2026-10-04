@@ -14,9 +14,11 @@ const viewports = (process.argv.slice(2).length ? process.argv.slice(2) : ['390x
 
 // screens that must be readable without scrolling (the others are lists or forms and are scrollable by nature)
 // (a key ending in "-held" is the same screen with every hold-to-see button held: the role card and the open role strip)
-const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wrong-longest', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held', 'discussion-host',
+const MUST_FIT = ['role-impostor', 'role-impostor-held', 'role-impostor-longest-held', 'role-loyal', 'role-loyal-held', 'countdown-asker', 'countdown-other', 'countdown-other-longest', 'reveal-asker', 'reveal-host-asker', 'reveal-wait', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-loyal-held', 'discussion-host',
   // two impostors (six players): the role card has a third part and the open strip a second line
-  'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held', 'discussion-loyal-duo-held', 'reveal-duo-wrong'];
+  'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held', 'discussion-loyal-duo-held', 'reveal-duo-asker', 'reveal-duo-wait',
+  // the reveal with the role strip held open (the strip is three lines tall for an impostor in a round with two)
+  'reveal-wait-held', 'reveal-asker-held', 'reveal-duo-wait-held', 'reveal-duo-asker-held'];
 // ... and these should at least keep their main action and the text above it in view
 const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3',
   // the host's second step: the number, what it comes to, and Neste
@@ -86,7 +88,9 @@ fixtures['question-asker-longest'] = variant('question-asker-selected', (v) => O
 const widestOption = (q) => Math.max(...q.options.map((o) => o.length));
 const widestQ = QUESTIONS.reduce((a, b) => (widestOption(b) > widestOption(a) ? b : a));
 fixtures['question-asker-widest-option'] = variant('question-asker-selected', (v) => Object.assign(v.question, { text: widestQ.text, options: [...widestQ.options] }));
-fixtures['reveal-wrong-longest'] = variant('reveal-wrong', (v) => Object.assign(v.reveal, { correctText: 'Bjørnstjerne Bjørnson' }));
+// ... and the countdown says what was locked: the widest answer the bank has, which wraps onto a second line
+const widestText = widestQ.options.reduce((a, b) => (b.length > a.length ? b : a));
+fixtures['countdown-other-longest'] = variant('countdown-other', (v) => Object.assign(v.countdown.chosen, { letter: 'D', text: widestText }));
 fixtures['role-impostor-longest'] = variant('role-impostor', (v) => Object.assign(v.you.secret, { text: 'Bjørnstjerne Bjørnson' }));
 let failures = 0;
 for (const [w, h] of viewports) {

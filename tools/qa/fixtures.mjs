@@ -112,7 +112,7 @@ export function buildFixtures({ stress = false } = {}) {
     out['countdown-other'] = room.viewFor(ola);
     tick(room, DEFAULT_TIMINGS.roleMs + DEFAULT_TIMINGS.countdownMs + 2);
     room.tick(room.clock());
-    out['reveal-right'] = room.viewFor(sofie);
+    out['reveal-asker'] = room.viewFor(sofie); // the reveal is spoken: the same screen for everybody, the asker has the button
     out['reveal-wait'] = room.viewFor(ola);
     room.continueRound(sofie);
     out['summary-right-host'] = room.viewFor(petter);
@@ -133,7 +133,8 @@ export function buildFixtures({ stress = false } = {}) {
     room.lock(sofie, 0); // wrong
     tick(room, 20_000);
     room.tick(room.clock());
-    out['reveal-duo-wrong'] = room.viewFor(sofie);
+    out['reveal-duo-asker'] = room.viewFor(sofie);
+    out['reveal-duo-wait'] = room.viewFor(ola);
     room.continueRound(sofie);
     out['summary-duo-wrong-host'] = room.viewFor(petter);
     out['summary-duo-wrong-guest'] = room.viewFor(ola);
@@ -157,7 +158,7 @@ export function buildFixtures({ stress = false } = {}) {
     room.lock(petter, 0); // wrong
     tick(room, 20_000);
     room.tick(room.clock());
-    out['reveal-wrong'] = room.viewFor(petter);
+    out['reveal-host-asker'] = room.viewFor(petter); // the host had the question: the gear sits next to "Poeng"
     room.continueRound(petter);
     out['summary-wrong-host'] = room.viewFor(petter);
     out['summary-wrong-guest'] = room.viewFor(mari);
@@ -187,8 +188,8 @@ export function buildFixtures({ stress = false } = {}) {
   }
 
   // A guard: every fixture counts on the first question being the tourists question (right answer "Frankrike"), which only
-  // holds while the scripted randomness is used up by exactly the picks the engine makes. The "right" verdict must be right.
-  if (out['role-impostor'].you.secret.text !== 'Frankrike' || out['reveal-right'].reveal.correct !== true || out['reveal-wrong'].reveal.correct !== false) {
+  // holds while the scripted randomness is used up by exactly the picks the engine makes. The "right" round must be right.
+  if (out['role-impostor'].you.secret.text !== 'Frankrike' || out['summary-right-host'].summary.correct !== true || out['summary-wrong-host'].summary.correct !== false) {
     throw new Error('the fixtures no longer start with the tourists question: check scripted() and makeRoom()');
   }
 
@@ -208,8 +209,10 @@ export function buildFixtures({ stress = false } = {}) {
     for (const key of ['question-asker', 'question-asker-selected', 'question-asker-timeup', 'countdown-asker']) {
       if (out[key]?.question) out[key].question = { ...out[key].question, text: longest.text, options };
     }
-    for (const key of ['reveal-right', 'reveal-wrong']) {
-      if (out[key]?.reveal) out[key].reveal = { ...out[key].reveal, correctText: options[2], question: { text: longest.text, options } };
+    // what was locked is said on every phone during the countdown, and the answer key has both answers
+    for (const key of ['countdown-asker', 'countdown-other']) out[key].countdown.chosen = { ...out[key].countdown.chosen, text: options[1] };
+    for (const key of ['summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'summary-duo-wrong-guest']) {
+      out[key].summary.answer = { ...out[key].summary.answer, correctText: options[2], chosenText: options[1] };
     }
     if (out['role-impostor']?.you?.secret) out['role-impostor'].you.secret = { ...out['role-impostor'].you.secret, text: options[2] };
   }

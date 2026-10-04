@@ -1,4 +1,5 @@
-// The screens of one round: role reveal -> question/discussion -> countdown -> reveal -> summary.
+// The screens of one round: role reveal -> question/discussion -> countdown -> reveal -> points.
+// The phone only counts down and keeps the score: what is revealed (the answer, the impostors) is said out loud.
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { useHold } from '../hold.js';
@@ -186,100 +187,81 @@ export function Discussion({ view }) {
 
 // ------------------------------------------------------------------ 3. locked: the 5-4-3-2-1
 
+/** The same on every phone, and it says what the group locked. (A host that has not been updated does not send it: then only the asker knows.) */
 export function Countdown({ view }) {
-  const isAsker = view.you.isAsker;
-  const asker = playerById(view, view.turn.askerId);
   const ms = useRemaining(view.countdown.endsAt, 10);
   const n = Math.max(1, Math.min(9, Math.ceil(ms / 1000)));
   useEffect(() => vibrate(35), [n]);
-  const chosen = isAsker && view.question && view.selected != null ? view.question.options[view.selected] : null;
+  const locked = view.countdown.chosen ?? (view.you.isAsker && view.question && view.selected != null ? { letter: letter(view.selected), text: view.question.options[view.selected] } : null);
 
   return html`<main class="screen countdown">
     <div class="countdown__body grow">
-      <p class="eyebrow">${isAsker ? 'Svaret er låst' : `${asker?.name} har låst svaret`}</p>
+      <p class="eyebrow">Svaret er låst</p>
       <div class="countdown__n" key=${n} aria-live="polite">${n}</div>
-      ${isAsker
-        ? html`<p class="lead">Du låste <strong>${letter(view.selected)}: ${chosen}</strong>.<br />Fasiten kommer på din telefon …</p>`
-        : html`<p class="lead">Se på <strong>${asker?.name}</strong> – fasiten avsløres på telefonen deres!</p>`}
+      <p class="lead">${locked && html`Dere låste <strong>${locked.letter}: ${locked.text}</strong>.<br />`}Se på hverandre!</p>
     </div>
   </main>`;
 }
 
-// ------------------------------------------------------------------ 4. reveal (asker only) / waiting (everyone else)
+// ------------------------------------------------------------------ 4. the reveal: spoken, not shown
 
-export function RevealAsker({ view }) {
-  const r = view.reveal;
-  useEffect(() => vibrate(r.correct ? [60, 40, 60, 40, 180] : 350), []);
-  return html`<main class=${cx('screen reveal', r.correct ? 'reveal--right' : 'reveal--wrong')}>
-    <div class="reveal__body grow">
-      <img class="reveal__art" src=${asset(r.correct ? 'assets/art/eye-right.svg' : 'assets/art/eye-wrong.svg')} alt="" width="400" height="300" />
-      <h1 class="reveal__word pop-in">${r.correct ? 'Riktig!' : 'Feil!'}</h1>
-      <div class="card card--paper center reveal__answer rise-in">
-        <p class="eyebrow" style="color:var(--ink);opacity:.78">Riktig svar</p>
-        <p class="role__answer"><span>${r.correctLetter}</span>${r.correctText}</p>
-      </div>
-      <p class="lead">${r.correct ? 'Gruppa lot seg ikke lure.' : impostorCount(view) > 1 ? 'Imposterne lurte dere.' : 'Imposteren lurte dere.'} Si det høyt til de andre – og trykk så på knappen.</p>
-    </div>
-    <div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>Gå videre</${Button}></div>
-  </main>`;
-}
-
-export function WaitReveal({ view }) {
-  const asker = playerById(view, view.turn.askerId);
-  const stuck = view.you.isHost && asker && !asker.connected;
-  return html`<main class="screen">
+/**
+ * Nothing is revealed on a screen. The impostors say the right answer out loud, and so out themselves, while everybody looks
+ * at each other. The phones are the same for everybody (a different screen would give the impostors away); only the asker, who
+ * had the question, has a button, and moves on when it has been said.
+ */
+function RevealStage({ view, asker = false }) {
+  const count = impostorCount(view);
+  const holder = playerById(view, view.turn.askerId);
+  const stuck = view.you.isHost && !asker && holder && !holder.connected;
+  useEffect(() => vibrate(60), []); // (the same for everybody)
+  return html`<main class="screen stage">
     <${GameBar} view=${view} />
-    <${RoleStrip} you=${view.you} impostors=${impostorCount(view)} />
-    <div class="grow center stack stack--loose" style="justify-content:center;align-items:center">
-      <${Avatar} id=${asker?.avatar} size="xl" alive />
-      <h2>Se på ${asker?.name}!</h2>
-      <p class="lead muted">Fasiten avsløres bare på telefonen til ${asker?.name}.</p>
-      ${stuck && html`<${Button} variant="cream" onClick=${() => actions.proceed()}>${asker.name} er borte – gå videre</${Button}>`}
+    <${RoleStrip} you=${view.you} impostors=${count} />
+    <div class="stage__body grow">
+      <img class="stage__art" src=${asset('assets/art/lips.svg')} alt="" width="300" height="200" />
+      <h1 class="stage__title">${count > 1 ? 'Imposterne avslører seg!' : 'Imposteren avslører seg!'}</h1>
+      <p class="lead">${count > 1 ? 'Imposterne sier riktig svar sammen.' : 'Imposteren sier riktig svar høyt.'}</p>
     </div>
+    ${asker
+      ? html`<div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>Det er sagt – vis poengene</${Button}></div>`
+      : html`<div class="foot center">
+          <p class="muted" role="status">${holder?.name ?? 'Spilleren med spørsmålet'} trykker videre når det er sagt.</p>
+          ${stuck && html`<${Button} variant="cream" onClick=${() => actions.proceed()}>${holder.name} er borte – gå videre</${Button}>`}
+        </div>`}
   </main>`;
 }
 
-// ------------------------------------------------------------------ 5. summary
+// (the two names are kept: the app opens them by these names)
+export const RevealAsker = ({ view }) => html`<${RevealStage} view=${view} asker />`;
+export const WaitReveal = ({ view }) => html`<${RevealStage} view=${view} />`;
 
+// ------------------------------------------------------------------ 5. the points
+
+/**
+ * The points, and one line on how the round went. Who the impostors were, and the answer, have been said out loud; for when
+ * the group disagrees about it, "Se fasit" (fasit.js) has them.
+ */
 export function Summary({ view }) {
   const s = view.summary;
-  const impostors = summaryImpostors(view); // (an impostor may have been removed since)
-  const names = impostors.map((i) => i.name);
-  const many = impostors.length > 1;
-  const isHost = view.you.isHost;
-  const headline = s.skipped ? 'Runden ble hoppet over' : s.correct ? 'Gruppa hadde rett!' : many ? 'Imposterne lurte dere!' : 'Imposteren lurte dere!';
-  const sub = s.skipped
-    ? 'Ingen fikk poeng.'
-    : s.correct
-      ? 'Alle lojale fikk 1 poeng.'
-      : many
-        ? `${joinNames(names)} fikk 1 poeng hver.`
-        : `${names[0] ?? 'Imposteren'} fikk 1 poeng.`;
+  const many = summaryImpostors(view).length > 1; // (an impostor may have been removed since)
+  const recap = s.skipped ? 'Runden ble hoppet over. Ingen fikk poeng.' : s.correct ? 'Gruppa hadde rett!' : many ? 'Imposterne lurte dere!' : 'Imposteren lurte dere!';
 
   return html`<main class="screen summary">
     <${GameBar} view=${view} />
     <header class="center stack stack--tight summary__head">
-      <h1 class="rise-in">${headline}</h1>
-      <p class="lead muted">${sub}</p>
+      <h1 class="rise-in">Poengene</h1>
+      <p class="lead muted">${recap}</p>
     </header>
-
-    <section class="card card--paper impostor-card row pop-in">
-      <span class="impostor-card__faces">${impostors.map((i) => html`<${Avatar} id=${i.avatar} size="md" alive key=${i.id} />`)}</span>
-      <div>
-        <p class="eyebrow" style="color:var(--ink);opacity:.78">${many ? 'Imposterne var' : 'Imposteren var'}</p>
-        <p class=${cx('display impostor-card__name', many && 'impostor-card__name--duo')}>${joinNames(names)}</p>
-      </div>
-    </section>
 
     ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">Uavgjort i teten – én runde til!</p>`}
 
     <section class="card stack">
-      <h3>Poengtavle</h3>
       <${Scoreboard} view=${view} gains=${s.gained} />
-      <p class="small muted center">Først til ${view.target} poeng vinner.</p>
+      ${!s.skipped && html`<div class="row row--center"><${Button} variant="text" onClick=${() => setStore({ sheet: 'fasit' })}>Uenige? Se fasit</${Button}></div>`}
     </section>
 
-    ${isHost
+    ${view.you.isHost
       ? html`<div class="dock">
           <${Button} block variant="lime" onClick=${() => actions.next()}>Neste runde</${Button}>
         </div>`

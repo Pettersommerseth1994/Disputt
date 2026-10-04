@@ -3,8 +3,9 @@
 // Time never comes from timers inside the room: the host process calls `tick(now)` ~10x/second and every
 // handler reads the injected clock. That keeps the engine deterministic and easy to test.
 //
-// Round flow:  ROLE (8 s) -> QUESTION (discussion timer) -> LOCKED (5 s countdown) -> REVEAL (asker only)
-//              -> SUMMARY (scores applied) -> next ROLE ...  or FINISHED when someone leads at/above the target.
+// Round flow:  ROLE (8 s) -> QUESTION (discussion timer) -> LOCKED (5 s countdown) -> REVEAL (the impostors say the answer
+//              out loud; the asker moves on) -> SUMMARY (scores applied) -> next ROLE ...  or FINISHED when someone leads at/above
+//              the target. Nothing is revealed on a screen: the phones only count down and keep the score.
 
 import { isAvatarId } from './avatars.mjs';
 import { LETTERS, QUESTIONS } from './questions.js';
@@ -685,12 +686,16 @@ export class Room {
         }
       }
       if (this.phase === PHASE.LOCKED) {
-        view.countdown = { endsAt: cur.locked.endsAt };
+        // What the group locked is no secret (they have just agreed on it), so every phone can say it during the countdown.
+        const picked = cur.locked.index;
+        view.countdown = { endsAt: cur.locked.endsAt, chosen: { index: picked, letter: LETTERS[picked], text: q.options[picked] } };
         if (isAsker) {
           view.question = { text: q.text, options: q.options };
           view.selected = cur.locked.index;
         }
       }
+      // (The verdict for the asker is not shown by the current client: the impostors say the answer out loud. It is still sent,
+      // for phones that have not been updated and still show it.)
       if (this.phase === PHASE.REVEAL && isAsker) {
         view.reveal = {
           correct: cur.correct,
@@ -704,6 +709,8 @@ export class Room {
     }
 
     if (cur && (this.phase === PHASE.SUMMARY || this.phase === PHASE.FINISHED)) {
+      const q = cur.question;
+      const picked = cur.locked?.index;
       view.summary = {
         ...cur.summary,
         impostorId: cur.impostorId,
@@ -711,6 +718,19 @@ export class Room {
         impostorIds: cur.impostorIds,
         impostors: cur.impostors,
         askerId: cur.askerId,
+        // the answer key, for "Se fasit" when the group disagrees about what was said (the round is over, so it is no secret now)
+        ...(cur.locked && !cur.skipped
+          ? {
+              answer: {
+                correctIndex: q.correct,
+                correctLetter: LETTERS[q.correct],
+                correctText: q.options[q.correct],
+                chosenIndex: picked,
+                chosenLetter: LETTERS[picked],
+                chosenText: q.options[picked],
+              },
+            }
+          : {}),
       };
     }
     if (this.phase === PHASE.FINISHED) view.winners = this.winnerIds;

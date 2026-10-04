@@ -14,7 +14,7 @@ const DOCS = process.argv.includes('--docs'); // also write 1x-viewport WebPs fo
 const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
 const DOCS_DIR = 'public/design-system/screens';
 // the screens shown in the style guide gallery (keep in sync with SCREENS in public/design-system/ds.js)
-const DOC_KEYS = new Set(['home', 'profile-new', 'setup-points', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'role-impostor-duo-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-right', 'reveal-wrong', 'summary-wrong-host', 'finished-host', 'sheet-scores']);
+const DOC_KEYS = new Set(['home', 'profile-new', 'setup-points', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'role-impostor-duo-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-wait', 'summary-wrong-host', 'finished-host', 'sheet-scores', 'sheet-fasit']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(OUT, { recursive: true });
@@ -69,7 +69,7 @@ const order = [
   'profile-new', 'profile-edit', 'lobby-host-new', 'setup-points', 'lobby-host-1', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
   'role-impostor', 'role-impostor-held', 'role-loyal', 'role-loyal-held', 'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held',
   'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-host', 'discussion-low',
-  'countdown-asker', 'countdown-other', 'reveal-right', 'reveal-wrong', 'reveal-wait',
+  'countdown-asker', 'countdown-other', 'reveal-asker', 'reveal-host-asker', 'reveal-wait', 'reveal-duo-wait',
   'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'lobby-host-6',
   'finished-host', 'finished-guest',
 ];
@@ -97,6 +97,10 @@ await show(f['summary-wrong-host'], { sheet: 'host' });
 await shot('92-sheet-host', { full: false });
 await show(f['lobby-host-3'], { sheet: 'home' });
 await shot('93-sheet-home-host', { full: false });
+await show(f['summary-wrong-host'], { sheet: 'fasit' });
+await shot('95-sheet-fasit', { full: false });
+await show(f['summary-duo-wrong-host'], { sheet: 'fasit' });
+await shot('96-sheet-fasit-duo', { full: false });
 await show(f['lobby-guest-3'], { sheet: 'home' });
 await shot('94-sheet-home-guest', { full: false });
 

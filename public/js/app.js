@@ -6,23 +6,14 @@ import { HomeSheet } from './screens/leave.js';
 import { Profile } from './screens/profile.js';
 import { PointsStep, hostStep } from './screens/setup.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
+import { FasitSheet } from './screens/fasit.js';
 import { HostSheet, QrSheet, RulesSheet, ScoresSheet, SettingsSheet } from './screens/sheets.js';
 import { isP2P } from './settings.js';
 import { useStore } from './store.js';
 import { Button, useWakeLock } from './ui.js';
 
-/**
- * Which colour the whole page (and the browser chrome) takes on for the current screen. Only the asker's verdict does: the
- * role screens stay the ordinary colour, since a red or blue phone would tell the people around you what you are.
- */
-function themeOf(view) {
-  if (!view) return '';
-  if (view.phase === 'reveal' && view.you.isAsker && view.reveal) return view.reveal.correct ? 'right' : 'wrong';
-  return '';
-}
 // Two failed attempts in a row (about 30 s): most likely a network that does not let phones talk to each other directly.
 const STUCK_HINT = 'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.';
-const THEME_COLORS = { '': '#6a1428', right: '#7eba2d', wrong: '#f48b8f' };
 
 function gameScreen(view, s) {
   switch (view.phase) {
@@ -42,7 +33,7 @@ function gameScreen(view, s) {
     case 'locked':
       return html`<${Countdown} view=${view} />`;
     case 'reveal':
-      return view.you.isAsker && view.reveal ? html`<${RevealAsker} view=${view} />` : html`<${WaitReveal} view=${view} />`;
+      return view.you.isAsker ? html`<${RevealAsker} view=${view} />` : html`<${WaitReveal} view=${view} />`;
     case 'summary':
       return html`<${Summary} view=${view} />`;
     case 'finished':
@@ -70,12 +61,6 @@ export function App() {
   // every new screen starts at the top
   useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.you?.ready, s.editing, s.step]);
 
-  const theme = themeOf(view);
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[theme]);
-  }, [theme]);
-
   const hint = isP2P && s.stuck >= 2 ? STUCK_HINT : null;
   let screen;
   if (s.replaced) screen = html`<${Replaced} />`;
@@ -92,6 +77,7 @@ export function App() {
   else if (view && s.sheet === 'scores') sheet = html`<${ScoresSheet} view=${view} />`;
   else if (view && s.sheet === 'host') sheet = html`<${HostSheet} view=${view} />`;
   else if (view && s.sheet === 'qr') sheet = html`<${QrSheet} view=${view} />`;
+  else if (view?.summary && s.sheet === 'fasit') sheet = html`<${FasitSheet} view=${view} />`;
   else if (view && s.sheet === 'settings') sheet = html`<${SettingsSheet} />`;
   else if (view && s.sheet === 'home') sheet = html`<${HomeSheet} view=${view} />`;
 

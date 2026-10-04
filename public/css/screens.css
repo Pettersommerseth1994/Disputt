@@ -1,22 +1,10 @@
 /* ==========================================================================
    DISPUTT DESIGN SYSTEM — screens
-   Layout and mood per screen. Whole-page colour changes (the asker's verdict) use html[data-theme].
+   Layout and mood per screen.
    ========================================================================== */
 
 .screen { gap: var(--s-4); }
 .screen > .grow { min-height: 0; }
-
-/* ---- Page themes: the whole viewport takes the screen's colour ---------------- */
-html[data-theme='right'] { --theme-bg: var(--lime); background: var(--lime); }
-html[data-theme='wrong'] { --theme-bg: var(--pink); background: var(--pink); }
-/* (The attribute is also present, but empty, on the ordinary screens, where --theme-bg does not exist. Without a fallback the
-   variable became "invalid at computed-value time" and the bar's whole background silently vanished, which is what let the
-   content scroll through the buttons and text of the bar.) */
-html[data-theme] .dock { --page-bg: var(--theme-bg, var(--burgundy-700)); }
-html[data-theme='right'] body { background: var(--tex-grain), var(--tex-light-soft), var(--lime); }
-html[data-theme='wrong'] body { background: var(--tex-grain), var(--tex-light-soft), var(--pink); }
-html[data-theme='right'] .dock,
-html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 
 /* ---- Home ------------------------------------------------------------------- */
 .home { overflow: hidden; overflow: clip; } /* clip (no scroll container) where supported, so the sticky dock keeps working */
@@ -258,13 +246,12 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   animation: pop 0.65s var(--ease-bounce) both;
 }
 
-/* ---- Verdict (asker only) ---------------------------------------------------------- */
-.reveal { color: var(--ink); text-align: center; }
-.reveal__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4); }
-.reveal__art { width: min(70vw, 15rem, 32vh, 32dvh); height: auto; animation: wobble 3.5s ease-in-out infinite; }
-.reveal__word { font-size: clamp(3.4rem, 18vw, 6rem); color: var(--cream); text-shadow: 5px 6px 0 var(--ink); }
-.reveal__answer { width: min(100%, 20rem); }
-.reveal .lead { font-weight: 700; }
+/* ---- The reveal stage ------------------------------------------------------------------
+   Nothing is revealed on a screen: the impostors say it out loud, and every phone looks the same meanwhile. */
+.stage__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4); text-align: center; }
+.stage__art { width: min(50vw, 12rem, 26vh, 26dvh); height: auto; animation: wobble 3.5s ease-in-out infinite; }
+.stage__title { font-size: clamp(2.1rem, 10vw, 2.8rem); line-height: 1.05; text-shadow: 3px 4px 0 var(--edge); }
+.stage .lead { max-width: 20rem; }
 
 /* ---- Summary ------------------------------------------------------------------------- */
 .summary__head h1 { font-size: clamp(2.2rem, 10.5vw, 3.2rem); }
@@ -273,6 +260,15 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
 .impostor-card__name--duo { font-size: 1.6rem; }
 .impostor-card__faces { display: flex; flex: none; }
 .impostor-card__faces > * + * { margin-left: -0.9rem; }
+
+/* the answer key sheet ("Se fasit") */
+.fasit { gap: var(--s-4); }
+.fasit__row { display: grid; gap: 0.15rem; }
+.fasit .eyebrow { margin: 0; color: var(--ink); opacity: 0.78; }
+.fasit .role__answer { justify-content: flex-start; font-size: 1.9rem; }
+.fasit__locked { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 1.35rem; line-height: 1.15; overflow-wrap: anywhere; }
+.fasit__row--who { display: flex; align-items: center; gap: var(--s-4); }
+.fasit__row--who .eyebrow { margin-bottom: 0.1rem; }
 
 /* ---- Finale -------------------------------------------------------------------------------- */
 .finale { position: relative; z-index: 0; isolation: isolate; }
@@ -319,8 +315,8 @@ html[data-theme='wrong'] .dock { --dock-tex: var(--tex-light-soft); }
   .discussion .timer { font-size: clamp(3.4rem, 17vw, 4.6rem); }
 }
 @media (max-height: 620px) {
-  .reveal__body { gap: var(--s-3); }
-  .reveal__word { font-size: clamp(3rem, 16vw, 4.6rem); }
+  .stage__body { gap: var(--s-3); }
+  .stage__title { font-size: clamp(1.9rem, 9vw, 2.4rem); }
 }
 @media (max-height: 580px) {
   .discussion__hint { display: none; } /* "who has the question" already says it; the sentence under it is the first thing to go */

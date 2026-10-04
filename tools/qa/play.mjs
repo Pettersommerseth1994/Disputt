@@ -404,40 +404,84 @@ try {
     await sleep(200);
     await clickButton(asker, 'Lås svaret');
 
-    // countdown, then the verdict on the asker's phone only
-    await Promise.all(all.map((p) => waitText(p, /låst|låste/i)));
-    await waitText(asker, groupRight ? /Riktig!/i : /Feil!/i, 8000 * SLOW);
-    for (const p of all.filter((x) => x !== asker)) {
-      const t = await bodyText(p);
-      assert.ok(!/Riktig!|Feil!/i.test(t), 'others do not see the verdict');
-      assert.match(t, /Se på/);
+    // countdown: every phone looks the same and says what was locked, and none of them says whether it was right
+    await Promise.all(all.map((p) => waitText(p, /Svaret er låst/i)));
+    const lockedAs = `${'ABCD'[choice]}: ${q.options[choice]}`;
+    // (the screen itself, `main`: a toast, such as the notice that a seat changed phones, comes and goes on its own, per phone)
+    const counting = await Promise.all(all.map((p) => p.page.evaluate(() => ({ screen: document.querySelector('main').innerText.replace(/\s+/g, ' '), whole: document.body.innerText.replace(/\s+/g, ' ') }))));
+    // (the seconds are masked: two phones can be a tick apart when they are read)
+    assert.equal(new Set(counting.map((c) => c.screen.replace(/\d/g, '#'))).size, 1, `round ${round}: the countdown looks the same on every phone (${[...new Set(counting.map((c) => c.screen))].join(' / ')})`);
+    counting.forEach((c, i) => {
+      assert.ok(c.screen.includes(`Dere låste ${lockedAs}`), `${all[i].name}'s countdown says what was locked: ${lockedAs} (${c.screen})`);
+      assert.doesNotMatch(c.whole, /Riktig!|Feil!|Riktig svar/, 'the countdown does not say whether it was right');
+    });
+
+    // the reveal is spoken: the same screen on every phone, with nothing about the verdict, the answer or the impostors,
+    // and a button only for the asker
+    await Promise.all(all.map((p) => waitText(p, /avslører seg/i, 8000 * SLOW)));
+    const stage = await Promise.all(
+      all.map((p) =>
+        p.page.evaluate(() => ({
+          body: document.querySelector('.stage__body')?.innerText.replace(/\s+/g, ' ') ?? '',
+          strip: document.querySelector('.role-strip')?.innerText.replace(/\s+/g, ' ') ?? '',
+          whole: document.body.innerText.replace(/\s+/g, ' '),
+          buttons: [...document.querySelectorAll('button')].map((b) => b.innerText.trim()),
+        })),
+      ),
+    );
+    assert.equal(new Set(stage.map((s) => s.body)).size, 1, `round ${round}: the reveal looks the same on every phone (${[...new Set(stage.map((s) => s.body))].join(' / ')})`);
+    assert.equal(new Set(stage.map((s) => s.strip)).size, 1, `round ${round}: and so does the role strip`);
+    assert.match(stage[0].body, expectedImpostors === 2 ? /Imposterne avslører seg/ : /Imposteren avslører seg/);
+    stage.forEach((s, i) => {
+      assert.doesNotMatch(s.whole, /Riktig!|Feil!|Riktig svar|Gruppa hadde rett|lurte dere|Imposter(en|ne) var/, `${all[i].name}'s screen reveals nothing`);
+      // (as text, not as a pattern: an answer such as "Falling Feather (rødvin)" has characters that mean something in one)
+      if (q.options[q.correct].length >= 5) assert.ok(!s.whole.includes(q.options[q.correct]), `${all[i].name}'s screen does not say the right answer`);
+      assert.equal(s.buttons.some((b) => b.includes('Det er sagt')), all[i] === asker, `only the asker has the button (${all[i].name})`);
+    });
+    if (round === 1) {
+      // an impostor can still look the answer up, on the strip, beside the button
+      const { card } = await holdAndRead(impostors[0]);
+      assert.match(card, /Riktig svar: [A-D]: /, 'an impostor can read the answer on the strip while the reveal is on');
+      await shot(asker, '08-reveal');
+      await shot(all.find((p) => p !== asker), '08b-reveal-wait');
     }
-    // (as text, not as a pattern: an answer such as "Falling Feather (rødvin)" has characters that mean something in one)
-    assert.ok((await bodyText(asker)).includes(q.options[q.correct]), `the asker's verdict screen shows the right answer "${q.options[q.correct]}"`);
-    if (round === 1) await shot(asker, '08-reveal');
-    // a double tap on "Gå videre": the second tap hits a screen that is already out of date, and must not show an error
+    // a double tap on "Det er sagt": the second tap hits a screen that is already out of date, and must not show an error
     await asker.page.evaluate(() => {
-      const b = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('Gå videre'));
+      const b = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('Det er sagt'));
       b.click();
       b.click();
     });
-    await waitText(asker, /Imposter(en|ne) var|vant!|Delt seier/i, 8000 * SLOW);
+    await waitText(asker, /Poengene|vant!|Delt seier/i, 8000 * SLOW);
     await sleep(300);
     // (the notice that a seat was taken over by a new phone is a toast too, and is meant to be there)
     const toasts = await asker.page.$$eval('.toast', (els) => els.map((e) => e.innerText));
     assert.deepEqual(toasts.filter((t) => !/^Plassen til .* ble tatt over av en ny telefon\.$/.test(t)), [], 'no error toast after a double tap');
 
-    // summary (or the winner)
-    await Promise.all(all.map((p) => waitText(p, /Imposter(en|ne) var|vant!|Delt seier/i, 8000 * SLOW)));
+    // the points (or the winner)
+    await Promise.all(all.map((p) => waitText(p, /Poengene|vant!|Delt seier/i, 8000 * SLOW)));
     const hostText = await bodyText(host);
     finished = /vant!|Delt seier/i.test(hostText);
     if (round === 1) await shot(host, '09-summary');
     if (!finished) {
-      assert.match(hostText, /Gruppa hadde rett|Imposter(en|ne) lurte dere/);
-      // the summary names every impostor, in the singular or the plural
-      const impostorCard = await host.page.$eval('.impostor-card', (el) => el.innerText.replace(/\s+/g, ' '));
-      assert.match(impostorCard, expectedImpostors === 2 ? /imposterne var/i : /imposteren var/i);
-      for (const p of impostors) assert.ok(impostorCard.includes(p.name), `the summary names ${p.name} (${impostorCard})`);
+      assert.match(hostText, groupRight ? /Gruppa hadde rett/ : /Imposter(en|ne) lurte dere/);
+      // nobody is named: the impostors have said it out loud
+      assert.equal(await host.page.$('.impostor-card'), null, 'no card names the impostors');
+      assert.doesNotMatch(hostText, /Imposter(en|ne) var/);
+      // the points went to the right players: every loyal player when the group was right, the impostors when it was not
+      const rows = await host.page.$$eval('.scoreboard .score', (els) => els.map((el) => ({ name: el.querySelector('.score__name').innerText.replace(/\s*\(deg\)\s*/, '').trim(), gain: Boolean(el.querySelector('.score__gain')) })));
+      const gainers = rows.filter((r) => r.gain).map((r) => r.name).sort();
+      const expected = all.filter((p) => (groupRight ? !isImpostor(p) : isImpostor(p))).map((p) => p.name).sort();
+      assert.deepEqual(gainers, expected, `round ${round}: the points went to ${expected.join(', ')}`);
+      // "Se fasit" has the right answer, what was locked and who the impostors were
+      await clickButton(host, 'Se fasit');
+      await waitText(host, /Fasit/);
+      const key = await host.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
+      assert.ok(key.includes(q.options[q.correct]), `the answer key shows the right answer (${key})`);
+      assert.ok(key.includes(lockedAs), `the answer key shows what was locked (${lockedAs})`);
+      assert.match(key, expectedImpostors === 2 ? /imposterne var/i : /imposteren var/i);
+      for (const p of impostors) assert.ok(key.includes(p.name), `the answer key names ${p.name} (${key})`);
+      await clickLabel(host, 'Lukk');
+      await host.page.waitForFunction(() => !document.querySelector('.sheet'));
       assert.match(await bodyText(others[0]), /Venter på at verten starter neste runde/);
 
       // a phone loses its browser data mid-game: the player re-enters through the QR link and takes their old seat
