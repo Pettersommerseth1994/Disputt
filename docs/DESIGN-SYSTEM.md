@@ -12,6 +12,7 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 | `public/css/base.css` | Reset, side, overskrifter, skjermskall (`.screen`, `.dock`), animasjoner (`pop`, `rise`, `wobble`, `float`, `pulse`, …). |
 | `public/css/components.css` | Knapper, kort, felt, stepper, segmentert valg, avatar, spillerrutenett, avatarvelger, chips, klokke, svaralternativer, fremdriftsstrek, poengtavle, sheet, toast, banner, logo-klistremerke, rollestripe, konfetti. |
 | `public/css/screens.css` | Layout og stemning per skjerm. |
+| `public/css/legal.css` | Leselayout for `vilkar.html` og `personvern.html`: en smal kolonne i spillets farger, med selgerkortet øverst. |
 | `public/js/hold.js` | `useHold()`: trykk og hold, slik hemmeligheter skjules (rollen vises bare mens en finger holder knappen). |
 | `public/js/ui.js` | JS-komponentene (`Avatar`, `Button`, `Timer`, `Sheet`, `Scoreboard`, `QR`, `RoleStrip`, …) som bruker klassene over. |
 | `public/js/screens/pay.js`, `public/js/pay/` | Pakkene, «Logg inn», «Takk!», «Min tilgang» og logikken bak (tilgang, kode, kall til betalingsserveren). Av som standard, se [BETALING.md](BETALING.md). |

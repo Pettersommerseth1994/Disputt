@@ -29,8 +29,9 @@ export function paymentSettings(cfg = config.payments, secure = globalThis.crypt
     publicKey: String(cfg.publicKey),
     methods: methods.length ? methods : ['applepay'],
     freeRounds: Number.isInteger(cfg.freeRounds) && cfg.freeRounds >= 1 ? cfg.freeRounds : 2, // (the first round is always free: the packages come at "Neste runde")
-    ...(cfg.termsUrl ? { termsUrl: String(cfg.termsUrl) } : {}),
-    ...(cfg.privacyUrl ? { privacyUrl: String(cfg.privacyUrl) } : {}),
+    // (the terms and the privacy statement are pages of the app, vilkar.html and personvern.html, unless the build says otherwise)
+    termsUrl: cfg.termsUrl ? String(cfg.termsUrl) : 'vilkar.html',
+    privacyUrl: cfg.privacyUrl ? String(cfg.privacyUrl) : 'personvern.html',
   };
 }
 

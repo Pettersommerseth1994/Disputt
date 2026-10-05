@@ -68,7 +68,7 @@ Utseendet er surrealistisk og lekent: fargestift/oljepastell på dyp burgunder, 
 
 - **Levende stilguide:** start serveren og åpne [`/design-system/`](http://localhost:3000/design-system/). Farger, typografi, avatarer, komponenter og skjermer, bygget med de samme CSS-filene som spillet.
 - **Dokumentasjon:** [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md).
-- **Kode:** `public/css/tokens.css` (farger, typografi, rom, former, bevegelse), `components.css` (knapper, felt, avatarer, klokke, svaralternativer …), `screens.css` (skjermene).
+- **Kode:** `public/css/tokens.css` (farger, typografi, rom, former, bevegelse), `components.css` (knapper, felt, avatarer, klokke, svaralternativer …), `screens.css` (skjermene), `legal.css` (vilkårs- og personvernsiden).
 - **Illustrasjoner:** de ti avatarene, rolleskjerm-øyne, teksturer og dekor genereres av `tools/art` (`npm run art`). De kan byttes ut 1:1 med håndtegnede SVG-er (samme filnavn, `viewBox 0 0 400 400`).
 - **Logo:** `public/assets/logo/` (mørk brun, krem og «øye i i-prikken»), generert fra fonten med `npm run logo`.
 
@@ -113,7 +113,7 @@ npm run pages:preview  # bygg og vis GitHub Pages-versjonen lokalt (http://local
 
 ## Personvern
 
-Ingen kontoer, ingen cookies, ingen sporing. Navn og avatar finnes bare i spillets minne (serverens, eller vertens nettleser i peer-to-peer-modus) mens spillet pågår, og identiteten i nettleseren ligger i `sessionStorage` for den ene fanen. I peer-to-peer-modus kobler PeerJS' offentlige meglertjeneste telefonene sammen (den ser ikke spilltrafikken), og slik WebRTC fungerer kan spillerne teknisk se hverandres IP-adresser. Er betaling slått på, kommer ett tillegg: betalingen skjer hos Stripe (vi ser aldri kortnummeret), og tilgangen og koden ligger i nettleserens lokale lagring på vertens telefon. Betalingsserveren lagrer ingenting.
+Ingen kontoer, ingen cookies, ingen sporing. Navn og avatar finnes bare i spillets minne (serverens, eller vertens nettleser i peer-to-peer-modus) mens spillet pågår, og identiteten i nettleseren ligger i `sessionStorage` for den ene fanen. I peer-to-peer-modus kobler PeerJS' offentlige meglertjeneste telefonene sammen (den ser ikke spilltrafikken), og slik WebRTC fungerer kan spillerne teknisk se hverandres IP-adresser. Er betaling slått på, kommer ett tillegg: betalingen skjer hos Stripe (vi ser aldri kortnummeret), og tilgangen og koden ligger i nettleserens lokale lagring på vertens telefon. Betalingsserveren lagrer ingenting. Hva som behandles hvor står i [`public/personvern.html`](public/personvern.html), og vilkårene for kjøp i [`public/vilkar.html`](public/vilkar.html); selger og behandlingsansvarlig er Pesom Holding AS.
 
 ## Veikart
 

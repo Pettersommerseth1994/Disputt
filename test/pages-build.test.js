@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
+import { PLANS } from '../public/js/pay/plans.js';
 import { build, buildConfig, contentSecurityPolicy } from '../tools/pages/build.mjs';
 
 let out;
@@ -90,6 +91,53 @@ describe('static build', () => {
     const html = fs.readFileSync(path.join(out, '404.html'), 'utf8');
     assert.match(html, /<base href="\/Disputt\/">/);
     assert.doesNotMatch(fs.readFileSync(path.join(out, 'index.html'), 'utf8'), /<base /);
+  });
+});
+
+describe('the terms and the privacy statement', () => {
+  const PAGES = ['vilkar.html', 'personvern.html'];
+  const PLACEHOLDER = 'KONTAKT-EPOST';
+  const page = (name) => fs.readFileSync(path.join(out, name), 'utf8');
+
+  it('are pages of the site that name the seller, and every local link in them leads to a file in the build', () => {
+    let local = 0;
+    for (const name of PAGES) {
+      const html = page(name);
+      assert.match(html, /<html lang="nb">/);
+      assert.match(html, /Pesom Holding AS/, `${name} names the seller`);
+      assert.match(html, /923 729 674/, `${name} gives the organisation number`);
+      assert.match(html, /Content-Security-Policy/, `${name} gets the CSP like every other page`);
+      for (const [, url] of html.matchAll(/(?:href|src)="([^"#?]+)(?:[?#][^"]*)?"/g)) {
+        if (/^(?:https?:|mailto:)/.test(url)) continue;
+        local++;
+        assert.ok(fs.existsSync(path.join(out, url)), `${name} links to ${url}, which is not in the build`);
+      }
+    }
+    assert.ok(local >= 20, `the link check looked at ${local} local links: has the markup changed so that it sees none?`);
+    assert.match(page('vilkar.html'), /href="personvern\.html"/);
+    assert.match(page('personvern.html'), /href="vilkar\.html"/);
+  });
+
+  it('list the packages and prices the payment server sells', () => {
+    const items = [...page('vilkar.html').matchAll(/<li><strong>([^<]+)<\/strong><span>([^<]+)<\/span><\/li>/g)];
+    assert.deepEqual(items.map((m) => m[1]), PLANS.map((p) => p.name), 'the same packages as plans.js, in the same order');
+    PLANS.forEach((p, i) => {
+      assert.ok(items[i][2].startsWith(`${p.price} kr`), `${p.name}: the terms say "${items[i][2]}", plans.js says ${p.price} kr (prices live in four places, see docs/BETALING.md, "Endre priser")`);
+      if (p.id !== 'lifetime') assert.ok(items[i][2].includes(p.length), `${p.name}: the terms must say ${p.length}`);
+    });
+  });
+
+  it('give one contact address: filled in, or the placeholder the Pages workflow refuses to go live with', () => {
+    const addresses = PAGES.map((name) => {
+      const m = page(name).match(/E-post: <a href="mailto:([^"]+)">([^<]+)<\/a>/);
+      assert.ok(m, `${name} has a contact line`);
+      assert.equal(m[1], m[2], `${name}: the link and the text show the same address`);
+      assert.ok(m[1] === PLACEHOLDER || /^[^@\s<>"]+@[^@\s<>"]+\.[a-z]{2,}$/i.test(m[1]), `${name}: "${m[1]}" is neither an e-mail address nor ${PLACEHOLDER}`);
+      return m[1];
+    });
+    assert.equal(addresses[0], addresses[1], 'both pages give the same address');
+    assert.match(fs.readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8'), /grep -n 'KONTAKT-EPOST' public\/vilkar\.html public\/personvern\.html/, 'the workflow looks for the placeholder in both pages');
+    assert.ok(fs.readFileSync(new URL('../docs/BETALING.md', import.meta.url), 'utf8').includes(`\`${PLACEHOLDER}\``), 'the plan tells the owner about the placeholder');
   });
 });
 

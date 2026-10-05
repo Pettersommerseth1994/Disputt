@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Personvern – Disputt</title>
+  <meta name="description" content="Personvernerklæring for Disputt: hva som behandles hvor, hvorfor, hvor lenge, og dine rettigheter.">
+  <meta name="theme-color" content="#6a1428">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="assets/icons/favicon-32.png?v=2" type="image/png" sizes="32x32">
+  <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" sizes="any">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/fraunces-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/lora.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/legal.css">
+</head>
+<body>
+<main class="legal">
+  <header class="legal__top">
+    <a class="legal__logo" href="./" aria-label="Til spillet"><img src="assets/logo/disputt-logo-cream.svg" alt="Disputt" width="300" height="130"></a>
+    <a class="legal__back" href="./">‹ Til spillet</a>
+  </header>
+
+  <div class="stack stack--tight">
+    <h1>Personvern</h1>
+    <p class="legal__updated">Personvernerklæring for Disputt · sist oppdatert 5. oktober 2026</p>
+  </div>
+
+  <div class="card card--paper legal__seller">
+    <strong>Behandlingsansvarlig</strong>
+    <span>Pesom Holding AS</span>
+    <span>Org.nr. 923 729 674 MVA</span>
+    <span>Agathe Grøndahls gate 46, 0478 Oslo</span>
+    <span>E-post: <a href="mailto:KONTAKT-EPOST">KONTAKT-EPOST</a></span>
+  </div>
+
+  <section>
+    <h2>Kort fortalt</h2>
+    <p>Disputt har ingen brukerkontoer og ingen sporing. Spillet kjører i vertens nettleser, og vi lagrer ingenting om spillerne. Det eneste vi får vite om deg, er det som hører til et kjøp, og det behandler Stripe.</p>
+  </section>
+
+  <section>
+    <h2>Hva vi behandler, og hvor</h2>
+    <ul>
+      <li><strong>Spillet.</strong> Navn, avatar, svar og poeng behandles i vertens nettleser og sendes direkte mellom telefonene, kryptert. Vi lagrer ingenting av det og har ingen spillserver. Det er borte når spillet er over.</li>
+      <li><strong>Å finne hverandre.</strong> En gratis meglertjeneste (PeerJS, drevet av PeerJS-prosjektet) kobler telefonene sammen. Den ser romkoden og tilkoblingsopplysninger, blant annet IP-adresser, mens telefonene finner hverandre, men ikke selve spillet. Slik WebRTC fungerer, kan spillerne teknisk se hverandres IP-adresser.</li>
+      <li><strong>Kjøp.</strong> Betalingen skjer hos <a href="https://stripe.com/en-no/privacy" rel="noopener">Stripe</a>, som behandler betalingsopplysningene (for eksempel navn, e-post, betalingsmåte og IP-adresse). Vi får se betalingen (beløp, tidspunkt og pakke), e-postadressen du oppga og koden din i Stripes oversikt. Vi ser aldri kortnummeret ditt.</li>
+      <li><strong>Tilgangen på telefonen.</strong> En signert tilgang og koden din lagres i nettleserens lokale lagring på telefonen din, og en betaling som pågår huskes i fanen. Det trengs for å levere tjenesten, så vi spør ikke om samtykke. Du kan fjerne tilgangen under Vertsvalg › Min tilgang, eller ved å tømme nettleserdata.</li>
+      <li><strong>Tekniske logger.</strong> Betalingstjenesten kjører hos <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare</a>, og siden ligger hos <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a>. De kan en kort tid logge IP-adresser og tekniske opplysninger for drift og sikkerhet.</li>
+      <li><strong>E-post til oss.</strong> Skriver du til oss, bruker vi e-postadressen og det du skriver til å svare deg.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Hvorfor, og på hvilket grunnlag</h2>
+    <ul>
+      <li>Å levere det du har kjøpt og hjelpe deg med det: avtalen med deg (personvernforordningen artikkel 6 nr. 1 bokstav b).</li>
+      <li>Regnskap og bokføring: plikt etter loven (artikkel 6 nr. 1 bokstav c).</li>
+      <li>Drift, sikkerhet og å hindre svindel: vår berettigede interesse (artikkel 6 nr. 1 bokstav f).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Hvor lenge</h2>
+    <p>Opplysninger om kjøp oppbevares i regnskapet så lenge bokføringsloven krever det, i dag fem år. Hos Stripe gjelder Stripes regler. E-post du sender oss, slettes når saken er løst, med mindre loven krever at vi beholder den. Det som ligger på telefonen din, bestemmer du selv over.</p>
+  </section>
+
+  <section>
+    <h2>Hvem vi deler med</h2>
+    <p>Bare dem som trengs for å levere tjenesten: Stripe (betaling), Cloudflare (betalingstjenesten), GitHub (nettsiden) og PeerJS (meglertjenesten). Vi selger ikke opplysninger. Noen av dem behandler opplysninger i USA. Det skjer på de vilkårene selskapene selv beskriver i sine personvernerklæringer, for eksempel EU–USAs Data Privacy Framework eller EUs standardavtaler.</p>
+  </section>
+
+  <section>
+    <h2>Informasjonskapsler</h2>
+    <p>Vi bruker ingen sporings- eller reklameinformasjonskapsler. Stripe har egne regler på betalingssiden sin.</p>
+  </section>
+
+  <section>
+    <h2>Dine rettigheter</h2>
+    <p>Du kan be om innsyn i opplysningene vi har om deg, få dem rettet eller slettet, be oss begrense behandlingen, protestere mot den og be om å få opplysningene utlevert. Skriv til oss. Mener du at vi behandler opplysninger i strid med loven, kan du klage til <a href="https://www.datatilsynet.no" rel="noopener">Datatilsynet</a>.</p>
+  </section>
+
+  <nav class="legal__foot" aria-label="Flere sider">
+    <a href="vilkar.html">Vilkår</a>
+    <a href="./">Til spillet</a>
+  </nav>
+</main>
+</body>
+</html>

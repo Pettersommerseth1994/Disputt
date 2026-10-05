@@ -32,6 +32,15 @@ jobs:
           node-version: 24
       - id: pages
         uses: actions/configure-pages@v6
+      # The terms and the privacy statement name the address customers write to. Until it is filled in they say KONTAKT-EPOST,
+      # and payments must not go live with that.
+      - name: Refuse to switch payments on while the terms are unfinished
+        if: ${{ vars.DISPUTT_PAYMENTS_URL != '' }}
+        run: |
+          if grep -n 'KONTAKT-EPOST' public/vilkar.html public/personvern.html; then
+            echo '::error::public/vilkar.html and public/personvern.html still say KONTAKT-EPOST. Put in the address customers write to first (docs/BETALING.md, 2.3).'
+            exit 1
+          fi
       - name: Build the static site
         run: node tools/pages/build.mjs --out dist --base "${{ steps.pages.outputs.base_path }}/"
         env:

@@ -130,7 +130,9 @@ describe('the settings', () => {
     assert.equal(pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', freeRounds: 0 }, {}).freeRounds, 2, 'the first round is always free, so "none" is not a setting');
     assert.equal(pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', freeRounds: 1 }, {}).freeRounds, 1);
     assert.deepEqual(pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', methods: ['vipps', 'vipps', 'applepay'] }, {}).methods, ['vipps', 'applepay'], 'a method named twice is one button');
-    assert.equal('termsUrl' in pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k' }, {}), false);
+    const bare = pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k' }, {});
+    assert.equal(bare.termsUrl, 'vilkar.html', 'unless the build says otherwise, the terms and the privacy statement are the pages of the app');
+    assert.equal(bare.privacyUrl, 'personvern.html');
   });
 });
 

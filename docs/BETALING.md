@@ -2,7 +2,7 @@
 
 > Sist kontrollert mot dokumentasjonen til Stripe, Cloudflare og Skatteetaten: **4. oktober 2026**. Stripe og Cloudflare flytter på menyer og knapper av og til. Finner du ikke en knapp, bruk den direkte lenken som står ved steget, eller søk etter navnet i Dashboard. Dette er teknisk veiledning, ikke juridisk eller skattemessig rådgivning: det som handler om vilkår, angrerett, mva og personvern må du selv få sjekket av noen som kan det.
 
-Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-det) · [2. Før du begynner](#2-før-du-begynner-virksomhet-skatt-og-jus) · [3. Stripe: konto](#3-stripe-konto-og-testmiljø) · [4. Pakkene](#4-stripe-pakkene-produkter-og-priser) · [5. Apple Pay og Vipps](#5-stripe-apple-pay-og-vipps) · [6. Informasjon og kvitteringer](#6-stripe-offentlig-informasjon-checkout-og-kvitteringer) · [7. Nøkler](#7-nøkler) · [8. Betalingsserveren](#8-betalingsserveren-cloudflare-worker) · [9. Koble til appen](#9-koble-til-appen-på-github) · [10. Test alt](#10-test-alt) · [11. Gå live](#11-gå-live) · [12. Drift](#12-drift) · [13. Slik henger koden sammen](#13-slik-henger-koden-sammen) · [14. Begrensninger](#14-begrensninger-og-mulige-neste-steg) · [15. Kilder](#15-kilder) · [Vedlegg A: vilkår](#vedlegg-a-utkast-til-vilkår) · [Vedlegg B: personvern](#vedlegg-b-utkast-til-personvernerklæring)
+Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-det) · [2. Før du begynner](#2-før-du-begynner-virksomhet-skatt-og-jus) · [3. Stripe: konto](#3-stripe-konto-og-testmiljø) · [4. Pakkene](#4-stripe-pakkene-produkter-og-priser) · [5. Apple Pay og Vipps](#5-stripe-apple-pay-og-vipps) · [6. Informasjon og kvitteringer](#6-stripe-offentlig-informasjon-checkout-og-kvitteringer) · [7. Nøkler](#7-nøkler) · [8. Betalingsserveren](#8-betalingsserveren-cloudflare-worker) · [9. Koble til appen](#9-koble-til-appen-på-github) · [10. Test alt](#10-test-alt) · [11. Gå live](#11-gå-live) · [12. Drift](#12-drift) · [13. Slik henger koden sammen](#13-slik-henger-koden-sammen) · [14. Begrensninger](#14-begrensninger-og-mulige-neste-steg) · [15. Kilder](#15-kilder) · [Vedlegg: valgene i vilkår og personvern](#vedlegg-valgene-i-vilkår-og-personvern)
 
 ## Kort fortalt
 
@@ -29,7 +29,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 
 | # | Hva | Hvor | Tid |
 | --- | --- | --- | --- |
-| 1 | Avklar virksomhet, mva og vilkår | Brønnøysund/Altinn, Skatteetaten ([del 2](#2-før-du-begynner-virksomhet-skatt-og-jus)) | dager; start først, kan gå parallelt med resten |
+| 1 | Bekreft at Pesom Holding AS kan selge dette (formål, mva), si fra hvilken e-postadresse kundene skal bruke, og få vilkårene lest av en som kan jus | regnskapsfører, jurist ([del 2](#2-før-du-begynner-virksomhet-skatt-og-jus)) | dager; start først, kan gå parallelt med resten |
 | 2 | Opprett Stripe-konto og bruk testmiljøet ([del 3](#3-stripe-konto-og-testmiljø)) | stripe.com | 30 min (identitetsbekreftelse kan ta dager) |
 | 3 | **Be om Vipps-tilgang** ([del 5](#5-stripe-apple-pay-og-vipps)) | skjema hos Stripe | 5 min; ventetiden bestemmer Stripe. Gjør det med en gang. |
 | 4 | Lag tre produkter med priser ([del 4](#4-stripe-pakkene-produkter-og-priser)) | Stripe | 15 min |
@@ -97,24 +97,28 @@ Dette er den delen som tar tid, og den du ikke kan hoppe over. Start i dag, og l
 
 ### 2.1 Virksomhet og bankkonto
 
-- Å selge tilgang til en tjeneste jevnlig er næringsvirksomhet. Det vanligste for en enkeltperson er et **enkeltpersonforetak** (gratis å registrere i Enhetsregisteret, via [Altinn](https://altinn.no/en/start-and-run-business/planning-starting/registration-of-the-enterprise/starting-and-registering-a-sole-proprietorship/)). Du får et **organisasjonsnummer**. Et aksjeselskap er et alternativ. Er du usikker, spør en regnskapsfører.
-- Stripe vil ha virksomhetstype, organisasjonsnummer, adresse, en representant som bekrefter identiteten sin, og en **norsk bankkonto** (utbetalinger i NOK).
-- Har du fast jobb: **les arbeidsavtalen** (bierverv, og hvem som eier det du lager på fritiden) før du begynner å selge noe.
+- **Selgeren er Pesom Holding AS**, org.nr. 923 729 674 MVA, Agathe Grøndahls gate 46, 0478 Oslo (opplysningene er hentet fra [Proff](https://www.proff.no/selskap/pesom-holding-as/oslo/designere/IF9YQDM009Y) 5. oktober 2026). Navn, org.nr. og adresse står på [vilkårssiden](../public/vilkar.html) og [personvernsiden](../public/personvern.html). Selskapet finnes allerede, så det er ingenting nytt å registrere.
+- **Sjekk formålet først.** Proff oppgir selskapets formål som «Investeringsvirksomhet lukket for allmennheten». Å selge en spilltjeneste til forbrukere er noe annet. Spør regnskapsføreren om formålet i vedtektene og næringskoden i Enhetsregisteret bør oppdateres før dere tar imot betaling. Stripe ser på hva selskapet driver med når kontoen aktiveres, og det de finner (nettsiden, vilkårene, Enhetsregisteret) bør stemme overens.
+- Stripe vil ha virksomhetstype (aksjeselskap), organisasjonsnummer, adresse, en representant som bekrefter identiteten sin (daglig leder), og en **norsk bankkonto i selskapets navn** (utbetalinger i NOK).
+- Har du fast jobb: **les arbeidsavtalen** (bierverv, og hvem som eier det du lager på fritiden) før du begynner å selge noe. Selgeren er selskapet, men det er fortsatt du som lager spillet.
 
 ### 2.2 Merverdiavgift (mva)
 
-- Du må registrere deg i Merverdiavgiftsregisteret når omsetningen din går over **50 000 kroner innenfor tolv måneder** ([Skatteetaten](https://www.skatteetaten.no/rettskilder/type/handboker/merverdiavgiftshandboken/merverdiavgiftshandboken-2024/M-2/M-2-1/): grensen gjelder også digitale tjenester til forbrukere). Under grensen kan du la være; over må du. Prisene forbrukere ser skal være sluttprisen, så da ligger mva i dem (normalsatsen er 25 %; sjekk satsen for din type tjeneste).
-- Appen sier derfor bare «Engangsbetaling, ingen abonnement» og påstår ikke «inkl. mva». Er du mva-registrert, kan du legge til «inkl. mva» i teksten i `public/js/screens/pay.js` og i vilkårene.
+- Pesom Holding AS står som **mva-registrert** (Proff viser «MVA» etter organisasjonsnummeret). Da skal prisene forbrukere ser være sluttprisene, med mva i. Appen og vilkårene sier derfor «inkl. mva»: 149, 399 og 499 kr er det kunden betaler, og selskapet skal beregne og betale mva av beløpet (normalsatsen er 25 %). Spør regnskapsføreren om riktig sats for denne typen tjeneste og om hvordan salg via Stripe skal bokføres.
+- «inkl. mva» står i `public/js/screens/pay.js` og i punkt 2 i [vilkårene](../public/vilkar.html). Skulle selskapet likevel ikke være mva-registrert, må det ut begge steder.
 - **Alternativ:** Stripe tilbyr [Managed Payments](https://docs.stripe.com/payments/managed-payments), der Stripe er selger overfor kunden (merchant of record) og tar mva-oppgjøret i over 80 land. Norge er med som forretningsland, og Apple Pay og kort støttes. Men **Vipps støttes ikke** (ikke i listen over betalingsmåter), kunden ser «Sold through Link», og kvitteringene kommer fra Link og kan ikke tilpasses. Det er ikke bygget inn her. Si fra hvis du vil vurdere det.
 
 ### 2.3 Vilkår, angrerett og personvern
 
-Du trenger to sider på nett, med adresser du kan lime inn (vedlegg A og B har utkast du kan ta utgangspunkt i). Enklest er to filer i repoet, `public/vilkar.html` og `public/personvern.html`, som da ligger på `https://pettersommerseth1994.github.io/Disputt/vilkar.html` og `…/personvern.html`. Fyll inn opplysningene i vedleggene og si fra, så lager jeg sidene i appens stil. De er ikke laget ennå, fordi de skal ha ditt navn, ditt organisasjonsnummer og din adresse, og fordi repoet er offentlig.
+De to sidene er laget og ligger i appen: [`public/vilkar.html`](../public/vilkar.html) og [`public/personvern.html`](../public/personvern.html), i appens stil. Når de er publisert, ligger de på `https://pettersommerseth1994.github.io/Disputt/vilkar.html` og `https://pettersommerseth1994.github.io/Disputt/personvern.html`. Betalingsskjermen i appen lenker til dem uten at du setter opp noe (`DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL` trengs bare om du vil bruke sider et annet sted). Selger og behandlingsansvarlig er Pesom Holding AS, med org.nr. og adresse øverst på begge sider. Valgene som er gjort i teksten står i [vedlegget](#vedlegg-valgene-i-vilkår-og-personvern).
 
-- [ ] **Vilkår**: hvem som selger (navn, org.nr., adresse, e-post), hva pakkene gir (og hva «Livstid» betyr), pris, levering, angrerett, reklamasjon og refusjon, kontakt.
-- [ ] **Personvernerklæring**: hva som behandles hvor (vedlegg B). Stripe krever også en personvern-URL og støtte-e-post på kvitteringene.
+- [ ] **Si fra hvilken e-postadresse kundene skal skrive til**, så legger jeg den inn. Den står som `KONTAKT-EPOST` på fire steder (lenken og teksten, i hver av de to filene). Siden er offentlig, og Stripe viser samme adresse på kvitteringene (del 6), så bruk en adresse som hører til selskapet og som du leser. Slår du på betaling på GitHub mens `KONTAKT-EPOST` står igjen, stopper byggingen med en forklaring.
+- [ ] **Få vilkårene lest av en som kan jus**, med punktene i [vedlegget](#vedlegg-valgene-i-vilkår-og-personvern) og spørsmålet om bekreftelsen under.
+- [ ] **Personvernerklæringen**: sjekk at den stemmer med det selskapet faktisk gjør. Bruker dere regnskapsprogram eller en e-posttjeneste som også behandler kundeopplysninger, skal de nevnes. Stripe krever en personvern-URL og støtte-e-post på kvitteringene.
 
 **Angrerett.** Forbrukere har som hovedregel 14 dagers angrerett. For digitalt innhold og digitale tjenester som leveres med en gang faller den bort når leveringen er startet, **hvis kunden uttrykkelig har samtykket til at leveringen starter og bekreftet at angreretten da er borte**. Det holder ikke at det står i vilkårene: en avkrysningsboks ved betalingen er den tryggeste måten (se [veilederen om angrerett](https://cms12.regjeringen.no/contentassets/6d6b5195d1ee4133977bf5339d1623d9/veileder-angrerett-2017.pdf), angrerettloven § 22). Koden gjør dette for deg når du slår på `REQUIRE_TERMS` og `TERMS_URL` ([del 8](#8-betalingsserveren-cloudflare-worker)): på Stripes side står det da en boks som må krysses av: «Jeg godtar *vilkårene*, ber om at tilgangen leveres med en gang, og forstår at jeg da mister angreretten.» Få en som kan jus til å lese teksten før du går live.
+
+**Bekreftelsen.** Etter det jeg finner, må kunden i tillegg få en bekreftelse på samtykket (og på at angreretten er borte) på e-post eller annet varig medium, ikke bare se boksen på betalingssiden. Stripes kvittering sier ikke noe om det i dag. Be juristen ta stilling til hvordan det løses: for eksempel at teksten legges i beskrivelsen som står på kvitteringen, eller at dere sender en egen bekreftelse. Si fra hva som blir konklusjonen, så bygger jeg inn det som trengs.
 
 **Informasjonskapsler.** Appen bruker ingen sporing. Tilgangen og koden lagres i nettleseren fordi tjenesten trenger det, og Stripe har egne regler på sin side. Spør en jurist om du trenger et samtykkebanner (jeg tror ikke det).
 
@@ -138,7 +142,7 @@ Stripe tar for norske og europeiske kort (Apple Pay regnes som kort) **2,4 % + 2
 
 1. - [ ] Opprett en konto på <https://dashboard.stripe.com/register>. Slå på tofaktorinnlogging med en gang.
 2. - [ ] **Bruk et testmiljø mens du bygger.** Stripe anbefaler et eget *sandbox* for nye integrasjoner (kontovelgeren øverst til venstre i Dashboard). Det gamle *testmodus*-valget fungerer også. Nøklene i testmiljø starter med `rk_test_`, `sk_test_` og `pk_test_`; nøklene i live starter med `…_live_`. Testmiljøet og live har **hver sine** produkter, priser, nøkler og innstillinger, så alt i del 4–7 gjør du først i testmiljøet og siden på nytt i live ([del 11](#11-gå-live)).
-3. - [ ] Du kan teste uten å aktivere kontoen. For å ta imot ekte penger må du aktivere den (*Activate payments*): virksomhetstype, org.nr., adresse, representant med identitetsbekreftelse og bankkonto. Stripe leser dokumentene og kan be om mer; regn med fra minutter til noen dager. Stripe ser også på nettsiden du oppgir: den bør si hva du selger, hva det koster, hvordan man kontakter deg og ha lenker til vilkår og personvern. Forsiden viser ingen priser, så legg prislisten (og refusjonsregelen) på vilkårssiden (vedlegg A).
+3. - [ ] Du kan teste uten å aktivere kontoen. For å ta imot ekte penger må du aktivere den (*Activate payments*): virksomhetstype, org.nr., adresse, representant med identitetsbekreftelse og bankkonto. Stripe leser dokumentene og kan be om mer; regn med fra minutter til noen dager. Stripe ser også på nettsiden du oppgir: den bør si hva du selger, hva det koster, hvordan man kontakter deg og ha lenker til vilkår og personvern. Forsiden viser ingen priser, men vilkårssiden har prislisten, refusjonsregelen og kontaktopplysningene, så oppgi den som del av nettstedet (del 6).
 4. - [ ] Legg inn **kontaktinformasjon og støtte-e-post** (del 6). Stripe viser den på kvitteringene.
 
 **Du skal se:** Dashboard med en merkelapp som sier at du er i testmiljø (sandbox/test mode), og nøkler som starter med `_test_`.
@@ -189,7 +193,7 @@ Det du trenger å vite om Vipps hos Stripe ([dokumentasjon](https://docs.stripe.
 
 ## 6. Stripe: offentlig informasjon, Checkout og kvitteringer
 
-1. - [ ] **Offentlige opplysninger** (<https://dashboard.stripe.com/settings/public>): navn kunden ser (for eksempel «Disputt»), støtte-e-post, støttetelefon om du har, nettsted (`https://pettersommerseth1994.github.io/Disputt/`), og **adressene til vilkår og personvern**. Boksen «Jeg godtar vilkårene» krever en vilkår-URL her; kvitteringene krever juridisk navn, støtteadresse, støtte-e-post og personvern-URL.
+1. - [ ] **Offentlige opplysninger** (<https://dashboard.stripe.com/settings/public>): navn kunden ser (for eksempel «Disputt»), juridisk navn (**Pesom Holding AS**), støtte-e-post (den samme som står på vilkårssiden), støttetelefon om du har, nettsted (`https://pettersommerseth1994.github.io/Disputt/`), og **adressene til vilkår og personvern**: `https://pettersommerseth1994.github.io/Disputt/vilkar.html` og `https://pettersommerseth1994.github.io/Disputt/personvern.html`. Boksen «Jeg godtar vilkårene» krever en vilkår-URL her; kvitteringene krever juridisk navn, støtteadresse, støtte-e-post og personvern-URL. Sidene må være publisert (sendt til `main`) før Stripe kan lese dem.
 2. - [ ] **Utseende** (Settings → Business → Branding, <https://dashboard.stripe.com/settings/branding>): last opp `public/assets/icons/icon-512.png` (kvadratisk PNG, minst 128 × 128 px, under 512 KB), og velg farger: `#6a1428` (burgunder) og `#fae025` (gul).
 3. - [ ] **Checkout** (<https://dashboard.stripe.com/settings/checkout>): slå på *Contact information* og *Legal policies* (lenker til vilkår og personvern på betalingssiden). La *Display agreement to legal terms* stå av hvis du bruker avkrysningsboksen fra `REQUIRE_TERMS`.
 4. - [ ] **Kvitteringer** (Settings → Business → Customer emails, <https://dashboard.stripe.com/settings/emails>): slå på *Successful payments* og *Refunds*. Kunden får da en kvittering på e-post. I testmiljø sendes ingen kvittering av seg selv: send den for hånd (Payments → betalingen → *Receipt history* → ⋯ → *Send receipt*).
@@ -261,7 +265,7 @@ Filen er [`payments/worker.js`](../payments/worker.js): ca. 300 linjer, ingen av
    | `PRICE_LIFETIME` | Text | `price_…` for «Livstid» |
    | `VIPPS_ENABLED` | Text | `false` (settes til `true` når Stripe har gitt deg Vipps) |
    | `REQUIRE_TERMS` | Text | `true` når vilkårene finnes (live: ja) |
-   | `TERMS_URL` | Text | adressen til vilkårene, `https://…` (uten mellomrom og parenteser) |
+   | `TERMS_URL` | Text | `https://pettersommerseth1994.github.io/Disputt/vilkar.html` (for en test-kopi: kopiens egen `…/vilkar.html`; uten mellomrom og parenteser) |
    | `STRIPE_VIPPS_VERSION` | Text, valgfri | bare hvis Stripes Vipps-dokumentasjon bruker en annen versjon enn `2026-09-30.preview; vipps_preview=v1` |
    | `METHOD_MODE` | Text, valgfri | Vanlig (tom): hver knapp ber om bare sin egen betalingsmåte (`allowed_payment_method_types`). `static`: sender den eldre `payment_method_types` i stedet. `dynamic`: Stripe-dashboardet bestemmer, og begge knappene viser det samme |
 
@@ -306,7 +310,7 @@ Appen slår betaling på når byggingen får to variabler: adressen til betaling
    | `DISPUTT_PAYMENTS_KEY` | innholdet i `offentlig-nokkel.txt` |
    | `DISPUTT_PAYMENTS_METHODS` | `applepay` (eller `vipps,applepay` når Vipps er på) |
    | `DISPUTT_FREE_ROUNDS` | valgfri, fra 1 til 99, standard `2` (første runde er alltid gratis, for pakkene kommer ved «Neste runde») |
-   | `DISPUTT_TERMS_URL`, `DISPUTT_PRIVACY_URL` | valgfri: lenker som vises under betalingsknappene |
+   | `DISPUTT_TERMS_URL`, `DISPUTT_PRIVACY_URL` | valgfri. Uten dem lenker betalingsskjermen til appens egne sider, `vilkar.html` og `personvern.html` (i test-kopien: kopiens egne). Sett dem bare hvis vilkårene ligger et annet sted |
 
 5. - [ ] **Actions → Pages → Run workflow.** Test-kopien havner på `https://<bruker>.github.io/Disputt-test/`.
 6. - [ ] Gå tilbake til Cloudflare og sett `SITE_URL` i **test-Workeren** til nøyaktig den adressen, med skråstrek på slutten. (Betalingsserveren svarer bare til den siden, og sender verten tilbake dit etter betalingen.) Trykk Deploy. (Test-kopien og den ekte siden ligger begge på `https://<bruker>.github.io` og deler derfor nettleserlagring. Det går bra: hver side husker tilgangen sin under navnet til sin egen betalingsserver.)
@@ -357,12 +361,12 @@ Testkort ([Stripes testkort](https://docs.stripe.com/testing)): `4242 4242 4242 
 
 Først når alt over virker i testmiljøet.
 
-- [ ] **Virksomheten er klar** (del 2): org.nr., bankkonto, mva avklart, vilkår og personvern publisert på adresser som virker, en jurist har sett over teksten om angrerett.
+- [ ] **Selskapet er klart** (del 2): formålet i vedtektene og næringskoden passer til det dere selger (spør regnskapsføreren), bankkonto i selskapets navn, mva-behandlingen avklart, e-postadressen er lagt inn på vilkårs- og personvernsiden (ingen `KONTAKT-EPOST` igjen), sidene er publisert og virker, og en jurist har lest vilkårene (særlig angrerett og bekreftelsen, aldersgrensen og refusjon av «Livstid», se vedlegget).
 - [ ] **Stripe-kontoen er aktivert** (del 3), og Vipps er slått på hvis du har fått tilgang.
 - [ ] **I live-modus** (bryt over i live øverst i Dashboard): lag de tre **produktene og prisene på nytt** (del 4), fyll ut offentlig informasjon, utseende, Checkout og kvitteringer (del 6), og lag en **live-nøkkel**, `rk_live_…`, med de samme tre rettighetene (del 7.1). Kopier den med en gang.
-- [ ] **Lag en ny Worker, `disputt-pay`** (del 8): samme kode, men `STRIPE_KEY` = live-nøkkelen, de tre **live**-pris-ID-ene, `SITE_URL` = den ekte sidens adresse, `VIPPS_ENABLED` = `true` hvis Vipps er på, `REQUIRE_TERMS` = `true` og `TERMS_URL` = adressen til vilkårene. `JWT_PRIVATE_KEY` må være et **eget nøkkelpar for live** (del 7.2), ikke det samme som i test. Den offentlige nøkkelen i hovedrepoet er den som hører til.
+- [ ] **Lag en ny Worker, `disputt-pay`** (del 8): samme kode, men `STRIPE_KEY` = live-nøkkelen, de tre **live**-pris-ID-ene, `SITE_URL` = den ekte sidens adresse, `VIPPS_ENABLED` = `true` hvis Vipps er på, `REQUIRE_TERMS` = `true` og `TERMS_URL` = `https://pettersommerseth1994.github.io/Disputt/vilkar.html`. `JWT_PRIVATE_KEY` må være et **eget nøkkelpar for live** (del 7.2), ikke det samme som i test. Den offentlige nøkkelen i hovedrepoet er den som hører til.
 - [ ] Åpne `…/health` på den nye Workeren: `"mode":"live"`, `"terms":"box-with-link"`.
-- [ ] **GitHub, hovedrepoet:** variablene `DISPUTT_PAYMENTS_URL` (den nye Workeren), `DISPUTT_PAYMENTS_KEY`, `DISPUTT_PAYMENTS_METHODS`, `DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL`. Kjør **Actions → Pages → Run workflow**.
+- [ ] **GitHub, hovedrepoet:** variablene `DISPUTT_PAYMENTS_URL` (den nye Workeren), `DISPUTT_PAYMENTS_KEY`, `DISPUTT_PAYMENTS_METHODS`. (`DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL` trengs ikke: appens egne sider brukes.) Kjør **Actions → Pages → Run workflow**.
 - [ ] **Kjøp pakken «En kveld» selv**, med ekte betaling (149 kr). Sjekk: betalingen står i Stripe, kvitteringen kom, «Takk!» viser koden, og runden starter. **Refunder** den deretter i Dashboard og sjekk at koden da nektes.
 - [ ] Sjekk utbetalingen (Stripe utbetaler til bankkontoen etter en frist som står i Dashboard) og at bokføringen din får det den trenger.
 - [ ] Fortell vennene dine at spillet nå har en betalingsmur etter runde 2 (og at den ene kvelden er 149 kr).
@@ -376,7 +380,7 @@ Først når alt over virker i testmiljøet.
 | **Kundens telefon er byttet** | «Allerede kunde? Logg inn» med koden. Nettleseren husker tilgangen etterpå. |
 | **Rotere Stripe-nøkkelen** | Dashboard → API keys → ⋯ → *Rotate key* (du får opptil 7 dagers overlapp), og legg den nye verdien i `STRIPE_KEY` i Cloudflare. |
 | **Rotere signeringsnøkkelen** | Lag et nytt par (del 7.2). Legg privatnøkkelen i `JWT_PRIVATE_KEY` og den offentlige i `DISPUTT_PAYMENTS_KEY` på GitHub, og kjør Pages på nytt. Alle må «Logge inn» med koden én gang. |
-| **Endre priser** | Tre steder må være like: prisene i Stripe (lag en ny Price, ikke endre en gammel), `PLANS` i `payments/worker.js` (beløp i øre) og `PLANS` i `public/js/pay/plans.js`. En test (`test/pay.test.js`) feiler hvis de to filene er uenige. Lim inn den nye Worker-koden, oppdater `PRICE_…` og bygg siden på nytt; stemmer ikke Stripe-prisen med tabellen, sier betalingsserveren fra før noen betaler. **De som har betalt før endringen beholder alt:** beløpet de betalte ligger i betalingen hos Stripe og er det som kontrolleres, så koden virker fortsatt på nye telefoner. |
+| **Endre priser** | Fire steder må være like: prisene i Stripe (lag en ny Price, ikke endre en gammel), `PLANS` i `payments/worker.js` (beløp i øre), `PLANS` i `public/js/pay/plans.js` og prisene i vilkårene (`public/vilkar.html`, punkt 1). Testene (`test/pay.test.js` og `test/pages-build.test.js`) feiler hvis filene er uenige. Lim inn den nye Worker-koden, oppdater `PRICE_…` og bygg siden på nytt; stemmer ikke Stripe-prisen med tabellen, sier betalingsserveren fra før noen betaler. **De som har betalt før endringen beholder alt:** beløpet de betalte ligger i betalingen hos Stripe og er det som kontrolleres, så koden virker fortsatt på nye telefoner. |
 | **Flytte betalingsserveren til en ny adresse** (for eksempel eget domene) | Tilgangene er knyttet til adressen til betalingsserveren. Bytter du adresse (og `DISPUTT_PAYMENTS_URL`), må alle trykke «Logg inn» og skrive koden sin én gang. |
 | **Slå av betalingen** | Slett `DISPUTT_PAYMENTS_URL` og `DISPUTT_PAYMENTS_KEY` på GitHub og kjør Pages. Spillet er gratis igjen, og tilganger på telefonene ignoreres. |
 | **Stripe eller Cloudflare er nede** | Spillet virker til muren. Da står det en feilmelding under knappene (og «Prøv igjen om litt»), og rommet blir stående. |
@@ -437,7 +441,7 @@ npm run shots -- --docs        # nye skjermbilder til stilguiden og denne filen
 - **Apple Pay vises ikke overalt.** Det avhenger av nettleseren og enheten (Safari med kort i Wallet), ikke av oss. Kort er alltid med på Stripes side.
 - **Kort står på Stripes side også.** Se 5.1.
 - **«Logg inn med Vipps/Apple Pay»** er ikke mulig slik du beskrev det: Apple Pay forteller ikke hvem kunden er, og «Logg inn med Vipps» (Vipps Login) krever en egen Vipps-avtale for virksomheten og et register som kobler Vipps-identiteten til kjøpet. Koden du fikk da du betalte er løsningen som virker uten konto. Vil du ha Vipps Login senere, er det en større utvidelse.
-- **«Livstid»** må defineres i vilkårene (så lenge Disputt tilbys, ikke så lenge kunden lever).
+- **«Livstid»** er definert i vilkårene (punkt 1 og 7): så lenge Disputt tilbys, ikke så lenge kunden lever, og ved avvikling får kunden forholdsmessig refusjon med fem år fra kjøpet som regnegrunnlag. Det er et valg, ikke en lovregel: få det lest av en jurist.
 - **Hjemkomst i en annen nettleser.** Åpner Vipps en annen nettleser enn den du startet i, får du «Takk!» der, men rommet ligger i den første fanen. Gå tilbake til den (tilbakeknappen): siden finner betalingen selv, og spillet står som du forlot det. Er den fanen lukket, er rommet borte, og vennene må starte et nytt spill (med tilgangen på plass: skriv koden).
 - **Alle kan banke på Workeren.** Adressen er offentlig, og `/checkout`, `/claim` og `/restore` kan kalles med `curl`. Ingenting kan kjøpes eller hentes uten en ekte, gjennomført betaling, men to ting kan skje: det lages betalingsøkter i Stripe som ingen bruker, og Stripes søk, som «Logg inn» bruker, tillater 20 kall i sekundet ([Stripe](https://docs.stripe.com/search)): en som holder det oppe kan få alle «Logg inn» til å feile. Vil du stenge det ute, legg en rate-begrensning foran Workeren i Cloudflare (Security → WAF → Rate limiting rules).
 - **Betaling virker bare med peer-to-peer-bygget (GitHub Pages).** En Disputt-server gir en vert som forlater siden bare noen få minutter før en annen blir vert, og det rekker ikke en Vipps-betaling. Bygget nekter derfor betaling sammen med `DISPUTT_SERVER_URL`.
@@ -445,7 +449,7 @@ npm run shots -- --docs        # nye skjermbilder til stilguiden og denne filen
 
 ## 15. Kilder
 
-Lest 4. oktober 2026:
+Lest 4. og 5. oktober 2026:
 
 - Vipps hos Stripe: <https://docs.stripe.com/payments/vipps> og <https://docs.stripe.com/payments/vipps/accept-a-payment> (privat forhåndsvisning, `vipps_preview=v1`, Checkout i betalingsmodus, fem minutter til godkjenning)
 - Apple Pay hos Stripe: <https://docs.stripe.com/apple-pay> (hostet Checkout uten oppsett, testing med eget kort mot testnøkler)
@@ -455,63 +459,26 @@ Lest 4. oktober 2026:
 - Priser i Norge: <https://stripe.com/en-no/pricing>
 - Managed Payments: <https://docs.stripe.com/payments/managed-payments> og <https://docs.stripe.com/payments/managed-payments/eligibility>
 - Cloudflare Workers: <https://developers.cloudflare.com/workers/get-started/dashboard/>, <https://developers.cloudflare.com/workers/configuration/secrets/>, <https://developers.cloudflare.com/workers/platform/pricing/>
-- Registreringsplikt for mva: [Skatteetaten, merverdiavgiftsloven § 2-1](https://www.skatteetaten.no/rettskilder/type/handboker/merverdiavgiftshandboken/merverdiavgiftshandboken-2024/M-2/M-2-1/)
+- Selskapet (navn, org.nr., adresse, mva-registrering, formål): [Proff, Pesom Holding AS](https://www.proff.no/selskap/pesom-holding-as/oslo/designere/IF9YQDM009Y)
 - Angrerett for digitalt innhold: [veileder om angrerett](https://cms12.regjeringen.no/contentassets/6d6b5195d1ee4133977bf5339d1623d9/veileder-angrerett-2017.pdf)
-- Enkeltpersonforetak: [Altinn](https://altinn.no/en/start-and-run-business/planning-starting/registration-of-the-enterprise/starting-and-registering-a-sole-proprietorship/)
+- Klageinstansene i vilkårene: [regjeringen.no om Forbrukerklageutvalget](https://www.regjeringen.no/no/aktuelt/ny-lov-om-forbrukerklageutvalget/id2435409/)
 
-## Vedlegg A: utkast til vilkår
+## Vedlegg: valgene i vilkår og personvern
 
-> **Utkast. Ikke juridisk rådgivning.** Fyll inn det som står i [hakeparenteser], tilpass, og få en som kan jus til å lese det før du bruker det. Publiser det som en side på nett og lim adressen inn i `TERMS_URL` (Worker), `DISPUTT_TERMS_URL` (GitHub) og *Terms of service URL* (Stripe).
+Teksten står i [`public/vilkar.html`](../public/vilkar.html) og [`public/personvern.html`](../public/personvern.html), skrevet for Pesom Holding AS. Det er ikke juridisk rådgivning. Valgene under er gjort på selskapets vegne; endre dem i filene hvis du vil ha dem annerledes, og få en som kan jus til å lese alt før du går live.
 
-**Vilkår for kjøp av tilgang til Disputt**
+| Punkt | Valget i teksten | Merk |
+| --- | --- | --- |
+| Alder (vilkår 1) | Kjøperen må være fylt 18 år, eller ha samtykke fra en forelder eller foresatt | Den enkleste trygge formuleringen. Skal yngre kunne kjøpe selv, må juristen si hva som gjelder |
+| Mva (vilkår 2 og appen) | Prisene er «inkl. mva» | Selskapet står som mva-registrert (2.2). Bekreft med regnskapsføreren |
+| Angrerett (vilkår 4) | Angreretten bortfaller når tilgangen leveres, etter avkrysning på betalingssiden | Loven krever også en bekreftelse på samtykket på varig medium (2.3). Stripes kvittering gir ikke det i dag |
+| Feil og refusjon (vilkår 5) | Vi retter feilen, ellers betaler vi tilbake; når hele beløpet er betalt tilbake, er tilgangen og koden ugyldige | Stemmer med betalingsserveren: full refusjon låser koden for nye telefoner, delvis refusjon gjør ikke det. Tilgangen som allerede ligger på en telefon kan ikke trekkes tilbake (del 14) |
+| «Livstid» (vilkår 1 og 7) | Så lenge vi tilbyr Disputt | Må være definert; «livstid» betyr ikke kundens liv |
+| Avvikling (vilkår 7) | Minst 90 dagers varsel på forsiden og forholdsmessig refusjon; for «Livstid» regnes en levetid på fem år fra kjøpet | Tallene 90 og 5 er forslag. Et annet varsel eller en annen levetid går bra så lenge det står tydelig |
+| Bruk (vilkår 6) | Privat bruk, ikke videresalg, ikke næringsvirksomhet; en kode som deles med mange kan stenges | Nødvendig fordi koden gir tilgang uten konto (del 14) |
+| Tvister (vilkår 9) | Norsk rett; Forbrukerrådet kan megle; Forbrukerklageutvalget i saker det behandler; ellers domstolene | EUs klageportal (ODR) er stengt og er ikke nevnt |
+| Oppbevaring (personvern) | Kjøpsopplysninger oppbevares så lenge bokføringsloven krever, i dag fem år | Sjekk med regnskapsføreren |
+| USA (personvern) | Stripe, Cloudflare og GitHub kan behandle noe i USA, på selskapenes egne vilkår (Data Privacy Framework, standardavtaler) | Lenker til selskapenes egne erklæringer; sjekk at de fortsatt stemmer |
+| Informasjonskapsler (personvern) | Ingen sporing og ingen banner | Tilgangen ligger i nettleserens lagring fordi tjenesten trenger det |
 
-Sist oppdatert: [dato]
-
-**1. Selger.** [Firmanavn], org.nr. [XXX XXX XXX], [adresse], e-post [e-postadresse] («vi»).
-
-**2. Hva du kjøper.** Disputt er et nettbasert spill som spilles på mobil. De første rundene i hvert spill er gratis. For å spille videre kjøper den som starter spillet («verten») tilgang. Bare verten trenger tilgang; de andre spillerne spiller gratis. Pakkene:
-
-- *En kveld*: tilgang i 12 timer fra betalingen. 149 kr.
-- *For ett år*: tilgang i 12 måneder fra betalingen. 399 kr.
-- *Livstid*: tilgang så lenge vi tilbyr Disputt. 499 kr. «Livstid» betyr tjenestens levetid, ikke din. Avvikler vi tjenesten, varsler vi deg minst [90] dager i forveien på [nettsiden / e-post], og [du får en forholdsmessig refusjon / …].
-
-Alle pakkene er engangsbetalinger. Ingenting fornyes automatisk.
-
-**3. Pris og betaling.** Prisene er i norske kroner [og inkluderer merverdiavgift]. Du betaler hos Stripe med Vipps, Apple Pay eller kort. Vi ser ikke kortnummeret ditt.
-
-**4. Levering.** Tilgangen leveres med en gang etter betalingen, som en tilgang som lagres i nettleseren på telefonen din, og en **kode**. Med koden får du tilgangen tilbake på en annen telefon. Ta vare på koden og del den ikke: den som har koden kan bruke tilgangen.
-
-**5. Angrerett.** Forbrukere har som hovedregel 14 dagers angrerett. For digitale tjenester og digitalt innhold som leveres med en gang, faller angreretten bort når leveringen er startet, dersom du uttrykkelig har samtykket til at leveringen starter og bekreftet at du da mister angreretten. Det gjør du ved å krysse av i boksen før du betaler. [Få denne paragrafen kontrollert.]
-
-**6. Reklamasjon og refusjon.** Virker ikke tilgangen slik den skal, kontakt oss på [e-postadresse]. Du har rettighetene dine etter [reglene om reklamasjon for digitale ytelser]. Vi refunderer til samme betalingsmåte. Når en betaling er refundert, slutter koden å virke på nye telefoner.
-
-**7. Bruk.** Tilgangen er til verten og de som spiller sammen med verten. Du kan ikke videreselge koden eller bruke den kommersielt.
-
-**8. Endringer.** Vi kan endre spillet og disse vilkårene. Endringer i vilkårene gjelder ikke for kjøp du allerede har gjort, med mindre loven krever noe annet.
-
-**9. Personvern.** Se personvernerklæringen: [lenke].
-
-**10. Lovvalg og klager.** Norsk rett. Kontakt oss først. Du kan også gå til Forbrukertilsynet eller Forbrukerrådet. [Legg til lenke til EUs klageportal om aktuelt.]
-
-## Vedlegg B: utkast til personvernerklæring
-
-> **Utkast. Ikke juridisk rådgivning.** Fyll inn og få det kontrollert.
-
-**Personvernerklæring for Disputt**
-
-Sist oppdatert: [dato]
-
-**Behandlingsansvarlig:** [Firmanavn], org.nr. [XXX XXX XXX], [adresse], [e-postadresse].
-
-**Hva vi behandler, og hvor**
-
-- *Spillet.* Navn, avatar, svar og poeng behandles i vertens nettleser og sendes direkte mellom telefonene (peer-to-peer, kryptert). Vi lagrer det ikke og har ingen spillserver. Tjenesten som kobler telefonene sammen (PeerJS) ser tilkoblingsopplysninger, blant annet IP-adresser, mens telefonene finner hverandre. Spillerne kan teknisk se hverandres IP-adresser.
-- *Kjøp.* Betalingen skjer hos **Stripe**, som behandler betalingsopplysningene (navn, e-post, betalingsmåte, IP-adresse og lignende). Vi får bekreftelse på betalingen, valgt pakke, tidspunkt, e-posten du oppga og koden din, og ser dem i Stripe. Vi ser aldri kortnummeret ditt. Stripe har egen personvernerklæring: [lenke].
-- *Tilgangen på telefonen.* En signert tilgang og koden lagres i nettleserens lokale lagring på telefonen din. Det er nødvendig for å levere tjenesten. Vi bruker ingen sporingsinformasjonskapsler.
-- *Tekniske logger.* Betalingsserveren (Cloudflare) og nettsiden (GitHub Pages) kan midlertidig logge IP-adresser og tekniske opplysninger for drift og sikkerhet.
-
-**Rettslig grunnlag.** Avtale (kjøpet, GDPR art. 6 nr. 1 b) og rettslig forpliktelse (bokføring, art. 6 nr. 1 c). Bokføringsloven krever at vi oppbevarer regnskapsmateriale i [5] år. [Kontroller.]
-
-**Lagring.** Betalingsopplysninger hos Stripe og i regnskapet oppbevares så lenge loven krever. Det som ligger på telefonen, fjerner du selv (Vertsvalg › Min tilgang › Fjern tilgangen, eller ved å tømme nettleserdata).
-
-**Dine rettigheter.** Du kan be om innsyn, retting, sletting og dataportabilitet, og du kan klage til [Datatilsynet](https://www.datatilsynet.no). Kontakt oss på [e-postadresse].
+Når du endrer teksten: oppdater «sist oppdatert» øverst på siden. Endringer i vilkårene gjelder bare kjøp gjort etter at de er publisert (vilkår 7).

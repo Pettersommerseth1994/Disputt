@@ -16,7 +16,7 @@ export default {
 
   // Payments. null = the game is free. The Pages build fills this in when the repository variables DISPUTT_PAYMENTS_URL and
   // DISPUTT_PAYMENTS_KEY are set (docs/BETALING.md): { apiUrl, publicKey, methods: ['vipps', 'applepay'], freeRounds: 2,
-  // termsUrl, privacyUrl }.
+  // termsUrl, privacyUrl } (the last two default to the pages vilkar.html and personvern.html of the app).
   payments: null,
 
   // p2p mode only: STUN servers help phones find each other across networks. Add a TURN server here

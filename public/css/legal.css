@@ -1,0 +1,29 @@
+/* ==========================================================================
+   The terms and the privacy statement (public/vilkar.html, public/personvern.html): plain pages to read, in the game's look.
+   They are opened from Stripe's payment page and from the packages, mostly on a phone.
+   ========================================================================== */
+
+.legal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--page-top) var(--page-x) calc(var(--page-bottom) + var(--s-6));
+}
+.legal__top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+.legal__logo img { width: 6.5rem; height: auto; }
+.legal__back { font-weight: 700; }
+.legal h1 { font-size: clamp(2.2rem, 11vw, 3.2rem); }
+.legal h2 { margin-top: var(--s-3); font-size: 1.5rem; line-height: 1.12; }
+.legal section { display: grid; gap: var(--s-3); }
+.legal p,
+.legal li { font-size: var(--fs-body); line-height: 1.55; }
+.legal ul { display: grid; gap: var(--s-2); margin: 0; padding-left: 1.2rem; }
+.legal__updated { color: var(--fg-muted); font-size: var(--fs-small); }
+.legal__seller { display: grid; gap: var(--s-1); padding: var(--s-4) var(--s-5); font-size: var(--fs-body); line-height: 1.45; }
+.legal__seller a { color: var(--ink); }
+.legal ul.legal__plans { display: grid; gap: var(--s-3); margin: 0; padding: 0; list-style: none; }
+.legal__plans li { display: grid; gap: var(--s-1); padding: var(--s-3) var(--s-4); border-radius: var(--r-card); background: rgb(var(--cream-rgb) / 0.12); box-shadow: var(--shadow-1); }
+.legal__plans strong { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; }
+.legal__foot { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); padding-top: var(--s-4); border-top: 3px solid rgb(var(--cream-rgb) / 0.2); font-size: var(--fs-small); }
