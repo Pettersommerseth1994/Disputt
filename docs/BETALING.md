@@ -155,6 +155,14 @@ Kundene skal skrive til `kontakt@disputt.site`: den står i vilkårene og person
 3. - [ ] Du kan teste uten å aktivere kontoen. For å ta imot ekte penger må du aktivere den (*Activate payments*): virksomhetstype, org.nr., adresse, representant med identitetsbekreftelse og bankkonto. Stripe leser dokumentene og kan be om mer; regn med fra minutter til noen dager. Stripe ser også på nettsiden du oppgir: den bør si hva du selger, hva det koster, hvordan man kontakter deg og ha lenker til vilkår og personvern. Forsiden viser ingen priser, men vilkårssiden har prislisten, refusjonsregelen og kontaktopplysningene, så oppgi den som del av nettstedet (del 6).
 4. - [ ] Legg inn **kontaktinformasjon og støtte-e-post** (del 6). Stripe viser den på kvitteringene.
 
+**Tekster til aktiveringen.** Stripe spør hva dere selger, og noen leser svaret, så skriv det på engelsk. Du kan lime inn dette (endre hvis noe ikke stemmer):
+
+> Disputt is a social party game for 3–10 players on their own phones: a bluffing and trivia game played in the browser, with no app and no account. The first two rounds of every game are free. The host can buy access as a one-time digital purchase: "En kveld" (one evening, 12 hours) NOK 149, "For ett år" (12 months) NOK 399, "Livstid" (as long as the service is offered) NOK 499. Access is delivered immediately, as a signed pass stored in the browser plus a restore code. No subscriptions, no physical goods, no shipping. Customers are consumers, paying with Vipps, Apple Pay or card.
+>
+> Refund policy: if the access does not work as described and we cannot fix it, we refund the full amount. Terms: https://pettersommerseth1994.github.io/Disputt/vilkar.html (section 5). Privacy: https://pettersommerseth1994.github.io/Disputt/personvern.html
+
+Bransjen skal være det dere faktisk selger (digitale varer, spill eller programvare). Passer ikke det med formålet i Enhetsregisteret, så ta det med regnskapsføreren før du sender inn ([2.1](#21-virksomhet-og-bankkonto)).
+
 **Du skal se:** Dashboard med en merkelapp som sier at du er i testmiljø (sandbox/test mode), og nøkler som starter med `_test_`.
 
 ## 4. Stripe: pakkene (produkter og priser)
@@ -207,6 +215,7 @@ Det du trenger å vite om Vipps hos Stripe ([dokumentasjon](https://docs.stripe.
 2. - [ ] **Utseende** (Settings → Business → Branding, <https://dashboard.stripe.com/settings/branding>): last opp `public/assets/icons/icon-512.png` (kvadratisk PNG, minst 128 × 128 px, under 512 KB), og velg farger: `#6a1428` (burgunder) og `#fae025` (gul).
 3. - [ ] **Checkout** (<https://dashboard.stripe.com/settings/checkout>): slå på *Contact information* og *Legal policies* (lenker til vilkår og personvern på betalingssiden). La *Display agreement to legal terms* stå av hvis du bruker avkrysningsboksen fra `REQUIRE_TERMS`.
 4. - [ ] **Kvitteringer** (Settings → Business → Customer emails, <https://dashboard.stripe.com/settings/emails>): slå på *Successful payments* og *Refunds*. Kunden får da en kvittering på e-post. I testmiljø sendes ingen kvittering av seg selv: send den for hånd (Payments → betalingen → *Receipt history* → ⋯ → *Send receipt*).
+5. - [ ] **Kontoutskrift** (Settings → Business → Business details, <https://dashboard.stripe.com/settings/business-details>, under *Public details*): teksten som står på kundens kort- og bankutskrift. Skriv `DISPUTT`. Reglene: 5–22 tegn, bare latinske bokstaver, minst én bokstav, ingen av `< > \ ' " *`, og den skal gjenspeile navnet kunden kjenner ([Stripe](https://docs.stripe.com/get-started/account/statement-descriptors)). Den *forkortede* teksten for kort (2–10 tegn) kan også være `DISPUTT`. En tydelig tekst gir færre tvister, og hver tvist koster 200 kr.
 
 ## 7. Nøkler
 
@@ -258,7 +267,7 @@ Når begge er limt inn, lagre `privat-nokkel.txt` i passordbehandleren og slett 
 
 ## 8. Betalingsserveren (Cloudflare Worker)
 
-Filen er [`payments/worker.js`](../payments/worker.js): ca. 300 linjer, ingen avhengigheter. Du limer den inn i nettleseren, så du trenger ikke Node.
+Filen er [`payments/worker.js`](../payments/worker.js): ca. 350 linjer, ingen avhengigheter. Du limer den inn i nettleseren, så du trenger ikke Node.
 
 1. - [ ] Opprett en konto på <https://dash.cloudflare.com/sign-up> og bekreft e-posten. Gratisplanen holder: 100 000 kall per dag og 10 ms CPU per kall ([Cloudflare](https://developers.cloudflare.com/workers/platform/pricing/)). En betaling bruker to kall.
 2. - [ ] **Workers & Pages → Create → Create Worker** (eller «Hello World»). Navn: `disputt-pay-test`. Trykk **Deploy**.
