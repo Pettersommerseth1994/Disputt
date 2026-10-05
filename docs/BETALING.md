@@ -316,24 +316,24 @@ Appen slår betaling på når byggingen får to variabler: adressen til betaling
 
 > **Slå ikke på betaling på hovedsiden mens du tester.** Alle som åpner siden da får betalingsmuren etter runde 2 (og i testmiljø kan ingen betale med ekte penger). Test i en egen kopi.
 
-### 9.1 Test-kopi (anbefalt)
+### 9.1 Test-kopi (laget)
 
-1. - [ ] Få koden til `main` (si fra, så gjør jeg det): betaling er av som standard, så den ekte siden ser ut og virker som før.
-2. - [ ] Lag en kopi av repoet. Du kan ikke forke ditt eget repo til din egen konto, så gjør det slik: i repoet `Disputt` → **Settings → General → Template repository** (kryss av). Trykk så **Use this template → Create a new repository**, kall den `Disputt-test` og velg **Public** (for gratis Pages). Skru av «Template repository» igjen etterpå om du vil. (Alternativ: en fork under en annen konto eller en organisasjon.)
-3. - [ ] I kopien: **Settings → Pages → Source: GitHub Actions.** (Har du lagd kopien fra en mal, ligger arbeidsflyten der allerede. Ser du at Actions er av, slå dem på under **Actions**.)
-4. - [ ] **Settings → Secrets and variables → Actions → Variables → New repository variable**:
+Test-kopien er laget: <https://github.com/Pettersommerseth1994/Disputt-test> (offentlig, Pages på). Den ligger på `https://pettersommerseth1994.github.io/Disputt-test/`, har samme kode som hovedrepoet, og betaling er av til variablene under er satt. Endres koden i hovedrepoet, legger jeg endringen over i test-kopien også.
+
+1. - [ ] Ha to verdier klare når test-Workeren er laget ([del 8](#8-betalingsserveren-cloudflare-worker)): Worker-adressen (`https://disputt-pay-test.<ditt-navn>.workers.dev`, uten noe på slutten) og innholdet i `offentlig-nokkel.txt`. Ingen av dem er hemmelige.
+2. - [ ] **Send dem til meg**, og si om Vipps er på, så setter jeg variablene i test-kopien og kjører bygget. Vil du heller gjøre det selv: <https://github.com/Pettersommerseth1994/Disputt-test/settings/variables/actions> → *New repository variable*:
 
    | Variabel | Verdi |
    | --- | --- |
-   | `DISPUTT_PAYMENTS_URL` | adressen til test-Workeren, `https://disputt-pay-test.<ditt-navn>.workers.dev` (uten noe på slutten) |
+   | `DISPUTT_PAYMENTS_URL` | adressen til test-Workeren |
    | `DISPUTT_PAYMENTS_KEY` | innholdet i `offentlig-nokkel.txt` |
    | `DISPUTT_PAYMENTS_METHODS` | `applepay` (eller `vipps,applepay` når Vipps er på) |
    | `DISPUTT_FREE_ROUNDS` | valgfri, fra 1 til 99, standard `2` (første runde er alltid gratis, for pakkene kommer ved «Neste runde») |
    | `DISPUTT_TERMS_URL`, `DISPUTT_PRIVACY_URL` | valgfri. Uten dem lenker betalingsskjermen til appens egne sider, `vilkar.html` og `personvern.html` (i test-kopien: kopiens egne). Sett dem bare hvis vilkårene ligger et annet sted |
 
-5. - [ ] **Actions → Pages → Run workflow.** Test-kopien havner på `https://<bruker>.github.io/Disputt-test/`.
-6. - [ ] Gå tilbake til Cloudflare og sett `SITE_URL` i **test-Workeren** til nøyaktig den adressen, med skråstrek på slutten. (Betalingsserveren svarer bare til den siden, og sender verten tilbake dit etter betalingen.) Trykk Deploy. (Test-kopien og den ekte siden ligger begge på `https://<bruker>.github.io` og deler derfor nettleserlagring. Det går bra: hver side husker tilgangen sin under navnet til sin egen betalingsserver.)
-7. - [ ] Åpne test-kopien på telefonen.
+   Kjør så bygget: **Actions → Pages → Run workflow** i test-kopien.
+3. - [ ] Sett `SITE_URL` i **test-Workeren** til `https://pettersommerseth1994.github.io/Disputt-test/` (med skråstrek på slutten) og trykk Deploy. Betalingsserveren svarer bare til den siden, og sender verten tilbake dit etter betalingen.
+4. - [ ] Åpne test-kopien på telefonen.
 
    **Du skal se:** på forsiden står det **Allerede kunde? Logg inn** der «Slik spiller du» stod. Er det ikke slik, mangler en av variablene, eller byggingen er ikke kjørt etter at du la dem inn (Actions-fanen).
 
