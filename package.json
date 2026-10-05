@@ -27,7 +27,7 @@
     "play:subpath": "node tools/qa/play.mjs --p2p --subpath",
     "play:pay": "node tools/qa/play.mjs 4 3 --p2p --pay",
     "play:pay-slow": "node tools/qa/play.mjs 3 3 --p2p --pay-slow",
-    "play:live": "node tools/qa/play.mjs --url=https://pettersommerseth1994.github.io/Disputt",
+    "play:live": "node tools/qa/play.mjs --url=https://disputt.site",
     "qa:stuck": "node tools/qa/stuck.mjs",
     "qa:signalling": "node tools/qa/signalling.mjs",
     "qa:hostile": "node tools/qa/hostile.mjs",

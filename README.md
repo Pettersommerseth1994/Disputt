@@ -6,7 +6,7 @@ Disputt er et sosialt bløff- og diskusjonsspill for **3–10 spillere**. Alle s
 
 Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de andre skanner en QR-kode (eller får lenken sendt med «Del lenke»).
 
-**Spill nå: https://pettersommerseth1994.github.io/Disputt/**
+**Spill nå: https://disputt.site/**
 
 ### Test med venner (fra hvilket som helst nett)
 

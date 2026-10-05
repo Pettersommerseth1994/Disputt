@@ -13,7 +13,7 @@
 // Settings (Worker > Settings > Variables and secrets):
 //   STRIPE_KEY         secret   a Stripe *restricted* key (see docs/BETALING.md for the permissions)
 //   JWT_PRIVATE_KEY    secret   the private signing key, base64 of the PKCS#8 DER (docs/BETALING.md shows how to make it)
-//   SITE_URL           text     where the game lives, e.g. https://pettersommerseth1994.github.io/Disputt/
+//   SITE_URL           text     where the game lives, e.g. https://disputt.site/
 //   PRICE_EVENING, PRICE_YEAR, PRICE_LIFETIME   text   the Stripe price ids (price_…) of the three packages
 //   VIPPS_ENABLED      text     "true" once Stripe has given you access to Vipps (private preview)
 //   STRIPE_VIPPS_VERSION  text  optional: the Stripe-Version header for the Vipps preview, as shown in Stripe's Vipps docs

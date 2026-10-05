@@ -22,6 +22,16 @@ Gratis GitHub-kontoer får bare Pages fra *offentlige* repoer.
 
 **Betaling** (tre pakker, Vipps og Apple Pay hos Stripe) er av som standard og slås på med to variabler til: se [BETALING.md](BETALING.md).
 
+### Eget domene: disputt.site
+
+Siden ligger på `https://disputt.site/` (satt opp 5. oktober 2026). Rotdomenet er hovedadressen; `www.disputt.site` og den gamle `https://<bruker>.github.io/Disputt/` sender folk videre dit (301, med sti og `?j=KODE`).
+
+1. **DNS** (hos Domeneshop: Domains → Manage DNS): fire `A`-poster og fire `AAAA`-poster på rotdomenet, og en `CNAME` for `www` til `<bruker>.github.io`. Adressene står i [GitHubs veiledning](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site): `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` og `2606:50c0:8000::153` til `2606:50c0:8003::153`. De gamle postene til parkeringssiden må bort, og e-postpostene (`MX`, `TXT`) røres ikke.
+2. **GitHub**: Settings → Pages → Custom domain: `disputt.site` (eller `gh api -X PUT repos/<bruker>/Disputt/pages -f cname=disputt.site`). Sett domenet **først når DNS peker på GitHub**, for fra da av sender GitHub også den gamle github.io-adressen dit. Når sertifikatet er klart (noen minutter), slå på *Enforce HTTPS* (`-F https_enforced=true`). Arbeidsflyten trenger ingen `CNAME`-fil.
+3. Kjør **Actions → Pages → Run workflow** (eller push), så siden bygges med riktig rotadresse. `404.html` har en `<base>` for den.
+4. Nettleserlagring (tilgang, pågående rom) følger ikke med mellom adresser. En vert som sitter midt i et spill når adressen flyttes, mister rommet.
+5. Fjerner du Pages-siden mens DNS fortsatt peker på GitHub, kan andre koble domenet til sine egne sider. Fjern da DNS-postene, eller verifiser domenet på GitHub-kontoen (Settings → Pages → Add a domain).
+
 ### Pages + Render (alltid-på server)
 
 Vil du ha en server som alltid står (og slippe at alt henger på vertens telefon), kan Pages-siden bruke Render-serveren:

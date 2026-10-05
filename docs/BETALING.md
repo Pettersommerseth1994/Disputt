@@ -110,7 +110,7 @@ Dette er den delen som tar tid, og den du ikke kan hoppe over. Start i dag, og l
 
 ### 2.3 Vilkår, angrerett og personvern
 
-De to sidene er laget og ligger i appen: [`public/vilkar.html`](../public/vilkar.html) og [`public/personvern.html`](../public/personvern.html), i appens stil. Når de er publisert, ligger de på `https://pettersommerseth1994.github.io/Disputt/vilkar.html` og `https://pettersommerseth1994.github.io/Disputt/personvern.html`. Betalingsskjermen i appen lenker til dem uten at du setter opp noe (`DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL` trengs bare om du vil bruke sider et annet sted). Selger og behandlingsansvarlig er Pesom Holding AS, med org.nr. og adresse øverst på begge sider. Valgene som er gjort i teksten står i [vedlegget](#vedlegg-valgene-i-vilkår-og-personvern).
+De to sidene er laget og ligger i appen: [`public/vilkar.html`](../public/vilkar.html) og [`public/personvern.html`](../public/personvern.html), i appens stil. Når de er publisert, ligger de på `https://disputt.site/vilkar.html` og `https://disputt.site/personvern.html`. Betalingsskjermen i appen lenker til dem uten at du setter opp noe (`DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL` trengs bare om du vil bruke sider et annet sted). Selger og behandlingsansvarlig er Pesom Holding AS, med org.nr. og adresse øverst på begge sider. Valgene som er gjort i teksten står i [vedlegget](#vedlegg-valgene-i-vilkår-og-personvern).
 
 - [x] **E-postadressen på sidene** er `kontakt@disputt.site` (lagt inn 5. oktober 2026, på fire steder: lenken og teksten i hver av de to filene). Den må virke før du går live, se [2.6](#26-e-post-på-disputtsite). Skal den byttes, bytt alle fire. Står `KONTAKT-EPOST` i sidene, stopper byggingen med betaling på.
 - [ ] **Få vilkårene lest av en som kan jus**, med punktene i [vedlegget](#vedlegg-valgene-i-vilkår-og-personvern) og spørsmålet om bekreftelsen under.
@@ -159,7 +159,7 @@ Kundene skal skrive til `kontakt@disputt.site`: den står i vilkårene og person
 
 > Disputt is a social party game for 3–10 players on their own phones: a bluffing and trivia game played in the browser, with no app and no account. The first two rounds of every game are free. The host can buy access as a one-time digital purchase: "En kveld" (one evening, 12 hours) NOK 149, "For ett år" (12 months) NOK 399, "Livstid" (as long as the service is offered) NOK 499. Access is delivered immediately, as a signed pass stored in the browser plus a restore code. No subscriptions, no physical goods, no shipping. Customers are consumers, paying with Vipps, Apple Pay or card.
 >
-> Refund policy: if the access does not work as described and we cannot fix it, we refund the full amount. Terms: https://pettersommerseth1994.github.io/Disputt/vilkar.html (section 5). Privacy: https://pettersommerseth1994.github.io/Disputt/personvern.html
+> Refund policy: if the access does not work as described and we cannot fix it, we refund the full amount. Terms: https://disputt.site/vilkar.html (section 5). Privacy: https://disputt.site/personvern.html
 
 Bransjen skal være det dere faktisk selger (digitale varer, spill eller programvare). Passer ikke det med formålet i Enhetsregisteret, så ta det med regnskapsføreren før du sender inn ([2.1](#21-virksomhet-og-bankkonto)).
 
@@ -211,7 +211,7 @@ Det du trenger å vite om Vipps hos Stripe ([dokumentasjon](https://docs.stripe.
 
 ## 6. Stripe: offentlig informasjon, Checkout og kvitteringer
 
-1. - [ ] **Offentlige opplysninger** (<https://dashboard.stripe.com/settings/public>): navn kunden ser (for eksempel «Disputt»), juridisk navn (**Pesom Holding AS**), støtte-e-post (`kontakt@disputt.site`, se [2.6](#26-e-post-på-disputtsite)), støttetelefon om du har, nettsted (`https://pettersommerseth1994.github.io/Disputt/`), og **adressene til vilkår og personvern**: `https://pettersommerseth1994.github.io/Disputt/vilkar.html` og `https://pettersommerseth1994.github.io/Disputt/personvern.html`. Boksen «Jeg godtar vilkårene» krever en vilkår-URL her; kvitteringene krever juridisk navn, støtteadresse, støtte-e-post og personvern-URL. Sidene må være publisert (sendt til `main`) før Stripe kan lese dem.
+1. - [ ] **Offentlige opplysninger** (<https://dashboard.stripe.com/settings/public>): navn kunden ser (for eksempel «Disputt»), juridisk navn (**Pesom Holding AS**), støtte-e-post (`kontakt@disputt.site`, se [2.6](#26-e-post-på-disputtsite)), støttetelefon om du har, nettsted (`https://disputt.site/`), og **adressene til vilkår og personvern**: `https://disputt.site/vilkar.html` og `https://disputt.site/personvern.html`. Boksen «Jeg godtar vilkårene» krever en vilkår-URL her; kvitteringene krever juridisk navn, støtteadresse, støtte-e-post og personvern-URL. Sidene må være publisert (sendt til `main`) før Stripe kan lese dem.
 2. - [ ] **Utseende** (Settings → Business → Branding, <https://dashboard.stripe.com/settings/branding>): last opp `public/assets/icons/icon-512.png` (kvadratisk PNG, minst 128 × 128 px, under 512 KB), og velg farger: `#6a1428` (burgunder) og `#fae025` (gul).
 3. - [ ] **Checkout** (<https://dashboard.stripe.com/settings/checkout>): slå på *Contact information* og *Legal policies* (lenker til vilkår og personvern på betalingssiden). La *Display agreement to legal terms* stå av hvis du bruker avkrysningsboksen fra `REQUIRE_TERMS`.
 4. - [ ] **Kvitteringer** (Settings → Business → Customer emails, <https://dashboard.stripe.com/settings/emails>): slå på *Successful payments* og *Refunds*. Kunden får da en kvittering på e-post. I testmiljø sendes ingen kvittering av seg selv: send den for hånd (Payments → betalingen → *Receipt history* → ⋯ → *Send receipt*).
@@ -278,13 +278,13 @@ Filen er [`payments/worker.js`](../payments/worker.js): ca. 350 linjer, ingen av
    | --- | --- | --- |
    | `STRIPE_KEY` | **Secret** | `rk_test_…` fra 7.1 |
    | `JWT_PRIVATE_KEY` | **Secret** | innholdet i `privat-nokkel.txt` |
-   | `SITE_URL` | Text | adressen til **siden som skal bruke betalingen**, med skråstrek på slutten (for en test-kopi: test-kopiens adresse, se del 9) |
+   | `SITE_URL` | Text | adressen til **siden som skal bruke betalingen**, med skråstrek på slutten (live: `https://disputt.site/`; for test-kopien: `https://pettersommerseth1994.github.io/Disputt-test/`, se del 9) |
    | `PRICE_EVENING` | Text | `price_…` for «En kveld» |
    | `PRICE_YEAR` | Text | `price_…` for «For ett år» |
    | `PRICE_LIFETIME` | Text | `price_…` for «Livstid» |
    | `VIPPS_ENABLED` | Text | `false` (settes til `true` når Stripe har gitt deg Vipps) |
    | `REQUIRE_TERMS` | Text | `true` når vilkårene finnes (live: ja) |
-   | `TERMS_URL` | Text | `https://pettersommerseth1994.github.io/Disputt/vilkar.html` (for en test-kopi: kopiens egen `…/vilkar.html`; uten mellomrom og parenteser) |
+   | `TERMS_URL` | Text | `https://disputt.site/vilkar.html` (for en test-kopi: kopiens egen `…/vilkar.html`; uten mellomrom og parenteser) |
    | `STRIPE_VIPPS_VERSION` | Text, valgfri | bare hvis Stripes Vipps-dokumentasjon bruker en annen versjon enn `2026-09-30.preview; vipps_preview=v1` |
    | `METHOD_MODE` | Text, valgfri | Vanlig (tom): hver knapp ber om bare sin egen betalingsmåte (`allowed_payment_method_types`). `static`: sender den eldre `payment_method_types` i stedet. `dynamic`: Stripe-dashboardet bestemmer, og begge knappene viser det samme |
 
@@ -380,11 +380,11 @@ Testkort ([Stripes testkort](https://docs.stripe.com/testing)): `4242 4242 4242 
 
 Først når alt over virker i testmiljøet.
 
-- [ ] **Bestem adressen til spillet før dere tar imot betaling.** Tilgangen ligger i nettleseren for én adresse (i dag `https://pettersommerseth1994.github.io`). Flytter du spillet senere til et eget domene (for eksempel `disputt.site`), må alle som har kjøpt skrive inn koden sin igjen, og `SITE_URL` i Workeren, adressene i Stripe og lenkene til vilkårene må byttes.
+- [x] **Adressen til spillet er `https://disputt.site/`** (flyttet dit 5. oktober 2026, før noen har kjøpt; `www.disputt.site` og den gamle github.io-adressen sender folk videre). Tilgangen ligger i nettleseren for én adresse, så en senere flytting betyr at kundene må skrive koden sin på nytt (se «Flytte siden til et eget domene» i [del 12](#12-drift)).
 - [ ] **Selskapet er klart** (del 2): formålet i vedtektene og næringskoden passer til det dere selger (spør regnskapsføreren), bankkonto i selskapets navn, mva-behandlingen avklart, e-posten `kontakt@disputt.site` er satt opp og testet (2.6), sidene er publisert og virker, og en jurist har lest vilkårene (særlig angrerett og bekreftelsen, aldersgrensen og refusjon av «Livstid», se vedlegget).
 - [ ] **Stripe-kontoen er aktivert** (del 3), og Vipps er slått på hvis du har fått tilgang.
 - [ ] **I live-modus** (bryt over i live øverst i Dashboard): lag de tre **produktene og prisene på nytt** (del 4), fyll ut offentlig informasjon, utseende, Checkout og kvitteringer (del 6), og lag en **live-nøkkel**, `rk_live_…`, med de samme tre rettighetene (del 7.1). Kopier den med en gang.
-- [ ] **Lag en ny Worker, `disputt-pay`** (del 8): samme kode, men `STRIPE_KEY` = live-nøkkelen, de tre **live**-pris-ID-ene, `SITE_URL` = den ekte sidens adresse, `VIPPS_ENABLED` = `true` hvis Vipps er på, `REQUIRE_TERMS` = `true` og `TERMS_URL` = `https://pettersommerseth1994.github.io/Disputt/vilkar.html`. `JWT_PRIVATE_KEY` må være et **eget nøkkelpar for live** (del 7.2), ikke det samme som i test. Den offentlige nøkkelen i hovedrepoet er den som hører til.
+- [ ] **Lag en ny Worker, `disputt-pay`** (del 8): samme kode, men `STRIPE_KEY` = live-nøkkelen, de tre **live**-pris-ID-ene, `SITE_URL` = `https://disputt.site/`, `VIPPS_ENABLED` = `true` hvis Vipps er på, `REQUIRE_TERMS` = `true` og `TERMS_URL` = `https://disputt.site/vilkar.html`. `JWT_PRIVATE_KEY` må være et **eget nøkkelpar for live** (del 7.2), ikke det samme som i test. Den offentlige nøkkelen i hovedrepoet er den som hører til.
 - [ ] Åpne `…/health` på den nye Workeren: `"mode":"live"`, `"terms":"box-with-link"`.
 - [ ] **GitHub, hovedrepoet:** variablene `DISPUTT_PAYMENTS_URL` (den nye Workeren), `DISPUTT_PAYMENTS_KEY`, `DISPUTT_PAYMENTS_METHODS`. (`DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL` trengs ikke: appens egne sider brukes.) Kjør **Actions → Pages → Run workflow**.
 - [ ] **Kjøp pakken «En kveld» selv**, med ekte betaling (149 kr). Sjekk: betalingen står i Stripe, kvitteringen kom, «Takk!» viser koden, og runden starter. **Refunder** den deretter i Dashboard og sjekk at koden da nektes.
