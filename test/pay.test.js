@@ -149,10 +149,10 @@ describe('the restore code', () => {
 
 describe('the packages', () => {
   it('are the three the host can buy, with the prices from the plan', () => {
-    assert.deepEqual(PLANS.map((p) => [p.id, p.name, p.price]), [['evening', 'En kveld', 149], ['year', 'For ett år', 399], ['lifetime', 'Livstid', 499]]);
+    assert.deepEqual(PLANS.map((p) => [p.id, p.name, p.price]), [['evening', 'En kveld', 89], ['year', 'For ett år', 249], ['lifetime', 'Livstid', 299]]);
     assert.equal(planById(DEFAULT_PLAN).id, 'year');
     assert.equal(planById('nope'), null);
-    assert.equal(formatPrice(149), '149 kr');
+    assert.equal(formatPrice(89), '89 kr');
     assert.ok(PERKS.length >= 3);
   });
 

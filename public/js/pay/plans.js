@@ -7,14 +7,14 @@ export const PLANS = [
   {
     id: 'evening',
     name: 'En kveld',
-    price: 149,
+    price: 89,
     length: '12 timer',
     detail: 'Til én spillekveld. Gjelder i 12 timer fra du betaler.',
   },
   {
     id: 'year',
     name: 'For ett år',
-    price: 399,
+    price: 249,
     length: '12 måneder',
     detail: 'For faste spillekvelder. Gjelder i 12 måneder fra du betaler, og fornyes ikke av seg selv.',
     badge: 'Mest populær',
@@ -22,7 +22,7 @@ export const PLANS = [
   {
     id: 'lifetime',
     name: 'Livstid',
-    price: 499,
+    price: 299,
     length: 'Én betaling',
     detail: 'Betal én gang, spill for alltid. Gjelder så lenge Disputt finnes.',
     badge: 'Best verdi',

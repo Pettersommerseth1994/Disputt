@@ -13,7 +13,7 @@ import { payScreens } from './payfixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
-const PRICES = { evening: 149, year: 399, lifetime: 499 };
+const PRICES = { evening: 89, year: 249, lifetime: 299 };
 const base = process.argv.find((a) => a.startsWith('--url='))?.slice('--url='.length).replace(/\/+$/, '');
 const plan = process.argv.find((a) => a.startsWith('--plan='))?.slice('--plan='.length) ?? 'evening';
 const SHOT = process.argv.includes('--shot');
@@ -42,7 +42,7 @@ try {
   await page.evaluate((view) => window.__disputt.setStore({ view, paywall: true }), host);
   await page.waitForSelector('input[name=plan]', { timeout: 10000 });
   const text = await page.evaluate(() => document.body.innerText);
-  for (const [name, price] of [['En kveld', 149], ['For ett år', 399], ['Livstid', 499]]) assert.match(text, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is on the packages with ${price} kr`);
+  for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(text, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is on the packages with ${price} kr`);
   assert.match(text, /Jeg godtar vilkårene, ber om at tilgangen leveres med en gang, og forstår at jeg da mister angreretten/);
   log('the host sees the three packages and the consent');
 

@@ -422,7 +422,7 @@ describe('asking whether it was paid', () => {
 
   it('tells the host, and stops waiting, when the order was refunded, cancelled or disputed, or the package has run out', async () => {
     for (const [what, act, wording] of [
-      ['refunded', (o) => t.deliver('refunds/create', { id: 1 + Math.floor(Math.random() * 1e9), order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '149.00', currency: 'NOK' }] }), /refundert/],
+      ['refunded', (o) => t.deliver('refunds/create', { id: 1 + Math.floor(Math.random() * 1e9), order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '89.00', currency: 'NOK' }] }), /refundert/],
       ['cancelled', (o) => t.deliver('orders/cancelled', o), /kansellert/],
       ['disputed', (o) => t.deliver('disputes/create', { id: 7, order_id: o.id }), /bestridt/],
     ]) {

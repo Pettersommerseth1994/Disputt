@@ -5,7 +5,7 @@ export const SECRET = 'shpss_qa_signing_secret';
 export const SHOP = 'https://shop.example.test';
 /** Like the real ones: numbers of 14 digits. */
 export const VARIANTS = { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' };
-export const PRICES = { evening: '149.00', year: '399.00', lifetime: '499.00' };
+export const PRICES = { evening: '89.00', year: '249.00', lifetime: '299.00' };
 export const CODE = 'K7M2-9QXD-4TRB';
 
 let nextOrder = 1001;
@@ -54,7 +54,7 @@ export const refund = (orderId, amount, { id, kind = 'refund', status = 'success
 });
 
 /** A chargeback (the topic disputes/create). */
-export const dispute = (orderId, { id } = {}) => ({ id: id ?? nextId++, order_id: orderId, type: 'chargeback', amount: '399.00', currency: 'NOK', status: 'needs_response' });
+export const dispute = (orderId, { id } = {}) => ({ id: id ?? nextId++, order_id: orderId, type: 'chargeback', amount: '249.00', currency: 'NOK', status: 'needs_response' });
 
 /** Shopify's signature: HMAC-SHA256 of the body with the signing secret, in base64. */
 export async function sign(body, secret = SECRET) {

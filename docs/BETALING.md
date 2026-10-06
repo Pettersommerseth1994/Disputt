@@ -12,9 +12,9 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 
 | Pakke | Pris | Varighet |
 | --- | --- | --- |
-| **En kveld** | 149 kr | 12 timer fra betalingen |
-| **For ett år** (mest populær) | 399 kr | 12 måneder fra betalingen |
-| **Livstid** (best verdi) | 499 kr | én betaling, ingen utløpsdato |
+| **En kveld** | 89 kr | 12 timer fra betalingen |
+| **For ett år** (mest populær) | 249 kr | 12 måneder fra betalingen |
+| **Livstid** (best verdi) | 299 kr | én betaling, ingen utløpsdato |
 
 Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betaler; de andre spiller gratis på sine egne telefoner.
 
@@ -106,7 +106,7 @@ Dette er den delen som tar tid, og den du ikke kan hoppe over. Start i dag, og l
 
 ### 2.2 Merverdiavgift (mva)
 
-- Pesom Holding AS står som **mva-registrert** (Proff viser «MVA» etter organisasjonsnummeret). Da skal prisene forbrukere ser være sluttprisene, med mva i. Appen og vilkårene sier derfor «inkl. mva»: 149, 399 og 499 kr er det kunden betaler, og selskapet skal beregne og betale mva av beløpet (normalsatsen er 25 %). Spør regnskapsføreren om riktig sats for denne typen tjeneste og om hvordan salg via Stripe skal bokføres.
+- Pesom Holding AS står som **mva-registrert** (Proff viser «MVA» etter organisasjonsnummeret). Da skal prisene forbrukere ser være sluttprisene, med mva i. Appen og vilkårene sier derfor «inkl. mva»: 89, 249 og 299 kr er det kunden betaler, og selskapet skal beregne og betale mva av beløpet (normalsatsen er 25 %). Spør regnskapsføreren om riktig sats for denne typen tjeneste og om hvordan salg via Stripe skal bokføres.
 - «inkl. mva» står i `public/js/screens/pay.js` og i punkt 2 i [vilkårene](../public/vilkar.html). Skulle selskapet likevel ikke være mva-registrert, må det ut begge steder.
 - **Alternativ:** Stripe tilbyr [Managed Payments](https://docs.stripe.com/payments/managed-payments), der Stripe er selger overfor kunden (merchant of record) og tar mva-oppgjøret i over 80 land. Norge er med som forretningsland, og Apple Pay og kort støttes. Men **Vipps støttes ikke** (ikke i listen over betalingsmåter), kunden ser «Sold through Link», og kvitteringene kommer fra Link og kan ikke tilpasses. Det er ikke bygget inn her. Si fra hvis du vil vurdere det.
 
@@ -134,9 +134,9 @@ Stripe tar for norske og europeiske kort (Apple Pay regnes som kort) **2,4 % + 2
 
 | Pakke | Pris | Stripe-gebyr | Igjen før mva og skatt | Hvis 25 % mva ligger i prisen: mva | Igjen etter gebyr og mva |
 | --- | --- | --- | --- | --- | --- |
-| En kveld | 149 kr | 5,58 kr | 143,42 kr | 29,80 kr | 113,62 kr |
-| For ett år | 399 kr | 11,58 kr | 387,42 kr | 79,80 kr | 307,62 kr |
-| Livstid | 499 kr | 13,98 kr | 485,02 kr | 99,80 kr | 385,22 kr |
+| En kveld | 89 kr | 4,14 kr | 84,86 kr | 17,80 kr | 67,06 kr |
+| For ett år | 249 kr | 7,98 kr | 241,02 kr | 49,80 kr | 191,22 kr |
+| Livstid | 299 kr | 9,18 kr | 289,82 kr | 59,80 kr | 230,02 kr |
 
 (Regnestykket er et anslag for norske kort og Apple Pay. Vipps-gebyret er ikke med.)
 
@@ -159,7 +159,7 @@ Kundene skal skrive til `kontakt@disputt.site`: den står i vilkårene og person
 
 **Tekster til aktiveringen.** Stripe spør hva dere selger, og noen leser svaret, så skriv det på engelsk. Du kan lime inn dette (endre hvis noe ikke stemmer):
 
-> Disputt is a social party game for 3–10 players on their own phones: a bluffing and trivia game played in the browser, with no app and no account. The first two rounds of every game are free. The host can buy access as a one-time digital purchase: "En kveld" (one evening, 12 hours) NOK 149, "For ett år" (12 months) NOK 399, "Livstid" (as long as the service is offered) NOK 499. Access is delivered immediately, as a signed pass stored in the browser plus a restore code. No subscriptions, no physical goods, no shipping. Customers are consumers, paying with Vipps, Apple Pay or card.
+> Disputt is a social party game for 3–10 players on their own phones: a bluffing and trivia game played in the browser, with no app and no account. The first two rounds of every game are free. The host can buy access as a one-time digital purchase: "En kveld" (one evening, 12 hours) NOK 89, "For ett år" (12 months) NOK 249, "Livstid" (as long as the service is offered) NOK 299. Access is delivered immediately, as a signed pass stored in the browser plus a restore code. No subscriptions, no physical goods, no shipping. Customers are consumers, paying with Vipps, Apple Pay or card.
 >
 > Refund policy: if the access does not work as described and we cannot fix it, we refund the full amount. Terms: https://disputt.site/vilkar.html (section 5). Privacy: https://disputt.site/personvern.html
 
@@ -175,13 +175,13 @@ For hver av de tre pakkene: *Product catalog* → **Add product**:
 
 | Navn | Beskrivelse | Pris | Type |
 | --- | --- | --- | --- |
-| Disputt – En kveld | 12 timers tilgang for verten | **149,00 NOK** | One-off (engangs) |
-| Disputt – For ett år | 12 måneders tilgang for verten | **399,00 NOK** | One-off |
-| Disputt – Livstid | Tilgang så lenge Disputt finnes, for verten | **499,00 NOK** | One-off |
+| Disputt – En kveld | 12 timers tilgang for verten | **89,00 NOK** | One-off (engangs) |
+| Disputt – For ett år | 12 måneders tilgang for verten | **249,00 NOK** | One-off |
+| Disputt – Livstid | Tilgang så lenge Disputt finnes, for verten | **299,00 NOK** | One-off |
 
 1. - [ ] Lag de tre produktene. Velg **One-off**, ikke *Recurring*.
 2. - [ ] Kopier **pris-ID-en** til hver (`price_…`): åpne produktet, finn prisen, trykk ⋯ → *Copy price ID*. Du trenger de tre i del 8 (`PRICE_EVENING`, `PRICE_YEAR`, `PRICE_LIFETIME`).
-3. - [ ] Dobbeltsjekk at beløpene er **nøyaktig** 149, 399 og 499 kroner, i NOK.
+3. - [ ] Dobbeltsjekk at beløpene er **nøyaktig** 89, 249 og 299 kroner, i NOK.
 
 Betalingsserveren sjekker prisen **før** kunden får se betalingssiden: stemmer ikke beløpet i Stripe med pakken (en pris-ID som peker på feil pris), får du feilen «Prisen i Stripe stemmer ikke med pakken» med navnet på variabelen, og ingen betaler for noe som ikke virker. Beløpet som betalingen startet med lagres også hos Stripe, og kontrolleres igjen når tilgangen hentes. Skal du endre en pris, se «Endre priser» i [del 12](#12-drift).
 
@@ -302,7 +302,7 @@ Filen er [`payments/worker.js`](../payments/worker.js): ca. 350 linjer, ingen av
 | `… (JWT_PRIVATE_KEY kan ikke leses)` | nøkkelen er kuttet, har linjeskift midt i, eller er ikke fra del 7.2 |
 | `… (TERMS_URL må være en https-adresse …)` | adressen har mellomrom, parenteser eller anførselstegn, eller er ikke https |
 | `Denne siden har ikke lov til å bruke betalingen` | adressen som kaller er ikke `SITE_URL` (feil adresse, eller http i stedet for https) |
-| `Beløpet stemmer ikke med pakken` | prisen i Stripe er ikke nøyaktig 149/399/499 kr i NOK |
+| `Beløpet stemmer ikke med pakken` | prisen i Stripe er ikke nøyaktig 89/249/299 kr i NOK |
 | `Betalingstjenesten sa nei …` (og i Cloudflare-loggen: *No such price*) | pris-ID-en hører til et annet miljø: en live-pris sammen med en testnøkkel, eller omvendt |
 | `Tilgangen kunne ikke kontrolleres` etter en betaling | den offentlige nøkkelen på GitHub (`DISPUTT_PAYMENTS_KEY`) hører ikke til den private i Cloudflare (`JWT_PRIVATE_KEY`). Betalingen er gjort, så rett opp nøkkelen og la kunden trykke «Logg inn» med koden. |
 | `Fikk ikke kontakt med betalingen` | telefonen når ikke betalingsserveren: feil adresse i `DISPUTT_PAYMENTS_URL`, eller Workeren er ikke deployet |
@@ -354,13 +354,13 @@ Testkort ([Stripes testkort](https://docs.stripe.com/testing)): `4242 4242 4242 
 | 1 | Åpne `…/health` på Workeren | `ok: true`, `mode: "test"` |
 | 2 | Forsiden | «Allerede kunde? Logg inn» (ikke «Slik spiller du»); regler finnes fortsatt under Vertsvalg i spillet |
 | 3 | Spill to runder. Verten trykker «Neste runde» | Verten får **pakkene**. Gjestene ser «Venter på at verten starter neste runde» og får aldri pakkene |
-| 4 | Velg **En kveld**, trykk **Betal med Apple Pay**. Betal med `4242…` | Stripe-siden viser 149 kr. Tilbake i spillet: «Takk!» med koden og knappen **Start runde 3** |
+| 4 | Velg **En kveld**, trykk **Betal med Apple Pay**. Betal med `4242…` | Stripe-siden viser 89 kr. Tilbake i spillet: «Takk!» med koden og knappen **Start runde 3** |
 | 5 | Mens verten er hos Stripe: se på en gjest | «Verten betaler – spillet fortsetter straks». Gjesten blir i spillet, også etter flere minutter (opptil ti) |
 | 6 | Trykk **Start runde 3** | Runde 3 starter. Er en gjest ikke tilbake ennå, står det «Venter på at … kommer tilbake …» under koden |
 | 7 | Trykk «Neste runde» etter runde 3 | Ingen betalingsmur: verten har tilgang |
 | 8 | **Avbryt** på Stripe-siden (pilen tilbake) | «Betalingen ble avbrutt. Du er ikke belastet.» Spillet står som før; «Neste runde» gir pakkene igjen |
 | 9 | I Stripe: Payments → betalingen → send kvittering for hånd | Kvitteringen kommer. **Står koden i kvitteringen?** Hvis ikke: se «Mistet koden» i [del 12](#12-drift) |
-| 10 | Pakken «For ett år» og «Livstid» (egne betalinger) | Beløpene 399 og 499 kr. «Takk!» sier «Gjelder til …» og «Gjelder for alltid» |
+| 10 | Pakken «For ett år» og «Livstid» (egne betalinger) | Beløpene 249 og 299 kr. «Takk!» sier «Gjelder til …» og «Gjelder for alltid» |
 | 11 | Avvist kort `4000 0000 0000 0002` | Stripe viser feil og lar deg prøve igjen. Spillet påvirkes ikke |
 | 12 | 3-D Secure `4000 0027 6000 3184` | Testsiden for godkjenning, så «Takk!» |
 | 13 | Ny telefon (eller privat fane): **Logg inn** → skriv koden | «Velkommen tilbake! …». Prøv også koden med små bokstaver og uten bindestreker, og en feil kode («Fant ingen betaling med den koden.»). **Vent et minutt etter betalingen først:** Stripes søk, som slår opp koden, kan ligge opptil ett minutt etter ([Stripe](https://docs.stripe.com/search): «under 1 minute»). Betaler du og logger inn med en gang på en annen telefon, kan du få «Fant ingen betaling» som går over av seg selv. |
@@ -389,15 +389,15 @@ Først når alt over virker i testmiljøet.
 - [ ] **Lag en ny Worker, `disputt-pay`** (del 8): samme kode, men `STRIPE_KEY` = live-nøkkelen, de tre **live**-pris-ID-ene, `SITE_URL` = `https://disputt.site/`, `VIPPS_ENABLED` = `true` hvis Vipps er på, `REQUIRE_TERMS` = `true` og `TERMS_URL` = `https://disputt.site/vilkar.html`. `JWT_PRIVATE_KEY` må være et **eget nøkkelpar for live** (del 7.2), ikke det samme som i test. Den offentlige nøkkelen i hovedrepoet er den som hører til.
 - [ ] Åpne `…/health` på den nye Workeren: `"mode":"live"`, `"terms":"box-with-link"`.
 - [ ] **GitHub, hovedrepoet:** variablene `DISPUTT_PAYMENTS_URL` (den nye Workeren), `DISPUTT_PAYMENTS_KEY`, `DISPUTT_PAYMENTS_METHODS`. (`DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL` trengs ikke: appens egne sider brukes.) Kjør **Actions → Pages → Run workflow**.
-- [ ] **Kjøp pakken «En kveld» selv**, med ekte betaling (149 kr). Sjekk: betalingen står i Stripe, kvitteringen kom, «Takk!» viser koden, og runden starter. **Refunder** den deretter i Dashboard og sjekk at koden da nektes.
+- [ ] **Kjøp pakken «En kveld» selv**, med ekte betaling (89 kr). Sjekk: betalingen står i Stripe, kvitteringen kom, «Takk!» viser koden, og runden starter. **Refunder** den deretter i Dashboard og sjekk at koden da nektes.
 - [ ] Sjekk utbetalingen (Stripe utbetaler til bankkontoen etter en frist som står i Dashboard) og at bokføringen din får det den trenger.
-- [ ] Fortell vennene dine at spillet nå har en betalingsmur etter runde 2 (og at den ene kvelden er 149 kr).
+- [ ] Fortell vennene dine at spillet nå har en betalingsmur etter runde 2 (og at den ene kvelden er 89 kr).
 
 ## 12. Drift
 
 | Når | Gjør slik |
 | --- | --- |
-| **Refusjon** | Stripe → Payments → betalingen → **Refund**. Refunderer du **hele** beløpet, virker koden ikke lenger på nye telefoner. En delvis refusjon (for eksempel 50 av 149 kr som imøtekommelse) låser ikke noe: kunden beholder det de kjøpte. En betaling som banken har bestridt (tvist) låses også. Telefoner som allerede har tilgangen beholder den (tilgangen er en signert fil som ikke kan trekkes tilbake, se del 14). |
+| **Refusjon** | Stripe → Payments → betalingen → **Refund**. Refunderer du **hele** beløpet, virker koden ikke lenger på nye telefoner. En delvis refusjon (for eksempel 20 av 89 kr som imøtekommelse) låser ikke noe: kunden beholder det de kjøpte. En betaling som banken har bestridt (tvist) låses også. Telefoner som allerede har tilgangen beholder den (tilgangen er en signert fil som ikke kan trekkes tilbake, se del 14). |
 | **Mistet koden** | Kunden skriver til deg med e-posten som ble brukt. Finn betalingen i Stripe (Payments, søk på e-post), åpne den og se **Metadata → code**. Send koden. (Eller send kvitteringslenken.) |
 | **Kundens telefon er byttet** | «Allerede kunde? Logg inn» med koden. Nettleseren husker tilgangen etterpå. |
 | **Rotere Stripe-nøkkelen** | Dashboard → API keys → ⋯ → *Rotate key* (du får opptil 7 dagers overlapp), og legg den nye verdien i `STRIPE_KEY` i Cloudflare. |

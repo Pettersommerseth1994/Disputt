@@ -10,7 +10,7 @@
 
 const alnum = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[b % 62]).join('');
 
-export function createFakeStripe({ key = 'sk_test_fake', prices = { price_evening: 14900, price_year: 39900, price_lifetime: 49900 }, checkoutBase = 'https://checkout.stripe.test', now = () => Date.now() } = {}) {
+export function createFakeStripe({ key = 'sk_test_fake', prices = { price_evening: 8900, price_year: 24900, price_lifetime: 29900 }, checkoutBase = 'https://checkout.stripe.test', now = () => Date.now() } = {}) {
   const sessions = new Map();
   const payments = new Map();
   const calls = [];

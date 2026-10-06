@@ -162,7 +162,7 @@ describe('POST /shopify/webhook: orders/paid', () => {
       plan: 'year',
       paid_at: Math.floor(Date.parse(o.processed_at) / 1000),
       consented_at: Math.floor(Date.parse(o.note_attributes.find((a) => a.name === 'samtykke').value) / 1000),
-      amount: 39900,
+      amount: 24900,
       currency: 'NOK',
       name: o.name,
       test: 0,
@@ -184,7 +184,7 @@ describe('POST /shopify/webhook: orders/paid', () => {
     const disputed = order({ code: 'MMMM-MMMM-MMM1' });
     for (const o of [cancelled, refunded, disputed]) await t.deliver('orders/paid', o);
     await t.deliver('orders/cancelled', cancelled);
-    await t.deliver('refunds/create', refund(refunded.id, '399.00'));
+    await t.deliver('refunds/create', refund(refunded.id, '249.00'));
     await t.deliver('disputes/create', dispute(disputed.id));
     for (const o of [cancelled, refunded, disputed]) assert.equal((await t.deliver('orders/paid', o)).status, 200);
     assert.deepEqual(rows().map((r) => r.state).sort(), ['cancelled', 'disputed', 'refunded']);
@@ -317,11 +317,11 @@ describe('POST /shopify/webhook: cancelled, refunded, disputed', () => {
     await t.deliver('refunds/create', refund(o.id, '100.00'));
     assert.equal((await claim()).status, 200, 'a part of it back (a goodwill refund) does not take the access away');
     assert.equal(rows()[0].refunded, 10000);
-    await t.deliver('refunds/create', refund(o.id, '299.00'));
+    await t.deliver('refunds/create', refund(o.id, '149.00'));
     const r = await claim();
     assert.equal(r.status, 410);
     assert.equal(r.body.error, 'refunded');
-    assert.equal(rows()[0].refunded, 39900);
+    assert.equal(rows()[0].refunded, 24900);
   });
 
   it('counts a refund once, however many times Shopify calls about it, and does not count one that did not go through', async () => {
@@ -339,27 +339,27 @@ describe('POST /shopify/webhook: cancelled, refunded, disputed', () => {
 
   it('counts a refund that has been asked for but has not cleared yet (a payment app such as Vipps), and stops the code at once', async () => {
     const { order: o } = await t.pay({ plan: 'year' });
-    await t.deliver('refunds/create', refund(o.id, '399.00', { status: 'pending' }));
+    await t.deliver('refunds/create', refund(o.id, '249.00', { status: 'pending' }));
     assert.equal((await claim()).body.error, 'refunded');
   });
 
   it('counts a refund that does not say which currency it is in as one in the currency of the order', async () => {
     const { order: o } = await t.pay({ plan: 'evening' });
-    await t.deliver('refunds/create', { id: 77, order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '149.00' }] });
+    await t.deliver('refunds/create', { id: 77, order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '89.00' }] });
     assert.equal((await claim()).body.error, 'refunded');
   });
 
   it('counts a refund only in the currency of the order: a sum in another currency is not the same sum', async () => {
     const { order: o } = await t.pay({ plan: 'year' });
     await t.deliver('refunds/create', refund(o.id, '36.00', { currency: 'EUR' }));
-    await t.deliver('refunds/create', refund(o.id, '399.00', { currency: 'EUR' }));
+    await t.deliver('refunds/create', refund(o.id, '249.00', { currency: 'EUR' }));
     assert.equal(rows()[0].refunded, 0, 'what was paid back in euros does not add up to what was paid in kroner');
     assert.equal((await claim()).status, 200);
   });
 
   it('applies a refund that Shopify\'s calls delivered before the order', async () => {
     const o = order({ plan: 'evening' });
-    await t.deliver('refunds/create', refund(o.id, '149.00'));
+    await t.deliver('refunds/create', refund(o.id, '89.00'));
     await t.deliver('orders/paid', o);
     assert.equal((await claim()).body.error, 'refunded');
   });
@@ -505,7 +505,7 @@ describe('POST /restore: a customer on a new phone', () => {
     assert.equal(unknown.status, 404);
     assert.match(unknown.body.message, /Fant ingen betaling/);
     const { order: o } = await t.pay({ plan: 'year' });
-    await t.deliver('refunds/create', refund(o.id, '399.00'));
+    await t.deliver('refunds/create', refund(o.id, '249.00'));
     assert.equal((await post(CODE)).body.error, 'refunded');
     await t.pay({ plan: 'evening', code: 'HHHH-HHHH-HHH1', paidAt: new Date(Date.now() - 13 * HOUR) });
     assert.equal((await post('HHHH-HHHH-HHH1')).body.error, 'expired');

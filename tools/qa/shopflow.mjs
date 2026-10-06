@@ -43,7 +43,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt to runder gratis/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
-  for (const [name, price] of [['En kveld', 149], ['For ett år', 399], ['Livstid', 499]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
+  for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Gå til betaling/);
   assert.match(paywall, /Jeg godtar vilkårene, ber om at tilgangen leveres med en gang, og forstår at jeg da mister angreretten/);
   assert.doesNotMatch(paywall, /Betal med (Vipps|Apple Pay)/, 'the shop lets the customer choose the way to pay: there is one button');
@@ -68,7 +68,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   await clickButton(host, 'Gå til betaling');
   const first = await shopTab(host);
   assert.equal((await host.ctx.pages()).length, pagesBefore + 1, 'the shop opened in a new tab, and the game is still where it was');
-  assert.equal(await first.$eval('#amount', (el) => el.textContent), '149 kr');
+  assert.equal(await first.$eval('#amount', (el) => el.textContent), '89 kr');
   assert.match(await first.$eval('#what', (el) => el.textContent), /evening/);
   const attributes = await first.$eval('#attributes', (el) => el.textContent);
   assert.match(attributes, /samtykke: \d{4}-\d{2}-\d{2}T[\d:.]+Z/, 'the time of the consent is on the order');
@@ -112,7 +112,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   await tick(host);
   await clickButton(host, 'Gå til betaling');
   const shop = await shopTab(host);
-  assert.equal(await shop.$eval('#amount', (el) => el.textContent), '499 kr');
+  assert.equal(await shop.$eval('#amount', (el) => el.textContent), '299 kr');
   const code = await codeOnCheckout(shop);
   assert.notEqual(code, firstCode, 'a new try is a new code');
   if (holdMs) {
@@ -195,7 +195,7 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   const orders = stack.orders.length;
   await clickButton(phone, 'Gå til betaling');
   await phone.page.waitForFunction(() => location.pathname.startsWith('/checkouts/'), { timeout: 20000 });
-  assert.equal(await phone.page.$eval('#amount', (el) => el.textContent), '399 kr');
+  assert.equal(await phone.page.$eval('#amount', (el) => el.textContent), '249 kr');
   await phone.page.click('#pay');
   await phone.page.waitForSelector('#thanks');
   assert.equal(stack.orders.length, orders + 1);

@@ -47,8 +47,8 @@ describe('POST /checkout', () => {
     assert.equal(p.get('line_items[0][quantity]'), '1');
     assert.equal(p.get('allowed_payment_method_types[0]'), 'card', 'Apple Pay is part of "card" on Stripe\'s page');
     assert.equal(p.get('payment_method_types[0]'), null, 'the older parameter is not used unless asked for');
-    assert.equal(p.get('metadata[amount]'), '39900', 'what this payment is started with, so that a later change of price cannot lock out the buyer');
-    assert.equal(p.get('payment_intent_data[metadata][amount]'), '39900');
+    assert.equal(p.get('metadata[amount]'), '24900', 'what this payment is started with, so that a later change of price cannot lock out the buyer');
+    assert.equal(p.get('payment_intent_data[metadata][amount]'), '24900');
     assert.match(p.get('custom_text[submit][message]'), new RegExp(`Koden din er \\*\\*${p.get('metadata[code]')}\\*\\*`), 'the code is on Stripe\'s page too');
     assert.equal(p.get('locale'), 'nb');
     assert.equal(p.get('customer_creation'), 'always');
@@ -121,7 +121,7 @@ describe('POST /checkout', () => {
   });
 
   it('finds a price in Stripe that is not the package\'s before anybody has paid, and shows no payment page', async () => {
-    t.env.PRICE_YEAR = 'price_evening'; // the 149 kr price on the year
+    t.env.PRICE_YEAR = 'price_evening'; // the 89 kr price on the year
     const r = await json(await t.call('/checkout', { method: 'POST', body: { plan: 'year', method: 'applepay' } }));
     assert.equal(r.status, 503);
     assert.equal(r.body.error, 'misconfigured');
@@ -233,7 +233,7 @@ describe('GET /claim', () => {
   it('refuses a payment whose amount is not the one it was started with, whatever else is true of it', async () => {
     const started = await json(await t.call('/checkout', { method: 'POST', body: { plan: 'year', method: 'applepay' } }));
     const id = started.body.url.split('/').pop();
-    t.stripe.pay(id, { amount: 14900 }); // (something changed the amount on its way: it is not what the payment was started with)
+    t.stripe.pay(id, { amount: 8900 }); // (something changed the amount on its way: it is not what the payment was started with)
     const r = await json(await t.call(`/claim?session_id=${id}`));
     assert.equal(r.status, 503);
     assert.equal(r.body.error, 'misconfigured');

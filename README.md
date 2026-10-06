@@ -60,7 +60,7 @@ Terminalen skriver ut to adresser. Åpne **adressen merket «På mobilen (Wi‑F
 
 ## Betaling (av som standard)
 
-Spillet er gratis. Koden kan også ta betalt, men det er **slått av** helt til to variabler settes på GitHub: tre pakker bare verten kjøper (**En kveld** 149 kr, **For ett år** 399 kr, **Livstid** 499 kr), en betalingsmur etter to gratis runder, betaling med **Vipps, Apple Pay eller kort** i en Shopify-butikk som åpner seg i en ny fane (eller hos Stripe), ingen innlogging (en kode fra e-posten gir tilgangen tilbake på en ny telefon). Betalingsserveren er én Cloudflare Worker: [`payments/worker-shopify.js`](payments/worker-shopify.js) (med en liten D1-database) for Shopify, og [`payments/worker.js`](payments/worker.js), som ikke lagrer noe, for Stripe. **Oppsettet, steg for steg: [docs/SHOPIFY.md](docs/SHOPIFY.md)** (Stripe: [docs/BETALING.md](docs/BETALING.md)).
+Spillet er gratis. Koden kan også ta betalt, men det er **slått av** helt til to variabler settes på GitHub: tre pakker bare verten kjøper (**En kveld** 89 kr, **For ett år** 249 kr, **Livstid** 299 kr), en betalingsmur etter to gratis runder, betaling med **Vipps, Apple Pay eller kort** i en Shopify-butikk som åpner seg i en ny fane (eller hos Stripe), ingen innlogging (en kode fra e-posten gir tilgangen tilbake på en ny telefon). Betalingsserveren er én Cloudflare Worker: [`payments/worker-shopify.js`](payments/worker-shopify.js) (med en liten D1-database) for Shopify, og [`payments/worker.js`](payments/worker.js), som ikke lagrer noe, for Stripe. **Oppsettet, steg for steg: [docs/SHOPIFY.md](docs/SHOPIFY.md)** (Stripe: [docs/BETALING.md](docs/BETALING.md)).
 
 ## Designsystem
 

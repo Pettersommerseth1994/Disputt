@@ -12,9 +12,9 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 
 | Pakke | Pris | Varighet |
 | --- | --- | --- |
-| **En kveld** | 149 kr | 12 timer fra betalingen |
-| **For ett år** (mest populær) | 399 kr | 12 måneder fra betalingen |
-| **Livstid** (best verdi) | 499 kr | én betaling, ingen utløpsdato |
+| **En kveld** | 89 kr | 12 timer fra betalingen |
+| **For ett år** (mest populær) | 249 kr | 12 måneder fra betalingen |
+| **Livstid** (best verdi) | 299 kr | én betaling, ingen utløpsdato |
 
 Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betaler; de andre spiller gratis på sine egne telefoner. Prisene står i Shopify; hvor lenge tilgangen varer står i koden ([del 15](#15-slik-henger-koden-sammen)).
 
@@ -119,7 +119,7 @@ Butikken er en egen butikk for Disputt, med egen månedspris. Planen *Basic* hol
 2. - [ ] **Vipps.** Shopify Payments har ikke Vipps. Vipps MobilePay har sitt eget tillegg: *Add payment methods* → søk «Vipps» → **Vipps/MobilePay Payments** (laget av Crude for Vipps MobilePay) → *Install*. Du trenger en avtale med Vipps MobilePay for selskapet (salgssted, bankkonto), og onboardingen kan ta opptil ti virkedager. **Søk med en gang**; Apple Pay og kort kan åpne uten. Velg automatisk uttrekk (capture) også der: webhooken «Order payment» kommer når pengene er trukket.
 3. - [ ] Du kan teste med Shopify Payments' testmodus og testkort ([del 12](#12-test-alt)); den slås på da.
 
-**Gebyrer.** Shopify Payments tar 2 % + 2 kr på kort på planen Basic. Vipps går som en tredjeparts betalingsmåte: **2 % ekstra** til Shopify på Basic, i tillegg til Vipps' eget gebyr. Hold det opp mot prisene i del 5: på 149 kr er 2 % litt under 3 kr. Planen har dessuten en fast månedspris. Se [Shopifys prisside](https://www.shopify.com/no/pricing) for tallene som gjelder når du leser dette.
+**Gebyrer.** Shopify Payments tar 2 % + 2 kr på kort på planen Basic. Vipps går som en tredjeparts betalingsmåte: **2 % ekstra** til Shopify på Basic, i tillegg til Vipps' eget gebyr. Hold det opp mot prisene i del 5: på 89 kr er 2 % 1,78 kr, så et kortkjøp koster 3,78 kr i gebyr (litt over 4 %, fordi de 2 kronene er faste). Planen har dessuten en fast månedspris. Se [Shopifys prisside](https://www.shopify.com/no/pricing) for tallene som gjelder når du leser dette.
 
 ## 5. Shopify: de tre produktene
 
@@ -127,9 +127,9 @@ Butikken er en egen butikk for Disputt, med egen månedspris. Planen *Basic* hol
 
 | Tittel | Pris | Beskrivelse (lim inn) |
 | --- | --- | --- |
-| **Disputt – En kveld (12 timer)** | 149 kr | Tilgang til alle runder i Disputt i 12 timer fra du betaler, til én spillekveld. Én betaling, ingenting fornyes. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
-| **Disputt – For ett år (12 måneder)** | 399 kr | Tilgang til alle runder i Disputt i 12 måneder fra du betaler, til faste spillekvelder. Én betaling, og tilgangen fornyes ikke av seg selv. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
-| **Disputt – Livstid** | 499 kr | Tilgang til alle runder i Disputt så lenge Disputt tilbys (se vilkårene). Én betaling. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
+| **Disputt – En kveld (12 timer)** | 89 kr | Tilgang til alle runder i Disputt i 12 timer fra du betaler, til én spillekveld. Én betaling, ingenting fornyes. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
+| **Disputt – For ett år (12 måneder)** | 249 kr | Tilgang til alle runder i Disputt i 12 måneder fra du betaler, til faste spillekvelder. Én betaling, og tilgangen fornyes ikke av seg selv. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
+| **Disputt – Livstid** | 299 kr | Tilgang til alle runder i Disputt så lenge Disputt tilbys (se vilkårene). Én betaling. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
 
 For hvert produkt:
 

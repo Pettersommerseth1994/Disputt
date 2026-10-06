@@ -38,9 +38,9 @@ function plusOneYear(seconds) {
  * `paidAt` (seconds); null means never.
  */
 const PLANS = {
-  evening: { name: 'En kveld', amount: 14900, ends: (paidAt) => paidAt + 12 * 3600 },
-  year: { name: 'For ett år', amount: 39900, ends: plusOneYear },
-  lifetime: { name: 'Livstid', amount: 49900, ends: () => null },
+  evening: { name: 'En kveld', amount: 8900, ends: (paidAt) => paidAt + 12 * 3600 },
+  year: { name: 'For ett år', amount: 24900, ends: plusOneYear },
+  lifetime: { name: 'Livstid', amount: 29900, ends: () => null },
 };
 
 const PRICE_VARS = { evening: 'PRICE_EVENING', year: 'PRICE_YEAR', lifetime: 'PRICE_LIFETIME' };
