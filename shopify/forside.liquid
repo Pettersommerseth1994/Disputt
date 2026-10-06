@@ -8,10 +8,13 @@
     spillet. Den åpner spillet i samme fane, og rommet står der det var.
   Slik bruker du den (docs/SHOPIFY.md, del 6): Nettbutikk > Temaer > Tilpass > Forside, fjern alle seksjonene som står der, legg til
   «Egendefinert Liquid» og lim inn alt under denne kommentaren. Adressen til spillet står i lenken (https://disputt.site/).
+  Siden fyller hele bredden selv, uansett hva seksjonen står på under «Bredde» (Horizon legger ellers en hvit kant på hver side), og
+  rullefeltet på en PC gir ikke et sidelengs rullefelt (html { overflow-x: clip }).
 {% endcomment %}
 <div class="disputt-back">
   <style>
-    .disputt-back { box-sizing: border-box; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; color: #f8e6b8; background: #6a1428; font-family: Georgia, 'Times New Roman', serif; }
+    html { overflow-x: clip; }
+    .disputt-back { box-sizing: border-box; width: 100vw; margin-left: calc(50% - 50vw); min-height: 100vh; min-height: 100svh; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; color: #f8e6b8; background: #6a1428; font-family: Georgia, 'Times New Roman', serif; }
     .disputt-back__card { max-width: 26rem; }
     .disputt-back h1 { margin: 0 0 12px; font-size: 2.2rem; line-height: 1.1; }
     .disputt-back p { margin: 0 0 14px; font-size: 1.1rem; line-height: 1.4; }
@@ -19,7 +22,7 @@
   </style>
   <div class="disputt-back__card">
     <h1>Takk!</h1>
-    <p>Betalingen er gjort, og tilgangen din dukker opp i spillet av seg selv. Du får en e-post med koden din også.</p>
+    <p>Betalingen er gjort, og tilgangen din dukker opp i spillet av seg selv.</p>
     <div id="disputt-from-game" hidden>
       <p><button id="disputt-close" type="button">Lukk fanen og gå tilbake til spillet</button></p>
       <p id="disputt-stay" hidden>Fanen lot seg ikke lukke her. Bytt tilbake til fanen med spillet, så er du der.</p>
