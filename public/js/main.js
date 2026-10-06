@@ -2,6 +2,7 @@ import { App } from './app.js';
 import { actions, connect, dropSession, reconnectNow } from './net.js';
 import { asset } from './paths.js';
 import { initPayments, handlePaymentReturn } from './pay/payments.js';
+import { initShop, setKnownShop } from './pay/shop.js';
 import { config, isP2P } from './settings.js';
 import { html, render } from './vendor/htm-preact.js';
 import { setStore, store } from './store.js';
@@ -15,9 +16,11 @@ if (store.route.page === 'join') {
 const debug = new URLSearchParams(location.search).get('debug'); // QA only: ?debug (hook) or ?debug=offline (no socket)
 if (debug !== 'offline') connect();
 
-// Payments (off unless the build switched them on): check the pass on this phone, and take care of a host who is back from Stripe.
+// Payments (off unless the build switched them on): check the pass on this phone, and take care of a host who is back from Stripe,
+// or whose payment in the Shopify shop is still being waited for.
 initPayments(config.payments)
   .then(() => handlePaymentReturn())
+  .then(() => initShop())
   .catch(() => {});
 
 // Phones sleep and drop sockets: come back to life as soon as the page is visible or online again.
@@ -34,7 +37,7 @@ if (!isP2P && !config.serverUrl) {
 }
 
 // Dev/QA hook: lets screenshots and tests inject a view without a game.
-if (debug !== null) window.__disputt = { store, setStore };
+if (debug !== null) window.__disputt = { store, setStore, setShop: setKnownShop };
 
 const root = document.getElementById('app');
 root.replaceChildren(); // drop the boot splash; Preact would otherwise leave it in place below the app
