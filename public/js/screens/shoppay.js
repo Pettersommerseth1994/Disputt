@@ -50,7 +50,7 @@ export function ShopDock({ plan }) {
     <label class="consent">
       <input type="checkbox" checked=${agreed} onChange=${(e) => setAgreed(e.currentTarget.checked)} />
       <span class="consent__box" aria-hidden="true"></span>
-      <span>Jeg godtar <a href=${pay.termsUrl} target="_blank" rel="noopener">vilkårene</a>, ber om at tilgangen leveres med en gang, og forstår at jeg da mister angreretten.</span>
+      <span>Jeg godtar <a href=${pay.termsUrl} target="_blank" rel="noopener">vilkårene</a>.</span>
     </label>
     <${Button} block disabled=${!agreed || !shop} onClick=${go}>Gå til betaling</${Button}>`;
 }

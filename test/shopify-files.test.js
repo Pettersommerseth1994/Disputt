@@ -45,7 +45,7 @@ describe('the box in the order confirmation (shopify/ordrebekreftelse.liquid)', 
 
   it('confirms the consent to getting the access at once, and that the right of withdrawal ends, and names the terms', () => {
     const withConsent = text(renderLiquid(MAIL, { attributes: { kode: 'K7M2-9QXD-4TRB', samtykke: '2026-10-06T08:15:00.000Z' } }));
-    assert.match(withConsent, /Du ba om at tilgangen skulle leveres med en gang da du betalte, og du forsto at angreretten da bortfaller/);
+    assert.match(withConsent, /Du godtok vilkårene før du betalte\. De sier at tilgangen leveres med en gang, og at angreretten da bortfaller/);
     assert.match(withConsent, /angrerettloven § 22/);
     assert.match(withConsent, /https:\/\/disputt\.site\/vilkar\.html/);
   });

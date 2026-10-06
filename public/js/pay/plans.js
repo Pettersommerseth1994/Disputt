@@ -9,7 +9,7 @@ export const PLANS = [
     name: 'En kveld',
     price: 89,
     length: '12 timer',
-    detail: 'Til én spillekveld. Gjelder i 12 timer fra du betaler.',
+    detail: 'Til én spillekveld. Gjelder i 12 timer fra du betaler, og fornyes ikke av seg selv.',
   },
   {
     id: 'year',

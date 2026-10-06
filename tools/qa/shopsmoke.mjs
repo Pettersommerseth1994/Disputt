@@ -43,7 +43,7 @@ try {
   await page.waitForSelector('input[name=plan]', { timeout: 10000 });
   const text = await page.evaluate(() => document.body.innerText);
   for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(text, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is on the packages with ${price} kr`);
-  assert.match(text, /Jeg godtar vilkårene, ber om at tilgangen leveres med en gang, og forstår at jeg da mister angreretten/);
+  assert.match(text, /Jeg godtar vilkårene\./);
   log('the host sees the three packages and the consent');
 
   await page.evaluate((p) => document.querySelector(`input[name=plan][value=${p}]`).click(), plan);
