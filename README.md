@@ -108,6 +108,7 @@ npm run play:pay       # med betaling: pakkene etter runde 2, avbrutt og gjennom
 npm run play:pay-slow  # det samme, men verten er borte i 75 s mens han betaler: gjestene må vente på ham
 npm run play:pay-shopify  # med betaling i en falsk Shopify-butikk som åpner seg i en ny fane: lukket og åpnet igjen, avbrutt, sent varsel, gjennomført, kjøp fra forsiden og innlogging på en ny telefon
 npm run play:pay-shopify-slow  # det samme, men verten er borte i 75 s
+npm run qa:shop-live -- --url=https://pettersommerseth1994.github.io/Disputt-test  # en utlagt kopi mot den ekte butikken, til og med kassen og ikke et skritt lenger: ingenting kjøpes
 npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/ (VIEWPORT=390x664 for en nettleser med verktøylinjer)
 npm run qa:fit         # får skjermene plass uten scrolling på de synlige skjermstørrelsene (390×664, 375×553 …)?
 npm run qa:toast       # toastene («Koden er kopiert») står hele øverst på skjermen, midt på bredden, glir ned ovenfra og slipper gjennom trykk, på alle skjermstørrelser (med egen selvtest)
