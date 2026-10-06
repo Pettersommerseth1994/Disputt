@@ -32,6 +32,7 @@ describe('health', () => {
       site: SITE,
       shop: SHOP,
       set: { database: true, webhookSecret: true, signingKey: true, shop: true, evening: true, year: true, lifetime: true },
+      hooks: [],
     });
     const text = JSON.stringify(r.body);
     for (const secret of [SECRET, t.env.JWT_PRIVATE_KEY, VARIANTS.year]) assert.ok(!text.includes(secret), 'no secret in the answer');
@@ -57,8 +58,86 @@ describe('health', () => {
     assert.deepEqual(t.db.sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((r) => r.name), []);
     await t.call('/health');
     const names = t.db.sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all().map((r) => r.name);
-    assert.deepEqual(names, ['orders', 'refunds', 'stops']);
+    assert.deepEqual(names, ['hooks', 'orders', 'refunds', 'stops']);
     await t.call('/health'); // (and again is no harm)
+  });
+});
+
+describe('health: what became of the last calls from Shopify', () => {
+  const lastHooks = async () => (await json(await t.call('/health'))).body.hooks;
+  const written = () => t.db.sqlite.prepare('SELECT topic, result FROM hooks ORDER BY id').all().map((h) => [h.topic, h.result]);
+
+  it('writes down every call with its topic and what was done with it, newest first, and nothing about the order or the buyer', async () => {
+    quiet();
+    assert.deepEqual(await lastHooks(), [], 'nothing yet');
+    const { order: paid } = await t.pay();
+    await t.deliver('orders/paid', order({ code: null }));
+    await t.deliver('orders/paid', order({ consent: false }));
+    await t.deliver('orders/paid', order({ lines: [{ variant_id: 99999999999, plan: 'annet' }] }));
+    await t.deliver('orders/paid', order({ test: true }));
+    await t.deliver('orders/paid', order({ status: 'pending' }));
+    await t.deliver('orders/cancelled', paid);
+    await t.deliver('refunds/create', refund(paid.id, null));
+    await t.deliver('customers/create', { id: 1 });
+    assert.deepEqual(written(), [
+      ['orders/paid', 'ok'],
+      ['orders/paid', 'ignored: no_code (attributes: samtykke)'],
+      ['orders/paid', 'ignored: no_consent (attributes: kode)'],
+      ['orders/paid', 'ignored: no_package (variants 99999999999)'],
+      ['orders/paid', 'ignored: test_order'],
+      ['orders/paid', 'ignored: not_paid (financial_status pending)'],
+      ['orders/cancelled', 'ok'],
+      ['refunds/create', 'ignored: nothing_refunded'],
+      ['customers/create', 'ignored: topic'],
+    ]);
+    const body = await json(await t.call('/health'));
+    assert.deepEqual(body.body.hooks.map((h) => h.result), ['ignored: topic', 'ignored: nothing_refunded', 'ok', 'ignored: not_paid (financial_status pending)', 'ignored: test_order', 'ignored: no_package (variants 99999999999)'], 'the newest six, the newest first');
+    assert.match(body.body.hooks[0].at, /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/);
+    const text = JSON.stringify(body.body);
+    for (const secret of [CODE, 'kunde@example.com', 'Kari', String(paid.id), paid.name]) assert.ok(!text.includes(secret), `${secret} is not in what /health says`);
+  });
+
+  it('writes down a call that fails, and what failed, and answers it as it would have', async () => {
+    quiet();
+    await t.call('/health'); // (the tables)
+    t.db.failNext(1);
+    const failed = await t.pay();
+    assert.equal(failed.res.status, 500);
+    const [last] = await lastHooks();
+    assert.equal(last.topic, 'orders/paid');
+    assert.match(last.result, /^error: .*D1 is down/);
+    const before = (await lastHooks()).length;
+    t.db.failNext(2); // (the order cannot be written, and neither can the note about it)
+    assert.equal((await t.pay()).res.status, 500, 'the answer is the same');
+    assert.equal((await lastHooks()).length, before, 'and no note was made');
+  });
+
+  it('writes down a call with a wrong signature, but at most once a minute: anybody can send one', async () => {
+    quiet();
+    for (let i = 0; i < 5; i++) assert.equal((await t.deliver('orders/paid', order(), { secret: 'another secret that is long enough' })).status, 401);
+    assert.deepEqual(written(), [['orders/paid', 'bad_signature']], 'one note for five calls');
+    t.db.sqlite.prepare('UPDATE hooks SET at = at - 61').run();
+    await t.deliver('orders/paid', order(), { secret: 'another secret that is long enough' });
+    assert.equal(written().length, 2, 'a minute later it is written down again');
+    assert.equal(rows().length, 0, 'and none of them was an order');
+  });
+
+  it('keeps the last hundred and shows the newest six', async () => {
+    for (let i = 0; i < 130; i++) await t.deliver('customers/create', { id: i });
+    assert.equal(t.db.sqlite.prepare('SELECT COUNT(*) AS n FROM hooks').get().n, 100);
+    assert.equal((await lastHooks()).length, 6);
+  });
+
+  it('forgives what is easy to get wrong when the settings are pasted in: a line break after the signing secret, and an address without https://', async () => {
+    t.env.SHOPIFY_WEBHOOK_SECRET = `  ${SECRET}\n`;
+    assert.equal((await t.deliver('orders/paid', order())).status, 200, 'a line break after the secret is no part of it');
+    assert.equal((await json(await t.call('/health'))).body.set.webhookSecret, true);
+    t.env.SITE_URL = ` ${SITE.replace(/^https:\/\//, '')}\n`;
+    const r = await json(await t.call('/health'));
+    assert.equal(r.body.site, SITE, 'example.github.io/Disputt/ is https://example.github.io/Disputt/');
+    assert.equal((await t.call('/shop')).headers.get('Access-Control-Allow-Origin'), ORIGIN, 'and the page is let in');
+    t.env.SITE_URL = '';
+    assert.equal((await json(await t.call('/health', { origin: null }))).status, 503, 'nothing at all is still reported');
   });
 });
 

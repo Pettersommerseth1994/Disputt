@@ -290,7 +290,20 @@ Test først i test-kopien, med Shopify Payments' testmodus. **Slå på testmodus
 | 10 | Bruk en nettleser som ikke åpner nye faner (eller slå av popup-tillatelsen) | fanen du står i går til butikken. Etter betalingen leder **Fortsett å handle** til forsiden, som da har en lenke tilbake til spillet (rommet står der det var). Tilbakeknappen virker også: spillet finner betalingen selv. |
 | 11 | Lag en bestilling uten samtykke: ta bort `attributes[samtykke]=…` fra handlekurvlenken i adressefeltet før du betaler | betalingen går gjennom i Shopify, men spillet gir **ingen tilgang**, og Cloudflare-loggen sier «… without the consent to getting the access at once». Dette er med vilje: uten samtykket ender ikke angreretten når tilgangen leveres. Du kan gi tilgangen for hånd ([del 14](#14-drift)) etter å ha snakket med kunden. |
 
-Går noe galt: *Cloudflare → Workeren → Observability / Logs* viser hva Workeren ble spurt om og svarte. `POST /shopify/webhook` med `401` betyr feil signeringsnøkkel (`SHOPIFY_WEBHOOK_SECRET`), og `ignored: no_code` i loggen betyr at en bestilling kom uten kode (kjøpt utenom spillet).
+Går noe galt, og en betaling aldri gir tilgang: **åpne `…/health`**. Under `hooks` står de siste seks varslene Shopify har sendt, det nyeste først, og hva Workeren gjorde med hvert av dem (ingen navn og ingen ordrenumre, bare tema, tid og utfall). Står det ingenting der etter en betaling, kom ikke varselet fram (se webhookene i Shopify, del 10: adressen og hendelsen **Order payment**).
+
+| `result` i `hooks` | Betyr |
+| --- | --- |
+| `ok` | varselet ble tatt imot og ordren er skrevet ned. Går spillet likevel ikke videre, ligger feilen i spillet eller i nøkkelen (`signingKey`) |
+| `bad_signature` | signeringsnøkkelen i Cloudflare (`SHOPIFY_WEBHOOK_SECRET`) er ikke den Shopify signerer med. Hent den på nytt (del 10) |
+| `ignored: no_code (attributes: …)` | ordren har ikke koden fra spillet. Etter «attributes» står navnene på det ordren hadde (kjøpt utenom spillet, eller handlekurven mistet attributtene) |
+| `ignored: no_consent (attributes: …)` | ordren mangler samtykket til at angreretten faller bort. Med vilje: ingen tilgang uten |
+| `ignored: no_package (variants …)` | ordren er ikke for en av de tre pakkene. Etter «variants» står variant-ID-ene i ordren; sammenlign med variablene `VARIANT_…` |
+| `ignored: test_order` | en testordre, og `ACCEPT_TEST_ORDERS` er ikke `true` |
+| `ignored: not_paid (financial_status …)` | ordren er ikke betalt ennå (for eksempel en betaling som venter) |
+| `error: …` | noe gikk galt hos Workeren, for eksempel databasen. Meldingen står der |
+
+*Cloudflare → Workeren → Observability / Logs* viser i tillegg hva Workeren ble spurt om og svarte. `POST /shopify/webhook` med `401` betyr feil signeringsnøkkel (`SHOPIFY_WEBHOOK_SECRET`), og `ignored: no_code` i loggen betyr at en bestilling kom uten kode (kjøpt utenom spillet).
 
 **Automatiske tester.** Disse trenger ingen konto og gjør det samme mot en falsk butikk:
 

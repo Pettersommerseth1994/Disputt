@@ -101,10 +101,16 @@ function encodeForm(obj, prefix = '', out = new URLSearchParams()) {
   return out;
 }
 
+/** What was typed as the address of the game: spaces round it and a missing "https://" are forgiven (disputt.site/ is https://disputt.site/). */
+const asUrl = (text) => {
+  const raw = String(text ?? '').trim();
+  return new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`);
+};
+
 const siteUrl = (env) => {
   let u;
   try {
-    u = new URL(env.SITE_URL);
+    u = asUrl(env.SITE_URL);
   } catch {
     throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp riktig (SITE_URL mangler).');
   }

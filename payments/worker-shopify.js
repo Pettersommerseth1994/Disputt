@@ -10,7 +10,8 @@
 //   POST /restore         { code }                has this code been paid? returns the pass. The page asks while the host pays in the
 //                                                 other tab, and a customer on a new phone asks with the code from the e-mail
 //   POST /shopify/webhook                         Shopify says that an order was paid, cancelled or refunded (signed: nobody else gets in)
-//   GET  /health                                  { ok, provider, mode: "test" | "live", set }   (to check the set-up; no secrets)
+//   GET  /health                                  { ok, provider, mode: "test" | "live", site, shop, set, hooks }   (to check the set-up and to see
+//                                                 what became of the last calls from Shopify; no secrets, no names, no order numbers)
 //
 // A pass is a JWT signed with ES256; the page checks it with the matching public key (public/js/pay/pass.js). What the end of
 // the access is (12 hours, a year, never) is decided here and signed into the pass; Shopify only says what was paid, and when.
@@ -84,10 +85,16 @@ function normalizeCode(input) {
   return `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8)}`;
 }
 
+/** What was typed as the address of the game: spaces round it and a missing "https://" are forgiven (disputt.site/ is https://disputt.site/). */
+const asUrl = (text) => {
+  const raw = String(text ?? '').trim();
+  return new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`);
+};
+
 const siteUrl = (env) => {
   let u;
   try {
-    u = new URL(env.SITE_URL);
+    u = asUrl(env.SITE_URL);
   } catch {
     throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp riktig (SITE_URL mangler).');
   }
@@ -101,7 +108,7 @@ const siteUrl = (env) => {
 function shopOrigin(env) {
   let u = null;
   try {
-    u = new URL(env.SHOP_URL);
+    u = new URL(String(env.SHOP_URL ?? '').trim());
   } catch {
     /* reported below */
   }
@@ -159,7 +166,11 @@ const SCHEMA = [
   // happened, so a refund or a cancel can come before the order is written down. These are looked at when the order comes.
   'CREATE TABLE IF NOT EXISTS refunds (refund_id TEXT PRIMARY KEY, order_id TEXT NOT NULL, amount INTEGER NOT NULL, currency TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS stops (order_id TEXT PRIMARY KEY, state TEXT NOT NULL)',
+  // what became of the last calls from Shopify (the topic, and "ok", "ignored: why", "error: why" or "bad_signature"), so that a person who
+  // wonders why a paid order never gave access can look at /health. Nothing about the order itself, and only the last HOOKS_KEPT.
+  'CREATE TABLE IF NOT EXISTS hooks (id INTEGER PRIMARY KEY, at INTEGER NOT NULL, topic TEXT NOT NULL, result TEXT NOT NULL)',
 ];
+const HOOKS_KEPT = 100;
 const prepared = new WeakSet(); // (the databases whose tables are known to be there)
 
 /** The database, with the tables made. A binding that is missing says so in words. */
@@ -203,18 +214,22 @@ const toSeconds = (text) => {
   const t = Date.parse(text);
   return Number.isFinite(t) ? Math.floor(t / 1000) : null;
 };
-const ignored = (why) => ({ ok: true, ignored: why });
+// (`hint` goes into the note that /health shows and no further: names and numbers that say what was missing, never what the buyer typed)
+const ignored = (why, hint) => ({ ok: true, ignored: why, ...(hint ? { hint } : {}) });
+
+/** Spaces and line breaks round a secret that was pasted into the dashboard are no part of it. */
+const webhookSecret = (env) => String(env.SHOPIFY_WEBHOOK_SECRET ?? '').trim();
 
 /** Checks Shopify's signature: HMAC-SHA256 of the body with the signing secret, in base64, in the X-Shopify-Hmac-Sha256 header. */
 async function checkSignature(env, bytes, header) {
-  if (String(env.SHOPIFY_WEBHOOK_SECRET ?? '').length < MIN_SECRET) throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp ennå (SHOPIFY_WEBHOOK_SECRET mangler, eller er for kort).');
+  if (webhookSecret(env).length < MIN_SECRET) throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp ennå (SHOPIFY_WEBHOOK_SECRET mangler, eller er for kort).');
   let sig = null;
   try {
     sig = b64ToBytes(header ?? '');
   } catch {
     /* not base64: no signature */
   }
-  const key = await crypto.subtle.importKey('raw', te.encode(env.SHOPIFY_WEBHOOK_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+  const key = await crypto.subtle.importKey('raw', te.encode(webhookSecret(env)), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
   if (!sig || sig.length !== 32 || !(await crypto.subtle.verify('HMAC', key, sig, bytes))) throw new HttpError(401, 'bad_signature', 'Ugyldig signatur.');
 }
 
@@ -222,7 +237,7 @@ async function checkSignature(env, bytes, header) {
 async function orderPaid(env, order) {
   if (order.test === true && !testOrders(env)) return ignored('test_order');
   if (order.cancelled_at) return ignored('cancelled');
-  if (order.financial_status !== 'paid') return ignored('not_paid');
+  if (order.financial_status !== 'paid') return ignored('not_paid', `financial_status ${String(order.financial_status).slice(0, 30)}`);
   const ids = variantIds(env);
   const plansByVariant = new Map(Object.entries(ids).map(([plan, id]) => [id, plan]));
   if (plansByVariant.size === 0) throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp ennå (VARIANT_EVENING, VARIANT_YEAR og VARIANT_LIFETIME mangler).');
@@ -231,19 +246,19 @@ async function orderPaid(env, order) {
     .map((line) => plansByVariant.get(String(line?.variant_id)))
     .filter(Boolean)
     .sort((a, b) => PLANS[b].rank - PLANS[a].rank)[0];
-  if (!plan) return ignored('no_package'); // (an order for something else in the same shop)
+  if (!plan) return ignored('no_package', `variants ${lines.map((line) => String(line?.variant_id)).join(', ').slice(0, 80) || 'none'}`); // (an order for something else in the same shop)
   const attributes = Array.isArray(order.note_attributes) ? order.note_attributes : [];
   const code = normalizeCode(attributes.find((a) => String(a?.name).toLowerCase() === 'kode')?.value);
   if (!code) {
     console.error('Order', order.name, 'was paid for a package but has no code, so nobody can claim it');
-    return ignored('no_code');
+    return ignored('no_code', `attributes: ${attributes.map((a) => String(a?.name)).join(', ').slice(0, 80) || 'none'}`);
   }
   // The host agreed to getting the access at once (and so to the right of withdrawal ending) in the game, before the shop. Without
   // that, the order is not delivered: a person has to look at it.
   const consentedAt = toSeconds(attributes.find((a) => String(a?.name).toLowerCase() === 'samtykke')?.value);
   if (consentedAt === null) {
     console.error('Order', order.name, 'was paid for a package but without the consent to getting the access at once, so no access is given');
-    return ignored('no_consent');
+    return ignored('no_consent', `attributes: ${attributes.map((a) => String(a?.name)).join(', ').slice(0, 80) || 'none'}`);
   }
   const orderId = String(order.id);
   const paidAt = toSeconds(order.processed_at) ?? toSeconds(order.created_at) ?? Math.floor(Date.now() / 1000); // (Shopify's time, not the time the call arrives)
@@ -289,22 +304,67 @@ async function disputeCreated(env, dispute) {
 
 const TOPICS = { 'orders/paid': orderPaid, 'orders/cancelled': orderCancelled, 'refunds/create': refundCreated, 'disputes/create': disputeCreated };
 
+/**
+ * Writes down what became of a call from Shopify (see the table `hooks`). Never changes the answer: if the database cannot take it,
+ * the call is answered as it would have been. `result` goes into /health, so it must say nothing about the order or the buyer.
+ */
+async function record(env, topic, result) {
+  try {
+    const db = await database(env);
+    await db.batch([
+      db.prepare('INSERT INTO hooks (at, topic, result) VALUES (?, ?, ?)').bind(Math.floor(Date.now() / 1000), String(topic).slice(0, 40), String(result).slice(0, 160)),
+      db.prepare('DELETE FROM hooks WHERE id <= (SELECT MAX(id) FROM hooks) - ?').bind(HOOKS_KEPT),
+    ]);
+  } catch (err) {
+    console.error('Could not write down the call from Shopify:', err);
+  }
+}
+
+/** A call with a wrong signature can come from anybody, so it is written down at most once a minute (it must not cost a write each). */
+async function recordBadSignature(env, topic) {
+  try {
+    const db = await database(env);
+    const now = Math.floor(Date.now() / 1000);
+    await db.batch([
+      db.prepare("INSERT INTO hooks (at, topic, result) SELECT ?, ?, 'bad_signature' WHERE NOT EXISTS (SELECT 1 FROM hooks WHERE result = 'bad_signature' AND at > ?)").bind(now, String(topic).slice(0, 40), now - 60),
+      db.prepare('DELETE FROM hooks WHERE id <= (SELECT MAX(id) FROM hooks) - ?').bind(HOOKS_KEPT),
+    ]);
+  } catch (err) {
+    console.error('Could not write down the call with the wrong signature:', err);
+  }
+}
+
 async function webhook(request, env) {
   if (Number(request.headers.get('Content-Length')) > MAX_WEBHOOK_BYTES) throw new HttpError(413, 'too_large', 'For stor forespørsel.');
   const bytes = new Uint8Array(await request.arrayBuffer());
   if (bytes.byteLength > MAX_WEBHOOK_BYTES) throw new HttpError(413, 'too_large', 'For stor forespørsel.');
-  await checkSignature(env, bytes, request.headers.get('X-Shopify-Hmac-Sha256'));
   const topic = request.headers.get('X-Shopify-Topic') ?? '';
-  const handler = Object.hasOwn(TOPICS, topic) ? TOPICS[topic] : null;
-  if (!handler) return ignored('topic');
-  let data = null;
   try {
-    data = JSON.parse(new TextDecoder().decode(bytes));
-  } catch {
-    /* reported below */
+    await checkSignature(env, bytes, request.headers.get('X-Shopify-Hmac-Sha256'));
+  } catch (err) {
+    if (err instanceof HttpError && err.code === 'bad_signature') await recordBadSignature(env, topic);
+    throw err;
   }
-  if (!data || typeof data !== 'object' || Array.isArray(data)) throw bad('Ugyldig innhold.');
-  return handler(env, data);
+  const handler = Object.hasOwn(TOPICS, topic) ? TOPICS[topic] : null;
+  if (!handler) {
+    await record(env, topic, 'ignored: topic');
+    return ignored('topic');
+  }
+  try {
+    let data = null;
+    try {
+      data = JSON.parse(new TextDecoder().decode(bytes));
+    } catch {
+      /* reported below */
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw bad('Ugyldig innhold.');
+    const { hint, ...answer } = await handler(env, data);
+    await record(env, topic, answer.ignored ? `ignored: ${answer.ignored}${hint ? ` (${hint})` : ''}` : 'ok');
+    return answer;
+  } catch (err) {
+    await record(env, topic, `error: ${err instanceof Error ? err.message : String(err)}`);
+    throw err;
+  }
 }
 
 // ------------------------------------------------------------------------------------------------ the endpoints
@@ -371,7 +431,7 @@ async function restore(request, env) {
 
 /** What is set and what is not, so that a person setting this up can see it (true or false, never the values). */
 async function health(env) {
-  const set = { database: false, webhookSecret: String(env.SHOPIFY_WEBHOOK_SECRET ?? '').length >= MIN_SECRET, signingKey: false, shop: false, ...Object.fromEntries(Object.keys(VARIANT_VARS).map((p) => [p, Boolean(variantIds(env)[p])])) };
+  const set = { database: false, webhookSecret: webhookSecret(env).length >= MIN_SECRET, signingKey: false, shop: false, ...Object.fromEntries(Object.keys(VARIANT_VARS).map((p) => [p, Boolean(variantIds(env)[p])])) };
   try {
     await (await database(env)).prepare('SELECT 1 AS ok').first();
     set.database = true;
@@ -391,7 +451,17 @@ async function health(env) {
   } catch {
     /* stays false */
   }
-  return { ok: true, provider: 'shopify', mode: testOrders(env) ? 'test' : 'live', site: siteUrl(env).href, shop: shopUrl, set };
+  // the last calls from Shopify and what was done with them (the newest first): "ok", "ignored: no_code", "error: …", "bad_signature"
+  let hooks = [];
+  if (set.database) {
+    try {
+      const { results } = await (await database(env)).prepare('SELECT at, topic, result FROM hooks ORDER BY id DESC LIMIT 6').all();
+      hooks = (results ?? []).map((h) => ({ at: new Date(h.at * 1000).toISOString(), topic: h.topic, result: h.result }));
+    } catch {
+      /* none to show */
+    }
+  }
+  return { ok: true, provider: 'shopify', mode: testOrders(env) ? 'test' : 'live', site: siteUrl(env).href, shop: shopUrl, set, hooks };
 }
 
 // ------------------------------------------------------------------------------------------------ routing and CORS
