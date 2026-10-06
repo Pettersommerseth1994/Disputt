@@ -45,7 +45,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
   for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Gå til betaling/);
-  assert.match(paywall, /Jeg godtar vilkårene\./);
+  assert.match(paywall, /Jeg godtar vilkårene og at tilgangen leveres med en gang\./);
   assert.doesNotMatch(paywall, /Betal med (Vipps|Apple Pay)/, 'the shop lets the customer choose the way to pay: there is one button');
   assert.doesNotMatch(paywall, /Stripe|Shopify/, 'the page does not name the shop');
   assert.equal((await button(host, 'Gå til betaling')).disabled, true, 'the button waits for the box to be ticked');

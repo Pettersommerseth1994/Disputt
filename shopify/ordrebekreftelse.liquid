@@ -1,6 +1,6 @@
 {% comment %}
   Disputt: boksen i ordrebekreftelsen til kunden. Den viser koden som spillet laget (lagt på ordren som «kode») og bekrefter at kunden
-  godtok vilkårene, som sier at tilgangen leveres med en gang og at angreretten da bortfaller (angrerettloven § 22), når ordren har samtykket fra spillet
+  godtok vilkårene og at tilgangen leveres med en gang, så angreretten bortfaller (angrerettloven § 22), når ordren har samtykket fra spillet
   (lagt på ordren som «samtykke»). Slik bruker du den (docs/SHOPIFY.md, del 7): Innstillinger > Varsler > Ordrebekreftelse > Rediger kode,
   og lim inn alt under denne kommentaren rett etter teksten som takker for bestillingen. Er det en ordre uten kode (en som ikke kom fra
   spillet), står det en linje om å ta kontakt.
@@ -15,7 +15,7 @@
       <p style="margin: 0 0 12px;">Tilgangen er klar i spillet allerede. Skal du bruke den på en annen telefon: åpne Disputt, trykk «Allerede kunde? Logg inn» og skriv inn koden. Ta vare på denne e-posten.</p>
       <p style="margin: 0 0 12px;">Hvor lenge den varer står i navnet på pakken: «En kveld» gjelder i 12 timer fra betalingen, «For ett år» i 12 måneder (og fornyes ikke av seg selv), og «Livstid» så lenge Disputt finnes.</p>
       {% if attributes.samtykke %}
-      <p style="margin: 0;"><strong>Angrerett:</strong> Du godtok vilkårene før du betalte. De sier at tilgangen leveres med en gang, og at angreretten da bortfaller (angrerettloven § 22). Vilkårene står på https://disputt.site/vilkar.html.</p>
+      <p style="margin: 0;"><strong>Angrerett:</strong> Du godtok vilkårene og at tilgangen leveres med en gang før du betalte. Da bortfaller angreretten (angrerettloven § 22). Vilkårene står på https://disputt.site/vilkar.html.</p>
       {% endif %}
     </td>
   </tr>

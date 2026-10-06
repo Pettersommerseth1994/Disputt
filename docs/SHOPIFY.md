@@ -47,7 +47,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 
 1. De to første rundene i hvert spill er gratis.
 2. Etter runde 2 trykker verten **Neste runde** og får **pakkene**. De andre spillerne ser det de alltid ser mellom runder: «Venter på at verten starter neste runde».
-3. Verten velger pakke, **krysser av** for at de godtar vilkårene (som også ber om at tilgangen leveres med en gang, og sier at angreretten da faller bort), og trykker **Gå til betaling**.
+3. Verten velger pakke, **krysser av** for at de godtar vilkårene og at tilgangen leveres med en gang (da faller angreretten bort, som vilkårene forklarer), og trykker **Gå til betaling**.
 4. Butikken åpner seg i en **ny fane**, rett i kassen med pakken valgt. Verten velger Vipps, Apple Pay eller kort og betaler. Spillet står i fanen bak og sier «Venter på betalingen …».
 5. Når Shopify har meldt at betalingen er gjennomført, viser spillet **«Takk!»** med tilgangen og en kode, og **lukker butikk-fanen** hvis den fortsatt er åpen. **Start runde 3** fortsetter spillet. Gjestene har vært tilkoblet hele tiden.
 6. Har nettleseren lagt spillfanen i dvale mens verten betalte (en telefon gjør det), trykker verten **Fortsett å handle** på Shopifys takkeside. Forsiden i butikken har da en knapp som lukker fanen, og spillet viser «Takk!» så snart verten er tilbake i det. Verten får også en e-post med koden.
@@ -85,7 +85,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 
 **Koden** (for eksempel `K7M2-9QXD-4TRB`) er tolv tegn (60 bit) som **siden** lager når verten trykker «Gå til betaling». Den følger med i handlekurven (som en handlekurvattributt kalt `kode`), ligger på ordren, står i e-posten, og er det kunden skriver under «Logg inn». Den som kjenner koden og har betalt for den, kan få tilgangen på en ny telefon. Appen er snill med skrivemåten: små bokstaver, mellomrom og bindestreker spiller ingen rolle, og O, I og L regnes som 0, 1 og 1.
 
-**Samtykket** til at tilgangen leveres med en gang (og at angreretten da faller bort) gis i spillet, i boksen over knappen, som sier «Jeg godtar vilkårene» (selve ordlyden om angreretten står i vilkårene, punkt 4), og tidspunktet følger med på ordren (attributten `samtykke`). **En ordre uten samtykket gir ingen tilgang**: da ender ikke angreretten ved leveringen, så betalingsserveren leverer ingenting før et menneske har sett på ordren ([del 14](#14-drift)). Shopifys vanlige kasse har ikke plass til en avkrysningsboks (det går bare på Plus), så boksen ligger i spillet, før verten forlater det.
+**Samtykket** til at tilgangen leveres med en gang (og at angreretten da faller bort) gis i spillet, i boksen over knappen, som sier «Jeg godtar vilkårene og at tilgangen leveres med en gang» (at angreretten da faller bort, står i vilkårene, punkt 4), og tidspunktet følger med på ordren (attributten `samtykke`). **En ordre uten samtykket gir ingen tilgang**: da ender ikke angreretten ved leveringen, så betalingsserveren leverer ingenting før et menneske har sett på ordren ([del 14](#14-drift)). Shopifys vanlige kasse har ikke plass til en avkrysningsboks (det går bare på Plus), så boksen ligger i spillet, før verten forlater det.
 
 ## 2. Før du begynner: virksomhet, skatt og jus
 
@@ -171,7 +171,7 @@ For hvert produkt:
 
 ## 7. Shopify: e-postbekreftelsen
 
-Filen [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) er en boks som legges inn i ordrebekreftelsen kunden får. Den viser koden fra spillet, forteller hvordan man bruker den på en ny telefon og hvor lenge pakkene varer, og **bekrefter samtykket**: kunden godtok vilkårene, som sier at tilgangen leveres med en gang og at angreretten da faller bort (avsnittet står bare når ordren har samtykket).
+Filen [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) er en boks som legges inn i ordrebekreftelsen kunden får. Den viser koden fra spillet, forteller hvordan man bruker den på en ny telefon og hvor lenge pakkene varer, og **bekrefter samtykket**: kunden godtok vilkårene og at tilgangen leveres med en gang, og at angreretten da faller bort (avsnittet står bare når ordren har samtykket).
 
 1. - [ ] *Settings → Notifications → Customer notifications → Order confirmation → Edit code*.
 2. - [ ] Finn teksten som takker for bestillingen, og lim inn hele innholdet i `shopify/ordrebekreftelse.liquid` rett etter den. Lagre.
