@@ -16,13 +16,13 @@ export function Home() {
     <div class="home__hero grow">
       <div class="pop-in"><${Logo} /></div>
       <h1 class="home__tagline rise-in">Diskuter,<br />manipuler<br />og <span class="scribble">vinn</span></h1>
-      <p class="lead muted rise-in" style="animation-delay:.1s">En quiz med uenighetsgaranti</p>
+      <p class="lead muted rise-in" style="animation-delay:.1s">Et quizspill med uenighetsgaranti</p>
       ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${s.notice}</p>`}
     </div>
     <div class="dock">
       <${Button} block onClick=${() => actions.create()} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
       <${Button} block variant="ghost" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
-      <div class="row row--center">
+      <div class="row row--center home__links">
         ${!s.payments?.enabled
           ? html`<${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>`
           : isActive(s.pass)

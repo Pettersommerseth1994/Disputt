@@ -19,6 +19,9 @@
 }
 .home__tagline { font-size: clamp(2.1rem, 10vw, 2.9rem); text-shadow: 3px 4px 0 var(--edge); }
 .home__notice { color: var(--ink); font-weight: 700; }
+/* "Allerede kunde? Logg inn" and "Du har tilgang Min tilgang": a question or a sentence and its link, with an ordinary word space between them (the text button has padding of its own) */
+.home__links { gap: 0; }
+.home__links .btn--text { padding-inline-start: 0.28rem; }
 .decor--home-a { top: 1rem; left: -1.5rem; --size: 6.5rem; }
 .decor--home-b { top: 4.4rem; right: -1.8rem; --size: 6rem; }
 .decor--home-c { bottom: 15.2rem; left: -0.9rem; --size: 4.4rem; }
