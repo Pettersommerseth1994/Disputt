@@ -84,7 +84,7 @@ shared/    Spillmotoren (game.js = ren tilstandsmaskin, hub.js, questions.js, ut
            Kjører både i Node-serveren og, i peer-to-peer-modus, i vertens nettleser.
 public/    Klienten: Preact + htm uten byggesteg (css/, js/, js/p2p/, assets/, design-system/).
 payments/  Betalingsserveren (én Cloudflare Worker, for Shopify eller for Stripe). Av som standard, se docs/SHOPIFY.md og docs/BETALING.md.
-shopify/   Det som limes inn i Shopify: forsiden i butikken og boksen i ordrebekreftelsen (Liquid).
+shopify/   Det som limes inn i Shopify: forsiden i butikken og hele ordrebekreftelsen, på norsk, dansk og svensk (Liquid).
 tools/     Generatorer (art, logo, fonter), byggeverktøy for GitHub Pages (pages/) og QA-verktøy (qa/).
 test/      Enhets-, server-, QR-, bygge- og ende-til-ende-tester.
 docs/      Protokoll, drift, peer-to-peer, betaling, designsystem.

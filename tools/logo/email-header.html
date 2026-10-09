@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Disputt: toppen av e-posten</title>
+<!--
+  Bildet øverst i ordrebekreftelsen (shopify/ordrebekreftelse.liquid): logoen på den gule ovalen, som på startskjermen, litt på skrå. Det er et
+  bilde og ikke HTML fordi Gmail og Outlook ikke viser SVG, og fordi Outlook ikke kan runde hjørner eller vippe en boks. Fordi e-posten blir liggende
+  i innboksen i årevis, ligger bildet på disputt.site/assets/email/, og adressen skal ikke endres.
+
+  Lage bildet på nytt (trenger bare Google Chrome og macOS, ikke Node). Det blir public/assets/email/disputt-epost-logo.png, 680 x 272 piksler
+  (vises som 340 x 136, altså i dobbel oppløsning), gjennomsiktig rundt ovalen:
+
+    CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    "$CHROME" --headless=new --hide-scrollbars --force-device-scale-factor=2 --default-background-color=00000000 \
+      --window-size=700,300 --screenshot=/tmp/epost-topp.png "file://$PWD/tools/logo/email-header.html"
+    sips --cropToHeightWidth 272 680 /tmp/epost-topp.png --out public/assets/email/disputt-epost-logo.png
+
+  Chrome har en minstebredde på vinduet, så ovalen tegnes midt i et større vindu (700 x 300), og sips klipper ut midten (det er det sips gjør
+  når det ikke får noe annet å gå etter). Endrer du størrelsen, endre width og height på <img> i shopify/ordrebekreftelse.liquid, og tallet bak ?v=
+  så innboksene henter bildet på nytt.
+-->
+<style>
+  html, body { margin: 0; padding: 0; width: 700px; height: 300px; background: transparent; }
+  .box { position: absolute; left: 180px; top: 82px; width: 340px; height: 136px; }
+  .plate { position: absolute; left: 5px; top: 7px; box-sizing: border-box; width: 330px; padding: 26px 0 20px; background: #fae025; border-bottom: 7px solid #d7b800; border-radius: 99px; transform: rotate(-2deg); }
+  .plate img { display: block; width: 230px; margin: 0 auto; }
+</style>
+<div class="box"><div class="plate"><img src="../../public/assets/logo/disputt-logo.svg" alt="Disputt"></div></div>

@@ -93,7 +93,7 @@ Alt i [BETALING.md, del 2](BETALING.md#2-før-du-begynner-virksomhet-skatt-og-ju
 
 - [ ] **Vilkår og personvern er skrevet om til Shopify** (de nevner Shopify, Shopify Payments og Vipps MobilePay i stedet for Stripe, og at samtykket gis i spillet). Få dem lest av en som kan jus, sammen med spørsmålene i [vedlegget til BETALING.md](BETALING.md#vedlegg-valgene-i-vilkår-og-personvern) og disse:
   - er avkrysningen i spillet (og tidspunktet på ordren) nok som samtykke til at angreretten faller bort, når selve betalingen skjer i en annen fane;
-  - er teksten i ordrebekreftelsen (boksen fra [del 7](#7-shopify-e-postbekreftelsen)) en bekreftelse på varig medium, slik loven krever;
+  - er e-posten kunden får ([del 7](#7-shopify-e-postbekreftelsen)) en bekreftelse på varig medium, slik loven krever;
   - må butikken, `shop.disputt.site`, ha et banner for informasjonskapsler (Shopify har innstillinger for det under *Settings → Customer privacy*), og hva skal stå i Shopifys egne retningslinjer ([del 6](#6-shopify-kassen-og-forsiden));
   - at Shopify (og betalingsleverandørene deres) er databehandlere, og at Cloudflare lagrer bestillingsnummer, kode, pakke, tid og beløp uten navn.
 - [ ] **Merverdiavgift i Shopify.** Prisene skal være **inkl. mva**. Under *Settings → Taxes and duties* (Norge): slå på at prisene inkluderer mva, og at mva legges på digitale produkter (25 %). Spør regnskapsføreren om oppsettet og om hvordan Shopify-salget bokføres.
@@ -171,12 +171,27 @@ For hvert produkt:
 
 ## 7. Shopify: e-postbekreftelsen
 
-Filen [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) er en boks som legges inn i ordrebekreftelsen kunden får. Den viser koden fra spillet, forteller hvordan man bruker den på en ny telefon og hvor lenge pakkene varer, og **bekrefter samtykket**: kunden godtok vilkårene og at tilgangen leveres med en gang, og at angreretten da faller bort (avsnittet står bare når ordren har samtykket).
+Filen [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) er **hele** ordrebekreftelsen kunden får, tegnet i Disputts stil (burgunder bakgrunn, kremfargede kort og gult) og skrevet på norsk, dansk og svensk. Den erstatter Shopifys standardmal og viser det samme som den: ordrenummer, hva som er kjøpt, mva, total, betalingsmåte, fakturaadresse, lenken til ordresiden og kontaktinformasjon (og, for kunder i Danmark og Tyskland, vilkårene og angreretten som PDF, slik Shopifys egen mal gjør). I tillegg viser den **koden** fra spillet og hvor lenge pakken varer, forteller hvordan koden brukes på en annen telefon, og **bekrefter samtykket**: kunden godtok vilkårene og at tilgangen leveres med en gang, og at angreretten da faller bort.
 
 1. - [ ] *Settings → Notifications → Customer notifications → Order confirmation → Edit code*.
-2. - [ ] Finn teksten som takker for bestillingen, og lim inn hele innholdet i `shopify/ordrebekreftelse.liquid` rett etter den. Lagre.
+2. - [ ] Marker alt som står der (Cmd+A), slett det, og lim inn hele innholdet i `shopify/ordrebekreftelse.liquid`. Lagre. Er noe skrevet feil, sier Shopify fra og lagrer ikke.
 3. - [ ] Under *Settings → Notifications → Sender email*: bruk `kontakt@disputt.site` som avsender (Shopify ber deg bekrefte adressen), så svar på e-posten når fram til deg.
-4. - [ ] **Forhåndsvisningen** i Shopify har ingen handlekurvattributter, så der ser du bare linjen om at kunden skal ta kontakt. Boksen med koden ser du først på en ekte (test)bestilling fra spillet ([del 12](#12-test-alt)).
+4. - [ ] **Emnelinjen** (*Subject*, øverst på samme side) kan stå som den er. Vil du ha den i Disputts tone og på kundens språk, bytt den med dette (alt på én linje):
+
+   ```liquid
+   {% assign l = attributes.sprak | default: order.customer_locale | default: customer.locale | default: 'nb' | downcase | slice: 0, 2 %}{% if l == 'da' %}Tak for din bestilling hos Disputt ({{ name }}){% elsif l == 'sv' %}Tack för din beställning hos Disputt ({{ name }}){% else %}Takk for bestillingen hos Disputt ({{ name }}){% endif %}
+   ```
+5. - [ ] **Se resultatet.** *Preview* og *Send test notification* bruker en prøveordre uten kode, så der ser du bare linjen om at kunden skal ta kontakt. Den ekte e-posten ser du på en ordre fra spillet: åpne ordren i *Orders* og trykk *Resend email* ved bekreftelsen i tidslinjen (eller gjør et nytt testkjøp, [del 12](#12-test-alt)). Se på den på en telefon og i Gmail, og sjekk at toppbildet vises.
+
+**Språk.** Teksten velges i denne rekkefølgen: handlekurvattributten `sprak` (spillet kan sette den den dagen det er oversatt), kundens språk på ordren (`order.customer_locale`), kundens språk (`customer.locale`). `da` gir dansk, `sv` svensk, alt annet norsk. For at en kunde skal få dansk eller svensk, må språket være lagt til og **publisert** (*Settings → Languages*), og kassen må åpnes på det språket. Hvordan det gjøres fra spillet (en språkmappe, `/da/`, foran stien i handlekurvlenken, eller språkvelgeren i butikken) er ikke prøvd, og må prøves den dagen spillet oversettes; så lenge spillet bare er på norsk, får alle den norske e-posten. Knappen i spillet heter fortsatt «Allerede kunde? Logg inn» i alle tre språk, fordi kunden skal se det som står i spillet: bytt `login_button` øverst i filen når spillet er oversatt. Alle tekstene står samlet per språk øverst i filen, og en test sørger for at de tre språkene har de samme tekstene. **Den danske og svenske teksten, særlig avsnittet om angreretten, må leses av noen som kan språket og av en jurist**, slik som den norske.
+
+**Pakken.** Malen kjenner pakkene på variant-ID (tre tall øverst i filen, de samme som `VARIANT_EVENING`, `VARIANT_YEAR` og `VARIANT_LIFETIME` i betalingsserveren) og bruker dem bare til å skrive hvor lenge tilgangen varer. Lager du produktene på nytt, må tallene byttes begge steder. Kjenner malen ikke pakken, står det i stedet at lengden står i pakken du kjøpte og i vilkårene.
+
+**Toppbildet** (logoen på den gule ovalen) er en PNG som ligger på `https://disputt.site/assets/email/disputt-epost-logo.png`, fordi Gmail og Outlook ikke viser SVG. Den er laget med [`tools/logo/email-header.html`](../tools/logo/email-header.html) (oppskriften står øverst i den filen). **Adressen må ikke flyttes eller slettes:** e-poster blir liggende i innbokser i årevis. Programmer som ikke viser bilder, viser ordet «Disputt» i gult i stedet.
+
+**Når koden ikke vises.** Står det en linje om å ta kontakt i stedet for koden, mangler ordren `kode` eller `samtykke` (kjøpt utenom spillet, eller samtykket ble tatt bort fra handlekurvlenken). Betalingsserveren gir ikke tilgang uten samtykke, så e-posten viser heller ikke en kode som ikke ville virke. Er ordren ikke betalt ennå (`financial_status` er ikke `paid`), står det at tilgangen aktiveres når betalingen er bekreftet.
+
+**Endre noe.** Tekstene står øverst i filen, ett avsnitt per språk. Prøv alltid en endring i en testbestilling (punkt 5) før den får ligge. Filen kan også prøves uten Shopify: `node --test test/shopify-files.test.js` kjører den med eksempelordrer (`tools/qa/shopify-order.mjs`) på alle tre språk, og er det en feil, sier testen fra før den når kundene.
 
 ## 8. Nøkler
 
@@ -284,7 +299,7 @@ Test først i test-kopien, med Shopify Payments' testmodus. **Slå på testmodus
 | 5 | Lukk butikk-fanen før du har betalt (ny pakke, ny runde) | spillet venter fortsatt. **Åpne betalingen igjen** åpner den samme handlekurven. **Avbryt** tar deg tilbake, og avkrysningen må settes igjen. |
 | 6 | Betal med spillfanen i front (på en datamaskin, med to vinduer side om side) | spillet viser **Takk!** og lukker butikk-fanen av seg selv |
 | 6b | På en telefon: betal, og trykk **Fortsett å handle** på takkesiden i butikken (spillfanen i bakgrunnen) | forsiden med «Takk!» og knappen **Lukk fanen og gå tilbake til spillet**. Den lukker butikk-fanen, og spillet er der du forlot det og viser «Takk!». Skulle det i stedet stå «Tilbake til spillet» som en lenke, åpnet ikke spillet butikken (se punkt 10). |
-| 7 | Sjekk e-posten du brukte | ordrebekreftelsen har boksen med koden, og teksten om angreretten |
+| 7 | Sjekk e-posten du brukte (åpne ordren og trykk *Resend email* hvis du vil se den igjen) | ordrebekreftelsen i Disputts stil, med koden, hvor lenge den varer, hvordan den brukes på en ny telefon, og teksten om angreretten. Se den på en telefon også, og sjekk at toppbildet vises. |
 | 8 | Ny telefon (eller privat fane): **Allerede kunde? Logg inn**, skriv koden (med små bokstaver, uten bindestreker) | «Velkommen tilbake!», og tilgangen ligger på telefonen |
 | 9 | Refunder ordren i Shopify (*Orders → ordren → Refund*) | kode som nå brukes under «Logg inn» sier at betalingen er refundert |
 | 10 | Bruk en nettleser som ikke åpner nye faner (eller slå av popup-tillatelsen) | fanen du står i går til butikken. Etter betalingen leder **Fortsett å handle** til forsiden, som da har en lenke tilbake til spillet (rommet står der det var). Tilbakeknappen virker også: spillet finner betalingen selv. |
@@ -356,9 +371,10 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 | [`public/js/pay/shop.js`](../public/js/pay/shop.js) | Siden: spør om butikken, lager koden og handlekurvlenken, åpner fanen, spør om koden er betalt |
 | [`public/js/screens/shoppay.js`](../public/js/screens/shoppay.js) | Bunnlinjen på pakkeskjermen: avkrysning, «Gå til betaling», og «Venter på betalingen» |
 | [`public/js/pay/payments.js`](../public/js/pay/payments.js), [`pass.js`](../public/js/pay/pass.js), [`plans.js`](../public/js/pay/plans.js) | det samme som for Stripe: tilgangen, koden, pakkene |
-| [`shopify/forside.liquid`](../shopify/forside.liquid), [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) | det som limes inn i Shopify |
+| [`shopify/forside.liquid`](../shopify/forside.liquid), [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) | det som limes inn i Shopify: forsiden, og hele ordrebekreftelsen (tre språk) |
+| [`public/assets/email/disputt-epost-logo.png`](../public/assets/email/disputt-epost-logo.png), [`tools/logo/email-header.html`](../tools/logo/email-header.html) | bildet øverst i e-posten (logoen på den gule ovalen, som PNG fordi Gmail og Outlook ikke viser SVG), og oppskriften på å lage det |
 | [`tools/pages/build.mjs`](../tools/pages/build.mjs) | bygger inn variablene, sjekker dem, og slipper betalingsserveren gjennom CSP-en |
-| `tools/qa/fakeshopify.mjs`, `fakedb.mjs`, `shop-stack.mjs`, `shopflow.mjs`, `miniliquid.mjs` | falsk Shopify (ordre og signerte webhooker, en butikk med kasse), falsk D1, hele kjeden i en nettleser, og en liten Liquid-tolk som prøver filene i `shopify/` |
+| `tools/qa/fakeshopify.mjs`, `fakedb.mjs`, `shop-stack.mjs`, `shopflow.mjs`, `miniliquid.mjs`, `shopify-order.mjs` | falsk Shopify (ordre og signerte webhooker, en butikk med kasse), falsk D1, hele kjeden i en nettleser, og en liten Liquid-tolk med eksempelordrer som prøver filene i `shopify/` |
 | `test/worker-shopify.test.js`, `test/shop-flow.test.js`, `test/shopify-files.test.js` | betalingsserveren, siden mot den, og filene som limes inn i Shopify |
 
 ### Betalingsserverens kall
@@ -398,6 +414,8 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 - **Bruk bare NOK i butikken** (ikke flere valutaer med Shopify Markets). Workeren regner en refusjon i samme valuta som ordren; en refusjon i en annen valuta stopper ikke koden.
 - **Faner som spillet åpner beholder `window.opener`** (det er derfor spillet kan lukke dem igjen). Butikkens egne sider kunne i teorien sendt spillfanen til en annen adresse; i en butikk uten tredjepartsapper på forsiden er det ikke noe problem. Ikke legg apper eller skript på butikkens forside.
 - **Kjøp utenom spillet gir ingen kode** ([del 14](#14-drift)). Vil du hindre det, kan produktsidene i temaet fjernes eller stenges.
+- **E-posten kan være på dansk og svensk, men spillet er bare på norsk.** Dansk og svensk tekst brukes først når språkene er publisert i Shopify og kassen åpnes på språket ([del 7](#7-shopify-e-postbekreftelsen)), og knappen i teksten heter fortsatt «Allerede kunde? Logg inn». Teksten er ikke lest av noen som kan språkene, eller av en jurist.
+- **E-posten er prøvd mot en etterlikning av Shopify, ikke mot Shopify.** Testene kjører malen med en eksempelordre og en egen, liten Liquid-tolk. Navnene i malen er hentet fra Shopifys egen standardmal, unntatt språkfeltet (`order.customer_locale`, med `customer.locale` som reserve) og variant-ID-en på varelinjen. Mangler de, blir e-posten norsk og uten lengde på pakken, aldri feil. Den ekte e-posten må sees på en ekte ordre ([del 7](#7-shopify-e-postbekreftelsen), punkt 5).
 - **Vipps går som tredjepartsbetaling** i Shopify: ekstra gebyr, og Vipps' hurtigbetaling («express checkout») er ikke støttet. Vipps-tillegget har egen onboarding.
 - **Apple Pay vises ikke overalt.** Det avhenger av nettleseren og enheten (Safari med kort i Wallet), ikke av oss. Kort er alltid med.
 - **Butikken må være åpen** (uten passord) og produktene må ligge i salgskanalen *Online Store*, ellers virker ikke handlekurvlenkene.
