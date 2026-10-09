@@ -108,7 +108,7 @@ const SCREENS = [
   ['sheet-scores', 'Poengtavle', 'Åpnes fra alle skjermer. Verten har vertsvalg bak tannhjulet ved siden av «Poeng».'],
   ['pay-gate', 'Pakkene', 'Betalingsmuren: verten får den når «Neste runde» trykkes etter de to gratis rundene. De andre ser den aldri.'],
   ['pay-guest-host-away', 'Verten betaler', 'Gjestene venter mens verten er hos Stripe, og kobler til igjen av seg selv.'],
-  ['pay-thanks', 'Takk!', 'Tilgangen, koden og én knapp som starter runden verten ba om.'],
+  ['pay-thanks', 'Velkommen!', 'Tilgangen, koden og én knapp som starter runden verten ba om.'],
   ['pay-login', 'Logg inn', 'Ingen konto: koden fra kvitteringen gir tilgangen tilbake på en ny telefon.'],
 ];
 const gallery = document.getElementById('screen-gallery');

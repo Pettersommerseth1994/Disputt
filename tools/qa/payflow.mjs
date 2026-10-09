@@ -103,7 +103,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
     }
   }
   await host.page.click('#pay');
-  await waitText(host, /Takk!/, 30000);
+  await waitText(host, /Velkommen!/, 30000);
   const thanks = await host.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
   assert.match(thanks, /Livstid/);
   assert.match(thanks, /Gjelder for alltid/);
@@ -119,7 +119,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   const sheetButtons = await host.page.$$eval('.sheet button', (els) => els.map((b) => b.innerText.trim()));
   assert.ok(sheetButtons.includes('Start runde 3'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
   await shot(host, '22-thanks');
-  log(`paid with Vipps: "Takk!" with the code ${code}`);
+  log(`paid with Vipps: "Velkommen!" with the code ${code}`);
 
   // the guests find their way back; then the round the host asked for starts with one tap
   await host.page.waitForFunction(() => !/Venter på at .* kommer tilbake/.test(document.querySelector('.sheet')?.innerText ?? ''), { timeout: 45000 });
@@ -155,7 +155,7 @@ export async function buyAndComeBackByTheBackButton(t, { base, stack }) {
   // the customer pays in the app, not on this page: the redirect never happens
   stack.fake.pay(session.id);
   await phone.page.goBack();
-  await waitText(phone, /Takk!/, 30000);
+  await waitText(phone, /Velkommen!/, 30000);
   const sheet = await phone.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
   assert.match(sheet, /For ett år/);
   const code = (await phone.page.$eval('.passcode', (el) => el.textContent)).trim();

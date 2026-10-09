@@ -249,7 +249,7 @@ async function checkout(request, env) {
     locale: 'nb',
     customer_creation: 'always',
     metadata: meta,
-    payment_intent_data: { description: `Disputt – ${PLANS[plan].name} (kode ${code})`, metadata: meta },
+    payment_intent_data: { description: `Disputt ${PLANS[plan].name} (kode ${code})`, metadata: meta },
     // The right of withdrawal ends for digital content that is delivered at once, but only with the buyer's own, express consent:
     // a box that has to be ticked says it best. Without the box (no terms link set) the notice by the button has to do.
     custom_text: {

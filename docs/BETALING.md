@@ -22,7 +22,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 <tr>
 <td align="center"><img src="../public/design-system/screens/pay-gate.webp" width="220" alt="Pakkene: En kveld, For ett år og Livstid, med knappene Betal med Vipps og Betal med Apple Pay"><br><sub>Verten trykker «Neste runde» etter runde 2 og får pakkene</sub></td>
 <td align="center"><img src="../public/design-system/screens/pay-guest-host-away.webp" width="220" alt="Poengskjermen hos en gjest, med varselet Verten betaler"><br><sub>Gjestene ser «Verten betaler» og venter</sub></td>
-<td align="center"><img src="../public/design-system/screens/pay-thanks.webp" width="220" alt="Takk-arket med tilgangen, koden og knappen Start runde 3"><br><sub>«Takk!» med koden, og én knapp som starter runde 3</sub></td>
+<td align="center"><img src="../public/design-system/screens/pay-thanks.webp" width="220" alt="Velkommen-arket med tilgangen, koden og knappen Start runde 3"><br><sub>«Velkommen!» med koden, og én knapp som starter runde 3</sub></td>
 <td align="center"><img src="../public/design-system/screens/pay-login.webp" width="220" alt="Logg inn: skriv inn koden fra kvitteringen"><br><sub>«Allerede kunde? Logg inn» på forsiden</sub></td>
 </tr>
 </table>
@@ -57,7 +57,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 2. Etter runde 2 trykker verten **Neste runde** og får **pakkene**. De andre spillerne ser det de alltid ser mellom runder: «Venter på at verten starter neste runde».
 3. Verten velger pakke og trykker **Betal med Vipps** eller **Betal med Apple Pay**. Gjestene får beskjed om at verten betaler og venter.
 4. Verten betaler på **Stripes betalingsside** og sendes tilbake til spillet, i samme fane.
-5. **«Takk!»** viser tilgangen og en kode. Knappen **Start runde 3** fortsetter spillet. Gjestene kobler seg til igjen av seg selv.
+5. **«Velkommen!»** viser tilgangen og en kode. Knappen **Start runde 3** fortsetter spillet. Gjestene kobler seg til igjen av seg selv.
 6. Neste kveld ligger tilgangen på telefonen. På en ny telefon: **Allerede kunde? Logg inn**, og skriv koden.
 
 ### Tre deler
@@ -76,7 +76,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
  ── GET /claim?session_id=… ──────────▶ spør Stripe: er den betalt? ──▶
                   ◀── { token, code } ──┘ signerer en tilgang
  tilgangen lagres på telefonen
- «Takk!» · «Start runde 3»
+ «Velkommen!» · «Start runde 3»
 ```
 
 | Del | Gjør | Vet og lagrer |
@@ -89,9 +89,9 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 
 **Tilgangen (passet)** er en signert tekst (JWT, ES256) som sier «dette er pakken `year`, betalt på tidspunkt T, gyldig til U». Betalingsserveren signerer den med en privat nøkkel som bare finnes i Cloudflare. Appen har den offentlige nøkkelen (den ligger åpent i `config.js`) og sjekker signaturen i nettleseren. Endrer noen pakke eller utløpsdato på sin telefon, blir signaturen ugyldig.
 
-**Koden** (for eksempel `K7M2-9QXD-4TRB`) er tolv tegn (60 bit) som betalingsserveren lager når betalingen startes og som bare lagres hos Stripe, som metadata på betalingen. Den som kjenner koden kan få tilgangen på en ny telefon. Appen er snill med skrivemåten: små bokstaver, mellomrom og bindestreker spiller ingen rolle, og O, I og L regnes som 0, 1 og 1. Koden står på Stripes betalingsside (under betalingsknappen), vises på «Takk!» og under *Vertsvalg › Min tilgang*, og kan stå på kvitteringen hvis Stripe tar med beskrivelsen (se test 9 i [del 10](#10-test-alt)). Har kunden den ikke likevel, finner du den i Stripe ([del 12](#12-drift), «Mistet koden»).
+**Koden** (for eksempel `K7M2-9QXD-4TRB`) er tolv tegn (60 bit) som betalingsserveren lager når betalingen startes og som bare lagres hos Stripe, som metadata på betalingen. Den som kjenner koden kan få tilgangen på en ny telefon. Appen er snill med skrivemåten: små bokstaver, mellomrom og bindestreker spiller ingen rolle, og O, I og L regnes som 0, 1 og 1. Koden står på Stripes betalingsside (under betalingsknappen), vises på «Velkommen!» og under *Vertsvalg › Min tilgang*, og kan stå på kvitteringen hvis Stripe tar med beskrivelsen (se test 9 i [del 10](#10-test-alt)). Har kunden den ikke likevel, finner du den i Stripe ([del 12](#12-drift), «Mistet koden»).
 
-**Når verten er hos Stripe.** Verten forlater siden mens han betaler. Rommet ligger lagret i fanen (`sessionStorage`) og kommer tilbake når Stripe sender verten hjem. Gjestene ville uten videre gitt opp etter ca. ett minutt, så verten sender dem først en melding (`away`) om at han er borte for å betale. Da venter de i opptil ti minutter med teksten «Verten betaler – spillet fortsetter straks». Vipps må godkjennes i appen innen fem minutter (Stripes regel), så ti minutter er romslig.
+**Når verten er hos Stripe.** Verten forlater siden mens han betaler. Rommet ligger lagret i fanen (`sessionStorage`) og kommer tilbake når Stripe sender verten hjem. Gjestene ville uten videre gitt opp etter ca. ett minutt, så verten sender dem først en melding (`away`) om at han er borte for å betale. Da venter de i opptil ti minutter med teksten «Verten betaler, spillet fortsetter straks». Vipps må godkjennes i appen innen fem minutter (Stripes regel), så ti minutter er romslig.
 
 ## 2. Før du begynner: virksomhet, skatt og jus
 
@@ -354,15 +354,15 @@ Testkort ([Stripes testkort](https://docs.stripe.com/testing)): `4242 4242 4242 
 | 1 | Åpne `…/health` på Workeren | `ok: true`, `mode: "test"` |
 | 2 | Forsiden | «Allerede kunde? Logg inn» (ikke «Slik spiller du»); regler finnes fortsatt under Vertsvalg i spillet |
 | 3 | Spill to runder. Verten trykker «Neste runde» | Verten får **pakkene**. Gjestene ser «Venter på at verten starter neste runde» og får aldri pakkene |
-| 4 | Velg **En kveld**, trykk **Betal med Apple Pay**. Betal med `4242…` | Stripe-siden viser 89 kr. Tilbake i spillet: «Takk!» med koden og knappen **Start runde 3** |
-| 5 | Mens verten er hos Stripe: se på en gjest | «Verten betaler – spillet fortsetter straks». Gjesten blir i spillet, også etter flere minutter (opptil ti) |
+| 4 | Velg **En kveld**, trykk **Betal med Apple Pay**. Betal med `4242…` | Stripe-siden viser 89 kr. Tilbake i spillet: «Velkommen!» med koden og knappen **Start runde 3** |
+| 5 | Mens verten er hos Stripe: se på en gjest | «Verten betaler, spillet fortsetter straks». Gjesten blir i spillet, også etter flere minutter (opptil ti) |
 | 6 | Trykk **Start runde 3** | Runde 3 starter. Er en gjest ikke tilbake ennå, står det «Venter på at … kommer tilbake …» under koden |
 | 7 | Trykk «Neste runde» etter runde 3 | Ingen betalingsmur: verten har tilgang |
 | 8 | **Avbryt** på Stripe-siden (pilen tilbake) | «Betalingen ble avbrutt. Du er ikke belastet.» Spillet står som før; «Neste runde» gir pakkene igjen |
 | 9 | I Stripe: Payments → betalingen → send kvittering for hånd | Kvitteringen kommer. **Står koden i kvitteringen?** Hvis ikke: se «Mistet koden» i [del 12](#12-drift) |
-| 10 | Pakken «For ett år» og «Livstid» (egne betalinger) | Beløpene 249 og 299 kr. «Takk!» sier «Gjelder til …» og «Gjelder for alltid» |
+| 10 | Pakken «For ett år» og «Livstid» (egne betalinger) | Beløpene 249 og 299 kr. «Velkommen!» sier «Gjelder til …» og «Gjelder for alltid» |
 | 11 | Avvist kort `4000 0000 0000 0002` | Stripe viser feil og lar deg prøve igjen. Spillet påvirkes ikke |
-| 12 | 3-D Secure `4000 0027 6000 3184` | Testsiden for godkjenning, så «Takk!» |
+| 12 | 3-D Secure `4000 0027 6000 3184` | Testsiden for godkjenning, så «Velkommen!» |
 | 13 | Ny telefon (eller privat fane): **Logg inn** → skriv koden | «Velkommen tilbake! …». Prøv også koden med små bokstaver og uten bindestreker, og en feil kode («Fant ingen betaling med den koden.»). **Vent et minutt etter betalingen først:** Stripes søk, som slår opp koden, kan ligge opptil ett minutt etter ([Stripe](https://docs.stripe.com/search): «under 1 minute»). Betaler du og logger inn med en gang på en annen telefon, kan du få «Fant ingen betaling» som går over av seg selv. |
 | 14 | Vertsvalg → **Min tilgang** | Pakken, gyldighet og koden. «Fjern tilgangen fra denne telefonen» krever to trykk |
 | 15 | Refunder betalingen i Stripe, trykk så «Logg inn» med koden | «Denne betalingen er refundert, så koden gjelder ikke lenger.» (Telefoner som allerede har tilgangen beholder den, se del 14) |
@@ -370,13 +370,13 @@ Testkort ([Stripes testkort](https://docs.stripe.com/testing)): `4242 4242 4242 
 | 17 | **Safari og Chrome** på iPhonen: se hva Stripe-siden viser | Apple Pay-knapp i Safari (med kort i Wallet). Ser du den ikke i Chrome, kan det være slik det skal være: Chrome på iPhone støtter ikke alltid Apple Pay |
 | 18 | Betal med Apple Pay i Safari med et ekte kort i Wallet og **testnøkler** | Stripe oppdager testmiljøet og lar testbetalingen gå gjennom uten at kortet belastes ([Stripe](https://docs.stripe.com/apple-pay): «you can make test payments on a live card without charging it») |
 | 19 | **Vipps** (når Stripe har gitt deg tilgang, `VIPPS_ENABLED=true`) | Testmiljø: en testside der du godkjenner eller avviser. Live: telefonnummer, push i Vipps-appen, godkjenn innen 5 minutter |
-| 20 | Vipps på iPhone i Chrome: åpner Vipps en annen nettleser da du kom tilbake? | Spillet skal kjenne igjen betalingen uansett: gå tilbake til fanen der spillet står (eller trykk tilbake) og vent noen sekunder: «Takk!» dukker opp av seg selv (sjekken er stille til betalingen er funnet) |
+| 20 | Vipps på iPhone i Chrome: åpner Vipps en annen nettleser da du kom tilbake? | Spillet skal kjenne igjen betalingen uansett: gå tilbake til fanen der spillet står (eller trykk tilbake) og vent noen sekunder: «Velkommen!» dukker opp av seg selv (sjekken er stille til betalingen er funnet) |
 | 21 | Verten er hos Stripe i over ett minutt (for eksempel mens du leter etter Vipps-appen) | Gjestene er fortsatt med når verten kommer tilbake |
 | 22 | Spillet er lagt på hjemskjermen (som en app) og verten betaler | Verten kommer tilbake til spillet med rommet i behold. Åpnes Stripe i en egen visning og kommer du ikke tilbake riktig, si fra |
 | 23 | I Safari: slå på «Blokker alle informasjonskapsler», og trykk betal som vert midt i et spill | Siden nekter å gå videre og sier hvorfor, i stedet for å la verten forsvinne fra spillet |
 | 24 | Livstid er kjøpt: skriv en gammel «En kveld»-kode under «Logg inn» | Du beholder Livstid (telefonen beholder den beste tilgangen) |
 
-**Automatiske tester.** Alt som kan sjekkes uten ekte penger, sjekkes av `npm test` (over 200 tester, inkludert betalingsserveren mot en falsk Stripe og sidens logikk rundt betaling) og av `npm run play:pay`, som spiller en hel kveld i en ekte nettleser: pakkene etter runde 2, avbrutt betaling, Vipps-betaling hos en falsk Stripe, «Takk!», runde 3, et kjøp fra forsiden der betalingen går gjennom «i Vipps-appen» og siden finner den selv når du går tilbake, og innlogging på en ny telefon. `npm run play:pay-slow` holder verten borte i 75 sekunder. De erstatter ikke testene over med ekte telefoner, Stripe og Vipps.
+**Automatiske tester.** Alt som kan sjekkes uten ekte penger, sjekkes av `npm test` (over 200 tester, inkludert betalingsserveren mot en falsk Stripe og sidens logikk rundt betaling) og av `npm run play:pay`, som spiller en hel kveld i en ekte nettleser: pakkene etter runde 2, avbrutt betaling, Vipps-betaling hos en falsk Stripe, «Velkommen!», runde 3, et kjøp fra forsiden der betalingen går gjennom «i Vipps-appen» og siden finner den selv når du går tilbake, og innlogging på en ny telefon. `npm run play:pay-slow` holder verten borte i 75 sekunder. De erstatter ikke testene over med ekte telefoner, Stripe og Vipps.
 
 ## 11. Gå live
 
@@ -389,7 +389,7 @@ Først når alt over virker i testmiljøet.
 - [ ] **Lag en ny Worker, `disputt-pay`** (del 8): samme kode, men `STRIPE_KEY` = live-nøkkelen, de tre **live**-pris-ID-ene, `SITE_URL` = `https://disputt.site/`, `VIPPS_ENABLED` = `true` hvis Vipps er på, `REQUIRE_TERMS` = `true` og `TERMS_URL` = `https://disputt.site/vilkar.html`. `JWT_PRIVATE_KEY` må være et **eget nøkkelpar for live** (del 7.2), ikke det samme som i test. Den offentlige nøkkelen i hovedrepoet er den som hører til.
 - [ ] Åpne `…/health` på den nye Workeren: `"mode":"live"`, `"terms":"box-with-link"`.
 - [ ] **GitHub, hovedrepoet:** variablene `DISPUTT_PAYMENTS_URL` (den nye Workeren), `DISPUTT_PAYMENTS_KEY`, `DISPUTT_PAYMENTS_METHODS`. (`DISPUTT_TERMS_URL` og `DISPUTT_PRIVACY_URL` trengs ikke: appens egne sider brukes.) Kjør **Actions → Pages → Run workflow**.
-- [ ] **Kjøp pakken «En kveld» selv**, med ekte betaling (89 kr). Sjekk: betalingen står i Stripe, kvitteringen kom, «Takk!» viser koden, og runden starter. **Refunder** den deretter i Dashboard og sjekk at koden da nektes.
+- [ ] **Kjøp pakken «En kveld» selv**, med ekte betaling (89 kr). Sjekk: betalingen står i Stripe, kvitteringen kom, «Velkommen!» viser koden, og runden starter. **Refunder** den deretter i Dashboard og sjekk at koden da nektes.
 - [ ] Sjekk utbetalingen (Stripe utbetaler til bankkontoen etter en frist som står i Dashboard) og at bokføringen din får det den trenger.
 - [ ] Fortell vennene dine at spillet nå har en betalingsmur etter runde 2 (og at den ene kvelden er 89 kr).
 
@@ -420,7 +420,7 @@ Først når alt over virker i testmiljøet.
 | [`public/js/pay/payments.js`](../public/js/pay/payments.js) | Innstillinger, tilgangen på telefonen, kallene til betalingsserveren, hjemkomsten fra Stripe |
 | [`public/js/pay/gate.js`](../public/js/pay/gate.js) | Hva «Neste runde» gjør: starter runden, eller viser pakkene |
 | [`public/js/pay/away.js`](../public/js/pay/away.js) | Gir gjestene beskjed om at verten er borte for å betale |
-| [`public/js/screens/pay.js`](../public/js/screens/pay.js) | Skjermene: pakkene, «Logg inn», «Takk!», «Min tilgang» |
+| [`public/js/screens/pay.js`](../public/js/screens/pay.js) | Skjermene: pakkene, «Logg inn», «Velkommen!», «Min tilgang» |
 | [`tools/pages/build.mjs`](../tools/pages/build.mjs) | Bygger inn de to variablene, sjekker dem, og slipper betalingsserveren gjennom CSP-en |
 | `tools/qa/fakestripe.mjs`, `tools/qa/payments-stack.mjs`, `tools/qa/payflow.mjs` | Falsk Stripe, den ekte betalingsserveren bak den, og hele kvelden spilt i en nettleser |
 | `test/worker.test.js`, `test/pay.test.js`, `test/pay-flow.test.js` | Betalingsserveren, tilgang/kode/pakker, og sidens betalingsflyt |
@@ -465,7 +465,7 @@ npm run shots -- --docs        # nye skjermbilder til stilguiden og denne filen
 - **Kort står på Stripes side også.** Se 5.1.
 - **«Logg inn med Vipps/Apple Pay»** er ikke mulig slik du beskrev det: Apple Pay forteller ikke hvem kunden er, og «Logg inn med Vipps» (Vipps Login) krever en egen Vipps-avtale for virksomheten og et register som kobler Vipps-identiteten til kjøpet. Koden du fikk da du betalte er løsningen som virker uten konto. Vil du ha Vipps Login senere, er det en større utvidelse.
 - **«Livstid»** er definert i vilkårene (punkt 1 og 7): så lenge Disputt tilbys, ikke så lenge kunden lever, og ved avvikling får kunden forholdsmessig refusjon med fem år fra kjøpet som regnegrunnlag. Det er et valg, ikke en lovregel: få det lest av en jurist.
-- **Hjemkomst i en annen nettleser.** Åpner Vipps en annen nettleser enn den du startet i, får du «Takk!» der, men rommet ligger i den første fanen. Gå tilbake til den (tilbakeknappen): siden finner betalingen selv, og spillet står som du forlot det. Er den fanen lukket, er rommet borte, og vennene må starte et nytt spill (med tilgangen på plass: skriv koden).
+- **Hjemkomst i en annen nettleser.** Åpner Vipps en annen nettleser enn den du startet i, får du «Velkommen!» der, men rommet ligger i den første fanen. Gå tilbake til den (tilbakeknappen): siden finner betalingen selv, og spillet står som du forlot det. Er den fanen lukket, er rommet borte, og vennene må starte et nytt spill (med tilgangen på plass: skriv koden).
 - **Alle kan banke på Workeren.** Adressen er offentlig, og `/checkout`, `/claim` og `/restore` kan kalles med `curl`. Ingenting kan kjøpes eller hentes uten en ekte, gjennomført betaling, men to ting kan skje: det lages betalingsøkter i Stripe som ingen bruker, og Stripes søk, som «Logg inn» bruker, tillater 20 kall i sekundet ([Stripe](https://docs.stripe.com/search)): en som holder det oppe kan få alle «Logg inn» til å feile. Vil du stenge det ute, legg en rate-begrensning foran Workeren i Cloudflare (Security → WAF → Rate limiting rules).
 - **Betaling virker bare med peer-to-peer-bygget (GitHub Pages).** En Disputt-server gir en vert som forlater siden bare noen få minutter før en annen blir vert, og det rekker ikke en Vipps-betaling. Bygget nekter derfor betaling sammen med `DISPUTT_SERVER_URL`.
 - **Flere typer innlogging, abonnement, kampanjekoder, kvitteringer fra appen, statistikk:** ikke bygget. Si fra om du vil ha noe av det.

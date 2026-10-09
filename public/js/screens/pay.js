@@ -185,7 +185,7 @@ export function LoginSheet() {
         ${error && html`<span class="field__error" id="pass-code-error" role="alert">${error}</span>`}
       </div>
       <${Button} block type="submit" disabled=${!valid || busy}>${busy ? 'Sjekker …' : 'Hent tilgangen'}</${Button}>
-      <p class="small muted">${shopify ? 'Koden står i e-posten du fikk fra butikken da du betalte, og under Vertsvalg › Min tilgang på telefonen du betalte med.' : 'Koden gjelder uansett om du betalte med Vipps eller Apple Pay. Du fikk den da du betalte («Takk!»-siden), og den står under Vertsvalg › Min tilgang på telefonen du betalte med.'}</p>
+      <p class="small muted">${shopify ? 'Koden står i bestillingsbekreftelsen på e-post, og under Vertsvalg › Min tilgang på telefonen du betalte med.' : 'Koden gjelder uansett om du betalte med Vipps eller Apple Pay. Du fikk den da du betalte («Takk!»-siden), og den står under Vertsvalg › Min tilgang på telefonen du betalte med.'}</p>
       <p class="center"><${Button} variant="text" onClick=${() => setStore({ sheet: null, paywall: true })}>Har du ikke kjøpt ennå? Se pakkene</${Button}></p>
     </form>
   </${Sheet}>`;
@@ -213,11 +213,11 @@ export function ThanksSheet() {
     close();
     if (next) requestNextRound(view);
   };
-  return html`<${Sheet} title="Takk!" onClose=${close}>
+  return html`<${Sheet} title="Velkommen!" onClose=${close}>
     <div class="stack">
       <p class="lead">Du har tilgang${plan && html`: <strong>${plan.name}</strong>`}. ${s.pass && describeValidity(s.pass)}.</p>
       ${s.passCode && html`<${CodeCard} code=${s.passCode} />`}
-      <p class="small muted">Ta vare på koden, for eksempel med et skjermbilde. Med den får du tilgangen tilbake på en ny telefon, uten konto.${s.payments?.provider === 'shopify' ? ' Den står også i e-posten du får fra butikken.' : ''}</p>
+      <p class="small muted">Ta vare på koden, for eksempel med et skjermbilde. Med den får du tilgangen tilbake på en ny telefon, uten konto.${s.payments?.provider === 'shopify' ? ' Den står også i bestillingsbekreftelsen på e-post.' : ''}</p>
       ${away.length > 0 && html`<p class="small center" role="status">Venter på at ${joinNames(away)} kommer tilbake …</p>`}
       <${Button} block variant="lime" onClick=${go}>${next ? `Start runde ${view.round + 1}` : 'Fortsett spillet'}</${Button}>
     </div>

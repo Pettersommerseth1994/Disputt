@@ -15,7 +15,7 @@ Disputt ser ut som en tegning med fargestifter på burgunder papir: flate krittf
 | `public/css/legal.css` | Leselayout for `vilkar.html` og `personvern.html`: en smal kolonne i spillets farger, med selgerkortet øverst. |
 | `public/js/hold.js` | `useHold()`: trykk og hold, slik hemmeligheter skjules (rollen vises bare mens en finger holder knappen). |
 | `public/js/ui.js` | JS-komponentene (`Avatar`, `Button`, `Timer`, `Sheet`, `Scoreboard`, `QR`, `RoleStrip`, …) som bruker klassene over. |
-| `public/js/screens/pay.js`, `screens/shoppay.js`, `public/js/pay/` | Pakkene, «Logg inn», «Takk!», «Min tilgang» og logikken bak (tilgang, kode, kall til betalingsserveren; `shop.js` for Shopify). Av som standard, se [SHOPIFY.md](SHOPIFY.md) og [BETALING.md](BETALING.md). |
+| `public/js/screens/pay.js`, `screens/shoppay.js`, `public/js/pay/` | Pakkene, «Logg inn», «Velkommen!», «Min tilgang» og logikken bak (tilgang, kode, kall til betalingsserveren; `shop.js` for Shopify). Av som standard, se [SHOPIFY.md](SHOPIFY.md) og [BETALING.md](BETALING.md). |
 | `public/design-system/` | Stilguide-siden. |
 | `shared/avatars.mjs` | Avatar-rosteret (id, navn, aksentfarge). |
 | `public/config.js`, `public/js/paths.js` | Distribusjonsinnstillinger og stedsuavhengige stier (alle URL-er er relative, så siden virker både på `/` og under `/Disputt/`). |
@@ -69,7 +69,7 @@ En telefon som er rød eller blå, eller som viser et stort «Imposter», røper
 
 - **Rolleskjermen (8 s) viser ingenting om rollen før en finger holder knappen.** Resten av tiden er den en tom, stiplet plass for kortet, helt lik for lojale og imposter. Kortet (øye, rollens navn i `--red`/`--blue`, riktig svar eller «?») er like stort for begge roller, og forsvinner når fingeren løftes (`public/js/hold.js`). Plassen tar resten av høyden i skjermen, så et høyere kort aldri skyver knappen bort fra under fingeren.
 - **Stripen under runden** (`RoleStrip`) er lik for alle («Din rolle · Hold for å se») og viser rollen, og for imposteren svaret, bare mens den holdes. **Det som kommer fram står til venstre for knappen, aldri i den eller under den**, for der dekker fingeren det: knappen endrer ikke tekst og flytter seg ikke når teksten ved siden av vokser. Det samme gjelder rollekortet, som står over knappen. `npm run qa:overlap` sjekker det (regel 6, med selvtest).
-- **To imposterer (fra seks spillere):** kortet har en tredje del, «Imposterne». Imposterne ser «Du og Kari» med Karis avatar, de lojale et «?» med «Finn dem sammen», så kortene er like store for begge roller. Stripen får en ekstra linje mens den holdes («Sammen med Kari» / «To av dere er imposterer»). Rundens antall imposterer er ingen hemmelighet og står i `view.turn.impostors`; hvem de er står bare i imposterens egen visning (`you.mates`).
+- **To imposterer (fra seks spillere):** kortet har en tredje del, «Imposterne». Imposterne ser «Du og Kari» med Karis avatar. De lojale har ingenting å slå opp, så kortet deres er bare rollen, midt i kortets plass. Stripen får en ekstra linje mens den holdes («Sammen med Kari» / «To av dere er imposterer»). Rundens antall imposterer er ingen hemmelighet og står i `view.turn.impostors`; hvem de er står bare i imposterens egen visning (`you.mates`).
 - **Alt annet som ellers kunne røpet rollen er likt:** vibrasjonen ved rolleskjermen, tipset under klokka, og nettleserfargen (`theme-color`). Hele siden skifter aldri farge: det finnes ingen sidetemaer.
 - QA kan vise alt som «holdt» uten finger: `setStore({ qaHold: true })` (se `useHold`).
 
@@ -77,7 +77,7 @@ En telefon som er rød eller blå, eller som viser et stort «Imposter», røper
 
 Spillet er til for at folk skal se på, snakke med og diskutere med hverandre, ikke på telefonen. Telefonen leser opp spørsmålet, trekker imposterne og holder styr på poengene. **Nye skjermer skal kreve så få trykk og blikk som mulig.**
 
-- **Fasit, utfall og hvem imposteren er står aldri på en skjerm før imposteren har sagt det høyt.** Etter at svaret er låst telles det ned på alle telefoner («Svaret er låst · 5 · Dere låste B: Japan. Se på hverandre!»), og så viser alle samme skjerm, «Imposteren avslører seg!» (`.stage`: leppene, rollestripen og én linje tekst). Bare den som hadde spørsmålet har en knapp, «Det er sagt – vis poengene». Imposteren kan slå opp svaret i rollestripen (hold) hvis hen har glemt det. Teksten sier ikke at imposteren «må reise seg», for det er opp til dem.
+- **Fasit, utfall og hvem imposteren er står aldri på en skjerm før imposteren har sagt det høyt.** Etter at svaret er låst telles det ned på alle telefoner («Svaret er låst · 5 · Dere låste B: Japan. Se på hverandre!»), og så viser alle samme skjerm, «Imposteren avslører seg!» (`.stage`: leppene, rollestripen og én linje tekst). Bare den som hadde spørsmålet har en knapp, «Det er sagt, vis poengene». Imposteren kan slå opp svaret i rollestripen (hold) hvis hen har glemt det. Teksten sier ikke at imposteren «må reise seg», for det er opp til dem.
 - **Poengene** (`Summary`) er en poengtavle med +1 og én linje om hvordan runden gikk, uten kort som navngir imposteren. Under står en liten tekstknapp, «Uenige? Se fasit», som åpner et ark (`FasitSheet`, `public/js/screens/fasit.js`) med riktig svar, hva dere låste og hvem imposteren var, til når gruppa er uenig om det som ble sagt. Telefonen regner ut poengene selv, så en imposter som lyver høyt får det ikke til å stå på poengtavlen.
 - Telefonen kan ikke få en iPhone til å vibrere, så nedtellingen må stå på skjermen.
 
@@ -91,13 +91,13 @@ Verten går gjennom tre steg, ett valg per skjerm: 1 «Hvem er du?» (`Profile` 
 
 ## Pakker og betaling
 
-Betaling er av som standard ([SHOPIFY.md](SHOPIFY.md), [BETALING.md](BETALING.md)). Når den er på, kommer tre ting til: pakkene, «Logg inn» og «Takk!». Med Shopify har pakkeskjermen én knapp og en avkrysning for samtykket (som må settes før knappen virker), og bunnlinjen sier «Venter på betalingen …» mens verten betaler i den andre fanen (`public/js/screens/shoppay.js`). Skjermene ligger i `public/js/screens/pay.js`, og tallene og teksten om pakkene i `public/js/pay/plans.js`.
+Betaling er av som standard ([SHOPIFY.md](SHOPIFY.md), [BETALING.md](BETALING.md)). Når den er på, kommer tre ting til: pakkene, «Logg inn» og «Velkommen!». Med Shopify har pakkeskjermen én knapp og en avkrysning for samtykket (som må settes før knappen virker), og bunnlinjen sier «Venter på betalingen …» mens verten betaler i den andre fanen (`public/js/screens/shoppay.js`). Skjermene ligger i `public/js/screens/pay.js`, og tallene og teksten om pakkene i `public/js/pay/plans.js`.
 
 - **Pakkekort** (`.plans`, `.plan`) er radiokort, som svaralternativene: det valgte kortet blir gult, prisen står alltid til høyre, og merkelappen («Mest populær», «Best verdi») sitter på kortets øvre kant, så teksten inni holder seg på to korte linjer. Et kort er en `label` rundt en usynlig radioknapp, så tastatur og skjermleser virker.
 - **Pakkeskjermen** (`Paywall`) har tittel, tre kort, en linje om den valgte pakken, «Dette får du» og et bunnfelt med én knapp per betalingsmåte (den første er den store). Kortene og knappene skal vises uten å rulle på 390×664 og 375×553: under 650 px høyde forsvinner setningen under tittelen og luften mellom kortene krymper. `npm run qa:fit` sjekker det (`pay-gate`).
 - **Koden** (`.passcode`, `.input--passcode`) står i visningsfonten, i store bokstaver. Innskrivingen setter inn bindestreker mens man skriver, og små bokstaver og O/I/L godtas.
-- **«Takk!»** (`ThanksSheet`) viser tilgangen, koden og én knapp som starter runden verten ba om («Start runde 3»). Mens gjestene er på vei tilbake står det «Venter på at … kommer tilbake …».
-- **Gjestene** får bannerteksten «Verten betaler – spillet fortsetter straks» i stedet for «Mistet forbindelsen» mens verten er hos Stripe.
+- **«Velkommen!»** (`ThanksSheet`) viser tilgangen, koden og én knapp som starter runden verten ba om («Start runde 3»). Mens gjestene er på vei tilbake står det «Venter på at … kommer tilbake …».
+- **Gjestene** får bannerteksten «Verten betaler, spillet fortsetter straks» i stedet for «Mistet forbindelsen» mens verten er hos Stripe.
 - **Forsiden** sier «Allerede kunde? Logg inn» der «Slik spiller du» stod, og «Du har tilgang · Min tilgang» på en telefon som har tilgang.
 - Alle betalingsskjermene ligger i `tools/qa/payfixtures.mjs` og er med i `qa:overlap`, `qa:fit` og `shots`.
 

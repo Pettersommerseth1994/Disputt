@@ -341,14 +341,14 @@ try {
     const isImpostor = (p) => impostors.includes(p);
     for (const [i, p] of all.entries()) {
       if (isImpostor(p)) assert.match(peeks[i].text, /\b[A-D]\s*\n?\s*[A-Za-zÆØÅæøå ]+/, 'an impostor sees letter + answer');
-      else assert.match(peeks[i].text, /\?/, 'the loyal player gets a "?" where the impostor gets the answer');
+      else assert.doesNotMatch(peeks[i].card, /Riktig svar|Finn det sammen|\?/, 'a loyal player has nothing to look up, so the card is only the role');
     }
-    // with two impostors each is told who the other is, in the card's third part; the loyal players get a "?" there
+    // with two impostors each is told who the other is, in the card's third part; a loyal player's card has no such part
     for (const [i, p] of all.entries()) {
       const card = peeks[i].card;
       if (expectedImpostors === 1) assert.doesNotMatch(card, /imposterne/i, 'a lone impostor has no "Imposterne" row');
       else if (isImpostor(p)) assert.match(card, new RegExp(`imposterne .*Du og ${impostors.find((o) => o !== p).name}\\b`, 'i'), `${p.name}'s card names the other impostor`);
-      else assert.match(card, /imposterne \? Finn dem sammen/i, `${p.name}'s card has a "?" where the impostors are named`);
+      else assert.doesNotMatch(card, /imposterne|Finn dem sammen/i, `${p.name}'s card has no part about the impostors`);
     }
     for (const p of impostors) assert.equal(await p.page.$('.rolecard'), null, 'the card is gone when the button is let go');
 

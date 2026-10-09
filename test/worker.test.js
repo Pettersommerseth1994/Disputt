@@ -58,7 +58,7 @@ describe('POST /checkout', () => {
     assert.equal(p.get('metadata[plan]'), 'year');
     assert.match(p.get('metadata[code]'), /^[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}$/);
     assert.equal(p.get('payment_intent_data[metadata][code]'), p.get('metadata[code]'), 'the payment carries the same code, so that it can be found again');
-    assert.match(p.get('payment_intent_data[description]'), /^Disputt – For ett år \(kode [0-9A-Z-]{14}\)$/);
+    assert.match(p.get('payment_intent_data[description]'), /^Disputt For ett år \(kode [0-9A-Z-]{14}\)$/);
     assert.match(p.get('custom_text[submit][message]'), /angreretten/);
     assert.equal(p.get('consent_collection[terms_of_service]'), null);
     assert.equal(call.headers['stripe-version'], undefined, 'no preview header until Vipps is on');

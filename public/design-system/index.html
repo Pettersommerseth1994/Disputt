@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Disputt – designsystem</title>
+  <title>Designsystem for Disputt</title>
   <meta name="description" content="Disputts designsystem: farger, typografi, kritt-teksturer, avatarer og komponenter.">
   <meta name="theme-color" content="#3d0a18">
   <link rel="icon" href="../assets/icons/favicon-32.png?v=2" type="image/png" sizes="32x32">
@@ -42,7 +42,7 @@
   <section class="ds-hero">
     <p class="eyebrow">Designsystem · versjon 1</p>
     <h1>Kritt på burgunder.</h1>
-    <p class="lead">Disputt er et sosialt spill om å lure – og å avsløre. Utseendet er surrealistisk og lekent, tegnet med fargestifter på mørk burgunder: flate kritt-farger med strek og korn oppå, former som aldri er helt rette, og øyne som ser på deg.</p>
+    <p class="lead">Disputt er et sosialt spill om å lure og å avsløre. Utseendet er surrealistisk og lekent, tegnet med fargestifter på mørk burgunder: flate kritt-farger med strek og korn oppå, former som aldri er helt rette, og øyne som ser på deg.</p>
     <p class="ds-note">Alt på denne siden bruker de samme CSS-filene som spillet (<code>/css/tokens.css</code>, <code>base.css</code>, <code>components.css</code>, <code>screens.css</code>). Endrer du en token, endres både spillet og denne siden.</p>
   </section>
 
@@ -107,11 +107,11 @@
       <h2>Farger</h2>
       <p>Paletten er plukket fra referansetegningene (gul papirbunn, rødrosa «kropp», lime, oransje, blå, fiolett og turkis fra briller-damen). Burgunder er scenen. Heksverdi og kontrast leses fra tokens ved innlasting. «AA» betyr at kombinasjonen tåler brødtekst, «stor» at den bare tåler overskrifter.</p>
     </header>
-    <h3>Burgunder – siden</h3>
+    <h3>Burgunder: siden</h3>
     <div class="ds-grid" id="sw-burgundy"></div>
-    <h3>Kritt – det man tegner med</h3>
+    <h3>Kritt: det man tegner med</h3>
     <div class="ds-grid" id="sw-crayon"></div>
-    <h3>Rollefarger – bare fargen på ordet</h3>
+    <h3>Rollefarger: bare fargen på ordet</h3>
     <div class="ds-grid" id="sw-role"></div>
     <h3>Papir og blekk</h3>
     <div class="ds-grid" id="sw-paper"></div>
@@ -139,7 +139,7 @@
     <div class="ds-grid ds-grid--wide">
       <div class="ds-stack"><h3>Regler</h3><p class="ds-note">Fraunces brukes til overskrifter, knapper, tall og navn på store flater. Lora brukes til alt annet. Aldri kursiv på Fraunces (filen er allerede kursiv). Aldri mer enn to linjer i en knapp.</p></div>
       <div class="ds-stack"><h3>Tall i faste celler</h3><p class="ds-note">Fraunces har proporsjonale sifre, så klokka tegner hvert siffer i en fast celle (<code>.timer__d</code>, 0,66&nbsp;em). Da hopper ikke tallene når sekundene går.</p></div>
-      <div class="ds-stack"><h3>Fontfiler</h3><p class="ds-note"><code>fraunces-italic.woff2</code> (69&nbsp;kB, vekt 600–900, optisk størrelse 48–144) og <code>lora.woff2</code> / <code>lora-italic.woff2</code> (35 + 38&nbsp;kB). Bygges med <code>npm run fonts</code>.</p></div>
+      <div class="ds-stack"><h3>Fontfiler</h3><p class="ds-note"><code>fraunces-italic.woff2</code> (69&nbsp;kB, vekt 600 til 900, optisk størrelse 48 til 144) og <code>lora.woff2</code> / <code>lora-italic.woff2</code> (35 + 38&nbsp;kB). Bygges med <code>npm run fonts</code>.</p></div>
     </div>
   </section>
 
@@ -216,7 +216,7 @@
         <button class="btn btn--cream btn--icon" aria-label="Pluss">+</button>
         <button class="btn btn--text">Tekstknapp</button>
       </div>
-      <p class="ds-note">Gul er primær, lime er «gå!» (start, lås svaret), rosa og oransje er sjeldne og farlige. Minst 3,6&nbsp;rem høy (≈ 58&nbsp;px) – lett å treffe med tommel.</p>
+      <p class="ds-note">Gul er primær, lime er «gå!» (start, lås svaret), rosa og oransje er sjeldne og farlige. Minst 3,6&nbsp;rem høy (≈ 58&nbsp;px), lett å treffe med tommel.</p>
     </div>
 
     <h3>Felt</h3>
@@ -347,9 +347,9 @@
 
     <h3>Meldinger og overlegg</h3>
     <div class="ds-grid ds-grid--wide">
-      <div class="ds-toast-preview"><div class="toast" role="status">Det navnet er tatt – velg et annet.</div></div>
-      <div class="ds-banner-preview"><div class="banner" role="status">Mistet forbindelsen – kobler til igjen</div></div>
-      <div class="ds-banner-preview"><div class="banner" role="status">Verten betaler – spillet fortsetter straks</div></div>
+      <div class="ds-toast-preview"><div class="toast" role="status">Det navnet er tatt, velg et annet.</div></div>
+      <div class="ds-banner-preview"><div class="banner" role="status">Mistet forbindelsen, kobler til igjen</div></div>
+      <div class="ds-banner-preview"><div class="banner" role="status">Verten betaler, spillet fortsetter straks</div></div>
       <div class="ds-stack"><button class="btn btn--small" data-toggle-sheet="ds-sheet">Vis / skjul sheet</button>
         <div class="ds-sheet-preview" id="ds-sheet" hidden><div class="sheet-backdrop"><div class="sheet"><div class="sheet__head"><h2>Poengtavle</h2><button class="btn btn--ghost btn--small btn--icon" aria-label="Lukk">✕</button></div><p class="muted">Sheets glir opp nedenfra og dekker maks 90&nbsp;% av høyden.</p></div></div></div>
       </div>
@@ -382,7 +382,7 @@
     <header><h2>Tone</h2><p>Kort, lekent og litt uhyggelig. Vi snakker til gruppa som til venner rundt et bord. Norsk bokmål, aldri teknisk.</p></header>
     <div class="ds-grid ds-grid--wide">
       <div class="ds-do"><strong>Slik</strong><p class="ds-note">«Diskuter, manipuler og vinn.» · «Én av dere vet svaret og vil lure dere.» · «Se på hverandre!» · «Imposteren avslører seg!» · «Gruppa hadde rett!»</p></div>
-      <div class="ds-dont"><strong>Ikke slik</strong><p class="ds-note">«Operasjon feilet.» · «Ugyldig inndata.» · «Vennligst vent mens systemet behandler forespørselen.» Feilmeldinger sier hva som skjedde og hva man kan gjøre: «Det navnet er tatt – velg et annet.»</p></div>
+      <div class="ds-dont"><strong>Ikke slik</strong><p class="ds-note">«Operasjon feilet.» · «Ugyldig inndata.» · «Vennligst vent mens systemet behandler forespørselen.» Feilmeldinger sier hva som skjedde og hva man kan gjøre: «Det navnet er tatt, velg et annet.»</p></div>
       <div class="ds-stack"><h3>Navn på ting</h3><p class="ds-note"><strong>Imposter</strong> (han/hun som vet svaret; to fra seks spillere, og i flertall «imposterer»), <strong>lojal</strong> (alle andre), <strong>den som har spørsmålet</strong> (leser høyt og låser svaret), <strong>vert</strong> (startet spillet). Poeng, ikke «score».</p></div>
     </div>
   </section>

@@ -89,7 +89,7 @@ export function App() {
 
   return html`
     ${s.payBusy && html`<div class="banner" role="status">Sjekker betalingen</div>`}
-    ${offline && html`<div class="banner" role="status">${hostAway ? 'Verten betaler – spillet fortsetter straks' : s.everOpened ? 'Mistet forbindelsen – kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}
+    ${offline && html`<div class="banner" role="status">${hostAway ? 'Verten betaler, spillet fortsetter straks' : s.everOpened ? 'Mistet forbindelsen, kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}
     ${screen}
     ${sheet}
     ${s.toast && html`<div class="toast" role="alert" key=${s.toast}>${s.toast}</div>`}

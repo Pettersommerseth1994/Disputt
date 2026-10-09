@@ -21,7 +21,7 @@ export function Home() {
     </div>
     <div class="dock">
       <${Button} block onClick=${() => actions.create()} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
-      <${Button} block variant="ghost" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
+      <${Button} block variant="cream" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
       <div class="row row--center home__links">
         ${!s.payments?.enabled
           ? html`<${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>`
@@ -54,7 +54,7 @@ function JoinByCode({ onBack }) {
     <form class="stack stack--loose grow" onSubmit=${submit} style="justify-content:center">
       <div class="stack stack--tight center">
         <h1>Skriv inn koden</h1>
-        <p class="muted">Du finner den på skjermen til verten – eller skann QR-koden med kameraet.</p>
+        <p class="muted">Du finner den på skjermen til verten, eller skann QR-koden med kameraet.</p>
       </div>
       <div class="field">
         <label class="sr-only" for="code">Spillkode</label>

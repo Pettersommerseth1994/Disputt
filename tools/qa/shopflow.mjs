@@ -134,11 +134,11 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   assert.match(await bodyText(host), /Venter på betalingen/, 'paid, but Shopify has not said so: the game waits');
   assert.equal(await storedPass(host), null);
   await stack.release();
-  await waitText(host, /Takk!/, 30000);
+  await waitText(host, /Velkommen!/, 30000);
   const thanks = await host.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
   assert.match(thanks, /Livstid/);
   assert.match(thanks, /Gjelder for alltid/);
-  assert.match(thanks, /Den står også i e-posten du får fra butikken/);
+  assert.match(thanks, /Den står også i bestillingsbekreftelsen på e-post/);
   const shown = (await host.page.$eval('.passcode', (el) => el.textContent)).trim();
   assert.equal(shown, code, 'the code on the thank-you sheet is the one on the order');
   const stored = await storedPass(host);
@@ -149,7 +149,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   const sheetButtons = await host.page.$$eval('.sheet button', (els) => els.map((b) => b.innerText.trim()));
   assert.ok(sheetButtons.includes('Start runde 3'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
   await shot(host, '22-thanks-shop');
-  log(`paid in the shop's tab: "Takk!" with the code ${shown}`);
+  log(`paid in the shop's tab: "Velkommen!" with the code ${shown}`);
 
   // the game closes the tab it opened, now that the payment is in, and the host is where the game is
   for (let i = 0; i < 20 && !shop.isClosed(); i++) await sleep(250);
@@ -205,7 +205,7 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   assert.equal(await phone.page.$eval('#disputt-from-game', (el) => el.hidden), true, 'this is the game\'s own tab: there is no tab to close');
   await shot(phone, '26-shop-front-page');
   await phone.page.click('#disputt-open');
-  await waitText(phone, /Takk!/, 30000);
+  await waitText(phone, /Velkommen!/, 30000);
   const sheet = await phone.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
   assert.match(sheet, /For ett år/);
   const code = (await phone.page.$eval('.passcode', (el) => el.textContent)).trim();
@@ -234,7 +234,7 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   await other.page.waitForSelector('#thanks');
   await other.page.goBack();
   await other.page.goBack();
-  await waitText(other, /Takk!/, 30000);
+  await waitText(other, /Velkommen!/, 30000);
   assert.match(await other.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' ')), /En kveld/);
   log('and the back button works as well');
 }

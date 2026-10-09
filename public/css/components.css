@@ -578,7 +578,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s-2) var(--s-3);
-  padding: 0.4rem 0.9rem; /* (as tall as the strip was before it had a button for both roles: the asker's screen is the densest one) */
+  padding: 0.4rem 0.4rem 0.4rem 0.9rem; /* (as tall as the strip was before it had a button for both roles: the asker's screen is the densest one). The button is as far from the right edge as from the top one */
   border-radius: var(--r-input);
   font-weight: 700;
   font-size: var(--fs-small);
@@ -586,7 +586,7 @@
 .role-strip__info { flex: 1 1 9rem; min-width: 0; display: grid; }
 .role-strip strong { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; letter-spacing: 0.01em; }
 .role-strip--hidden { color: var(--cream); background: var(--tex-grain), var(--tex-dark), var(--surface-deep); box-shadow: inset 0 0 0 2px rgb(var(--cream-rgb) / 0.14), 0 3px 0 var(--edge); }
-.role-strip--open { align-items: flex-start; color: var(--ink); background: var(--tex-grain), var(--cream); box-shadow: 0 3px 0 var(--edge); }
+.role-strip--open { align-items: flex-start; padding-right: 0.525rem; padding-bottom: 0.8rem; color: var(--ink); background: var(--tex-grain), var(--cream); box-shadow: 0 3px 0 var(--edge); } /* (room under the last line; and 2px more on the right, because the pressed button sits 2px lower: it is as far from the right edge as from the top one) */
 /* the first line sits level with the button, whatever comes below it */
 .role-strip__who { line-height: 2.05rem; } /* (as tall as the button) */
 .role-strip__impostor { color: var(--red); }

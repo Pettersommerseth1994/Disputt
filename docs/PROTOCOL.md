@@ -18,7 +18,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `timer.set` | `seconds` (30–3600) | den som svarer | setter gjenstående tid (2/6/10 min i UI) |
 | `timer.add` | `seconds` | den som svarer | legger til tid (starter fra nå hvis tiden er ute) |
 | `lock` | `index` | den som svarer | låser svaret, starter 5-sekunders nedtelling |
-| `continue` | | den som svarte, eller verten | teller poeng, viser poengene (eller vinner). Sendes når imposteren har sagt riktig svar høyt: knappen «Det er sagt – vis poengene» |
+| `continue` | | den som svarte, eller verten | teller poeng, viser poengene (eller vinner). Sendes når imposteren har sagt riktig svar høyt: knappen «Det er sagt, vis poengene» |
 | `next` | | vert, oppsummering | neste runde |
 | `skip` | | vert, under en runde | hopper over runden uten poeng |
 | `end` | | vert | avslutter spillet; de som leder vinner |

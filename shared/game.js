@@ -250,10 +250,10 @@ export class Room {
     if (!isAvatarId(avatar)) throw new GameError('bad_avatar', 'Velg en avatar.');
     const others = [...this.players.values()].filter((o) => o.id !== playerId && isReady(o));
     if (others.some((o) => nameKey(o.name) === nameKey(clean))) {
-      throw new GameError('name_taken', 'Det navnet er tatt – velg et annet.');
+      throw new GameError('name_taken', 'Det navnet er tatt, velg et annet.');
     }
     if (others.some((o) => o.avatar === avatar)) {
-      throw new GameError('avatar_taken', 'Den avataren er tatt – velg en annen.');
+      throw new GameError('avatar_taken', 'Den avataren er tatt, velg en annen.');
     }
     p.name = clean;
     p.avatar = avatar;

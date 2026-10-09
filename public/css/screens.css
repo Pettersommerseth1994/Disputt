@@ -200,6 +200,12 @@
   box-shadow: 0 3px 0 rgb(var(--ink-rgb) / 0.25);
 }
 
+/* a loyal player's card is only the role, in the middle of the card's place */
+.rolecard--loyal { align-content: center; }
+.rolecard--loyal .rolecard__head { justify-content: center; gap: 0.3rem 1rem; }
+.rolecard--loyal .rolecard__eye { width: 4.2rem; }
+.rolecard--loyal .rolecard__word { font-size: 2.8rem; }
+
 /* two impostors: the card gets a third part, so it is a little tighter */
 .rolecard--duo { gap: 0.45rem; padding-block: 0.7rem 0.8rem; }
 .rolecard--duo .rolecard__pill { font-size: 1.3rem; }
@@ -324,6 +330,7 @@
   .question { gap: var(--s-2); }
   .question .option { min-height: 3.25rem; }
   .question .option__letter { width: 2.35rem; height: 2.35rem; font-size: 1.4rem; }
+  .timer-block { padding-block: var(--s-1); } /* (the held role strip of an impostor with a partner is the tallest thing on the discussion screen) */
 }
 @media (max-height: 660px) {
   .discussion .avatar--lg { --size: 4.75rem; }

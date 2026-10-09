@@ -8,7 +8,7 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 
 ## Kort fortalt
 
-**Det som er laget (i koden):** tre pakker, en betalingsmur etter to gratis runder, betaling i en Shopify-butikk som åpner seg i en **ny fane** (Vipps, Apple Pay og kort), ingen innlogging, og en kode som gir tilgangen tilbake på en ny telefon. Spillet blir stående åpent i fanen bak, så rommet og vennene er der når verten kommer tilbake, og «Takk!» dukker opp av seg selv så snart betalingen er gjennomført. **Alt er av som standard.** Uten to variabler på GitHub vises ingenting om betaling, og spillet er gratis, helt som i dag.
+**Det som er laget (i koden):** tre pakker, en betalingsmur etter to gratis runder, betaling i en Shopify-butikk som åpner seg i en **ny fane** (Vipps, Apple Pay og kort), ingen innlogging, og en kode som gir tilgangen tilbake på en ny telefon. Spillet blir stående åpent i fanen bak, så rommet og vennene er der når verten kommer tilbake, og «Velkommen!» dukker opp av seg selv så snart betalingen er gjennomført. **Alt er av som standard.** Uten to variabler på GitHub vises ingenting om betaling, og spillet er gratis, helt som i dag.
 
 | Pakke | Pris | Varighet |
 | --- | --- | --- |
@@ -49,8 +49,8 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 2. Etter runde 2 trykker verten **Neste runde** og får **pakkene**. De andre spillerne ser det de alltid ser mellom runder: «Venter på at verten starter neste runde».
 3. Verten velger pakke, **krysser av** for at de godtar vilkårene og at tilgangen leveres med en gang (da faller angreretten bort, som vilkårene forklarer), og trykker **Gå til betaling**.
 4. Butikken åpner seg i en **ny fane**, rett i kassen med pakken valgt. Verten velger Vipps, Apple Pay eller kort og betaler. Spillet står i fanen bak og sier «Venter på betalingen …».
-5. Når Shopify har meldt at betalingen er gjennomført, viser spillet **«Takk!»** med tilgangen og en kode, og **lukker butikk-fanen** hvis den fortsatt er åpen. **Start runde 3** fortsetter spillet. Gjestene har vært tilkoblet hele tiden.
-6. Har nettleseren lagt spillfanen i dvale mens verten betalte (en telefon gjør det), trykker verten **Fortsett å handle** på Shopifys takkeside. Forsiden i butikken har da en knapp som lukker fanen, og spillet viser «Takk!» så snart verten er tilbake i det. Verten får også en e-post med koden.
+5. Når Shopify har meldt at betalingen er gjennomført, viser spillet **«Velkommen!»** med tilgangen og en kode, og **lukker butikk-fanen** hvis den fortsatt er åpen. **Start runde 3** fortsetter spillet. Gjestene har vært tilkoblet hele tiden.
+6. Har nettleseren lagt spillfanen i dvale mens verten betalte (en telefon gjør det), trykker verten **Fortsett å handle** på Shopifys takkeside. Forsiden i butikken har da en knapp som lukker fanen, og spillet viser «Velkommen!» så snart verten er tilbake i det. Verten får også en e-post med koden.
 7. Neste kveld ligger tilgangen på telefonen. På en ny telefon: **Allerede kunde? Logg inn**, og skriv koden.
 
 ### Tre deler
@@ -68,7 +68,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
                                      ordren er betalt ── webhook (signert) ──▶ skriver ned kode, pakke, tid
  spør «er koden betalt?» ──────────────────────── POST /restore ────────▶
                 ◀──────── { token, code }: en signert tilgang ────────────
- «Takk!» · «Start runde 3»
+ «Velkommen!» · «Start runde 3»
 ```
 
 | Del | Gjør | Vet og lagrer |
@@ -79,7 +79,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 
 **Hvorfor en betalingsserver, når Shopify gjør jobben?** Det som mangler er budbringeren: Shopify kan ikke si til en side på GitHub Pages at «koden K7M2-9QXD-4TRB er betalt», og kassen kan ikke sende kunden tilbake til spillet. Betalingsserveren tar imot beskjeden fra Shopify (en webhook, signert så ingen andre kan late som), husker den, og gir spillet en signert tilgang når spillet spør. Uten den hadde kunden måttet skrive inn koden for hånd hver gang.
 
-**Hvorfor en database (D1) og ikke bare Shopify?** Apper får bare se de siste 60 dagene av ordrene i en Shopify-butikk, med mindre Shopify godkjenner dem særskilt, og «Livstid» og «For ett år» må kunne hentes igjen etter mer enn 60 dager. Cloudflare D1 er en liten gratis database (SQLite) som er konsistent med en gang: en betaling som er skrevet ned er der i neste spørsmål. (Cloudflare KV kan bruke opptil et minutt på å vise en ny verdi andre steder, og da hadde «Takk!» latt vente på seg.)
+**Hvorfor en database (D1) og ikke bare Shopify?** Apper får bare se de siste 60 dagene av ordrene i en Shopify-butikk, med mindre Shopify godkjenner dem særskilt, og «Livstid» og «For ett år» må kunne hentes igjen etter mer enn 60 dager. Cloudflare D1 er en liten gratis database (SQLite) som er konsistent med en gang: en betaling som er skrevet ned er der i neste spørsmål. (Cloudflare KV kan bruke opptil et minutt på å vise en ny verdi andre steder, og da hadde «Velkommen!» latt vente på seg.)
 
 **Tilgangen (passet)** er en signert tekst (JWT, ES256) som sier «dette er pakken `year`, betalt på tidspunkt T, gyldig til U». Betalingsserveren signerer den med en privat nøkkel som bare finnes i Cloudflare. Appen har den offentlige nøkkelen (den ligger åpent i `config.js`) og sjekker signaturen i nettleseren. **Hvor lenge tilgangen varer bestemmes i betalingsserveren, ikke i Shopify:** Shopify sier bare hva som er betalt og når, og serveren regner ut slutten (12 timer, ett år, ingen) fra Shopifys tidspunkt på ordren, ikke fra når varselet kommer.
 
@@ -296,11 +296,11 @@ Test først i test-kopien, med Shopify Payments' testmodus. **Slå på testmodus
 | --- | --- | --- |
 | 1 | Start et spill med to–tre telefoner, spill to runder, trykk **Neste runde** | pakkene. Knappen **Gå til betaling** er grå til du har krysset av. De andre telefonene sier bare «Venter på at verten starter neste runde». |
 | 2 | Kryss av og trykk **Gå til betaling** | butikken åpner seg i en **ny fane**, i kassen, med pakken og prisen. Spillet står bak og sier «Venter på betalingen …». Gjestene merker ingenting. |
-| 3 | Betal med testkortet | i butikken: takkesiden. I spillet: **Takk!** med kode og pakke, innen få sekunder. Trykk **Start runde 3**. |
+| 3 | Betal med testkortet | i butikken: takkesiden. I spillet: **Velkommen!** med kode og pakke, innen få sekunder. Trykk **Start runde 3**. |
 | 4 | I Shopify admin, åpne ordren | under merknader (*Additional details*) står `kode: …` og `samtykke: …` |
 | 5 | Lukk butikk-fanen før du har betalt (ny pakke, ny runde) | spillet venter fortsatt. **Åpne betalingen igjen** åpner den samme handlekurven. **Avbryt** tar deg tilbake, og avkrysningen må settes igjen. |
-| 6 | Betal med spillfanen i front (på en datamaskin, med to vinduer side om side) | spillet viser **Takk!** og lukker butikk-fanen av seg selv |
-| 6b | På en telefon: betal, og trykk **Fortsett å handle** på takkesiden i butikken (spillfanen i bakgrunnen) | forsiden med «Takk!» og knappen **Lukk fanen og gå tilbake til spillet**. Den lukker butikk-fanen, og spillet er der du forlot det og viser «Takk!». Skulle det i stedet stå «Tilbake til spillet» som en lenke, åpnet ikke spillet butikken (se punkt 10). |
+| 6 | Betal med spillfanen i front (på en datamaskin, med to vinduer side om side) | spillet viser **Velkommen!** og lukker butikk-fanen av seg selv |
+| 6b | På en telefon: betal, og trykk **Fortsett å handle** på takkesiden i butikken (spillfanen i bakgrunnen) | forsiden med «Takk!» og knappen **Lukk fanen og gå tilbake til spillet**. Den lukker butikk-fanen, og spillet er der du forlot det og viser «Velkommen!». Skulle det i stedet stå «Tilbake til spillet» som en lenke, åpnet ikke spillet butikken (se punkt 10). |
 | 7 | Sjekk e-posten du brukte (åpne ordren og trykk *Resend email* hvis du vil se den igjen) | ordrebekreftelsen i Disputts stil, med koden, hvor lenge den varer, hvordan den brukes på en ny telefon, og teksten om angreretten. Se den på en telefon også, og sjekk at toppbildet vises. |
 | 8 | Ny telefon (eller privat fane): **Allerede kunde? Logg inn**, skriv koden (med små bokstaver, uten bindestreker) | «Velkommen tilbake!», og tilgangen ligger på telefonen |
 | 9 | Refunder ordren i Shopify (*Orders → ordren → Refund*) | kode som nå brukes under «Logg inn» sier at betalingen er refundert |
@@ -338,7 +338,7 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 2. - [ ] Slå av testmodus i Shopify Payments. Sjekk at Vipps er godkjent og i bruk, og at Apple Pay vises.
 3. - [ ] Sjekk at vilkårene og personvernerklæringen er lest, og at `kontakt@disputt.site` virker ([BETALING.md, 2.6](BETALING.md#26-e-post-på-disputtsite)). Står det fortsatt `KONTAKT-EPOST` i sidene, stopper byggingen med betaling på.
 4. - [ ] Sett variablene i hovedrepoet <https://github.com/Pettersommerseth1994/Disputt/settings/variables/actions>: `DISPUTT_PAYMENTS_URL` (den ekte Workeren), `DISPUTT_PAYMENTS_KEY` (den ekte offentlige nøkkelen) og `DISPUTT_PAYMENTS_PROVIDER` = `shopify`. Kjør **Actions → Pages → Run workflow**.
-5. - [ ] **Ett lite, ekte kjøp.** Kjøp «En kveld» med et ekte kort (eller Apple Pay og Vipps), sjekk at «Takk!» og e-posten kommer, og **refunder** ordren i Shopify. Sjekk at «Logg inn» med koden nå sier at betalingen er refundert.
+5. - [ ] **Ett lite, ekte kjøp.** Kjøp «En kveld» med et ekte kort (eller Apple Pay og Vipps), sjekk at «Velkommen!» og e-posten kommer, og **refunder** ordren i Shopify. Sjekk at «Logg inn» med koden nå sier at betalingen er refundert.
 6. - [ ] Slå av betalingen igjen når som helst ved å slette de to variablene `DISPUTT_PAYMENTS_URL` og `DISPUTT_PAYMENTS_KEY` og kjøre Pages på nytt.
 
 ## 14. Drift

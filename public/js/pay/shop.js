@@ -181,7 +181,7 @@ const mayStillCome = (err) => ['not_found', 'network', 'server', 'unavailable'].
 
 function trouble(err) {
   if (['refunded', 'expired', 'disputed', 'cancelled'].includes(err.code)) return err.message;
-  return `${err.message} Har du betalt, står kontaktinformasjonen i e-posten du fikk fra butikken.`;
+  return `${err.message} Har du betalt, står kontaktinformasjonen i bestillingsbekreftelsen på e-post.`;
 }
 
 function schedule() {

@@ -31,36 +31,36 @@ export function GameBar({ view }) {
 
 const EYES = { impostor: 'assets/art/eye-impostor.svg', loyal: 'assets/art/eye-loyal.svg' };
 const TIPS = {
-  impostor: 'Få de andre til å svare feil – uten å bli avslørt.',
-  impostorDuo: 'Hjelp hverandre med å få de andre til å svare feil – uten å bli avslørt.',
-  loyal: 'Finn ut hva som er riktig svar sammen – og ikke la imposteren lure dere.',
-  loyalDuo: 'Finn ut hva som er riktig svar sammen – og ikke la imposterne lure dere.',
+  impostor: 'Få de andre til å svare feil, uten å bli avslørt.',
+  impostorDuo: 'Hjelp hverandre med å få de andre til å svare feil, uten å bli avslørt.',
+  loyal: 'Finn ut hva som er riktig svar sammen, og ikke la imposteren lure dere.',
+  loyalDuo: 'Finn ut hva som er riktig svar sammen, og ikke la imposterne lure dere.',
 };
 
 /**
- * The card that appears while the button is held. Both roles get a card of the same size: the loyal player's answer is a "?".
- * With two impostors the card has a third part, "Imposterne": the impostors see who they are, the loyal players a "?".
+ * The card that appears while the button is held. A loyal player has nothing to look up, so the card is only the role. The
+ * impostor's has the right answer too, and with two impostors a third part, "Imposterne": who they are.
  */
 function RoleCard({ you, count }) {
   const impostor = you.role === 'impostor';
   const mates = matesOf(you);
-  return html`<article class=${cx('rolecard pop-in', count > 1 && 'rolecard--duo')}>
+  return html`<article class=${cx('rolecard pop-in', impostor && count > 1 && 'rolecard--duo', !impostor && 'rolecard--loyal')}>
     <div class="rolecard__head">
       <img class="rolecard__eye" src=${asset(EYES[you.role])} alt="" width="400" height="300" />
       <h1 class=${cx('rolecard__word', impostor ? 'rolecard__word--impostor' : 'rolecard__word--loyal')}>${impostor ? 'Imposter' : 'Lojal'}</h1>
     </div>
-    <div class="rolecard__answer">
+    ${impostor &&
+    html`<div class="rolecard__answer">
       <span class="rolecard__label">Riktig svar</span>
-      <p class="rolecard__pill"><span class="rolecard__dot">${impostor ? you.secret.letter : '?'}</span>${impostor ? you.secret.text : 'Finn det sammen'}</p>
-    </div>
-    ${count > 1 &&
+      <p class="rolecard__pill"><span class="rolecard__dot">${you.secret.letter}</span>${you.secret.text}</p>
+    </div>`}
+    ${impostor &&
+    count > 1 &&
     html`<div class="rolecard__answer">
       <span class="rolecard__label">Imposterne</span>
       <p class="rolecard__pill">
-        ${impostor && mates.length > 0
-          ? html`<${Avatar} id=${mates[0].avatar} size="xs" class="rolecard__mate" label=${mates[0].name} />`
-          : html`<span class="rolecard__dot">?</span>`}
-        ${impostor ? joinNames(['Du', ...mates.map((m) => m.name)]) : 'Finn dem sammen'}
+        ${mates.length > 0 && html`<${Avatar} id=${mates[0].avatar} size="xs" class="rolecard__mate" label=${mates[0].name} />`}
+        ${joinNames(['Du', ...mates.map((m) => m.name)])}
       </p>
     </div>`}
   </article>`;
@@ -93,7 +93,7 @@ export function RoleReveal({ view }) {
       </div>
     </div>
     <div class="role__hold">
-      <p class="role__hint">${held ? TIPS[you.role + (count > 1 ? 'Duo' : '')] : 'Hold telefonen inntil deg og dekk til med hånda.'}</p>
+      <p class="role__hint">${held ? TIPS[you.role + (count > 1 ? 'Duo' : '')] : 'Skjul rollen din godt!'}</p>
       <button type="button" class=${cx('btn btn--block hold-btn', held && 'is-held')} ...${bind} aria-label="Hold inne for å se rollen din">
         ${held ? 'Slipp for å skjule' : 'Hold for å se rollen din'}
       </button>
@@ -135,7 +135,7 @@ export function Question({ view }) {
       </div>
       <${Button} variant="cream" size="small" onClick=${() => actions.addTime(60)} aria-label="Legg til ett minutt">+1</${Button}>
     </div>
-    ${ms <= 0 && html`<p class="timeup">Tiden er ute – bli enige og lås svaret!</p>`}
+    ${ms <= 0 && html`<p class="timeup">Tiden er ute, bli enige og lås svaret!</p>`}
 
     <section class="card card--paper stack stack--tight question__card">
       <p class="eyebrow" style="color:var(--ink);opacity:.78">Les høyt for de andre</p>
@@ -173,13 +173,13 @@ export function Discussion({ view }) {
     <section class="center stack" style="align-items:center;margin-top:var(--s-4)">
       <${Avatar} id=${asker?.avatar} size="lg" alive offline=${asker && !asker.connected} />
       <h2>${asker?.name} har spørsmålet</h2>
-      <p class="muted discussion__hint">Lytt når ${asker?.name} leser det opp – og diskuter dere frem til riktig svar.</p>
+      <p class="muted discussion__hint">Lytt når ${asker?.name} leser det opp, og diskuter dere frem til riktig svar.</p>
     </section>
 
     <section class="timer-block center stack stack--tight">
       <p class="eyebrow">Tid til å diskutere</p>
       <${Timer} endsAt=${view.discussion.endsAt} />
-      ${ms <= 0 && html`<p class="timeup">Tiden er ute – bli enige! ${asker?.name} låser svaret.</p>`}
+      ${ms <= 0 && html`<p class="timeup">Tiden er ute, bli enige! ${asker?.name} låser svaret.</p>`}
     </section>
 
     <p class="card card--deep center discussion__tip">Diskuter, og bli enige før tiden går ut.</p>
@@ -225,10 +225,10 @@ function RevealStage({ view, asker = false }) {
       <p class="lead">${count > 1 ? 'Imposterne sier riktig svar sammen.' : 'Imposteren sier riktig svar høyt.'}</p>
     </div>
     ${asker
-      ? html`<div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>Det er sagt – vis poengene</${Button}></div>`
+      ? html`<div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>Det er sagt, vis poengene</${Button}></div>`
       : html`<div class="foot center">
           <p class="muted" role="status">${holder?.name ?? 'Spilleren med spørsmålet'} trykker videre når det er sagt.</p>
-          ${stuck && html`<${Button} variant="cream" onClick=${() => actions.proceed()}>${holder.name} er borte – gå videre</${Button}>`}
+          ${stuck && html`<${Button} variant="cream" onClick=${() => actions.proceed()}>${holder.name} er borte, gå videre</${Button}>`}
         </div>`}
   </main>`;
 }
@@ -255,7 +255,7 @@ export function Summary({ view }) {
       <p class="lead muted">${recap}</p>
     </header>
 
-    ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">Uavgjort i teten – én runde til!</p>`}
+    ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">Uavgjort i teten, én runde til!</p>`}
 
     <section class="card stack">
       <${Scoreboard} view=${view} gains=${s.gained} />
