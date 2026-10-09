@@ -7,14 +7,16 @@
   Shopify gjør det selv). Det nye er koden fra spillet og bekreftelsen av samtykket til at tilgangen leveres med en gang (angreretten).
 
   Språk: «da» gir dansk, «sv» svensk og alt annet norsk. Språket hentes, i denne rekkefølgen, fra handlekurvattributten «sprak» (den kan spillet
-  sette den dagen det er oversatt), kundens språk på ordren og kundens språk. Skal kunder få dansk eller svensk, må språkene være lagt til og publisert i
-  Shopify (Innstillinger > Språk), og kassen må åpnes på det språket. Tekstene står samlet per språk like under, og er det eneste som skiller språkene.
+  sette den dagen det er oversatt), kundens språk på ordren og kundens språk. Bare attributten står i Shopifys egen dokumentasjon: finner malen
+  ikke noe språk, blir e-posten norsk. Skal kunder få dansk eller svensk, må språkene være lagt til og publisert i Shopify (Innstillinger > Språk),
+  og kassen må åpnes på det språket. Tekstene står samlet per språk like under, og er det eneste som skiller språkene.
 
   Koden og samtykket kommer som handlekurvattributter fra spillet («kode» og «samtykke»). Uten begge er ikke tilgangen gitt (betalingsserveren gir
   ingen tilgang uten samtykke), og da står det en linje om å ta kontakt, i stedet for en kode som ikke virker.
 
-  Tallene under «Hvilken pakke» er variant-ID-ene til de tre pakkene (de samme som VARIANT_EVENING, VARIANT_YEAR og VARIANT_LIFETIME hos
-  betalingsserveren). De brukes bare til å skrive hvor lenge tilgangen varer. Lager du produktene på nytt, må de byttes.
+  Pakken kjennes på variant-ID (tallene under «Hvilken pakke», de samme som VARIANT_EVENING, VARIANT_YEAR og VARIANT_LIFETIME hos betalingsserveren),
+  og er den ikke å få i en e-post, på navnet på varen («En kveld», «For ett år» og «Livstid»). Det brukes bare til å skrive hvor lenge tilgangen varer.
+  Har ordren flere pakker, teller den dyreste, slik betalingsserveren gjør. Lager du produktene på nytt, må tallene (og navnene) byttes.
 
   Toppbildet ligger på disputt.site (public/assets/email/disputt-epost-logo.png, laget av tools/logo/email-header.html).
 {%- endcomment -%}
@@ -41,7 +43,7 @@
   {%- assign t_steps_title = 'Skal du bruge den på en anden telefon?' -%}
   {%- assign t_step1 = 'Åbn Disputt' -%}
   {%- assign t_step2 = 'Tryk på «' | append: login_button | append: '»' -%}
-  {%- assign t_step3 = 'Skriv koden' -%}
+  {%- assign t_step3 = 'Indtast koden' -%}
   {%- assign t_keep = 'Gem denne e-mail.' -%}
   {%- assign t_nocode = 'Har du betalt uden at få en kode i spillet? Svar på denne e-mail, eller skriv til kontakt@disputt.site med ordrenummeret, så hjælper vi dig.' -%}
   {%- assign t_button = 'Åbn Disputt' -%}
@@ -61,18 +63,18 @@
   {%- assign t_pdf_refund = 'Fortrydelsesret' -%}
 {%- elsif lang == 'sv' -%}
   {%- assign t_title = 'Tack för din beställning!' -%}
-  {%- assign t_preheader_access = 'Din åtkomst till Disputt är klar. Här är din kod och så här använder du den.' -%}
+  {%- assign t_preheader_access = 'Din tillgång till Disputt är klar. Här är din kod och så här använder du den.' -%}
   {%- assign t_preheader_plain = 'Tack för din beställning hos Disputt. Här är ditt kvitto.' -%}
   {%- assign t_order = 'Order' -%}
   {%- assign t_code_label = 'Din kod' -%}
-  {%- assign t_ready = 'Åtkomsten är redan klar i spelet.' -%}
-  {%- assign t_not_paid = 'Åtkomsten aktiveras så snart betalningen är bekräftad.' -%}
+  {%- assign t_ready = 'Tillgången är redan klar i spelet.' -%}
+  {%- assign t_not_paid = 'Tillgången aktiveras så snart betalningen är bekräftad.' -%}
   {%- assign t_plan_evening = 'Gäller i 12 timmar från betalningen' -%}
   {%- assign t_plan_year = 'Gäller i 12 månader från betalningen' -%}
   {%- assign t_plan_lifetime = 'Gäller så länge Disputt finns' -%}
   {%- assign t_renew = 'Förnyas inte automatiskt.' -%}
   {%- assign t_once = 'Du betalar bara en gång.' -%}
-  {%- assign t_plan_generic = 'Hur länge åtkomsten gäller framgår av paketet du köpte och av villkoren.' -%}
+  {%- assign t_plan_generic = 'Hur länge tillgången gäller framgår av paketet du köpte och av villkoren.' -%}
   {%- assign t_steps_title = 'Ska du använda den på en annan telefon?' -%}
   {%- assign t_step1 = 'Öppna Disputt' -%}
   {%- assign t_step2 = 'Tryck på «' | append: login_button | append: '»' -%}
@@ -88,7 +90,7 @@
   {%- assign t_paid_with = 'Betalat med' -%}
   {%- assign t_billing = 'Faktureringsadress' -%}
   {%- assign t_withdrawal_label = 'Ångerrätt:' -%}
-  {%- assign t_withdrawal = 'Du godkände villkoren och att åtkomsten levereras direkt innan du betalade. Då upphör ångerrätten.' -%}
+  {%- assign t_withdrawal = 'Du godkände villkoren och att tillgången levereras direkt innan du betalade. Då förlorar du ångerrätten.' -%}
   {%- assign t_questions = 'Frågor? Svara på det här mejlet eller skriv till' -%}
   {%- assign t_terms = 'Villkor' -%}
   {%- assign t_privacy = 'Integritetspolicy' -%}
@@ -137,32 +139,38 @@
 {%- if attributes.kode != blank and attributes.samtykke != blank -%}
   {%- assign has_access = true -%}
 {%- endif -%}
-{%- assign is_paid = false -%}
-{%- if financial_status == 'paid' -%}
-  {%- assign is_paid = true -%}
+{%- comment %} Venter betalingen ennå (ventende, godkjent men ikke trukket, delvis betalt)? Da er ikke tilgangen gitt. En ordre som er betalt og senere refundert, venter ikke: det er den som sendes på nytt når du prøver malen. {% endcomment -%}
+{%- assign is_waiting = false -%}
+{%- if financial_status == 'pending' or financial_status == 'authorized' or financial_status == 'partially_paid' -%}
+  {%- assign is_waiting = true -%}
 {%- endif -%}
 
-{%- comment %} Hvilken pakke: «evening» (En kveld), «year» (For ett år) eller «lifetime» (Livstid) {% endcomment -%}
-{%- assign plan = '' -%}
+{%- comment %} Hvilken pakke: kjennes på variant-ID, ellers på navnet. Har ordren flere, teller den dyreste (3 Livstid, 2 For ett år, 1 En kveld) {% endcomment -%}
+{%- assign rank = 0 -%}
 {%- for line in subtotal_line_items -%}
-  {%- assign variant = line.variant_id | default: line.variant.id -%}
-  {%- if variant == 67625895526534 -%}
-    {%- assign plan = 'evening' -%}
-  {%- elsif variant == 67625896280198 -%}
-    {%- assign plan = 'year' -%}
-  {%- elsif variant == 67625896870022 -%}
-    {%- assign plan = 'lifetime' -%}
+  {%- assign variant = line.variant_id | default: line.variant.id | append: '' -%}
+  {%- assign line_name = line.title | default: line.product.title | append: '' -%}
+  {%- assign line_rank = 0 -%}
+  {%- if variant == '67625896870022' or line_name contains 'Livstid' -%}
+    {%- assign line_rank = 3 -%}
+  {%- elsif variant == '67625896280198' or line_name contains 'For ett år' -%}
+    {%- assign line_rank = 2 -%}
+  {%- elsif variant == '67625895526534' or line_name contains 'En kveld' -%}
+    {%- assign line_rank = 1 -%}
+  {%- endif -%}
+  {%- if line_rank > rank -%}
+    {%- assign rank = line_rank -%}
   {%- endif -%}
 {%- endfor -%}
 {%- assign plan_text = '' -%}
 {%- assign plan_note = '' -%}
-{%- if plan == 'evening' -%}
+{%- if rank == 1 -%}
   {%- assign plan_text = t_plan_evening -%}
   {%- assign plan_note = t_renew -%}
-{%- elsif plan == 'year' -%}
+{%- elsif rank == 2 -%}
   {%- assign plan_text = t_plan_year -%}
   {%- assign plan_note = t_renew -%}
-{%- elsif plan == 'lifetime' -%}
+{%- elsif rank == 3 -%}
   {%- assign plan_text = t_plan_lifetime -%}
   {%- assign plan_note = t_once -%}
 {%- else -%}
@@ -188,7 +196,7 @@
 {%- comment %} Mva-linjen: «Herav mva (25 %)» når ordren har én skattelinje, ellers bare «Herav mva» {% endcomment -%}
 {%- assign vat_rate = '' -%}
 {%- if tax_lines.size == 1 and tax_lines.first.rate_percentage -%}
-  {%- assign vat_percent = tax_lines.first.rate_percentage | round -%}
+  {%- assign vat_percent = tax_lines.first.rate_percentage | round: 1 | remove: '.0' | replace: '.', ',' -%}
   {%- capture vat_rate %} ({{ vat_percent }} %){% endcapture -%}
 {%- endif -%}
 
@@ -213,11 +221,17 @@
   table { border-spacing: 0; }
   img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
   a { text-decoration: underline; }
+  td p { margin: 0 !important; }
+  @media only screen and (min-width: 481px) {
+    .code { font-size: 28px !important; line-height: 34px !important; letter-spacing: 3px !important; }
+    .card { padding-left: 28px !important; padding-right: 28px !important; }
+  }
   @media only screen and (max-width: 480px) {
     .h1 { font-size: 32px !important; line-height: 36px !important; }
-    .code { font-size: 25px !important; line-height: 30px !important; letter-spacing: 2px !important; }
-    .card { padding-left: 16px !important; padding-right: 16px !important; }
     .stack { display: block !important; width: 100% !important; padding: 14px 0 0 0 !important; }
+  }
+  @media only screen and (max-width: 340px) {
+    .code { font-size: 21px !important; line-height: 28px !important; letter-spacing: 1px !important; }
   }
 </style>
 </head>
@@ -240,14 +254,14 @@
 
   <tr><td style="padding:30px 0 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr><td class="card" align="center" bgcolor="#f8e6b8" style="background-color:#f8e6b8;border-radius:24px;border-bottom:6px solid #3d0a18;padding:26px 28px 24px;{{ ff }}color:#3a2012;">
+      <tr><td class="card" align="center" bgcolor="#f8e6b8" style="background-color:#f8e6b8;border-radius:24px;border-bottom:6px solid #3d0a18;padding:26px 20px 24px;{{ ff }}color:#3a2012;">
         <div style="{{ fh }}font-size:15px;line-height:20px;color:#7a4a2c;">{{ t_code_label }}</div>
-        <div class="code" style="padding:8px 0 12px;{{ fh }}font-size:28px;line-height:34px;letter-spacing:3px;color:#3a2012;">{{ attributes.kode | escape }}</div>
+        <div class="code" style="padding:8px 0 12px;{{ fh }}font-size:24px;line-height:30px;letter-spacing:2px;color:#3a2012;">{{ attributes.kode | escape }}</div>
 {%- if plan_text != blank %}
         <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#fae025" style="background-color:#fae025;border-radius:999px;padding:7px 18px;{{ ff }}font-size:14px;line-height:18px;font-weight:bold;color:#3a2012;">{{ plan_text }}</td></tr></table>
 {%- endif %}
         <div style="padding-top:10px;{{ ff }}font-size:14px;line-height:20px;color:#7a4a2c;">{{ plan_note }}</div>
-        <div style="padding-top:8px;{{ ff }}font-size:15px;line-height:21px;color:#3a2012;">{% if is_paid %}{{ t_ready }}{% else %}{{ t_not_paid }}{% endif %}</div>
+        <div style="padding-top:8px;{{ ff }}font-size:15px;line-height:21px;color:#3a2012;">{% if is_waiting %}{{ t_not_paid }}{% else %}{{ t_ready }}{% endif %}</div>
       </td></tr>
     </table>
   </td></tr>
@@ -277,7 +291,7 @@
 
   <tr><td style="padding:30px 0 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr><td class="card" align="center" bgcolor="#f8e6b8" style="background-color:#f8e6b8;border-radius:24px;border-bottom:6px solid #3d0a18;padding:26px 28px 24px;{{ ff }}font-size:16px;line-height:24px;color:#3a2012;">{{ t_nocode }}</td></tr>
+      <tr><td class="card" align="center" bgcolor="#f8e6b8" style="background-color:#f8e6b8;border-radius:24px;border-bottom:6px solid #3d0a18;padding:26px 20px 24px;{{ ff }}font-size:16px;line-height:24px;color:#3a2012;">{{ t_nocode }}</td></tr>
     </table>
   </td></tr>
 
@@ -294,7 +308,7 @@
 
   <tr><td style="padding:34px 0 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr><td class="card" bgcolor="#f8e6b8" style="background-color:#f8e6b8;border-radius:24px;border-bottom:6px solid #3d0a18;padding:26px 28px;{{ ff }}color:#3a2012;">
+      <tr><td class="card" bgcolor="#f8e6b8" style="background-color:#f8e6b8;border-radius:24px;border-bottom:6px solid #3d0a18;padding:26px 20px;{{ ff }}color:#3a2012;">
         <div style="padding-bottom:8px;{{ fh }}font-size:22px;line-height:28px;color:#3a2012;">{{ t_summary }}</div>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 {%- for line in subtotal_line_items %}
@@ -343,7 +357,7 @@
     </table>
   </td></tr>
 
-{%- if attributes.samtykke != blank %}
+{%- if has_access %}
 
   <tr><td align="center" style="padding:22px 12px 0;{{ ff }}font-size:13px;line-height:20px;color:#e4c9a4;"><b style="color:#fae025;">{{ t_withdrawal_label }}</b> {{ t_withdrawal }}</td></tr>
 {%- endif %}

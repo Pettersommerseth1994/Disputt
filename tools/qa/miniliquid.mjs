@@ -3,7 +3,7 @@
 //   tags      {% comment %}  {% assign x = … %}  {% capture x %}  {% if %} {% elsif %} {% else %}  {% unless %}  {% for x in y %} (with forloop)
 //   output    {{ x.y | filter: argument, argument | filter }}, and "-" next to a brace trims the spaces around the tag ({%- -%}, {{- -}})
 //   tests     == != < > <= >= contains, and / or (from the right, without precedence, as Liquid does), nil true false blank empty
-//   filters   escape default downcase upcase slice round append size strip, and any that the caller gives (Shopify's own: money, format_address …)
+//   filters   escape default downcase upcase slice round append remove replace size strip, and any that the caller gives (Shopify's own: money, format_address …)
 // Like Liquid, only nil and false are false: an empty text is true, and so is 0. Unlike Liquid, a name that is not set is an error when it is
 // written out (in a test it is simply false), which is what catches a misspelt name: the filter `default` is what makes a missing value fine.
 // (Shopify's own Liquid is the real thing: this only catches a tag that is not closed, a name that is not set, and text that would come out wrong.)
@@ -208,6 +208,8 @@ const FILTERS = {
     return digits === 0 ? Math.trunc(rounded) : rounded;
   },
   append: (v, s) => text(v) + text(s),
+  remove: (v, s) => text(v).split(text(s)).join(''),
+  replace: (v, a, b) => text(v).split(text(a)).join(text(b)),
   size: (v) => (isNil(v) ? 0 : typeof v === 'string' || Array.isArray(v) ? v.length : Object.keys(v).length),
   strip: (v) => text(v).trim(),
 };

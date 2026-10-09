@@ -50,8 +50,10 @@ describe('the little Liquid that the tests know', () => {
     assert.equal(r('{{ a | default: "d" }}|{{ b | default: "d" }}|{{ c | default: "d" }}|{{ e | default: "d" }}|{{ f | default: "d" }}', { b: '', c: false, e: 0, f: 'v' }), 'd|d|d|0|v');
     assert.equal(r('{% assign lang = x | default: y | default: "nb" | downcase | slice: 0, 2 %}{{ lang }}', { y: 'DA-dk' }), 'da');
     assert.equal(r('{{ x | round }} {{ y | round: 1 }} {{ 25.0 | round }}', { x: 24.6, y: 24.66 }), '25 24.7 25');
+    assert.equal(r('{{ x | round: 1 | remove: ".0" | replace: ".", "," }}|{{ y | round: 1 | remove: ".0" | replace: ".", "," }}', { x: 25, y: 25.5 }), '25|25,5', 'the way the e-mail writes a VAT rate');
     assert.equal(r('{{ s | size }} {{ list | size }}', { s: 'abc', list: [1, 2] }), '3 2');
     assert.equal(r('{% assign a = 1 %}{% assign a = 2 %}{{ a }}'), '2');
+    assert.equal(r('{{ x | remove: "a" }}|{{ x | replace: "a", "o" }}', { x: 'banana' }), 'bnn|bonono', 'remove and replace take every place, not the first');
   });
 
   it('loops with forloop, takes {% else %} for an empty or missing list, and lets an assign inside the loop out', () => {
@@ -152,7 +154,7 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.match(mail, /<html lang="da">/);
       assert.match(t, /Tak for din bestilling! Ordre #1003/);
       assert.match(t, /Din kode K7M2-9QXD-4TRB Gælder i 12 timer fra betalingen Fornyes ikke automatisk\. Adgangen er allerede klar i spillet\./);
-      assert.match(t, /Skal du bruge den på en anden telefon\? 1 Åbn Disputt 2 Tryk på «Allerede kunde\? Logg inn» 3 Skriv koden Gem denne e-mail\./);
+      assert.match(t, /Skal du bruge den på en anden telefon\? 1 Åbn Disputt 2 Tryk på «Allerede kunde\? Logg inn» 3 Indtast koden Gem denne e-mail\./);
       assert.match(t, /Din ordre Disputt – En kveld \(12 timer\) × 1 89,00 kr I alt 89,00 kr NOK Heraf moms \(25 %\) 17,80 kr/);
       assert.match(t, /Betalt med Visa •••• 5031 Faktureringsadresse Mette Hansen Eksempelvej 12 2100 København Ø Danmark/);
       assert.match(t, /Fortrydelsesret: Du accepterede vilkårene og at adgangen leveres med det samme, før du betalte\. Dermed bortfalder fortrydelsesretten\./);
@@ -165,11 +167,11 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       const t = text(mail);
       assert.match(mail, /<html lang="sv">/);
       assert.match(t, /Tack för din beställning! Order #1003/);
-      assert.match(t, /Din kod K7M2-9QXD-4TRB Gäller i 12 timmar från betalningen Förnyas inte automatiskt\. Åtkomsten är redan klar i spelet\./);
+      assert.match(t, /Din kod K7M2-9QXD-4TRB Gäller i 12 timmar från betalningen Förnyas inte automatiskt\. Tillgången är redan klar i spelet\./);
       assert.match(t, /Ska du använda den på en annan telefon\? 1 Öppna Disputt 2 Tryck på «Allerede kunde\? Logg inn» 3 Skriv in koden Spara det här mejlet\./);
       assert.match(t, /Din beställning Disputt – En kveld \(12 timer\) × 1 89,00 kr Totalt 89,00 kr NOK Varav moms \(25 %\) 17,80 kr/);
       assert.match(t, /Betalat med Visa •••• 5031 Faktureringsadress/);
-      assert.match(t, /Ångerrätt: Du godkände villkoren och att åtkomsten levereras direkt innan du betalade\. Då upphör ångerrätten\./);
+      assert.match(t, /Ångerrätt: Du godkände villkoren och att tillgången levereras direkt innan du betalade\. Då förlorar du ångerrätten\./);
       assert.match(t, /Frågor\? Svara på det här mejlet eller skriv till kontakt@disputt\.site Villkor · Integritetspolicy/);
       assert.doesNotMatch(t, /Takk for|Gjelder|Herav|Angrerett|Bestillingen din|Tak for|Gælder|Heraf/, 'no Norwegian or Danish is left behind');
     });
@@ -214,12 +216,27 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.ok(PLANS.find((p) => p.id === 'lifetime').detail.includes('Gjelder så lenge Disputt finnes'), 'the game says the same about Livstid');
     });
 
-    it('knows the package by the variant id, and says something true when it does not know it', () => {
+    it('knows the package by the variant id, then by the name, and says something true when it knows neither', () => {
       assert.deepEqual(Object.keys(VARIANT), PLANS.map((p) => p.id), 'the same three packages, in the same order, as the game');
-      for (const id of Object.values(VARIANT)) assert.ok(MAIL.includes(`== ${id} `), `the variant ${id} is in the file`);
-      const other = said('evening', { subtotal_line_items: [line('evening', { variant_id: 111, variant: { id: 111, title: 'Default Title' } })] });
-      assert.match(other, /Koden din K7M2-9QXD-4TRB Hvor lenge tilgangen varer, står i pakken du kjøpte og i vilkårene\./);
-      assert.doesNotMatch(other, /Gjelder i 12 timer/);
+      for (const id of Object.values(VARIANT)) assert.ok(MAIL.includes(`== '${id}' `), `the variant ${id} is in the file`);
+      const pill = (over) => said('evening', { subtotal_line_items: [line('evening', over)] }).match(/Gjelder [^.]*?(?= Fornyes| Du betaler)/)?.[0];
+      assert.equal(pill({}), 'Gjelder i 12 timer fra betalingen');
+      assert.equal(pill({ title: 'Noe annet', presentment_title: undefined, product: { title: 'Noe annet' } }), 'Gjelder i 12 timer fra betalingen', 'the variant id alone is enough, with a name that says nothing');
+      assert.equal(pill({ variant_id: VARIANT.year, variant: { id: VARIANT.year } }), 'Gjelder i 12 måneder fra betalingen', 'the variant id says it, whatever the name says');
+      assert.equal(pill({ variant_id: undefined, variant: { id: VARIANT.lifetime } }), 'Gjelder så lenge Disputt finnes', 'the id from the variant, when the line has none of its own');
+      assert.equal(pill({ variant_id: undefined, variant: undefined, title: 'Disputt – For ett år (12 måneder)', presentment_title: undefined }), 'Gjelder i 12 måneder fra betalingen', 'the name, when there is no variant id to be had');
+      assert.equal(pill({ variant_id: undefined, variant: undefined, title: 'Disputt – Livstid', presentment_title: undefined }), 'Gjelder så lenge Disputt finnes');
+      const unknown = said('evening', { subtotal_line_items: [line('evening', { variant_id: 111, variant: { id: 111 }, title: 'Noe annet', presentment_title: undefined, product: { title: 'Noe annet' } })] });
+      assert.match(unknown, /Koden din K7M2-9QXD-4TRB Hvor lenge tilgangen varer, står i pakken du kjøpte og i vilkårene\./);
+      assert.doesNotMatch(unknown, /Gjelder i 12 timer/);
+    });
+
+    it('lets the dearest package count when an order has more than one, as the payment server does', () => {
+      const two = (a, b) => said('evening', { subtotal_line_items: [line(a), line(b)] });
+      assert.match(two('evening', 'lifetime'), /Gjelder så lenge Disputt finnes/);
+      assert.match(two('lifetime', 'evening'), /Gjelder så lenge Disputt finnes/, 'in either order');
+      assert.match(two('evening', 'year'), /Gjelder i 12 måneder fra betalingen/);
+      assert.match(read('payments/worker-shopify.js'), /\.sort\(\(a, b\) => PLANS\[b\]\.rank - PLANS\[a\]\.rank\)/, 'the same rule at the payment server');
     });
   });
 
@@ -230,6 +247,7 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.doesNotMatch(t, /Koden din|Skal du bruke den|Tilgangen er klar/);
       assert.doesNotMatch(t, /Angrerett/, 'and claims no consent that was never given');
       assert.match(t, /Bestillingen din Disputt – En kveld/, 'but the order is still there');
+      assert.doesNotMatch(said('evening', { attributes: { samtykke: '2026-10-07T12:00:00.000Z' } }), /Angrerett/, 'nor a consent without a code: no access was given, so there is nothing for the right of withdrawal to lapse for');
     });
 
     it('does not show a code that the payment server will not honour: without the consent no access is given', () => {
@@ -239,10 +257,15 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.match(read('payments/worker-shopify.js'), /no_consent/, 'the server really does give nothing without the consent');
     });
 
-    it('says that the access starts when the payment is confirmed, until the order is paid', () => {
-      const t = said('evening', { financial_status: 'pending', transactions: [] });
-      assert.match(t, /Koden din K7M2-9QXD-4TRB .*Tilgangen aktiveres så snart betalingen er bekreftet\./);
-      assert.doesNotMatch(t, /klar i spillet allerede|Betalt med/);
+    it('says that the access starts when the payment is confirmed, while the payment is awaited, and not for an order that was paid and later refunded', () => {
+      for (const status of ['pending', 'authorized', 'partially_paid']) {
+        const t = said('evening', { financial_status: status, transactions: [] });
+        assert.match(t, /Koden din K7M2-9QXD-4TRB .*Tilgangen aktiveres så snart betalingen er bekreftet\./, status);
+        assert.doesNotMatch(t, /klar i spillet allerede|Betalt med/, status);
+      }
+      for (const status of ['paid', 'refunded', 'partially_refunded']) {
+        assert.match(said('evening', { financial_status: status }), /Tilgangen er klar i spillet allerede\./, `${status}: an order that is sent again after a refund says what a new order says`);
+      }
     });
 
     it('shows a discount as its own line, and the total after it', () => {
@@ -256,6 +279,12 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.match(t, /Herav mva 17,80 kr/, 'the VAT line without a percentage when there is no tax line to take it from');
       assert.match(said('evening', { tax_price: 0, tax_lines: [] }), /Totalt 89,00 kr NOK Skal du bruke|Totalt 89,00 kr NOK Betalt med/, 'and no VAT line for an order without VAT');
       assert.doesNotMatch(said('evening', { tax_price: 0, tax_lines: [] }), /Herav mva/);
+    });
+
+    it('writes the VAT rate the way the order has it: 25 %, 25,5 %, and none when there are several tax lines', () => {
+      assert.match(said('evening', { tax_lines: [{ rate_percentage: 25.0 }] }), /Herav mva \(25 %\)/);
+      assert.match(said('evening', { tax_lines: [{ rate_percentage: 25.5 }] }), /Herav mva \(25,5 %\)/);
+      assert.match(said('evening', { tax_lines: [{ rate_percentage: 15 }, { rate_percentage: 10 }] }), /Herav mva 17,80 kr/, 'two tax lines: no percentage, because it would be only one of them');
     });
 
     it('names the card or the other way of paying, and the first payment that went through', () => {
@@ -304,6 +333,15 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       const tints = ['#7a4a2c', '#e4c9a4', '#d9b898', '#c3af89']; // the cream and the ink mixed into the burgundy and the cream, as solid colours
       const used = new Set(MAIL.toLowerCase().match(/#[0-9a-f]{6}\b/g));
       for (const colour of used) assert.ok(tints.includes(colour) || tokens.includes(colour), `${colour} is a colour of the app`);
+    });
+
+    it('is made for a small phone first: the code and the cards are small without a style sheet, and grow where there is room', () => {
+      assert.match(MAIL, /class="code" style="[^"]*font-size:24px;line-height:30px;letter-spacing:2px;/, 'the code is 263 px wide as it stands: it fits a 360 px phone even in a mail program that drops the style sheet');
+      assert.match(MAIL, /@media only screen and \(min-width: 481px\) \{[^}]*\.code \{[^}]*font-size: 28px/, 'and it grows where there is room');
+      assert.match(MAIL, /@media only screen and \(max-width: 340px\) \{[^}]*\.code \{[^}]*font-size: 21px/, 'and shrinks for the smallest phones');
+      assert.doesNotMatch(MAIL, /\.code \{[^}]*font-size: 25px/, 'the old rule is gone');
+      assert.match(MAIL, /td p \{ margin: 0 !important; \}/, 'the address that Shopify writes in a paragraph has no margin round it');
+      assert.equal((MAIL.match(/padding:26px 20px/g) ?? []).length, 3, 'the three cards have 20 px at the sides, and 28 px where there is room');
     });
 
     it('has a picture at the top that exists on the site, at twice the size it is shown at', () => {

@@ -15,7 +15,7 @@ export const kr = (øre) => `${(øre / 100).toFixed(2).replace('.', ',')} kr`;
 export const makeFilters = (attached = []) => ({
   money: (value) => kr(value),
   money_with_currency: (value) => `${kr(value)} NOK`,
-  format_address: (a) => [a.name, a.address1, `${a.zip} ${a.city}`, a.country].join('<br>'),
+  format_address: (a) => `<p>${[a.name, a.address1, `${a.zip} ${a.city}`, a.country].join('<br>')}</p>`, // (Shopify's comes in a paragraph, with the margin of one)
   attach_as_pdf: (policy, name) => {
     attached.push(name);
     return '';
