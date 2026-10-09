@@ -174,7 +174,7 @@ For hvert produkt:
 Filen [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) er **hele** ordrebekreftelsen kunden får, tegnet i Disputts stil (burgunder bakgrunn, kremfargede kort og gult) og skrevet på norsk, dansk og svensk. Den erstatter Shopifys standardmal og viser det samme som den: ordrenummer, hva som er kjøpt, mva, total, betalingsmåte, fakturaadresse, lenken til ordresiden og kontaktinformasjon (og, for kunder i Danmark og Tyskland, vilkårene og angreretten som PDF, slik Shopifys egen mal gjør). I tillegg viser den **koden** fra spillet og hvor lenge pakken varer, forteller hvordan koden brukes på en annen telefon, og **bekrefter samtykket**: kunden godtok vilkårene og at tilgangen leveres med en gang, og at angreretten da faller bort.
 
 1. - [ ] *Settings → Notifications → Customer notifications → Order confirmation → Edit code*.
-2. - [ ] Marker alt som står der (Cmd+A), slett det, og lim inn hele innholdet i `shopify/ordrebekreftelse.liquid`. Lagre. Er noe skrevet feil, sier Shopify fra og lagrer ikke.
+2. - [ ] Marker alt som står der (Cmd+A), slett det, og lim inn hele innholdet i `shopify/ordrebekreftelse.liquid`. Lagre. Er noe skrevet feil, viser Shopify en feilmelding: ta et skjermbilde av den.
 3. - [ ] Under *Settings → Notifications → Sender email*: bruk `kontakt@disputt.site` som avsender (Shopify ber deg bekrefte adressen), så svar på e-posten når fram til deg.
 4. - [ ] **Emnelinjen** (*Subject*, øverst på samme side) kan stå som den er. Vil du ha den i Disputts tone og på kundens språk, bytt den med dette (alt på én linje):
 
