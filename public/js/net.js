@@ -24,6 +24,7 @@ let unreachable = 0; // p2p: consecutive times the host's phone could not be fou
 let retryTimer = null;
 let pingTimer = null;
 let stopped = false;
+let wantedMode = null; // the way to play that the host asked for, until the game that was made for it answers
 const outbox = [];
 
 const UNREACHABLE_LIMIT = 15; // ~1 minute of backoff: long enough for a host who is reloading, short enough to give up
@@ -275,6 +276,10 @@ function onMessage(msg) {
       break;
     }
     case 'welcome': {
+      const wanted = wantedMode;
+      wantedMode = null;
+      // (a page whose game engine is an older copy from the browser's cache makes a game on one phone as an ordinary one that nobody can join: better to say so)
+      if (wanted === 'car' && msg.view.mode !== 'car') return forget('Siden er ikke ferdig oppdatert. Last inn siden på nytt og prøv igjen.');
       const session = { code: msg.code, playerId: msg.playerId, token: msg.token };
       saveSession(session);
       syncClock(msg.view.now);
@@ -360,6 +365,7 @@ function onError(msg) {
 export const actions = {
   /** `mode` is the way to play: 'car' (everybody on one phone) or 'cabin' (a phone each, as it always was). */
   create: (mode = 'cabin') => {
+    wantedMode = mode;
     if (isP2P) {
       setStore({ modeStep: false, step: null }); // (a new game starts at its first step)
       return void createP2PRoom(mode);
@@ -408,6 +414,7 @@ export function dropSession() {
 
 /** Drop the local identity and go back to the start screen. */
 export function forget(notice = null) {
+  wantedMode = null;
   saveSession(null);
   if (isP2P) {
     // leaving a room means letting go of its link; a hosting page also ends the game for everybody

@@ -1,7 +1,7 @@
 {
   "name": "Disputt",
   "short_name": "Disputt",
-  "description": "Et sosialt bløff- og diskusjonsspill for 3 eller flere.",
+  "description": "Et sosialt bløff- og diskusjonsspill for 2 eller flere.",
   "lang": "nb",
   "start_url": "./",
   "scope": "./",

@@ -10,7 +10,7 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { useHold } from '../hold.js';
 import { impostorCount, joinNames, matesOf } from '../impostors.js';
-import { setStore } from '../store.js';
+import { setStore, store } from '../store.js';
 import { Avatar, Sheet } from '../ui.js';
 import { cx } from '../util.js';
 
@@ -19,11 +19,21 @@ const close = () => setStore({ sheet: null });
 /**
  * The strip of the normal game (ui.js, RoleStrip) for one row of the table. `onRelease(ms)` is told how long the button was held, when
  * the finger lifts: the phone going round counts a role as seen from that.
+ *
+ * `lockMs`: a strip that has just been handed to somebody is not armed at once. The finger that let go of the last one may still be there
+ * (and the page may have scrolled this very button to the spot where it was): a second press there would show this player's role to the
+ * wrong person, and a tap that is too short to count as a look would still show it. The button waits, dimmed, for that long.
  */
-export function TableStrip({ row, impostors = 1, onRelease }) {
+export function TableStrip({ row, impostors = 1, onRelease, lockMs = 0 }) {
   const { held, bind } = useHold();
   const impostor = row.role === 'impostor';
   const pressedAt = useRef(0);
+  const [locked, setLocked] = useState(lockMs > 0 && !store.qaHold); // (QA shows every strip held, with or without a finger)
+  useEffect(() => {
+    if (!locked) return undefined;
+    const timer = setTimeout(() => setLocked(false), lockMs);
+    return () => clearTimeout(timer);
+  }, []);
   useEffect(() => {
     if (held) {
       pressedAt.current = Date.now();
@@ -47,7 +57,7 @@ export function TableStrip({ row, impostors = 1, onRelease }) {
             html`<span class="role-strip__line">${impostor ? `Sammen med ${joinNames(matesOf(row).map((m) => m.name))}` : 'To av dere er imposterer'}</span>`}`
         : html`<span>Din rolle</span>`}
     </div>
-    <button type="button" class=${cx('secret', held && 'secret--held')} ...${bind} aria-label="Hold inne for å se rollen din">Hold for å se</button>
+    <button type="button" class=${cx('secret', held && 'secret--held', locked && 'secret--wait')} disabled=${locked} ...${locked ? {} : bind} aria-label="Hold inne for å se rollen din">Hold for å se</button>
   </div>`;
 }
 

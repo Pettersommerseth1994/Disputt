@@ -46,6 +46,11 @@ export const impostorCount = (players) => (players >= LIMITS.twoImpostorsFrom ? 
 
 const MAX_GHOSTS = 2; // abandoned, nameless lobby placeholders kept around at the same time (see addPlayer)
 
+// With three players or more, a round needs three phones: a friend whose phone has gone to sleep is waited for (it is back in a moment), and
+// the others are not left to play a round as if they were only two, where the rule for two players would apply. Only a game of exactly two
+// is played by two, and then it needs both phones.
+const PHONES_FOR_A_CROWD = 3;
+
 export const DEFAULT_TIMINGS = Object.freeze({
   roleMs: 8000,
   countdownMs: 5000,
@@ -684,8 +689,10 @@ export class Room {
       if (this.readyPlayers().length < LIMITS.minPlayers) throw new GameError('need_players', `Dere må være minst ${LIMITS.minPlayers} spillere.`);
       return;
     }
-    const missing = this.readyPlayers().filter((p) => !p.connected);
-    if (this.connectedReadyPlayers().length < LIMITS.minPlayers) {
+    const ready = this.readyPlayers();
+    const missing = ready.filter((p) => !p.connected);
+    const needed = Math.max(LIMITS.minPlayers, Math.min(ready.length, PHONES_FOR_A_CROWD));
+    if (this.connectedReadyPlayers().length < needed) {
       throw new GameError(
         'need_connected',
         missing.length ? `Venter på at ${missing.map((p) => p.name).join(', ')} kobler til igjen.` : `Dere må være minst ${LIMITS.minPlayers} spillere.`,

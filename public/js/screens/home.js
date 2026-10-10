@@ -5,10 +5,13 @@ import { actions, forget } from '../net.js';
 import { isActive } from '../pay/pass.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, Logo } from '../ui.js';
+import { ModeStep } from './mode.js';
 
 export function Home() {
   const s = useStore();
   const [mode, setMode] = useState('home');
+  // (the first step of the host's set-up is part of the start screen: a start screen and an app.js that are not equally new, from the cache, still work)
+  if (s.modeStep) return html`<${ModeStep} />`;
   if (mode === 'code') return html`<${JoinByCode} onBack=${() => setMode('home')} />`;
 
   return html`<main class="screen home">

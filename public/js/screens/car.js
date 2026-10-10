@@ -21,6 +21,7 @@ import { TwoPlayersNote } from './twonote.js';
 
 const NAME_MAX = 14;
 const MIN_HOLD_MS = 500; // a role counts as seen when the button has been held this long: a stray touch does not use somebody's turn up
+const HANDOVER_LOCK_MS = 1500; // a button that has just been handed over waits this long before it works (see TableStrip)
 
 /** The same view with nobody marked "(deg)": all of them are at the table. */
 export const anonymous = (view) => ({ ...view, you: { ...view.you, id: null } });
@@ -29,7 +30,8 @@ export const anonymous = (view) => ({ ...view, you: { ...view.you, id: null } })
 export function carScreen(view, s) {
   switch (view.phase) {
     case 'lobby': {
-      const step = hostStep(view, s.step);
+      // (too few players for a game: the list of players, whatever step it was on. After a reload with only the host in it, the last step could not start anything)
+      const step = view.players.length < view.limits.min ? 1 : hostStep(view, s.step);
       if (step === 1) return html`<${PlayersStep} view=${view} />`;
       if (step === 2) return html`<${PointsStep} view=${view} />`;
       return html`<${HowStep} view=${view} />`;
@@ -225,7 +227,7 @@ export function HowStep({ view }) {
   const twoImpostors = view.players.length >= (view.limits.twoImpostorsFrom ?? Infinity);
   const canStart = enough && view.you.ready && s.conn === 'open';
   const steps = [
-    ['Send telefonen rundt', 'Alle trykker på navnet sitt og ser rollen sin, én og én. Skjul skjermen for de andre.'],
+    ['Send telefonen rundt', 'Alle holder inne knappen ved navnet sitt og ser rollen sin, én og én. Skjul skjermen for de andre.'],
     [`${host?.name ?? 'Verten'} leser spørsmålet`, 'Verten leser spørsmålet og alternativene høyt. Diskuter, og bli enige om ett svar.'],
     ['Imposteren avslører seg', 'Imposteren sier riktig svar høyt. Så vises poengene, og neste runde starter med nye roller.'],
   ];
@@ -297,7 +299,7 @@ export function CarRoles({ view }) {
             <span class="rolerow__n">${i + 1}</span>
             <${Avatar} id=${r.avatar} size="sm" />
             <span class="rolerow__name">${r.name}${tag}</span>
-            <${TableStrip} key=${r.id} row=${r} impostors=${count} onRelease=${released(r)} />
+            <${TableStrip} key=${r.id} row=${r} impostors=${count} onRelease=${released(r)} lockMs=${HANDOVER_LOCK_MS} />
           </li>`;
         }
         return html`<li class="rolerow rolerow--wait" key=${r.id}><span class="rolerow__n">${i + 1}</span><${Avatar} id=${r.avatar} size="sm" /><span class="rolerow__name">${r.name}${tag}</span><span class="rolerow__state">Venter</span></li>`;

@@ -187,9 +187,16 @@ describe('lobby', () => {
   });
 
   it('only counts connected players and refuses to start when too few are online', () => {
-    const ctx = lobby(2);
-    ctx.room.disconnect(ctx.players[1].id);
+    // three friends, one phone has gone to sleep: the game waits for it (as it always did) and does not start for two
+    const ctx = lobby(3);
+    ctx.room.disconnect(ctx.players[2].id);
     throwsCode(() => ctx.room.start(ctx.host.id), 'need_connected');
+    ctx.room.connect(ctx.players[2].id);
+    ctx.room.start(ctx.host.id);
+    // two friends need both phones
+    const two = lobby(2);
+    two.room.disconnect(two.players[1].id);
+    throwsCode(() => two.room.start(two.host.id), 'need_connected');
   });
 });
 

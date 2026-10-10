@@ -146,7 +146,8 @@ const toasts = () => page.$$eval('.toast', (els) => els.map((e) => e.innerText))
 const ROLE_WORD = /\b(Imposter|Lojal)\b/; // (as a word of its own: "Imposteren" or "lojale" inside a sentence is not the role)
 async function hold(within = '', ms = 700) {
   where = `holding the button ${within || 'on the screen'}`;
-  const button = await page.waitForSelector(`${within} .role-strip .secret`.trim(), { visible: true, timeout: 5000 });
+  // (a button that has just been handed to somebody waits a moment before it works: it is pressed when it does)
+  const button = await page.waitForSelector(`${within} .role-strip .secret:not(:disabled)`.trim(), { visible: true, timeout: 5000 });
   // (a sheet slides in, and a button that is measured on the way is not where it ends up: wait until it stands still)
   let box = await button.boundingBox();
   for (let i = 0; i < 25; i++) {
@@ -183,7 +184,7 @@ async function hold(within = '', ms = 700) {
     throw new Error(`the role was still on the screen after the finger lifted: ${state}: ${err.message.split('\n')[0]}`);
   });
   const role = /\bImposter\b/.test(strip) ? 'impostor' : 'loyal';
-  return { strip, buttonText, role };
+  return { strip, buttonText, role, at: { x: box.x + box.width / 2, y: box.y + box.height / 2 } };
 }
 
 // ---------------------------------------------------------------- the set-up
@@ -360,7 +361,17 @@ async function sendPhoneRound(round) {
     const waiting = await page.$$eval('.rolerow--wait .rolerow__name', (els) => els.map((el) => el.firstChild.textContent.trim()));
     assert.deepEqual(waiting, names.slice(i + 1), 'the rest wait, in order');
     if (round === 1 && i === 0) {
+      // a button that has just been handed over does not work for a moment: a touch on it shows nothing, and does not count
+      const waiting = await page.$('.role-strip .secret:disabled');
+      assert.ok(waiting, 'the button of the first one waits a moment before it works');
+      const w = await waiting.boundingBox();
+      await page.mouse.move(w.x + w.width / 2, w.y + w.height / 2);
+      await page.mouse.down();
+      await sleep(120);
+      assert.doesNotMatch(await bodyText(), ROLE_WORD, 'a press on a button that waits shows nothing');
+      await page.mouse.up();
       // a touch that is too short to see anything does not use up the turn
+      await page.waitForSelector('.role-strip .secret:not(:disabled)', { timeout: 5000 });
       const b = await (await page.$('.role-strip .secret')).boundingBox();
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.down();
@@ -375,6 +386,19 @@ async function sendPhoneRound(round) {
     assert.match(peek.strip, /^Du er /, 'the strip says who you are');
     seenRoles.set(name, { role: peek.role, strip: peek.strip });
     await waitText(new RegExp(`${i + 1} av ${PLAYERS} har sett rollen sin`));
+    if (round <= 2 && i < PLAYERS - 1) {
+      // The finger that has just let go presses again, at once, on the spot where it was (a double tap, or a hand that is slow to leave):
+      // whatever is there now is the next player's button, and it must show nothing, and must not use up that player's turn.
+      // (With a long list the page has scrolled the next button to the very place where the finger was.)
+      await page.mouse.move(peek.at.x, peek.at.y);
+      await sleep(250);
+      await page.mouse.down();
+      await sleep(250);
+      assert.doesNotMatch(await bodyText(), ROLE_WORD, `round ${round}: a press on the spot where ${name}'s finger was, right after it let go, shows nothing of ${names[i + 1]}'s role`);
+      await page.mouse.up();
+      await sleep(150);
+      assert.match(await bodyText(), new RegExp(`${i + 1} av ${PLAYERS} har sett rollen sin`), `and it does not use up ${names[i + 1]}'s turn`);
+    }
     const done = await page.$$eval('.rolerow--done .rolerow__name', (els) => els.map((el) => el.firstChild.textContent.trim()));
     assert.deepEqual(done, names.slice(0, i + 1), 'the ones who have seen are marked, in order');
     // and the phone goes to the next: the host gets it back at the end

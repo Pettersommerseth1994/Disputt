@@ -161,6 +161,40 @@ describe('a round with two players', () => {
     }
   });
 
+  it('is not what a game of three or more turns into when a phone has gone to sleep: it waits for the phone, as it always did', () => {
+    // (a round for two has the rule for two, and a crowd that is missing one must not be played by the rest as if they were only two)
+    for (const players of [3, 4, 7]) {
+      const ctx = cabin(players);
+      ctx.room.disconnect(ctx.players[players - 1].id);
+      if (players === 3) throwsCode(() => ctx.room.start(ctx.host.id), 'need_connected');
+      else ctx.room.start(ctx.host.id); // four with one asleep: the three who are there play, as before
+      if (players > 3) {
+        assert.equal(ctx.room.current.participants.length, players - 1);
+        assert.ok(ctx.room.current.impostorIds.length >= 1);
+      }
+    }
+    for (const [players, asleep] of [[4, 2], [5, 3], [3, 1]]) {
+      // between two rounds: too few phones, and the next round waits
+      const ctx = cabin(players);
+      ctx.room.start(ctx.host.id);
+      ctx.clock.advance(DEFAULT_TIMINGS.roleMs + 1);
+      ctx.room.tick(ctx.clock.now());
+      ctx.room.skipRound(ctx.host.id);
+      for (let i = 0; i < asleep; i++) ctx.room.disconnect(ctx.players[players - 1 - i].id);
+      throwsCode(() => ctx.room.nextRound(ctx.host.id), 'need_connected');
+      assert.equal(ctx.room.phase, PHASE.SUMMARY, `${players} players, ${asleep} asleep: still at the points`);
+    }
+    // only a game of exactly two is played by two, and then it needs both phones
+    const two = cabin(2);
+    two.room.start(two.host.id);
+    two.room.skipRound(two.host.id);
+    two.room.disconnect(two.players[1].id);
+    throwsCode(() => two.room.nextRound(two.host.id), 'need_connected');
+    two.room.connect(two.players[1].id);
+    two.room.nextRound(two.host.id);
+    assert.equal(two.room.phase, PHASE.ROLE);
+  });
+
   it('can be played by two: the least a game needs is two players, in both ways', () => {
     assert.equal(LIMITS.minPlayers, 2);
     const one = cabin(1);
