@@ -20,7 +20,7 @@ export function Home() {
       ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${s.notice}</p>`}
     </div>
     <div class="dock">
-      <${Button} block onClick=${() => actions.create()} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
+      <${Button} block onClick=${() => setStore({ modeStep: true })} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
       <${Button} block variant="cream" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
       <div class="row row--center home__links">
         ${!s.payments?.enabled

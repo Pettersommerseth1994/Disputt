@@ -13,6 +13,7 @@ export function FasitSheet({ view }) {
   const s = view.summary;
   const impostors = summaryImpostors(view); // (somebody who has left the game since is still named)
   const many = impostors.length > 1;
+  const none = Boolean(s.noImpostor); // (a round of two players may have no impostor)
   const a = s.answer; // (a host that has not been updated does not send it)
   return html`<${Sheet} title="Fasit" onClose=${close}>
     <div class="card card--paper stack fasit">
@@ -26,11 +27,16 @@ export function FasitSheet({ view }) {
           <p class="fasit__locked">${a.chosenLetter}: ${a.chosenText}</p>
         </div>`}
       <div class="fasit__row fasit__row--who">
-        <span class="impostor-card__faces">${impostors.map((i) => html`<${Avatar} id=${i.avatar} size="md" key=${i.id} />`)}</span>
-        <div>
-          <p class="eyebrow">${many ? 'Imposterne var' : 'Imposteren var'}</p>
-          <p class=${many ? 'display impostor-card__name impostor-card__name--duo' : 'display impostor-card__name'}>${joinNames(impostors.map((i) => i.name))}</p>
-        </div>
+        ${none
+          ? html`<div>
+              <p class="eyebrow">Imposteren var</p>
+              <p class="display impostor-card__name">Ingen i denne runden</p>
+            </div>`
+          : html`<span class="impostor-card__faces">${impostors.map((i) => html`<${Avatar} id=${i.avatar} size="md" key=${i.id} />`)}</span>
+              <div>
+                <p class="eyebrow">${many ? 'Imposterne var' : 'Imposteren var'}</p>
+                <p class=${many ? 'display impostor-card__name impostor-card__name--duo' : 'display impostor-card__name'}>${joinNames(impostors.map((i) => i.name))}</p>
+              </div>`}
       </div>
     </div>
     <p class="small muted center" style="margin-top:var(--s-4)">Imposteren skal si det høyt først. Fasiten er bare her hvis dere blir uenige.</p>

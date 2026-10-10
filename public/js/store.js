@@ -39,6 +39,7 @@ export const store = {
   session: loadSession(),
   route: parseRoute(),
   joining: null, // room code we are trying to join
+  modeStep: false, // the host is choosing how to play (screens/mode.js), before any game exists
   creating: false, // p2p: the host is being set up (reserving a room code with the signalling server)
   stuck: 0, // p2p: how many connection attempts in a row failed without ever finding a line to the host
   hostAwayUntil: 0, // p2p guest: the host said it was going away (to pay) and is expected back before this time (ms since 1970)
@@ -46,9 +47,9 @@ export const store = {
   seats: null, // { code, seats } when the game has already started and a seat can be claimed
   notice: null, // message shown on the home screen (e.g. "game is gone")
   toast: null, // transient error/info
-  sheet: null, // 'scores' | 'rules' | 'host' | 'qr' | 'settings' | 'home' | 'fasit' | 'login' | 'thanks' | 'access' | null
+  sheet: null, // 'scores' | 'rules' | 'host' | 'qr' | 'settings' | 'home' | 'fasit' | 'roles' | 'login' | 'thanks' | 'access' | null
   editing: false, // lobby: changing name/avatar
-  step: null, // the host's set-up: 1 profile, 2 points, 3 invitation (null: see hostStep in screens/setup.js)
+  step: null, // the host's set-up, after the way to play has been chosen: 1 profile (the players, in the car), 2 points, 3 invitation (null: see hostStep in screens/setup.js)
   payments: null, // what the page knows about payments (pay/payments.js): { enabled, apiUrl, publicKey, methods, freeRounds }
   pass: null, // the verified access pass on this phone (pay/pass.js), or null
   passCode: null, // the restore code that goes with it

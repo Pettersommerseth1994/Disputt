@@ -143,9 +143,9 @@ describe('lobby', () => {
     throwsCode(() => room.addPlayer(), 'full');
   });
 
-  it('needs the host and at least three registered players to start', () => {
-    const two = lobby(2);
-    throwsCode(() => two.room.start(two.host.id), 'need_players');
+  it('needs the host and at least two registered players to start', () => {
+    const one = lobby(1);
+    throwsCode(() => one.room.start(one.host.id), 'need_players');
     const three = lobby(3);
     throwsCode(() => three.room.start(three.players[1].id), 'not_host');
     three.room.start(three.host.id);
@@ -187,8 +187,8 @@ describe('lobby', () => {
   });
 
   it('only counts connected players and refuses to start when too few are online', () => {
-    const ctx = lobby(3);
-    ctx.room.disconnect(ctx.players[2].id);
+    const ctx = lobby(2);
+    ctx.room.disconnect(ctx.players[1].id);
     throwsCode(() => ctx.room.start(ctx.host.id), 'need_connected');
   });
 });

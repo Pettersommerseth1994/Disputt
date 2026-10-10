@@ -11,6 +11,10 @@ import { requestNextRound } from '../pay/gate.js';
 import { setStore } from '../store.js';
 import { Avatar, Button, GearIcon, RoleStrip, Scoreboard, Timer, TrophyIcon } from '../ui.js';
 import { cx, letter, playerById, useRemaining, vibrate } from '../util.js';
+import { CarStrip } from './carstrip.js';
+
+/** The reminder of your role above the game screens. In bilturmodus the phone is everybody's, so it asks "Glemt rollen din?" instead (carstrip.js). */
+const Strip = ({ view }) => (view.mode === 'car' ? html`<${CarStrip} />` : html`<${RoleStrip} you=${view.you} impostors=${impostorCount(view)} />`);
 
 /** Round number + score shortcut, shown above the in-round screens. The host also has the gear with the host's options. */
 export function GameBar({ view }) {
@@ -110,7 +114,7 @@ export function RoleReveal({ view }) {
 const PRESETS = [2, 6, 10];
 
 export function Question({ view }) {
-  const { you, question } = view;
+  const { question } = view;
   const [sel, setSel] = useState(view.selected); // restored from the server after a reload, then local
   const [preset, setPreset] = useState(6);
   const ms = useRemaining(view.discussion.endsAt);
@@ -126,7 +130,7 @@ export function Question({ view }) {
 
   return html`<main class="screen question">
     <${GameBar} view=${view} />
-    <${RoleStrip} you=${you} impostors=${impostorCount(view)} />
+    <${Strip} view=${view} />
 
     <div class="timebar">
       <${Timer} endsAt=${view.discussion.endsAt} small />
@@ -163,12 +167,11 @@ export function Question({ view }) {
 }
 
 export function Discussion({ view }) {
-  const { you } = view;
   const asker = playerById(view, view.turn.askerId);
   const ms = useRemaining(view.discussion.endsAt);
   return html`<main class="screen discussion">
     <${GameBar} view=${view} />
-    <${RoleStrip} you=${you} impostors=${impostorCount(view)} />
+    <${Strip} view=${view} />
 
     <section class="center stack" style="align-items:center;margin-top:var(--s-4)">
       <${Avatar} id=${asker?.avatar} size="lg" alive offline=${asker && !asker.connected} />
@@ -218,7 +221,7 @@ function RevealStage({ view, asker = false }) {
   useEffect(() => vibrate(60), []); // (the same for everybody)
   return html`<main class="screen stage">
     <${GameBar} view=${view} />
-    <${RoleStrip} you=${view.you} impostors=${count} />
+    <${Strip} view=${view} />
     <div class="stage__body grow">
       <img class="stage__art" src=${asset('assets/art/lips.svg')} alt="" width="300" height="200" />
       <h1 class="stage__title">${count > 1 ? 'Imposterne avslører seg!' : 'Imposteren avslører seg!'}</h1>
@@ -246,7 +249,16 @@ export const WaitReveal = ({ view }) => html`<${RevealStage} view=${view} />`;
 export function Summary({ view }) {
   const s = view.summary;
   const many = summaryImpostors(view).length > 1; // (an impostor may have been removed since)
-  const recap = s.skipped ? 'Runden ble hoppet over. Ingen fikk poeng.' : s.correct ? 'Gruppa hadde rett!' : many ? 'Imposterne lurte dere!' : 'Imposteren lurte dere!';
+  const none = Boolean(s.noImpostor) && !s.skipped; // (a round of two players may have no impostor: the points say so)
+  const recap = s.skipped
+    ? 'Runden ble hoppet over. Ingen fikk poeng.'
+    : none
+      ? 'Ingen var imposter denne runden.'
+      : s.correct
+        ? 'Gruppa hadde rett!'
+        : many
+          ? 'Imposterne lurte dere!'
+          : 'Imposteren lurte dere!';
 
   return html`<main class="screen summary">
     <${GameBar} view=${view} />
@@ -255,6 +267,7 @@ export function Summary({ view }) {
       <p class="lead muted">${recap}</p>
     </header>
 
+    ${none && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${s.correct ? 'Dere svarte riktig sammen!' : 'Dere svarte feil. Ingen fikk poeng.'}</p>`}
     ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">Uavgjort i teten, én runde til!</p>`}
 
     <section class="card stack">
@@ -262,6 +275,7 @@ export function Summary({ view }) {
       ${!s.skipped && html`<div class="row row--center"><${Button} variant="text" onClick=${() => setStore({ sheet: 'fasit' })}>Uenige? Se fasit</${Button}></div>`}
     </section>
 
+    ${view.mode === 'car' && html`<p class="small muted center">Neste runde får dere nye roller: send telefonen rundt igjen.</p>`}
     ${view.you.isHost
       ? html`<div class="dock">
           <${Button} block variant="lime" onClick=${() => requestNextRound(view)}>Neste runde</${Button}>

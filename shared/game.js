@@ -6,6 +6,11 @@
 // Round flow:  ROLE (8 s) -> QUESTION (discussion timer) -> LOCKED (5 s countdown) -> REVEAL (the impostors say the answer
 //              out loud; the asker moves on) -> SUMMARY (scores applied) -> next ROLE ...  or FINISHED when someone leads at/above
 //              the target. Nothing is revealed on a screen: the phones only count down and keep the score.
+//
+// There are two ways to play the same game (MODE): "cabin" (hytteturmodus), a phone each, and "car" (bilturmodus), ONE phone, the host's.
+// In the car the other players have no phone of their own (`local`: the host puts them in, they are always "connected"), the host always
+// asks the question, and the ROLE phase has no timer: the phone goes round, one player after the other sees their role, and the host
+// goes on when everybody has (`roleSeen`, `startQuestion`). Everything else is the same code.
 
 import { isAvatarId } from './avatars.mjs';
 import { LETTERS, QUESTIONS } from './questions.js';
@@ -23,7 +28,7 @@ export const PHASE = Object.freeze({
 });
 
 export const LIMITS = Object.freeze({
-  minPlayers: 3,
+  minPlayers: 2,
   maxPlayers: 10,
   twoImpostorsFrom: 6, // a round with this many players or more has two impostors instead of one
   targetMin: 1,
@@ -32,7 +37,11 @@ export const LIMITS = Object.freeze({
   timerMaxSec: 60 * 60,
 });
 
-/** How many impostors a round with this many players has. */
+/** The two ways to play: a phone each ("cabin", hytteturmodus) or one phone for everybody ("car", bilturmodus). */
+export const MODE = Object.freeze({ CABIN: 'cabin', CAR: 'car' });
+
+/** How many impostors a round with this many players has. (With only two players a round may also have none: see beginRound.) */
+
 export const impostorCount = (players) => (players >= LIMITS.twoImpostorsFrom ? 2 : 1);
 
 const MAX_GHOSTS = 2; // abandoned, nameless lobby placeholders kept around at the same time (see addPlayer)
@@ -60,8 +69,9 @@ export class GameError extends Error {
 const isReady = (p) => Boolean(p && p.name && p.avatar);
 
 export class Room {
-  constructor({ code, rand = defaultRandom, now = Date.now, timings = {}, questions = QUESTIONS } = {}) {
+  constructor({ code, rand = defaultRandom, now = Date.now, timings = {}, questions = QUESTIONS, mode = MODE.CABIN } = {}) {
     this.code = code;
+    this.mode = mode === MODE.CAR ? MODE.CAR : MODE.CABIN; // (anything else, and a game saved before there were two ways to play, is the cabin)
     this.rand = rand;
     this.clock = now;
     this.timings = { ...DEFAULT_TIMINGS, ...timings };
@@ -94,6 +104,7 @@ export class Room {
     return {
       v: 1,
       code: this.code,
+      mode: this.mode,
       createdAt: this.createdAt,
       lastActivity: this.lastActivity,
       hostId: this.hostId,
@@ -115,6 +126,7 @@ export class Room {
         score: p.score,
         joinedAt: p.joinedAt,
         lastSeen: p.lastSeen,
+        ...(p.local ? { local: true } : {}),
       })),
       current: this.current,
     };
@@ -126,7 +138,7 @@ export class Room {
       throw new Error('Unknown room snapshot');
     }
     const copy = JSON.parse(JSON.stringify(data)); // never share state with the caller
-    const room = new Room({ ...options, code: copy.code });
+    const room = new Room({ ...options, code: copy.code, mode: copy.mode });
     room.createdAt = copy.createdAt;
     room.lastActivity = room.clock();
     room.hostId = copy.hostId;
@@ -148,7 +160,8 @@ export class Room {
     room.deck = sameBank ? copy.deck ?? [] : [];
     room.lastQuestionIndex = sameBank ? copy.lastQuestionIndex ?? -1 : -1;
     const now = room.clock();
-    for (const p of copy.players) room.players.set(p.id, { ...p, connected: false, lastSeen: now });
+    // (the players on the host's own phone are always here: it is only the host's phone that has to come back)
+    for (const p of copy.players) room.players.set(p.id, { ...p, connected: Boolean(p.local), lastSeen: now });
     return room;
   }
 
@@ -164,6 +177,7 @@ export class Room {
     const crowded = ghosts.length >= MAX_GHOSTS || this.players.size >= LIMITS.maxPlayers;
     const leftover = crowded ? ghosts.sort((a, b) => a.lastSeen - b.lastSeen)[0] ?? null : null;
     if (!asHost) {
+      if (this.mode === MODE.CAR) throw new GameError('single_phone', 'Dette spillet spilles på én telefon, så ingen kan bli med fra en annen.');
       if (this.phase !== PHASE.LOBBY) {
         throw new GameError('started', 'Spillet har allerede startet.', { seats: this.claimableSeats() });
       }
@@ -242,13 +256,22 @@ export class Room {
     return this.readyPlayers().filter((p) => p.connected);
   }
 
-  setProfile(playerId, { name, avatar }) {
+  /** Sets a profile. In the car the host also sets the profile of the players who are on the host's phone (`targetId`). */
+  setProfile(playerId, { name, avatar }, targetId = playerId) {
     this.needPhase(PHASE.LOBBY);
-    const p = this.player(playerId);
+    this.player(playerId);
+    if (targetId !== playerId) {
+      this.needHost(playerId);
+      const target = this.players.get(targetId);
+      // ('bad_value', not the 'bad_token' of `player()`: that one tells a phone that its seat is gone, and the page then leaves the game)
+      if (!target) throw new GameError('bad_value', 'Den spilleren finnes ikke lenger.');
+      if (!target.local) throw new GameError('bad_value', 'Du kan bare endre spillere som er lagt inn på denne telefonen.');
+    }
+    const p = this.player(targetId);
     const clean = cleanName(name);
     if (clean.length < 1) throw new GameError('bad_name', 'Skriv inn et navn.');
     if (!isAvatarId(avatar)) throw new GameError('bad_avatar', 'Velg en avatar.');
-    const others = [...this.players.values()].filter((o) => o.id !== playerId && isReady(o));
+    const others = [...this.players.values()].filter((o) => o.id !== targetId && isReady(o));
     if (others.some((o) => nameKey(o.name) === nameKey(clean))) {
       throw new GameError('name_taken', 'Det navnet er tatt, velg et annet.');
     }
@@ -258,6 +281,28 @@ export class Room {
     p.name = clean;
     p.avatar = avatar;
     this.touch();
+  }
+
+  /**
+   * The car: the host puts a player in on this phone. They have no phone of their own, so they never connect or leave: they are
+   * here as long as the room is.
+   */
+  addLocalPlayer(hostId, { name, avatar }) {
+    this.needHost(hostId);
+    this.needCar();
+    this.needPhase(PHASE.LOBBY);
+    // ('too_many', not the 'full' of a room that cannot take another phone: the page leaves the game when it hears that one)
+    if (this.players.size >= LIMITS.maxPlayers) throw new GameError('too_many', `Dere kan være ${LIMITS.maxPlayers} spillere.`);
+    const now = this.clock();
+    const player = { id: makeId(), token: makeToken(), name: '', avatar: null, score: 0, connected: true, local: true, joinedAt: now, lastSeen: now };
+    this.players.set(player.id, player);
+    try {
+      this.setProfile(hostId, { name, avatar }, player.id);
+    } catch (err) {
+      this.players.delete(player.id);
+      throw err;
+    }
+    return player;
   }
 
   removePlayer(playerId, reason = 'removed') {
@@ -285,7 +330,8 @@ export class Room {
     }
     const cur = this.current;
     // (with two impostors the round carries on when only one of them is gone)
-    const lastImpostorGone = cur && cur.impostorIds.includes(targetId) && cur.impostorIds.every((id) => id === targetId || !this.players.has(id));
+    const impostors = cur?.impostorIds;
+    const lastImpostorGone = impostors && impostors.includes(targetId) && impostors.every((id) => id === targetId || !this.players.has(id));
     const inCurrentRound = cur && IN_ROUND.includes(this.phase) && (lastImpostorGone || cur.askerId === targetId);
     // Once the answer is locked the result is decided: removing someone must not wipe out a round that was already won or lost.
     const decided = this.phase === PHASE.LOCKED || this.phase === PHASE.REVEAL;
@@ -297,18 +343,20 @@ export class Room {
   }
 
   leave(playerId) {
-    this.needPhase(PHASE.LOBBY);
+    // (everybody else is on the host's phone: a game on one phone is over when the host leaves it, whatever it is doing)
+    if (this.mode !== MODE.CAR) this.needPhase(PHASE.LOBBY);
     this.player(playerId);
     this.removePlayer(playerId, 'left');
   }
 
-  /** The room is abandoned when nobody is connected. */
+  /** The room is abandoned when nobody is connected. (The players on the host's phone are always "connected": only phones count.) */
   get empty() {
-    return ![...this.players.values()].some((p) => p.connected);
+    return ![...this.players.values()].some((p) => p.connected && !p.local);
   }
 
   migrateHost() {
-    const next = this.connectedReadyPlayers().find((p) => p.id !== this.hostId) ?? this.connectedReadyPlayers()[0];
+    const phones = this.connectedReadyPlayers().filter((p) => !p.local); // (a player on the host's phone has nothing to take over with)
+    const next = phones.find((p) => p.id !== this.hostId) ?? phones[0];
     this.hostId = next ? next.id : null;
     this.hostAwaySince = null;
   }
@@ -431,12 +479,35 @@ export class Room {
     this.applyScoring();
   }
 
+  /** The car: the host says that a player has seen their role (the phone goes round, one after the other). */
+  roleSeen(hostId, id) {
+    this.needCar();
+    this.needHost(hostId);
+    this.needPhase(PHASE.ROLE);
+    const cur = this.current;
+    if (!cur.participants.includes(id) || !this.players.has(id)) throw new GameError('bad_value', 'Den spilleren er ikke med i denne runden.');
+    if (!cur.seen.includes(id)) cur.seen.push(id);
+    this.touch();
+  }
+
+  /** The car: when everybody has seen their role, the phone is the host's again, and the question comes. */
+  startQuestion(hostId) {
+    this.needCar();
+    this.needHost(hostId);
+    this.needPhase(PHASE.ROLE);
+    const cur = this.current;
+    if (cur.participants.some((id) => this.players.has(id) && !cur.seen.includes(id))) throw new GameError('not_all', 'Alle må se rollen sin først.');
+    this.phase = PHASE.QUESTION;
+    cur.discussionEndsAt = this.clock() + this.timings.discussionMs;
+    this.touch();
+  }
+
   /** Advances time-driven phases. Returns true when something changed. */
   tick(now = this.clock()) {
     let changed = false;
     const cur = this.current;
 
-    if (this.phase === PHASE.ROLE && now >= cur.roleEndsAt) {
+    if (this.phase === PHASE.ROLE && cur.roleEndsAt != null && now >= cur.roleEndsAt) { // (in the car the phone goes round by hand: no timer)
       this.phase = PHASE.QUESTION;
       cur.discussionEndsAt = now + this.timings.discussionMs;
       changed = true;
@@ -445,9 +516,12 @@ export class Room {
       changed = true;
     }
 
-    // Host went away for good: hand the controls to someone who is still here.
+    // Host went away for good: hand the controls to someone who is still here. (Not in the car: the others are on the host's phone,
+    // and have nothing to take over with.)
     const host = this.players.get(this.hostId);
-    if (!host || !host.connected) {
+    if (this.mode === MODE.CAR) {
+      this.hostAwaySince = null;
+    } else if (!host || !host.connected) {
       this.hostAwaySince ??= now;
       const grace = this.phase === PHASE.LOBBY ? this.timings.hostGraceLobbyMs : this.timings.hostGraceMs;
       if (now - this.hostAwaySince >= grace) {
@@ -476,28 +550,40 @@ export class Room {
   // ---------------------------------------------------------------- internals
 
   beginRound() {
-    const pool = this.connectedReadyPlayers();
+    const car = this.mode === MODE.CAR;
+    // (in the car everybody is on the host's phone, so everybody is here)
+    const pool = car ? this.readyPlayers() : this.connectedReadyPlayers();
     const now = this.clock();
-    const first = pool[this.rand.int(pool.length)];
-    const asker = pool[this.rand.int(pool.length)]; // may be an impostor too
-    const impostors = [first];
-    while (impostors.length < impostorCount(pool.length)) {
+    let impostors;
+    if (pool.length === 2) {
+      // Only two: an impostor in every round would tell the other one who it is. So a round is one of three, each as likely as the
+      // others: the first is the impostor, the second is, or nobody is.
+      const outcome = this.rand.int(3);
+      impostors = outcome === 0 ? [] : [pool[outcome - 1]];
+    } else {
+      impostors = [pool[this.rand.int(pool.length)]];
+    }
+    // (in the car the host always asks: the question is on the one phone, and that is the host's)
+    const asker = car ? this.players.get(this.hostId) : pool[this.rand.int(pool.length)]; // may be an impostor too
+    while (impostors.length > 0 && impostors.length < impostorCount(pool.length)) {
       const rest = pool.filter((p) => !impostors.includes(p));
       impostors.push(rest[this.rand.int(rest.length)]);
     }
+    const first = impostors[0] ?? null;
     const info = (p) => ({ id: p.id, name: p.name, avatar: p.avatar });
     this.current = {
       number: ++this.round,
-      impostorIds: impostors.map((p) => p.id),
+      impostorIds: impostors.map((p) => p.id), // (empty in a round of two that has no impostor)
       impostors: impostors.map(info), // (these survive an impostor being removed later: the summary names them)
       // The first impostor also under the old names: a phone that has not reloaded since an update, and a game saved by
       // this version and read by an older one, only know one impostor.
-      impostorId: first.id,
-      impostor: info(first),
+      impostorId: first ? first.id : null,
+      impostor: first ? info(first) : null,
       askerId: asker.id,
       participants: pool.map((p) => p.id), // only players who were in this round can score from it
       question: this.nextQuestion(),
-      roleEndsAt: now + this.timings.roleMs,
+      roleEndsAt: car ? null : now + this.timings.roleMs,
+      ...(car ? { seen: [] } : {}), // (who has seen their role: the phone goes round, and the host goes on when all have)
       discussionEndsAt: null,
       selected: null,
       locked: null,
@@ -593,6 +679,11 @@ export class Room {
   }
 
   ensureEnoughConnected() {
+    if (this.mode === MODE.CAR) {
+      // (everybody is on the host's phone)
+      if (this.readyPlayers().length < LIMITS.minPlayers) throw new GameError('need_players', `Dere må være minst ${LIMITS.minPlayers} spillere.`);
+      return;
+    }
     const missing = this.readyPlayers().filter((p) => !p.connected);
     if (this.connectedReadyPlayers().length < LIMITS.minPlayers) {
       throw new GameError(
@@ -606,6 +697,10 @@ export class Room {
     const p = this.players.get(id);
     if (!p) throw new GameError('bad_token', 'Vi fant deg ikke i dette spillet.');
     return p;
+  }
+
+  needCar() {
+    if (this.mode !== MODE.CAR) throw new GameError('bad_mode', 'Det finnes bare i bilturmodus.');
   }
 
   needHost(id) {
@@ -635,9 +730,11 @@ export class Room {
     const cur = this.current;
     const inRound = cur && IN_ROUND.includes(this.phase);
     const ready = this.readyPlayers();
+    const car = this.mode === MODE.CAR;
 
     const view = {
       code: this.code,
+      mode: this.mode,
       phase: this.phase,
       round: this.round,
       target: this.target,
@@ -650,7 +747,7 @@ export class Room {
         name: p.name,
         avatar: p.avatar,
         score: p.score,
-        connected: p.connected,
+        connected: car || p.connected, // (in the car everybody is on the host's phone, which is here when anybody looks)
         isHost: p.id === this.hostId,
       })),
       pending: [...this.players.values()].filter((p) => !isReady(p) && p.connected).length,
@@ -674,10 +771,26 @@ export class Room {
         // with two impostors, each learns who the other is (and nobody else is told)
         if (cur.impostors.length > 1) view.you.mates = cur.impostors.filter((m) => m.id !== playerId).map((m) => ({ ...m }));
       }
-      // (how many impostors there are is no secret: it follows from how many are playing)
-      view.turn = { number: cur.number, askerId: cur.askerId, impostors: cur.impostorIds.length };
+      // (how many impostors there are is no secret: it follows from how many are playing. A round of two that has none says one,
+      // or the phones would tell the two of them that nobody is.)
+      view.turn = { number: cur.number, askerId: cur.askerId, impostors: Math.max(1, cur.impostorIds.length) };
 
-      if (this.phase === PHASE.ROLE) view.roleEndsAt = cur.roleEndsAt;
+      if (this.phase === PHASE.ROLE && !car) view.roleEndsAt = cur.roleEndsAt;
+      if (car && playerId === this.hostId) {
+        // The phone is the table's: it knows every player's role, and shows one only while that player holds the button.
+        view.table = cur.participants.flatMap((id) => {
+          const p = this.players.get(id);
+          if (!p) return [];
+          const impostor = cur.impostorIds.includes(id);
+          const row = { id, name: p.name, avatar: p.avatar, role: impostor ? 'impostor' : 'loyal' };
+          if (impostor) {
+            row.secret = { index: q.correct, letter: LETTERS[q.correct], text: q.options[q.correct] };
+            if (cur.impostors.length > 1) row.mates = cur.impostors.filter((m) => m.id !== id).map((m) => ({ ...m }));
+          }
+          return [row];
+        });
+        if (this.phase === PHASE.ROLE) view.seen = [...cur.seen];
+      }
       if (this.phase === PHASE.QUESTION) {
         view.discussion = { endsAt: cur.discussionEndsAt };
         if (isAsker) {
@@ -717,6 +830,7 @@ export class Room {
         impostor: cur.impostor,
         impostorIds: cur.impostorIds,
         impostors: cur.impostors,
+        noImpostor: cur.impostorIds.length === 0, // (a round of two can have none)
         askerId: cur.askerId,
         // the answer key, for "Se fasit" when the group disagrees about what was said (the round is over, so it is no secret now)
         ...(cur.locked && !cur.skipped

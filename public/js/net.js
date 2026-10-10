@@ -5,6 +5,7 @@
 //   - server mode:      a WebSocket to the Node server                        (config.mode === 'server')
 //   - p2p, as a guest:  a WebRTC data channel to the host's phone             (config.mode === 'p2p')
 //   - p2p, as the host: an in-page loopback to the engine running in this page
+//   - bilturmodus (everybody on ONE phone), in p2p mode: the same loopback, with an engine that needs no network at all
 
 import { goHome } from './paths.js';
 import { loadHostSnapshot } from './p2p/snapshot.js';
@@ -170,8 +171,10 @@ async function connectP2P() {
     if (host?.code === code || snapshot) {
       // this page hosts the game (it was reloaded, or the browser threw the tab away): bring the room back
       if (!host) {
-        const { startHost } = await import('./p2p/host.js');
-        const started = await startHost({ restore: snapshot });
+        const started =
+          snapshot?.room?.mode === 'car'
+            ? (await import('./p2p/local.js')).startLocalHost({ restore: snapshot }) // (a game on one phone: no network to set up)
+            : await (await import('./p2p/host.js')).startHost({ restore: snapshot });
         if (gen !== generation) return started.stop();
         host = started;
       }
@@ -185,25 +188,32 @@ async function connectP2P() {
   }
 }
 
-async function createP2PRoom() {
+async function createP2PRoom(mode) {
   teardown();
   const gen = ++generation;
   linkState = 'connecting';
   setStore({ creating: true, conn: 'connecting' });
   try {
-    const { startHost } = await import('./p2p/host.js');
-    const started = await startHost();
+    let started;
+    if (mode === 'car') {
+      started = (await import('./p2p/local.js')).startLocalHost(); // everybody on this phone: nothing to reserve, nothing to connect to
+    } else {
+      const { startHost } = await import('./p2p/host.js');
+      started = await startHost();
+    }
     if (gen !== generation) return started.stop();
     host = started;
-    link = host.openLink(handlersFor(gen), { create: true }); // creates the room and answers with `welcome`
+    link = host.openLink(handlersFor(gen), { create: true, mode }); // creates the room and answers with `welcome`
   } catch (err) {
     if (gen !== generation) return;
     linkState = 'idle';
-    setStore({ creating: false, conn: 'open' });
+    setStore({ creating: false, conn: 'open', modeStep: true }); // (back to where the way to play is chosen: another try is two taps)
     toast(
-      err?.kind === 'busy'
-        ? 'Fant ingen ledig spillkode akkurat nå. Prøv igjen.'
-        : 'Får ikke kontakt med tjenesten som kobler telefonene sammen. Sjekk nettet og prøv igjen.',
+      mode === 'car'
+        ? 'Kunne ikke starte spillet. Prøv igjen.' // (a game on one phone asks the network for nothing but the page's own files)
+        : err?.kind === 'busy'
+          ? 'Fant ingen ledig spillkode akkurat nå. Prøv igjen.'
+          : 'Får ikke kontakt med tjenesten som kobler telefonene sammen. Sjekk nettet og prøv igjen.',
     );
   }
 }
@@ -331,6 +341,7 @@ function onError(msg) {
       break;
     case 'full':
     case 'busy':
+    case 'single_phone': // (a game that is played on one phone has no seat for anybody else)
       forget(msg.message);
       break;
     case 'started':
@@ -339,6 +350,7 @@ function onError(msg) {
     case 'no_session':
       break;
     default:
+      if (!isP2P && store.creating && !store.view) setStore({ creating: false, modeStep: true }); // a game that could not be made: back to where the way to play is chosen
       toast(msg.message || 'Noe gikk galt.');
   }
 }
@@ -346,9 +358,14 @@ function onError(msg) {
 // ------------------------------------------------------------------ actions used by the screens
 
 export const actions = {
-  create: () => {
-    if (isP2P) return void createP2PRoom();
-    return send({ t: 'create' });
+  /** `mode` is the way to play: 'car' (everybody on one phone) or 'cabin' (a phone each, as it always was). */
+  create: (mode = 'cabin') => {
+    if (isP2P) {
+      setStore({ modeStep: false, step: null }); // (a new game starts at its first step)
+      return void createP2PRoom(mode);
+    }
+    setStore({ modeStep: false, step: null, creating: true }); // (so that the start screen does not show for a moment while the server answers)
+    return send({ t: 'create', mode });
   },
   join: (code) => {
     setStore({ joining: code, stuck: 0 });
@@ -360,7 +377,10 @@ export const actions = {
     }
   },
   claim: (code, playerId) => send({ t: 'claim', code, playerId }),
-  profile: (name, avatar) => send({ t: 'profile', name, avatar }),
+  profile: (name, avatar, id) => send({ t: 'profile', name, avatar, ...(id ? { id } : {}) }), // (`id`: in the car, a player on the host's phone)
+  addPlayer: (name, avatar) => send({ t: 'player.add', name, avatar }),
+  seen: (id) => send({ t: 'seen', id }), // the car: a player has seen their role
+  begin: () => send({ t: 'begin' }), // the car: everybody has, on to the question
   target: (value) => send({ t: 'target', value }),
   start: () => send({ t: 'start' }),
   select: (index) => send({ t: 'select', index }),

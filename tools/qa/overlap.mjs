@@ -16,12 +16,13 @@
 //   node tools/qa/overlap.mjs                 the whole plan (a minute or two)
 //   node tools/qa/overlap.mjs 390x664 …       the same plan, on just these screen sizes
 //   node tools/qa/overlap.mjs --font=150      just the friendly and the worst-case data, with the text 150% larger
+//   ONLY=car node tools/qa/overlap.mjs        just the screens whose name has "car" in it
 //   node tools/qa/overlap.mjs --self-test     breaks the layout on purpose, four ways, and checks that the rules notice
 //   exits non-zero when a screen breaks a rule
 import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { createApp } from '../../server/index.js';
-import { buildFixtures } from './fixtures.mjs';
+import { STEP_OF, buildFixtures } from './fixtures.mjs';
 import { PAY_BASE, SHOP_INFO, payScreens } from './payfixtures.mjs';
 import { underTheFinger } from './underfinger.mjs';
 
@@ -52,7 +53,7 @@ page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
 /** Put the app in a state: everything not mentioned goes back to "nothing special". */
-const BASE = { view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' }, ...PAY_BASE };
+const BASE = { view: null, session: null, seats: null, joining: null, modeStep: false, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' }, ...PAY_BASE };
 const put = (patch) =>
   page.evaluate(
     (base, patch) => {
@@ -73,13 +74,54 @@ function screensFor(fixtures) {
   const list = [
     ['home', () => put({})],
     ['home-notice', () => put({ notice: 'Spillet er avsluttet.' })],
-    ...Object.entries(fixtures).map(([key, view]) => [key, () => put({ view, editing: key === 'profile-edit', step: key === 'setup-points' ? 2 : null })]),
+    ...Object.entries(fixtures).map(([key, view]) => [key, () => put({ view, editing: key === 'profile-edit', step: STEP_OF[key] ?? null })]),
     // the screens with a hold-to-see button, with every such button held: the role card, and the role strip turned cream
     ...Object.entries(fixtures)
-      .filter(([key]) => /^(role|question|discussion|reveal)/.test(key))
-      .map(([key, view]) => [`${key}-held`, () => put({ view, qaHold: true })]),
+      .filter(([key]) => /^(role|question|discussion|reveal|car-roles|car-question|car-reveal)/.test(key))
+      .map(([key, view]) => [`${key}-held`, () => put({ view, qaHold: true, step: STEP_OF[key] ?? null })]),
     // payments: the start screen for customers, the packages, and the sheets and banners that belong to them
     ...payScreens(fixtures).map(([key, patch]) => [key, () => put(patch)]),
+    // the way to play is chosen before any game exists; and bilturmodus: the sheets, and the form for a player
+    ['mode-step', () => put({ modeStep: true })],
+    [
+      'mode-step-chosen',
+      async () => {
+        await put({ modeStep: true });
+        await page.evaluate(() => document.querySelector('.mode').click());
+      },
+    ],
+    [
+      'car-player-form',
+      async () => {
+        await put({ view: fixtures['car-players-3'], step: 1 });
+        await sleep(300);
+        await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Legg til spiller')).click());
+      },
+    ],
+    [
+      'car-player-form-edit',
+      async () => {
+        await put({ view: fixtures['car-players-10'], step: 1 });
+        await sleep(300);
+        await page.evaluate(() => document.querySelectorAll('.roster__main')[2].click());
+      },
+    ],
+    ['sheet-roles', () => put({ view: fixtures['car-question'], sheet: 'roles' })],
+    [
+      'sheet-roles-held',
+      async () => {
+        await put({ view: fixtures['car-question-10'], sheet: 'roles' });
+        await sleep(300);
+        await page.evaluate(() => document.querySelectorAll('.sheet .roster__main')[1].click());
+        await sleep(200);
+        await put({ view: fixtures['car-question-10'], sheet: 'roles', qaHold: true });
+      },
+    ],
+    ['sheet-scores-car', () => put({ view: fixtures['car-summary'], sheet: 'scores' })],
+    ['sheet-host-car', () => put({ view: fixtures['car-summary'], sheet: 'host' })],
+    ['sheet-fasit-none', () => put({ view: fixtures['car-summary-none-right'], sheet: 'fasit' })],
+    ['sheet-rules-car', () => put({ view: fixtures['car-how'], sheet: 'rules' })],
+    ['sheet-home-car', () => put({ view: fixtures['car-how'], sheet: 'home' })],
     ['connecting-join', () => put({ joining: 'ABCD', conn: 'closed', stuck: 2, route: { page: 'join', code: 'ABCD' } })],
     ['connecting-create', () => put({ creating: true })],
     ['seat-picker', () => put({ seats: { code: 'KRAP', seats: seatsOf(fixtures['lobby-host-3']) } })],
@@ -268,6 +310,7 @@ for (const plan of PLAN) {
     await page.evaluate((info) => window.__disputt.setShop(info), SHOP_INFO); // (the packages of a Shopify shop have nobody to ask where the shop is; and the browser reloads the page when the viewport first becomes a phone's, which forgets it)
     const problems = [];
     for (const [key, setup] of screens) {
+      if (process.env.ONLY && !key.includes(process.env.ONLY)) continue;
       await setup();
       await sleep(/^(role|finished)/.test(key) ? 1300 : 850); // entrance animations
       screensChecked++;

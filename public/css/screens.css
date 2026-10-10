@@ -56,8 +56,8 @@
 .accesscode { gap: var(--s-2); }
 .accesscode .eyebrow { margin: 0; color: var(--ink); opacity: 0.78; } /* (on the paper card: the usual cream would not show) */
 
-/* ---- The host's set-up: three steps -------------------------------------------------
-   1 who you are, 2 how long to play, 3 the invitation. A bar of three segments and "Steg 2 av 3" tell where you are. */
+/* ---- The host's set-up: four steps -------------------------------------------------
+   1 how to play, 2 who you are, 3 how long to play, 4 the invitation. A bar of four segments and "Steg 2 av 4" tell where you are. */
 .setup { gap: var(--s-3); }
 .steps { display: grid; gap: 0.1rem; }
 .steps__bar { display: flex; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
@@ -68,14 +68,14 @@
 .steps__row .eyebrow { margin: 0 0 0 auto; }
 .setup__title { font-size: clamp(1.9rem, 8.6vw, 2.3rem); line-height: 1.05; }
 
-/* step 2: the number, big, on a paper card */
+/* step 3: the number, big, on a paper card */
 .setup__points { align-items: stretch; gap: var(--s-1); padding: var(--s-5) var(--s-4); }
 .setup__points .stepper .input { font-size: 4.2rem; line-height: 1; padding: 0.05em 0 0.1em; background: none; box-shadow: none; color: var(--ink); }
 .setup__points .stepper .input:focus { box-shadow: 0 0 0 4px var(--yellow); }
 .setup__unit { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; }
 .setup__time { margin: var(--s-2) 0 0; font-weight: 700; }
 
-/* step 3: the QR code beside the code, and how to join under them */
+/* step 4: the QR code beside the code, and how to join under them */
 .invite { display: grid; grid-template-columns: auto 1fr; gap: var(--s-3) var(--s-4); align-items: center; padding: var(--s-4); }
 .invite__qr { display: grid; justify-items: center; gap: 0.3rem; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .invite__qr .qr { width: 8.5rem; margin: 0; }
@@ -316,6 +316,176 @@
 .rules h3 { margin-bottom: 0.15rem; }
 .rules p { font-size: var(--fs-small); line-height: 1.4; }
 
+/* ---- Step 1 of the set-up: how to play ------------------------------------------------------------------
+   Two radio cards, made like the packages (.plan): a cream card, and the chosen one in yellow with a tick. Each says how many can play (the
+   chip), what it is, and has its picture beside the text (the car, and the cabin). */
+.modes { display: flex; flex-direction: column; gap: var(--s-4); }
+.mode {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'chip check' 'title title' 'text art';
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  width: 100%;
+  padding: var(--s-4);
+  border: 0;
+  border-radius: var(--r-card);
+  text-align: left;
+  color: var(--ink);
+  background: var(--tex-grain), var(--cream);
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-2) var(--ease-bounce), box-shadow var(--dur-1), background-color var(--dur-2);
+}
+.mode:nth-child(2) { border-radius: 30px 24px 32px 26px / 24px 30px 26px 32px; }
+.mode__chip {
+  grid-area: chip;
+  justify-self: start;
+  padding: 0.12rem 0.75rem 0.18rem;
+  border-radius: var(--r-pill);
+  font-weight: 800;
+  font-size: 0.84rem;
+  line-height: 1.3;
+  color: var(--cream);
+  background: var(--burgundy-600);
+  box-shadow: 0 2px 0 var(--edge);
+}
+.mode__check { grid-area: check; width: 1.7rem; height: 1.7rem; border-radius: 50%; box-shadow: inset 0 0 0 3px rgb(var(--ink-rgb) / 0.3); }
+.mode__title { grid-area: title; font-size: 1.75rem; line-height: 1.08; overflow-wrap: anywhere; }
+.mode__text { grid-area: text; font-weight: 600; font-size: 0.98rem; line-height: 1.35; }
+.mode__art {
+  grid-area: art;
+  align-self: center;
+  display: block;
+  width: 6.4rem;
+  border-radius: 18px 22px 20px 24px / 22px 18px 24px 20px;
+  background: var(--tex-grain), var(--tex-light), var(--panel);
+  overflow: hidden;
+  box-shadow: 0 2px 0 var(--edge);
+}
+.mode__art img { display: block; width: 100%; height: auto; }
+.mode__art--bil { --panel: var(--blue-light); }
+.mode__art--hytte { --panel: var(--pink-pale); }
+.mode--chosen {
+  background: var(--tex-grain), var(--tex-light), var(--yellow);
+  transform: translateY(3px) rotate(-0.4deg);
+  box-shadow: 0 3px 0 var(--yellow-deep), 0 3px 0 1px var(--edge);
+}
+.mode--chosen .mode__check {
+  box-shadow: none;
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fae025' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.6 4.6L19 7'/%3E%3C/svg%3E") center / 80% no-repeat;
+}
+.mode:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+/* what is the same in both ways to play */
+.pillars-note { display: grid; gap: 0.45rem; padding: var(--s-3) var(--s-4); border-radius: var(--r-card); background: rgb(var(--cream-rgb) / 0.1); box-shadow: inset 0 0 0 2px rgb(var(--cream-rgb) / 0.16); }
+.pillars-note p { margin: 0; display: flex; gap: 0.6rem; align-items: baseline; font-size: 0.95rem; line-height: 1.3; font-weight: 600; }
+.pillars-note b { flex: none; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--yellow); transform: translateY(-0.05rem); }
+
+/* ---- Bilturmodus: everybody on ONE phone -------------------------------------------------------------------
+   Step 2: everybody who plays is put in here, one row each. */
+.roster { display: flex; flex-direction: column; gap: var(--s-3); margin: 0; padding: 0; list-style: none; }
+.roster__item { display: flex; align-items: stretch; gap: var(--s-2); }
+.roster__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 3.7rem;
+  padding: 0.4rem 1rem 0.4rem 0.6rem;
+  border: 0;
+  border-radius: var(--r-card);
+  text-align: left;
+  color: var(--ink);
+  background: var(--tex-grain), var(--cream);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.roster__main:active { transform: translateY(2px); box-shadow: none; }
+.roster__name { flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 900; font-size: 1.35rem; line-height: 1.1; overflow-wrap: anywhere; }
+.roster__host { display: inline-block; margin-left: 0.4rem; padding: 0.05rem 0.55rem 0.1rem; border-radius: var(--r-pill); font-family: var(--font-text); font-weight: 800; font-size: 0.74rem; color: var(--cream); background: var(--burgundy-600); vertical-align: 0.15em; }
+.roster__edit { flex: none; font-size: 0.85rem; font-weight: 700; opacity: 0.7; }
+.roster__remove {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 3.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-card);
+  color: var(--cream);
+  background: var(--burgundy-900);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+}
+.roster__remove svg { width: 1.1rem; height: 1.1rem; }
+.roster__remove--armed { padding: 0 0.9rem; font-size: 0.88rem; font-weight: 700; background: var(--red); }
+.roster__add {
+  flex: 1;
+  min-height: 3.4rem;
+  padding: 0.4rem 1rem;
+  border: 3px dashed rgb(var(--cream-rgb) / 0.5);
+  border-radius: var(--r-card);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--cream);
+  background: transparent;
+  cursor: pointer;
+}
+.roster__add:active { background: rgb(var(--cream-rgb) / 0.12); }
+.players-step { gap: var(--s-3); }
+/* with two players: a round may have no impostor, and the players are told before they start */
+.note { display: grid; gap: 0.3rem; padding: var(--s-3) var(--s-4); border-radius: var(--r-card); }
+.note strong { font-family: var(--font-display); font-weight: 900; font-size: 1.05rem; }
+.note p { margin: 0; font-size: 0.92rem; line-height: 1.35; font-weight: 600; }
+
+/* The phone goes round: one name after the other. The one whose turn it is has the same strip as in the game (the button on the
+   right, and the role on the left while it is held). */
+.rolelist { gap: var(--s-4); }
+.rolelist__head { display: grid; gap: var(--s-2); padding-top: var(--s-3); }
+.rolelist__list { display: flex; flex-direction: column; gap: var(--s-3); margin: 0; padding: 0; list-style: none; }
+.rolerow {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 4.1rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.55rem;
+  border-radius: var(--r-card);
+}
+.rolerow__n { font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; text-align: center; opacity: 0.85; }
+.rolerow__name { font-family: var(--font-display); font-weight: 900; font-size: 1.45rem; line-height: 1.05; overflow-wrap: anywhere; }
+.rolerow__name small { display: block; margin-top: 0.1rem; font-family: var(--font-text); font-weight: 700; font-size: 0.78rem; opacity: 0.8; }
+.rolerow__state { font-weight: 800; font-size: 0.92rem; text-align: right; }
+.rolerow--wait { color: var(--fg-muted); background: rgb(var(--cream-rgb) / 0.07); box-shadow: inset 0 0 0 2px rgb(var(--cream-rgb) / 0.2); }
+.rolerow--wait .avatar { filter: grayscale(0.75) brightness(0.75); opacity: 0.7; box-shadow: none; }
+.rolerow--done { color: var(--cream); background: rgb(126 186 45 / 0.2); box-shadow: inset 0 0 0 2px rgb(196 215 74 / 0.5); }
+.rolerow--done .rolerow__state { color: var(--lime-light); }
+.rolerow--strip {
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  row-gap: var(--s-3);
+  padding: 0.55rem 0.55rem 0.6rem;
+  color: var(--cream);
+  background: rgb(var(--cream-rgb) / 0.06);
+  box-shadow: inset 0 0 0 3px var(--yellow);
+}
+.rolerow--strip .rolerow__n { color: var(--yellow); opacity: 1; }
+.rolerow--strip .role-strip { grid-column: 1 / -1; }
+.rolelist__list--plain .rolerow--strip { grid-template-columns: auto minmax(0, 1fr); }
+/* in a sheet: as tall as the list gets with the strip open (the other names, and one row with the strip held open), see RolesSheet */
+.rolelist__list--plain { min-height: calc((var(--rows, 1) - 1) * 4.45rem + 12.5rem); }
+.handover { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
+.handover p { margin: 0; font-weight: 700; line-height: 1.25; }
+.handover strong { font-family: var(--font-display); font-weight: 900; font-size: 1.25rem; }
+.dock__count { margin: 0; text-align: center; }
+
 /* ---- Wider screens: keep the phone-shaped column, add a little air ---------------------------- */
 @media (min-width: 640px) {
   #app { box-shadow: 0 0 0 3px rgb(var(--cream-rgb) / 0.08), 0 0 80px rgb(var(--shadow-rgb) / 0.35); }
@@ -331,6 +501,21 @@
   .question .option { min-height: 3.25rem; }
   .question .option__letter { width: 2.35rem; height: 2.35rem; font-size: 1.4rem; }
   .timer-block { padding-block: var(--s-1); } /* (the held role strip of an impostor with a partner is the tallest thing on the discussion screen) */
+  /* bilturmodus: the way to play, and the phone going round, are a few rows and a button: they should not need much scrolling */
+  .modes { gap: var(--s-3); }
+  .mode { padding: 0.65rem var(--s-4) 0.75rem; row-gap: 0.2rem; }
+  .mode__chip { font-size: 0.78rem; }
+  .mode__title { font-size: 1.5rem; }
+  .mode__text { font-size: 0.92rem; line-height: 1.3; }
+  .mode__art { width: 4.8rem; }
+  .pillars-note { padding: var(--s-2) var(--s-4); gap: 0.3rem; }
+  .pillars-note p { font-size: 0.9rem; }
+  .rolelist { gap: var(--s-3); }
+  .rolelist__head { padding-top: 0; gap: var(--s-1); }
+  .rolelist__head .lead { font-size: 1rem; line-height: 1.3; }
+  .rolerow { min-height: 3.4rem; padding-block: 0.3rem; }
+  .rolerow--strip { row-gap: var(--s-2); }
+  .handover { padding-block: var(--s-2); }
 }
 @media (max-height: 660px) {
   .discussion .avatar--lg { --size: 4.75rem; }

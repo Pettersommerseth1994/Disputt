@@ -37,11 +37,13 @@ try {
   const host = await newPage();
   await host.goto(`${base}/`);
   await clickButton(host, 'Opprett spill');
-  await host.waitForSelector('#name', { timeout: 20000 }); // the first of the host's three steps
+  await clickButton(host, 'Hytteturmodus'); // (the way to play: the first of the host's four steps)
+  await clickButton(host, 'Neste');
+  await host.waitForSelector('#name', { timeout: 20000 }); // the second
   await host.type('#name', 'Petter');
   await host.evaluate(() => document.querySelectorAll('.picker__item:not([disabled])')[0].click());
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 2 av 3/);
+  await waitText(host, /Steg 3 av 4/);
   await clickButton(host, 'Neste');
   await host.waitForSelector('.lobby__code', { timeout: 20000 });
   const code = await host.$eval('.lobby__code', (el) => el.textContent.trim());

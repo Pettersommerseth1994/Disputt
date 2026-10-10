@@ -12,15 +12,18 @@ const close = () => setStore({ sheet: null });
 
 export function HomeSheet({ view }) {
   const isHost = view.you.isHost;
-  const endsForAll = isHost && isP2P;
-  const text = endsForAll
-    ? 'Du er verten, så spillet avsluttes for alle som er med.'
-    : isHost
-      ? 'Du forlater spillet, og en annen spiller blir vert.'
-      : 'Du forlater spillet. Du kan bli med igjen med koden så lenge spillet ikke har startet.';
+  const car = view.mode === 'car'; // everybody is on this phone: leaving ends the game (there is nobody to hand it to)
+  const endsForAll = isHost && (isP2P || car);
+  const text = car
+    ? 'Spillet avsluttes, og stillingen går tapt.'
+    : endsForAll
+      ? 'Du er verten, så spillet avsluttes for alle som er med.'
+      : isHost
+        ? 'Du forlater spillet, og en annen spiller blir vert.'
+        : 'Du forlater spillet. Du kan bli med igjen med koden så lenge spillet ikke har startet.';
   const leave = () => {
     close();
-    if (endsForAll) forget(); // stops the page that runs the game, which tells everybody that it is over
+    if (endsForAll && isP2P) forget(); // stops the page that runs the game, which tells everybody that it is over
     else actions.leave();
   };
   return html`<${Sheet} title="Tilbake til hjemskjermen?" onClose=${close}>

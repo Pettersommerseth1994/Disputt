@@ -6,7 +6,7 @@
 import puppeteer from 'puppeteer-core';
 import { createApp } from '../../server/index.js';
 import { QUESTIONS } from '../../shared/questions.js';
-import { buildFixtures } from './fixtures.mjs';
+import { STEP_OF, buildFixtures } from './fixtures.mjs';
 import { PAY_BASE, SHOP_INFO, payScreens } from './payfixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -24,11 +24,15 @@ const MUST_FIT = [
   // the reveal with the role strip held open (the strip is three lines tall for an impostor in a round with two)
   'reveal-wait-held', 'reveal-asker-held', 'reveal-duo-wait-held', 'reveal-duo-asker-held',
   // the packages the host meets after the free rounds: the three cards, what the chosen one means, and the buttons to pay with
-  'pay-gate', 'pay-gate-applepay-only', 'pay-gate-shop'];
+  'pay-gate', 'pay-gate-applepay-only', 'pay-gate-shop',
+  // bilturmodus: the countdown and the reveal are the same screens as in the normal game, with the strip that asks "Glemt rollen din?"
+  'car-countdown', 'car-reveal', 'car-reveal-held'];
 // ... and these should at least keep their main action and the text above it in view
 const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3',
   // the host's second step: the number, what it comes to, and Neste
-  'setup-points'];
+  'setup-points',
+  // bilturmodus: the way to play, the list of players, how it works, and the phone going round
+  'mode-step', 'car-players-3', 'car-how', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-question', 'car-question-selected', 'car-summary', 'car-summary-none-right'];
 
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
@@ -39,7 +43,7 @@ await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'network
 
 async function show(view, qaHold = false, step = null) {
   // (unmounted first: a screen keeps its own state, such as the answer that is selected, from the screen shown before it)
-  await page.evaluate(() => window.__disputt.setStore({ view: null }));
+  await page.evaluate(() => window.__disputt.setStore({ view: null, modeStep: false }));
   await page.evaluate((view, qaHold, step, payBase) => {
     window.__realNow ??= Date.now.bind(Date);
     const delta = view.now - window.__realNow();
@@ -53,11 +57,19 @@ async function show(view, qaHold = false, step = null) {
   }, view, qaHold, step, PAY_BASE);
 }
 
+/** The first step of the host's set-up: the way to play, before any game exists. */
+async function showMode() {
+  await page.evaluate(() => window.__disputt.setStore({ view: null }));
+  await page.evaluate((base) => {
+    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, modeStep: true, ...base });
+  }, PAY_BASE);
+}
+
 /** The start screen: no game and no seat, as a phone shows it the first time. */
 async function showHome() {
   await page.evaluate(() => window.__disputt.setStore({ view: null }));
   await page.evaluate((base) => {
-    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, ...base });
+    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, modeStep: false, ...base });
   }, PAY_BASE);
 }
 
@@ -146,8 +158,9 @@ for (const [w, h] of viewports) {
   for (const key of [...MUST_FIT, ...NICE_TO_FIT]) {
     const held = key.endsWith('-held');
     if (key === 'home') await showHome();
+    else if (key === 'mode-step') await showMode();
     else if (key.startsWith('pay-')) await showPay(pay[key]);
-    else await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held, key === 'setup-points' ? 2 : null);
+    else await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held, STEP_OF[held ? key.slice(0, -'-held'.length) : key] ?? null);
     await sleep(key.startsWith('role') ? 1300 : 900); // let the entrance animations settle
     const m = key.startsWith('pay-') ? await measurePay() : await measure();
     const must = MUST_FIT.includes(key);

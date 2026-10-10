@@ -33,7 +33,7 @@ export class Hub {
         case 'ping':
           return send(conn.ws, { t: 'pong', c: msg.c, s: this.clock() });
         case 'create':
-          return this.create(conn);
+          return this.create(conn, msg);
         case 'join':
           return this.join(conn, msg);
         case 'resume':
@@ -92,7 +92,8 @@ export class Hub {
     for (const [code, entry] of this.rooms) {
       const age = now - entry.room.lastActivity;
       const sparseLobby = entry.room.phase === PHASE.LOBBY && entry.room.readyPlayers().length < 2;
-      const abandonedFor = sparseLobby ? EMPTY_LOBBY_TTL_MS : ABANDONED_TTL_MS;
+      // (a game on one phone has nobody else to come back to it, and a phone that is locked for a long stop drops its connection: it keeps as long as any room does)
+      const abandonedFor = sparseLobby ? EMPTY_LOBBY_TTL_MS : entry.room.mode === 'car' ? ROOM_TTL_MS : ABANDONED_TTL_MS;
       if (age > ROOM_TTL_MS || (entry.room.empty && age > abandonedFor)) {
         for (const ws of entry.sockets.values()) {
           send(ws, { t: 'closed', reason: 'expired' });
@@ -105,17 +106,18 @@ export class Hub {
 
   // ---------------------------------------------------------------- identity
 
-  create(conn) {
-    this.openRoom(conn, null);
+  /** `msg.mode` is the way to play: 'car' (one phone), or anything else for the cabin (a phone each, as it always was). */
+  create(conn, msg = {}) {
+    this.openRoom(conn, null, msg.mode);
   }
 
   /** Like `create`, but the caller chooses the code (the peer-to-peer host reserves it with the signalling server first). */
-  createWithCode(conn, code) {
+  createWithCode(conn, code, mode) {
     if (!/^[A-Z]{4}$/.test(code) || this.rooms.has(code)) throw new GameError('busy', 'Den koden er opptatt.');
-    this.openRoom(conn, code);
+    this.openRoom(conn, code, mode);
   }
 
-  openRoom(conn, wantedCode) {
+  openRoom(conn, wantedCode, mode) {
     if ((conn.created ?? 0) >= MAX_ROOMS_PER_SOCKET) {
       throw new GameError('busy', 'Du har startet for mange spill på rad. Last inn siden på nytt.');
     }
@@ -123,7 +125,7 @@ export class Hub {
     this.leaveCurrent(conn);
     conn.created = (conn.created ?? 0) + 1;
     const code = wantedCode ?? makeRoomCode(this.rand, (c) => this.rooms.has(c));
-    const room = new Room({ code, rand: this.rand, now: this.clock, timings: this.timings, questions: this.questions });
+    const room = new Room({ code, rand: this.rand, now: this.clock, timings: this.timings, questions: this.questions, mode });
     const entry = { room, sockets: new Map() };
     this.rooms.set(code, entry);
     const player = room.addPlayer({ asHost: true });
@@ -230,7 +232,16 @@ export class Hub {
     const pid = conn.playerId;
     switch (msg.t) {
       case 'profile':
-        room.setProfile(pid, { name: msg.name, avatar: msg.avatar });
+        room.setProfile(pid, { name: msg.name, avatar: msg.avatar }, msg.id ?? pid); // (`id`: in the car the host sets the profile of a player on the host's phone)
+        break;
+      case 'player.add':
+        room.addLocalPlayer(pid, { name: msg.name, avatar: msg.avatar });
+        break;
+      case 'seen':
+        room.roleSeen(pid, msg.id);
+        break;
+      case 'begin':
+        room.startQuestion(pid);
         break;
       case 'target':
         room.setTarget(pid, msg.value);
@@ -288,6 +299,8 @@ export class Hub {
       }
     }
     this.broadcast(entry);
+    // a game on one phone whose phone has left it (the host, in the lobby) has nobody to go on with: it is not kept for hours
+    if (entry.room.mode === 'car' && entry.room.hostId === null) this.rooms.delete(entry.room.code);
   }
 
   broadcast(entry, { except } = {}) {

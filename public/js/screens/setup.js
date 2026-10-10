@@ -1,5 +1,6 @@
-// The host's set-up, one step at a time: 1 who you are, 2 how long to play, 3 the invitation (the lobby, where the game then
-// waits for its players). Guests only ever see the first.
+// The host's set-up, one step at a time: 1 how to play (a phone each, or everybody on one: screens/mode.js, before any game exists),
+// 2 who you are (in the car: who is playing), 3 how long to play, 4 the invitation (the lobby, where the game then waits for its
+// players; in the car: how it works). Guests only ever see "who you are".
 // (A file of its own: pages are cached for ten minutes, and a module that imports something an older cached copy of another
 // module does not have would not load.)
 
@@ -10,7 +11,8 @@ import { Button, HelpIcon, Logo } from '../ui.js';
 import { cx } from '../util.js';
 
 export const MINUTES_PER_POINT = 6;
-const STEPS = 3;
+const SEGMENTS = 4; // the bar at the top of every step
+const LAST = 3; // what `store.step` counts, after the way to play has been chosen: 1 who you are, 2 how long, 3 the invitation
 
 export function duration(minutes) {
   if (minutes < 90) return `ca. ${minutes} min`;
@@ -20,7 +22,7 @@ export function duration(minutes) {
 }
 
 /** Which step the host is on. Somebody who has not picked a profile is on the first; after a reload the game waits at the last. */
-export const hostStep = (view, step) => (!view.you.ready ? 1 : (step ?? STEPS));
+export const hostStep = (view, step) => (!view.you.ready ? 1 : (step ?? LAST));
 
 /** The logo (back to the start screen) and the rules, on top of every step. */
 export function SetupHeader() {
@@ -30,15 +32,15 @@ export function SetupHeader() {
   </header>`;
 }
 
-/** Three segments, then a way back (from the second step on) on the left and "Steg 2 av 3" on the right. */
+/** Four segments, then a way back on the left and "Steg 2 av 4" on the right. */
 export function Steps({ current, onBack }) {
   return html`<div class="steps">
     <ol class="steps__bar" aria-hidden="true">
-      ${Array.from({ length: STEPS }, (_, i) => html`<li key=${i} class=${cx('steps__seg', i + 1 <= current && 'steps__seg--done')}></li>`)}
+      ${Array.from({ length: SEGMENTS }, (_, i) => html`<li key=${i} class=${cx('steps__seg', i + 1 <= current && 'steps__seg--done')}></li>`)}
     </ol>
     <div class="steps__row">
       ${onBack && html`<${Button} variant="text" onClick=${onBack}>‹ Tilbake</${Button}>`}
-      <p class="eyebrow">Steg ${current} av ${STEPS}</p>
+      <p class="eyebrow">Steg ${current} av ${SEGMENTS}</p>
     </div>
   </div>`;
 }
@@ -91,7 +93,7 @@ function useTarget(view) {
   return { text, n, valid, emptied, onInput, onFocus: () => setText(''), onBlur, bump, flush };
 }
 
-/** Step 2: how many points the game is played to. */
+/** Step 3: how many points the game is played to. */
 export function PointsStep({ view }) {
   const t = useTarget(view);
   const goTo = (step) => () => {
@@ -100,7 +102,7 @@ export function PointsStep({ view }) {
   };
   return html`<main class="screen setup">
     <${SetupHeader} />
-    <${Steps} current=${2} onBack=${goTo(1)} />
+    <${Steps} current=${3} onBack=${goTo(1)} />
     <h1 class="setup__title rise-in">Hvor lenge skal dere spille?</h1>
     <section class="card card--paper card--tilt-r setup__points center stack">
       <label class="sr-only" for="target">Antall poeng å spille til</label>

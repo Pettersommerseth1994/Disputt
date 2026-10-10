@@ -8,6 +8,7 @@ import { Avatar, Button, CloseIcon, GearIcon, HelpIcon, Logo, QR, ShareLink, joi
 import { isP2P } from '../settings.js';
 import { cx, plural } from '../util.js';
 import { MINUTES_PER_POINT, SetupHeader, Steps, duration } from './setup.js';
+import { TwoPlayersNote } from './twonote.js';
 
 export function Lobby({ view }) {
   return view.you.isHost ? html`<${HostLobby} view=${view} />` : html`<${GuestLobby} view=${view} />`;
@@ -69,7 +70,7 @@ function HostLobby({ view }) {
 
   return html`<main class="screen lobby">
     <${SetupHeader} />
-    <${Steps} current=${3} onBack=${() => setStore({ step: 2 })} />
+    <${Steps} current=${4} onBack=${() => setStore({ step: 2 })} />
 
     <div class="stack">
       <header class="stack stack--tight">
@@ -101,6 +102,7 @@ function HostLobby({ view }) {
         html`<div class="row row--center">
           <${Button} variant="text" onClick=${() => setStore({ editing: true })}>Endre navn eller avatar</${Button}>
         </div>`}
+        ${view.players.length === 2 && html`<${TwoPlayersNote} />`}
         <${AwakeTip} denied=${s.wakeLockDenied} />
       </section>
 

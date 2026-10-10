@@ -2,17 +2,17 @@
 
 > **Diskuter, manipuler og vinn.**
 
-Disputt er et sosialt bløff- og diskusjonsspill for **3–10 spillere**. Alle spiller på sin egen telefon, samlet i samme rom. Én av dere er imposter (to hvis dere er seks eller flere) og vet svaret på spørsmålet. De andre må finne ut hva som er riktig, uten å bli lurt.
+Disputt er et sosialt bløff- og diskusjonsspill for **2–10 spillere**, og det kan spilles på to måter, med de samme reglene: **Hytteturmodus**, der alle spiller på sin egen telefon, samlet i samme rom, og **Bilturmodus**, der alle spiller på *én* telefon, vertens, som sendes rundt (f.eks. på en biltur). I begge er det alltid en eller flere imposterer, og gruppa må bli enige om riktig svar. Én av dere er imposter (to hvis dere er seks eller flere) og vet svaret på spørsmålet. De andre må finne ut hva som er riktig, uten å bli lurt.
 
-Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden, de andre skanner en QR-kode (eller får lenken sendt med «Del lenke»).
+Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden. I Hytteturmodus skanner de andre en QR-kode (eller får lenken sendt med «Del lenke»); i Bilturmodus trengs bare vertens telefon.
 
 **Spill nå: https://disputt.site/**
 
 ### Test med venner (fra hvilket som helst nett)
 
-1. **Verten** åpner lenken over, trykker *Opprett spill* og går gjennom tre steg: navn og avatar, hvor mange poeng man spiller til, og så invitasjonen. De andre trykker *Bli med i spill* og skriver koden (eller skanner QR-koden).
+1. **Verten** åpner lenken over, trykker *Opprett spill* og går gjennom fire steg: hvordan dere vil spille (*Bilturmodus* eller *Hytteturmodus*), navn og avatar (i Bilturmodus: alle navnene), hvor mange poeng man spiller til, og så invitasjonen (i Bilturmodus: «Klar? Slik funker det»). I Hytteturmodus trykker de andre *Bli med i spill* og skriver koden (eller skanner QR-koden).
 2. De andre **skanner QR-koden** på vertens skjerm, eller verten trykker *Del lenke* og sender den i en chat. Man kan også gå til siden og skrive den firebokstavers koden.
-3. Verten trykker *Start Disputt* når alle er med (minst tre).
+3. Verten trykker *Start Disputt* når alle er med (minst to). I Bilturmodus heter knappen *Start spillet*.
 
 Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)): **verten er serveren.** Vær vert fra en telefon på Wi-Fi (eller en laptop), og hold siden åpen med skjermen våken. Får en gjest ikke kontakt etter ca. 30 sekunder, står det et råd på skjermen: bytt mellom Wi-Fi og mobildata. Noen mobilnett og bedriftsnett slipper ikke telefoner i direkte kontakt (det finnes ingen TURN-server ennå, se veikartet).
 
@@ -27,6 +27,13 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 7. **Imposteren avslører seg.** Telefonene viser ingenting om fasit eller hvem imposteren er. Imposteren (eller imposterne, sammen) sier riktig svar høyt, og dere ser selv om dere hadde rett. Så trykker spilleren med spørsmålet «Det er sagt, vis poengene».
 8. **Riktig svar:** alle lojale får 1 poeng. **Feil svar:** bare imposteren får 1 poeng (er det to, får begge 1 poeng hver). Poengskjermen har en liten knapp, «Se fasit», for når dere er uenige om hva som ble sagt. Så en ny runde med nye roller, ny spiller og nytt spørsmål.
 9. Først til målet vinner. Poengtavlen kan åpnes når som helst. Verten har et tannhjul ved siden av «Poeng» med vertsvalg: justere poengmålet, hoppe over runden, fjerne frakoblede spillere og avslutte spillet.
+
+### To måter å spille på
+
+- **Hytteturmodus** (en telefon hver) er spillet slik det er beskrevet over.
+- **Bilturmodus** (alle på én telefon, vertens): verten legger inn alle navnene i steg 2, «Hvem spiller?». Den øverste er verten, og verten leser alltid spørsmålet. Hver runde begynner med at telefonen sendes rundt: en liste med navnene nedover, der bare den som står for tur har «Hold for å se» (den samme stripen som i Hytteturmodus, med knappen til høyre og rollen til venstre mens den holdes). Slipper man, er rollen borte og turen går videre («Gi telefonen til …»). Når alle har sett rollen sin, gir de telefonen tilbake til verten, som trykker «Vis spørsmålet». Resten er som i Hytteturmodus, på vertens telefon. Glemt rollen din? «Se rolle» i stripen øverst åpner «Se rolle igjen»: trykk på navnet ditt og hold inne knappen. Et spill på én telefon bruker ikke nettverket, så det kan spilles uten dekning (i Hytteturmodus er verten fortsatt «serveren»).
+- **Betaling og tid er de samme i begge:** to runder gratis, så pakkene, og ca. 6 minutter per poeng.
+- **Med to spillere** er en runde én av tre, like sannsynlige: den første er imposter, den andre er imposter, eller ingen er imposter (da får begge 1 poeng hvis dere svarer riktig, og ingen hvis dere svarer feil). Ellers ville den ene alltid visst hvem imposteren var. Rollen din sier ikke om den andre er imposter, og avsløringen ser lik ut i alle tre. Fra tre spillere er det alltid en imposter.
 
 ### Valg som er tatt (og kan endres)
 
@@ -100,6 +107,11 @@ npm run play           # UI-test: flere "telefoner" i ekte nettleser spiller et 
 npm run play -- 6 3    # …med 6 spillere, til 3 poeng
 npm run play:p2p -- 4 2  # det samme over WebRTC (peer-to-peer-bygget + lokal megler, uten internett)
 npm run play:live      # det samme mot den publiserte siden på GitHub Pages (ekte megler, ekte tidtakere, ca. 1,5 min)
+npm run play:car       # Bilturmodus (alle på én telefon): oppsettet, telefonen sendt rundt, «Se rolle igjen», poengene, spill igjen (node tools/qa/car.mjs [spillere] [poeng])
+npm run play:car:p2p   # det samme i peer-to-peer-bygget: ingen WebSocket og ingen WebRTC, og siden lastes på nytt midt i spillet
+npm run play:car:two   # Bilturmodus med to spillere: runder til første er imposter, andre er imposter og ingen er imposter alle har kommet opp
+npm run play:car:pay   # Bilturmodus med betaling: to runder gratis, så pakkene, hos en falsk Stripe, og tilbake til samme spill
+npm run play:two       # to spillere, en telefon hver: runder til alle tre utfall har kommet opp (og en runde uten imposter ser lik ut på begge telefoner til poengene)
 npm run qa:stuck       # en gjest som ikke får linje til verten får et råd på skjermen (ca. 40 s)
 npm run qa:signalling  # kontakten med meglertjenesten faller ut (også midt i et spill), verten våkner, plassvelgeren mister linjen: alt kommer seg
 npm run qa:hostile     # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn (ca. 30 s)

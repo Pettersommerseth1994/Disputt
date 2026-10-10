@@ -81,11 +81,28 @@ Spillet er til for at folk skal se på, snakke med og diskutere med hverandre, i
 - **Poengene** (`Summary`) er en poengtavle med +1 og én linje om hvordan runden gikk, uten kort som navngir imposteren. Under står en liten tekstknapp, «Uenige? Se fasit», som åpner et ark (`FasitSheet`, `public/js/screens/fasit.js`) med riktig svar, hva dere låste og hvem imposteren var, til når gruppa er uenig om det som ble sagt. Telefonen regner ut poengene selv, så en imposter som lyver høyt får det ikke til å stå på poengtavlen.
 - Telefonen kan ikke få en iPhone til å vibrere, så nedtellingen må stå på skjermen.
 
-## Vertens oppsett i tre steg
+## Vertens oppsett i fire steg
 
-Verten går gjennom tre steg, ett valg per skjerm: 1 «Hvem er du?» (`Profile` med `wizard`, knappen heter «Neste»), 2 «Hvor lenge skal dere spille?» (`PointsStep`) og 3 «Få med vennene dine» (`Lobby`, der spillet venter på spillerne). Komponentene ligger i `public/js/screens/setup.js`.
+Verten går gjennom fire steg, ett valg per skjerm: 1 «Hvordan vil dere spille?» (`ModeStep`, `public/js/screens/mode.js`: før noe spill finnes), 2 «Hvem er du?» (`Profile` med `wizard`, knappen heter «Neste»), 3 «Hvor lenge skal dere spille?» (`PointsStep`) og 4 «Få med vennene dine» (`Lobby`, der spillet venter på spillerne). Komponentene ligger i `public/js/screens/setup.js`.
 
-- `Steps` viser tre striper, «‹ Tilbake» til venstre (fra steg 2) og «Steg 2 av 3» til høyre. `store.step` husker hvor verten er (1–3). `hostStep` gir steg 1 til en vert uten profil og steg 3 etter en omlasting.
+- `Steps` viser fire striper, «‹ Tilbake» til venstre og «Steg 2 av 4» til høyre. `store.step` husker hvor verten er etter valget av spillemåte (1 profilen, 2 poeng, 3 invitasjonen; i Bilturmodus er 1 spillerlisten og 3 «Klar? Slik funker det»); stripen viser det tallet pluss én. `hostStep` gir steg 1 til en vert uten profil og siste steg etter en omlasting. «Tilbake» fra «Hvem er du?» gir opp spillet og går til valget av spillemåte, men bare mens verten er alene i det.
+- **Spillemåtekortene** (`.mode`) er de samme radiokortene som pakkene: krem, og det valgte gult med avkrysning. Merkelapp («2-10 deltakere») øverst til venstre, tittel, kort tekst, og bildet (en bil og en hytte, `assets/art/bil.svg` og `hytte.svg`, tegnet av `tools/art/art/modes.mjs`) ved siden av teksten. Under kortene står det som er likt i begge.
+OLD
+
+s.sub!(<<'OLD') { <<'NEW' } or abort 'carsection'
+## Pakker og betaling
+OLD
+## Bilturmodus: alle på én telefon
+
+Samme spill, samme skjermer, men verten har alle spillerne på sin telefon (`public/js/screens/car.js`, `carstrip.js`, motorens `MODE.CAR`). Det som er annerledes:
+
+- **Spillerlisten** (`PlayersStep`, `.roster`) er steg 2: en rad per spiller (avatar, navn, «vert» på den øverste, «Endre») og en kryss-knapp som må trykkes to ganger. Et navn er nok å skrive: neste ledige avatar er valgt på forhånd (`PlayerForm`). Er dere bare to, står det et gult merke om at en runde da har ingen imposter hver tredje gang (`TwoPlayersNote`, `twonote.js`, også i Hytteturmodus-lobbyen).
+- **Telefonen sendes rundt** (`CarRoles`, `.rolelist`, `.rolerow`): en liste med navnene nedover. Den som står for tur har *den samme stripen som ellers* (`TableStrip`, lik `RoleStrip`): «Din rolle» og en knapp til høyre, og rollen (og imposterens svar) til venstre mens knappen holdes. De andre venter, de som er ferdige har «✓ Sett», og et gult kort sier hvem telefonen skal til. En rolle regnes som sett når knappen er holdt i minst et halvt sekund og sluppet. Når alle har sett sin, får verten «Vis spørsmålet».
+- **«Glemt rollen din?»** (`CarStrip`) står der `RoleStrip` ellers står, og «Se rolle» åpner arket «Se rolle igjen» (`RolesSheet`): trykk på navnet ditt, og stripen er der. **Listen i arket holder høyden den har med stripen åpen** (`--rows`): et ark sitter nederst på skjermen, og en liste som vokste da stripen åpnet seg ville skjøvet knappen opp og bort fra fingeren (`tools/qa/car.mjs` sjekker at knappen blir stående).
+- Poengtavlen og resten viser ingen «(deg)»: alle sitter ved bordet.
+- QA: `tools/qa/fixtures.mjs` har bilskjermene (`car-…`), de er med i `qa:fit`, `qa:overlap` og `shots`, og `node tools/qa/car.mjs` spiller hele spillet.
+
+## Pakker og betaling
 - Invitasjonen har en liten QR-kode (trykk for å forstørre, det eksisterende arket «Bli med»), koden og «Del lenke», og under dem poengmålet med «Endre». **Hvem som er med vises i bunnfeltet** som en rad med overlappende ansikter (`.facepile`) og en kort tekst over Start-knappen, siden spillerlisten ellers havner under bunnfeltet på en 664 px høy skjerm. Listen med navn og fjerning ligger lenger ned.
 - Ett poeng tar ca. 6 minutter (`MINUTES_PER_POINT` i `setup.js`). Tallet står også i spillereglene, vertsvalget, README og stilguiden.
 

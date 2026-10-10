@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Disputt – et sosialt bløff- og diskusjonsspill for 3+ spillere. Mobile first.",
+  "description": "Disputt – et sosialt bløff- og diskusjonsspill for 2+ spillere. Mobile first.",
   "repository": {
     "type": "git",
     "url": "https://github.com/Pettersommerseth1994/Disputt.git"
@@ -24,6 +24,11 @@
     "pages:build": "node tools/pages/build.mjs",
     "pages:preview": "node tools/pages/serve.mjs",
     "play:p2p": "node tools/qa/play.mjs --p2p",
+    "play:car": "node tools/qa/car.mjs",
+    "play:car:p2p": "node tools/qa/car.mjs 4 2 --p2p",
+    "play:car:two": "node tools/qa/car.mjs 2 --outcomes --p2p",
+    "play:car:pay": "node tools/qa/car.mjs 3 3 --p2p --pay",
+    "play:two": "node tools/qa/two.mjs --p2p",
     "play:subpath": "node tools/qa/play.mjs --p2p --subpath",
     "play:pay": "node tools/qa/play.mjs 4 3 --p2p --pay",
     "play:pay-slow": "node tools/qa/play.mjs 3 3 --p2p --pay-slow",

@@ -2,7 +2,7 @@
 // Used by tools/qa/shots.mjs (visual QA) — the views are exactly what the server would send.
 
 import { AVATAR_IDS } from '../../shared/avatars.mjs';
-import { DEFAULT_TIMINGS, LIMITS, Room } from '../../shared/game.js';
+import { DEFAULT_TIMINGS, LIMITS, MODE, Room } from '../../shared/game.js';
 import { QUESTIONS } from '../../shared/questions.js';
 
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida'];
@@ -36,6 +36,28 @@ function makeRoom({ players = 5, impostor = 1, asker = 3, mate = 4, target = 5, 
   return { room, ids };
 }
 
+/**
+ * A room in bilturmodus: everybody on the host's phone. `impostor` is the seat of the impostor, `outcome` (two players only) is the
+ * one of three: 0 nobody, 1 the first, 2 the second. The host asks, so there is no pick for that.
+ */
+function makeCarRoom({ players = 3, impostor = 1, mate = 4, outcome = 1, target = 5, stress = false } = {}) {
+  const picks = players === 2 ? [outcome] : players >= LIMITS.twoImpostorsFrom ? [impostor, mate > impostor ? mate - 1 : mate] : [impostor];
+  const room = new Room({ code: 'KRAP', rand: scripted(picks), now: () => Date.now(), mode: MODE.CAR });
+  const host = room.addPlayer({ asHost: true });
+  room.setProfile(host.id, { name: stress ? STRESS_NAMES[0] : NAMES[0], avatar: AVATAR_IDS[stress ? 0 : 0] });
+  room.connect(host.id);
+  const ids = [host.id];
+  for (let i = 1; i < players; i++) {
+    const p = room.addLocalPlayer(host.id, { name: stress ? STRESS_NAMES[i] : NAMES[i], avatar: AVATAR_IDS[stress ? i : [0, 1, 2, 4, 6, 8, 3, 5, 7, 9][i]] });
+    ids.push(p.id);
+  }
+  room.setTarget(host.id, target);
+  return { room, ids };
+}
+
+/** Which step of the host's set-up a screen is on (the rest are null: the game's own choice, which is the last step). */
+export const STEP_OF = { 'setup-points': 2, 'car-points': 2, 'car-players-1': 1, 'car-players-3': 1, 'car-players-2': 1, 'car-players-10': 1 };
+
 const tick = (room, ms) => {
   room.clock = (() => {
     const base = Date.now() + ms;
@@ -63,6 +85,10 @@ export function buildFixtures({ stress = false } = {}) {
     const { room, ids } = room0({ players: 1 });
     out['lobby-host-1'] = room.viewFor(ids[0]); // the invitation, with nobody there yet
     out['setup-points'] = room.viewFor(ids[0]); // the host's second step (shown with `step: 2`)
+  }
+  {
+    const { room, ids } = room0({ players: 2 });
+    out['lobby-host-2'] = room.viewFor(ids[0]); // with only two players the host is told about the rule
   }
   {
     const { room, ids } = room0({ players: 3 });
@@ -187,6 +213,90 @@ export function buildFixtures({ stress = false } = {}) {
     out['summary-offline-host'] = offline;
   }
 
+  // ---- bilturmodus: everybody on the host's phone
+  {
+    const { room, ids } = makeCarRoom({ players: 1, stress });
+    room.players.get(ids[0]).name = '';
+    room.players.get(ids[0]).avatar = null; // the host has not put in a name yet: the list asks for it
+    out['car-players-new'] = room.viewFor(ids[0]);
+  }
+  {
+    const { room, ids } = makeCarRoom({ players: 1, stress });
+    out['car-players-1'] = room.viewFor(ids[0]);
+  }
+  {
+    const { room, ids } = makeCarRoom({ players: 2, stress });
+    out['car-players-2'] = room.viewFor(ids[0]); // "Dere er bare to"
+  }
+  {
+    const { room, ids } = makeCarRoom({ players: 3, stress });
+    out['car-players-3'] = room.viewFor(ids[0]);
+    out['car-how'] = room.viewFor(ids[0]); // the last step: how it works
+    out['car-points'] = room.viewFor(ids[0]);
+  }
+  {
+    const { room, ids } = makeCarRoom({ players: 10, stress: true });
+    out['car-players-10'] = room.viewFor(ids[0]);
+  }
+  {
+    // the phone goes round: Mari (1) is the impostor
+    const { room, ids } = makeCarRoom({ players: 3, impostor: 1, stress });
+    const [petter, mari, ola] = ids;
+    room.start(petter);
+    out['car-roles-start'] = room.viewFor(petter);
+    room.roleSeen(petter, petter);
+    out['car-roles-next'] = room.viewFor(petter);
+    room.roleSeen(petter, mari);
+    room.roleSeen(petter, ola);
+    out['car-roles-done'] = room.viewFor(petter);
+    room.startQuestion(petter);
+    out['car-question'] = room.viewFor(petter);
+    room.select(petter, 2);
+    out['car-question-selected'] = room.viewFor(petter);
+    room.lock(petter, 2); // right answer: Frankrike
+    out['car-countdown'] = room.viewFor(petter);
+    tick(room, DEFAULT_TIMINGS.countdownMs + 2);
+    room.tick(room.clock());
+    out['car-reveal'] = room.viewFor(petter);
+    room.continueRound(petter);
+    out['car-summary'] = room.viewFor(petter);
+  }
+  {
+    // ten players, two impostors: the list of names is as long as it gets
+    const { room, ids } = makeCarRoom({ players: 10, impostor: 1, mate: 4, stress: true });
+    room.start(ids[0]);
+    for (const id of ids.slice(0, 6)) room.roleSeen(ids[0], id);
+    out['car-roles-10'] = room.viewFor(ids[0]);
+    for (const id of ids.slice(6)) room.roleSeen(ids[0], id);
+    room.startQuestion(ids[0]);
+    out['car-question-10'] = room.viewFor(ids[0]); // (the sheet "Se rolle igjen" has ten names)
+  }
+  for (const [name, outcome, answer] of [['car-summary-none-right', 0, 2], ['car-summary-none-wrong', 0, 0], ['car-summary-two', 2, 0]]) {
+    // two players: nobody is the impostor (or the second is), and the group is right (or not)
+    const { room, ids } = makeCarRoom({ players: 2, outcome, stress });
+    room.start(ids[0]);
+    room.roleSeen(ids[0], ids[0]);
+    room.roleSeen(ids[0], ids[1]);
+    room.startQuestion(ids[0]);
+    room.lock(ids[0], answer);
+    tick(room, DEFAULT_TIMINGS.countdownMs + 2);
+    room.tick(room.clock());
+    room.continueRound(ids[0]);
+    out[name] = room.viewFor(ids[0]);
+  }
+  {
+    const { room, ids } = makeCarRoom({ players: 3, impostor: 2, target: 3, stress });
+    room.start(ids[0]);
+    room.players.get(ids[0]).score = 2;
+    for (const id of ids) room.roleSeen(ids[0], id);
+    room.startQuestion(ids[0]);
+    room.lock(ids[0], 2);
+    tick(room, DEFAULT_TIMINGS.countdownMs + 2);
+    room.tick(room.clock());
+    room.continueRound(ids[0]);
+    out['car-finished'] = room.viewFor(ids[0]);
+  }
+
   // A guard: every fixture counts on the first question being the tourists question (right answer "Frankrike"), which only
   // holds while the scripted randomness is used up by exactly the picks the engine makes. The "right" round must be right.
   if (out['role-impostor'].you.secret.text !== 'Frankrike' || out['summary-right-host'].summary.correct !== true || out['summary-wrong-host'].summary.correct !== false) {
@@ -196,7 +306,7 @@ export function buildFixtures({ stress = false } = {}) {
   if (stress) {
     // two-digit scores wherever a scoreboard is drawn
     const scores = [99, 87, 76, 65, 54, 43, 32, 21, 10, 0];
-    for (const key of ['summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'finished-host', 'finished-guest']) {
+    for (const key of ['summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'finished-host', 'finished-guest', 'car-summary', 'car-finished']) {
       out[key].players.forEach((p, i) => (p.score = scores[i] ?? 0));
     }
     // a tie at the top: three winners with names of the widest kind
@@ -206,15 +316,18 @@ export function buildFixtures({ stress = false } = {}) {
     // the longest question and the longest answers the bank can produce
     const longest = QUESTIONS.reduce((a, b) => (b.text.length > a.text.length ? b : a));
     const options = ['Valentina Teresjkova', 'Svetlana Savitskaja', 'Bjørnstjerne Bjørnson', 'Store Skagastølstind'];
-    for (const key of ['question-asker', 'question-asker-selected', 'question-asker-timeup', 'countdown-asker']) {
+    for (const key of ['question-asker', 'question-asker-selected', 'question-asker-timeup', 'countdown-asker', 'car-question', 'car-question-selected', 'car-question-10', 'car-countdown']) {
       if (out[key]?.question) out[key].question = { ...out[key].question, text: longest.text, options };
     }
     // what was locked is said on every phone during the countdown, and the answer key has both answers
-    for (const key of ['countdown-asker', 'countdown-other']) out[key].countdown.chosen = { ...out[key].countdown.chosen, text: options[1] };
-    for (const key of ['summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'summary-duo-wrong-guest']) {
+    for (const key of ['countdown-asker', 'countdown-other', 'car-countdown']) out[key].countdown.chosen = { ...out[key].countdown.chosen, text: options[1] };
+    for (const key of ['summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'summary-duo-wrong-guest', 'car-summary', 'car-summary-none-right', 'car-summary-none-wrong', 'car-summary-two']) {
       out[key].summary.answer = { ...out[key].summary.answer, correctText: options[2], chosenText: options[1] };
     }
     if (out['role-impostor']?.you?.secret) out['role-impostor'].you.secret = { ...out['role-impostor'].you.secret, text: options[2] };
+    for (const key of ['car-roles-start', 'car-roles-next', 'car-roles-done', 'car-roles-10', 'car-question', 'car-question-10']) {
+      for (const row of out[key].table ?? []) if (row.secret) row.secret = { ...row.secret, text: options[2] };
+    }
   }
   return out;
 }

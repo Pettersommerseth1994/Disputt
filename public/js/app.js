@@ -1,8 +1,11 @@
 import { html, useEffect } from './vendor/htm-preact.js';
+import { anonymous, carScreen } from './screens/car.js';
+import { RolesSheet } from './screens/carstrip.js';
 import { Finished } from './screens/finale.js';
 import { Connecting, Home, SeatPicker } from './screens/home.js';
 import { Lobby } from './screens/lobby.js';
 import { HomeSheet } from './screens/leave.js';
+import { ModeStep } from './screens/mode.js';
 import { Profile } from './screens/profile.js';
 import { PointsStep, hostStep } from './screens/setup.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
@@ -17,6 +20,7 @@ import { Button, useWakeLock } from './ui.js';
 const STUCK_HINT = 'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.';
 
 function gameScreen(view, s) {
+  if (view.mode === 'car') return carScreen(view, s); // everybody on one phone (screens/car.js)
   switch (view.phase) {
     case 'lobby':
       // Everybody picks a profile first. The host then goes on to the points, and last to the invitation, where the game waits.
@@ -60,7 +64,7 @@ export function App() {
   useWakeLock(Boolean(view));
 
   // every new screen starts at the top
-  useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.you?.ready, s.editing, s.step]);
+  useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep]);
 
   const hint = isP2P && s.stuck >= 2 ? STUCK_HINT : null;
   let screen;
@@ -71,20 +75,23 @@ export function App() {
   else if (s.creating) screen = html`<${Connecting} text="Starter spillet …" />`;
   else if (s.session) screen = html`<${Connecting} text="Kobler til spillet ditt …" hint=${hint} />`;
   else if (s.joining || s.route.page === 'join') screen = html`<${Connecting} text=${`Blir med i ${s.joining ?? s.route.code} …`} hint=${hint} />`;
+  else if (s.modeStep) screen = html`<${ModeStep} />`;
   else screen = html`<${Home} />`;
 
   const offline = s.conn !== 'open' && !s.replaced && (s.everOpened || s.conn === 'closed');
   const hostAway = s.hostAwayUntil > Date.now(); // p2p guest: the host said it was going away to pay
+  const car = view?.mode === 'car';
   let sheet = null;
-  if (s.sheet === 'rules') sheet = html`<${RulesSheet} />`;
+  if (s.sheet === 'rules') sheet = html`<${RulesSheet} car=${car} />`;
   else if (s.payments?.enabled && s.sheet === 'login') sheet = html`<${LoginSheet} />`;
   else if (s.payments?.enabled && s.sheet === 'thanks') sheet = html`<${ThanksSheet} />`;
   else if (s.payments?.enabled && s.sheet === 'access') sheet = html`<${AccessSheet} />`;
-  else if (view && s.sheet === 'scores') sheet = html`<${ScoresSheet} view=${view} />`;
+  else if (view && s.sheet === 'scores') sheet = html`<${ScoresSheet} view=${car ? anonymous(view) : view} />`;
   else if (view && s.sheet === 'host') sheet = html`<${HostSheet} view=${view} />`;
-  else if (view && s.sheet === 'qr') sheet = html`<${QrSheet} view=${view} />`;
+  else if (view && !car && s.sheet === 'qr') sheet = html`<${QrSheet} view=${view} />`;
+  else if (view?.table && car && s.sheet === 'roles') sheet = html`<${RolesSheet} view=${view} />`;
   else if (view?.summary && s.sheet === 'fasit') sheet = html`<${FasitSheet} view=${view} />`;
-  else if (view && s.sheet === 'settings') sheet = html`<${SettingsSheet} />`;
+  else if (view && !car && s.sheet === 'settings') sheet = html`<${SettingsSheet} />`;
   else if (view && s.sheet === 'home') sheet = html`<${HomeSheet} view=${view} />`;
 
   return html`

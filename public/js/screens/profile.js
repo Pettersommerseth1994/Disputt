@@ -1,5 +1,5 @@
 // Name + avatar. Used when joining, and again when someone wants to change their profile in the lobby. For the host it is
-// also the first step of the set-up (`wizard`).
+// also the second step of the set-up (`wizard`; the first, how to play, is chosen before the game exists).
 
 import { AVATARS } from '../../shared/avatars.mjs';
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
@@ -35,6 +35,15 @@ export function Profile({ view, editing, wizard = false }) {
     setBusy(false);
   }, [view]);
 
+  // Back to where the way to play is chosen: the game that was made for it is given up. Only while nobody else is in it (somebody
+  // who has come in through the QR code would be thrown out of a game that is theirs too).
+  // (`pending` counts the phones that have not picked a profile yet, and a host who has not is one of them)
+  const alone = view.players.every((p) => p.id === you.id) && view.pending - (you.ready ? 0 : 1) <= 0;
+  const backToMode = () => {
+    actions.leave();
+    setStore({ modeStep: true });
+  };
+
   const submit = (e) => {
     e.preventDefault();
     if (!ready) return;
@@ -53,7 +62,7 @@ export function Profile({ view, editing, wizard = false }) {
   };
 
   return html`<main class=${wizard ? 'screen setup' : 'screen'}>
-    ${wizard && html`<${SetupHeader} /><${Steps} current=${1} />`}
+    ${wizard && html`<${SetupHeader} /><${Steps} current=${2} onBack=${alone ? backToMode : undefined} />`}
     <form class="stack stack--loose grow" onSubmit=${submit}>
       <header class="stack stack--tight">
         ${!wizard && html`<p class="eyebrow">Spill ${view.code}</p>`}

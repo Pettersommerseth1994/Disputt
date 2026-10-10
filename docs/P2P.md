@@ -17,6 +17,8 @@ GitHub Pages kan bare vise filer, så der finnes ingen spillserver. Derfor kjør
 
 Koden ligger i [`public/js/p2p/`](../public/js/p2p) (`host.js`, `guest.js`, `adapter.js`, `peer.js`) og i `public/js/net.js`, som velger kobling («link») etter modus.
 
+**Bilturmodus** (alle på én telefon) bruker ikke dette nettverket i det hele tatt. Siden velger en spillkode selv (ingen skal skrive den inn), motoren kjører i siden som vanlig, og vertens skjerm snakker med den gjennom loopback-koblingen. Det er ingen megler, ingen WebSocket og ingen WebRTC: [`public/js/p2p/local.js`](../public/js/p2p/local.js) er vertens side uten nettverksdelen (rommet lagres i `sessionStorage` på samme måte, og en omlasting fortsetter spillet). Derfor kan det spilles uten dekning. `node tools/qa/car.mjs --p2p` sjekker at ingen av dem blir laget.
+
 ## Hva skjer når …
 
 | Situasjon | Resultat |

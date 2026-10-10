@@ -81,8 +81,10 @@ try {
   const host = await newPhone('Petter');
   await host.page.goto(`${base}/`);
   await clickButton(host, 'Opprett spill');
-  await register(host, 0, 'Neste'); // the host's first step
-  await waitText(host, /Steg 2 av 3/);
+  await clickButton(host, 'Hytteturmodus'); // the host's first step: the way to play
+  await clickButton(host, 'Neste');
+  await register(host, 0, 'Neste'); // the second
+  await waitText(host, /Steg 3 av 4/);
   await host.page.focus('#target'); // one point, so that a game is over after a single round
   await host.page.keyboard.type('1');
   await sleep(400);

@@ -91,13 +91,16 @@ if (sizes) {
 // ---- screen gallery (images come from `npm run shots -- --docs`; missing ones are dropped silently)
 const SCREENS = [
   ['home', 'Hjem', 'Opprett spill, eller bli med i et spill med koden.'],
+  ['mode-step', 'Oppsett: hvordan dere vil spille', 'Vertens første steg (av fire): Bilturmodus (alle på én telefon) eller Hytteturmodus (en telefon hver). Likt i begge: alltid en eller flere imposterer, og dere må bli enige.'],
   ['profile-new', 'Profil', 'Navn og avatar. Tatte avatarer er utilgjengelige.'],
-  ['setup-points', 'Oppsett – poeng', 'Vertens andre steg (av tre): hvor mange poeng. Første steg er profilen.'],
+  ['car-players-3', 'Bilturmodus: hvem spiller', 'Verten legger inn alle navnene (den øverste er verten). Et navn er nok: neste ledige avatar er allerede valgt.'],
+  ['setup-points', 'Oppsett: poeng', 'Vertens tredje steg (av fire): hvor mange poeng. Ett poeng tar ca. 6 minutter, i begge måter å spille på.'],
   ['lobby-host-3', 'Invitasjon – vert', 'Siste steg: QR-koden, koden og «Del lenke». Hvem som er med står over Start Disputt.'],
   ['lobby-guest-3', 'Lobby – spiller', 'Venter på verten. Kan se hvem som er med.'],
   ['role-impostor', 'Rolle: skjult', 'Lik på alles telefon til en finger holder knappen. Lojal og imposter ser det samme. 8 sekunder.'],
   ['role-impostor-held', 'Rolle: mens du holder', 'Kortet vises bare mens knappen holdes. Imposteren ser også riktig svar; lojale ser «?».'],
   ['role-impostor-duo-held', 'Rolle: to imposterer', 'Fra seks spillere er det to imposterer. De ser hverandre på kortet; de lojale ser «?» der.'],
+  ['car-roles-start-held', 'Bilturmodus: telefonen sendes rundt', 'Én og én ser rollen sin: bare den som står for tur har knappen, med samme stripe som ellers (knappen til høyre, rollen til venstre mens den holdes).'],
   ['question-asker-selected', 'Spørsmål', 'Den som svarer: klokke, 2/6/10 min, spørsmål, alternativer og lås.'],
   ['discussion-impostor', 'Diskusjon', 'Alle andre: hvem som har spørsmålet, klokka og en rollestripe som er lik for alle til den holdes.'],
   ['countdown-asker', 'Nedtelling', '5 – 4 – 3 – 2 – 1 etter at svaret er låst, lik på alle telefoner og med det dere låste.'],

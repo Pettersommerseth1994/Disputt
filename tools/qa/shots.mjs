@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
 import { createApp } from '../../server/index.js';
-import { buildFixtures } from './fixtures.mjs';
+import { STEP_OF, buildFixtures } from './fixtures.mjs';
 import { PAY_BASE, SHOP_INFO, payScreens } from './payfixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -15,7 +15,7 @@ const DOCS = process.argv.includes('--docs'); // also write 1x-viewport WebPs fo
 const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
 const DOCS_DIR = 'public/design-system/screens';
 // the screens shown in the style guide gallery (keep in sync with SCREENS in public/design-system/ds.js)
-const DOC_KEYS = new Set(['home', 'profile-new', 'setup-points', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'role-impostor-duo-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-wait', 'summary-wrong-host', 'finished-host', 'sheet-scores', 'sheet-fasit', 'pay-gate', 'pay-thanks', 'pay-login', 'pay-guest-host-away']);
+const DOC_KEYS = new Set(['home', 'mode-step', 'car-players-3', 'car-roles-start-held', 'profile-new', 'setup-points', 'lobby-host-3', 'lobby-guest-3', 'role-impostor', 'role-impostor-held', 'role-impostor-duo-held', 'question-asker-selected', 'discussion-impostor', 'countdown-asker', 'reveal-wait', 'summary-wrong-host', 'finished-host', 'sheet-scores', 'sheet-fasit', 'pay-gate', 'pay-thanks', 'pay-login', 'pay-guest-host-away']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 fs.mkdirSync(OUT, { recursive: true });
@@ -43,6 +43,8 @@ const shot = async (name, opts = {}) => {
 };
 
 async function show(view, extra = {}) {
+  // (unmounted first: a screen keeps its own state, such as a form that is open, from the screen shown before it)
+  await page.evaluate(() => window.__disputt.setStore({ view: null }));
   await page.evaluate((view, extra) => {
     window.__realNow ??= Date.now.bind(Date);
     const delta = view.now - window.__realNow();
@@ -65,22 +67,31 @@ await shot('01-join-code', { wait: 400 });
 await page.evaluate(() => window.__disputt.setStore({ sheet: 'rules' }));
 await shot('02-rules', { full: false });
 await page.evaluate(() => window.__disputt.setStore({ sheet: null }));
+// the first step of the host's set-up: the way to play (no game exists yet)
+await page.evaluate(() => window.__disputt.setStore({ modeStep: true }));
+await shot('02-mode-step', { wait: 600 });
+await page.evaluate(() => document.querySelector('.mode')?.click());
+await shot('02-mode-step-chosen', { wait: 500 });
+await page.evaluate(() => window.__disputt.setStore({ modeStep: false }));
 
 const f = buildFixtures();
 const order = [
-  'profile-new', 'profile-edit', 'lobby-host-new', 'setup-points', 'lobby-host-1', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
+  'profile-new', 'profile-edit', 'lobby-host-new', 'setup-points', 'lobby-host-1', 'lobby-host-2', 'lobby-host-3', 'lobby-host-5', 'lobby-guest-3',
   'role-impostor', 'role-impostor-held', 'role-loyal', 'role-loyal-held', 'role-impostor-duo-held', 'role-loyal-duo-held', 'discussion-impostor-duo-held',
   'question-asker', 'question-asker-selected', 'question-asker-timeup', 'discussion-impostor', 'discussion-impostor-held', 'discussion-loyal', 'discussion-host', 'discussion-low',
   'countdown-asker', 'countdown-other', 'reveal-asker', 'reveal-host-asker', 'reveal-wait', 'reveal-duo-wait',
   'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'lobby-host-6',
   'finished-host', 'finished-guest',
+  // bilturmodus: everybody on the host's phone
+  'car-players-new', 'car-players-1', 'car-players-2', 'car-players-3', 'car-players-10', 'car-points', 'car-how', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-roles-10',
+  'car-question', 'car-question-selected', 'car-countdown', 'car-reveal', 'car-summary', 'car-summary-none-right', 'car-summary-none-wrong', 'car-summary-two', 'car-finished',
 ];
-const LONG = new Set(['lobby-host-new', 'lobby-host-1', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host']);
+const LONG = new Set(['lobby-host-new', 'lobby-host-1', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host', 'car-players-10', 'car-roles-10']);
 let i = 3;
 for (const key of order) {
   // (a key ending in "-held" is the same screen with every hold-to-see button held, as with a finger on the screen)
   const held = key.endsWith('-held');
-  await show(f[held ? key.slice(0, -'-held'.length) : key], { ...(key === 'profile-edit' ? { editing: true } : {}), ...(key === 'setup-points' ? { step: 2 } : { step: null }), ...(held ? { qaHold: true } : {}) });
+  await show(f[held ? key.slice(0, -'-held'.length) : key], { ...(key === 'profile-edit' ? { editing: true } : {}), ...{ step: STEP_OF[held ? key.slice(0, -'-held'.length) : key] ?? null }, ...(held ? { qaHold: true } : {}) });
   const name = `${String(i++).padStart(2, '0')}-${key}`;
   await shot(name, { wait: key.startsWith('role') || key.startsWith('finished') ? 900 : 650 });
   // what a phone really shows after scrolling down: the dock sticks to the bottom of the viewport
@@ -105,6 +116,25 @@ await show(f['summary-duo-wrong-host'], { sheet: 'fasit' });
 await shot('96-sheet-fasit-duo', { full: false });
 await show(f['lobby-guest-3'], { sheet: 'home' });
 await shot('94-sheet-home-guest', { full: false });
+// bilturmodus: the sheets
+await show(f['car-question'], { sheet: 'roles' });
+await shot('94b-car-sheet-roles', { full: false });
+await page.evaluate(() => document.querySelectorAll('.sheet .roster__main')[1]?.click());
+await shot('94c-car-sheet-roles-chosen', { full: false, wait: 400 });
+await show(f['car-question'], { sheet: 'roles', qaHold: true });
+await page.evaluate(() => document.querySelectorAll('.sheet .roster__main')[1]?.click());
+await shot('94d-car-sheet-roles-held', { full: false, wait: 400 });
+await show(f['car-summary'], { sheet: 'scores' });
+await shot('94e-car-sheet-scores', { full: false });
+await show(f['car-summary-none-right'], { sheet: 'fasit' });
+await shot('94f-car-sheet-fasit-none', { full: false });
+await show(f['car-how'], { sheet: 'rules' });
+await shot('94g-car-sheet-rules', { full: false });
+await show(f['car-how'], { sheet: 'home' });
+await shot('94h-car-sheet-home', { full: false });
+await show(f['car-players-3'], { step: 1 });
+await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Legg til spiller'))?.click());
+await shot('94i-car-player-form', { full: false, wait: 500 });
 
 // payments: the packages the host meets after the free rounds, the sheets that belong to them, and what a guest sees while the host pays
 let n = 97;

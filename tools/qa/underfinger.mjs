@@ -7,6 +7,9 @@ export function underTheFinger() {
   for (const button of document.querySelectorAll('.hold-btn, .role-strip .secret')) {
     const b = button.getBoundingClientRect();
     if (!b.width || !b.height) continue;
+    // a button under a sheet (the page behind it) cannot be pressed: nothing is covered by a finger that is not there
+    const top = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+    if (top && !button.contains(top) && !top.contains(button)) continue;
     for (const holder of document.querySelectorAll('.rolecard, .role-strip__info')) {
       const walker = document.createTreeWalker(holder, NodeFilter.SHOW_TEXT);
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {

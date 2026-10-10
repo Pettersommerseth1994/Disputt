@@ -159,7 +159,7 @@ Kundene skal skrive til `kontakt@disputt.site`: den står i vilkårene og person
 
 **Tekster til aktiveringen.** Stripe spør hva dere selger, og noen leser svaret, så skriv det på engelsk. Du kan lime inn dette (endre hvis noe ikke stemmer):
 
-> Disputt is a social party game for 3–10 players on their own phones: a bluffing and trivia game played in the browser, with no app and no account. The first two rounds of every game are free. The host can buy access as a one-time digital purchase: "En kveld" (one evening, 12 hours) NOK 89, "For ett år" (12 months) NOK 249, "Livstid" (as long as the service is offered) NOK 299. Access is delivered immediately, as a signed pass stored in the browser plus a restore code. No subscriptions, no physical goods, no shipping. Customers are consumers, paying with Vipps, Apple Pay or card.
+> Disputt is a social party game for 2–10 players, each on their own phone or all on one phone: a bluffing and trivia game played in the browser, with no app and no account. The first two rounds of every game are free. The host can buy access as a one-time digital purchase: "En kveld" (one evening, 12 hours) NOK 89, "For ett år" (12 months) NOK 249, "Livstid" (as long as the service is offered) NOK 299. Access is delivered immediately, as a signed pass stored in the browser plus a restore code. No subscriptions, no physical goods, no shipping. Customers are consumers, paying with Vipps, Apple Pay or card.
 >
 > Refund policy: if the access does not work as described and we cannot fix it, we refund the full amount. Terms: https://disputt.site/vilkar.html (section 5). Privacy: https://disputt.site/personvern.html
 

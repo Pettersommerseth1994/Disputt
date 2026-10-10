@@ -168,28 +168,47 @@ try {
   if (PAY || PAY_SHOP) await checkHome({ waitText, bodyText }, host);
   await shot(host, '01-home');
   await clickButton(host, 'Opprett spill');
-  // the host sets the game up in three steps: who you are, how long to play, and last the invitation
-  await waitText(host, /Steg 1 av 3/);
-  await shot(host, '01b-setup-1-profile');
+  // the host sets the game up in four steps: how to play, who you are, how long to play, and last the invitation
+  await waitText(host, /Steg 1 av 4/);
+  await shot(host, '01a-setup-1-mode');
+  assert.match(await bodyText(host), /Hvordan vil dere spille\?/);
+  const modeCards = await host.page.$$eval('.mode', (els) => els.map((el) => el.innerText.replace(/\s+/g, ' ').trim()));
+  assert.equal(modeCards.length, 2, 'two ways to play');
+  assert.match(modeCards[0], /Bilturmodus.*Alle spiller på 1 telefon, som sendes rundt\./, 'the first card is the car');
+  assert.match(modeCards[1], /Hytteturmodus.*Alle spiller på sin egen telefon\./, 'the second card is the cabin');
+  for (const card of modeCards) assert.ok(card.includes('2-10 deltakere') && !/Perfekt/.test(card), `a card says how many can play, and nothing about where it is perfect (${card})`);
+  assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), true, 'Neste waits for a way to play');
+  await clickButton(host, 'Hytteturmodus'); // (a phone each: this script is the cabin; car.mjs is the car)
+  assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), false, 'Neste is there once a way is chosen');
+  await clickButton(host, 'Neste');
+  await waitText(host, /Steg 2 av 4/);
+  // alone in the game, "back" gives it up and goes back to the choice, and on again makes a new one
+  await clickButton(host, 'Tilbake');
+  await waitText(host, /Steg 1 av 4/);
+  assert.match(await bodyText(host), /Hvordan vil dere spille\?/);
+  await clickButton(host, 'Hytteturmodus');
+  await clickButton(host, 'Neste');
+  await waitText(host, /Steg 2 av 4/);
+  await shot(host, '01b-setup-2-profile');
   assert.match(await bodyText(host), /Hvem er du\?/);
   assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), true, 'Neste waits for a name and an avatar');
   await register(host, NAMES[0], 0, 'Neste');
-  await waitText(host, /Steg 2 av 3/);
+  await waitText(host, /Steg 3 av 4/);
   assert.match(await bodyText(host), /Hvor lenge skal dere spille\?/);
   // "back" keeps the profile, and going on again is possible
   await clickButton(host, 'Tilbake');
-  await waitText(host, /Steg 1 av 3/);
+  await waitText(host, /Steg 2 av 4/);
   assert.equal(await host.page.$eval('#name', (i) => i.value), NAMES[0], 'the profile is still there after going back');
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 2 av 3/);
-  await shot(host, '01c-setup-2-points');
+  await waitText(host, /Steg 3 av 4/);
+  await shot(host, '01c-setup-3-points');
   // the points go in the free-text field (focusing selects the old value, so typing replaces it), and a point takes six minutes
   await host.page.focus('#target');
   await host.page.keyboard.type(String(TARGET));
   await sleep(500);
   if (TARGET * 6 < 90) assert.match(await bodyText(host), new RegExp(`ca\\. ${TARGET * 6} min`), 'six minutes a point');
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 3 av 3/);
+  await waitText(host, /Steg 4 av 4/);
   await waitText(host, /Spillere\s+1\/10/);
   // a phone that refuses to keep the screen awake must tell its owner to turn auto-lock off by hand
   await waitText(host, /sett skjermlåsen/i, 5000);

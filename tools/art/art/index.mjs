@@ -1,6 +1,7 @@
 // Role / reveal / state illustrations and decorative bits.
 import { eyeImpostor, eyeLoyal, eyeRight, eyeWrong, eyeWait } from './eyes.mjs';
 import { crown, lipsArt, star, sparkle, blobs, scribbleUnderline, scribbleCircle } from './decor.mjs';
+import { bil, hytte } from './modes.mjs';
 
 export const ART_SET = {
   'eye-impostor': eyeImpostor,
@@ -15,4 +16,6 @@ export const ART_SET = {
   ...blobs,
   'scribble-underline': scribbleUnderline,
   'scribble-circle': scribbleCircle,
+  bil, // the two ways to play: a car (one phone) and a cabin (a phone each)
+  hytte,
 };
