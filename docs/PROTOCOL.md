@@ -12,7 +12,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `resume` | `code, playerId, token` | tilbakevendende | `welcome`, eller feil `bad_token` / `room_not_found` |
 | `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser). Krever ingen hemmelighet, for en telefon som har mistet nettleserdataene har ingen, så alle andre i rommet får `notice` om at plassen er overtatt. Tilkoblingen slipper plassen den hadde fra før |
 | `profile` | `name, avatar`, evt. `id` | lobby | setter/endrer navn og avatar (unike). I bilturmodus kan verten sette profilen til en spiller på vertens telefon med `id` (andre gir `not_host`, og en `id` som ikke er en spiller på vertens telefon gir `bad_value`) |
-| `player.add` | `name, avatar` | vert, lobby, bare bilturmodus | legger inn en spiller på vertens telefon (høyst 10, ellers `too_many`; `bad_mode` i hytteturmodus). Spilleren har ingen telefon, så er alltid «tilkoblet» |
+| `player.add` | `name, avatar` | vert, lobby, bare bilturmodus | legger inn en spiller på vertens telefon (høyst 5, `limits.max`, ellers `too_many`; `bad_mode` i hytteturmodus). Spilleren har ingen telefon, så er alltid «tilkoblet» |
 | `seen` | `id` | vert, fase `role`, bare bilturmodus | spilleren har sett rollen sin (telefonen sendes rundt) |
 | `begin` | | vert, fase `role`, bare bilturmodus | alle har sett rollen sin: videre til spørsmålet (`not_all` hvis noen ikke har det) |
 | `target` | `value` (1–99) | vert, når som helst før spillet er ferdig | poengmål (sjekkes for vinner når runden er ferdig) |
@@ -64,7 +64,7 @@ I `reveal` vises ingenting om utfallet: imposterne sier riktig svar høyt, og sk
 {
   "code": "KRAP", "mode": "cabin",           // "cabin" (en telefon hver) eller "car" (alle på vertens telefon)
   "phase": "question", "round": 3, "target": 5, "hostId": "…", "now": 1790000000000,
-  "limits": { "min": 2, "max": 10, "twoImpostorsFrom": 6 },   // fra så mange spillere i runden er det to imposterer
+  "limits": { "min": 2, "max": 10, "twoImpostorsFrom": 6 },   // max er 5 i bilturmodus   // fra så mange spillere i runden er det to imposterer
   "timings": { "roleMs": 8000, "countdownMs": 5000 },
   "players": [{ "id": "…", "name": "Mari", "avatar": "mandarin", "score": 2, "connected": true, "isHost": false }],
   "pending": 0,                       // tilkoblede som ikke har valgt profil ennå

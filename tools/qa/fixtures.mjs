@@ -56,7 +56,7 @@ function makeCarRoom({ players = 3, impostor = 1, mate = 4, outcome = 1, target 
 }
 
 /** Which step of the host's set-up a screen is on (the rest are null: the game's own choice, which is the last step). */
-export const STEP_OF = { 'setup-points': 2, 'car-points': 2, 'car-players-1': 1, 'car-players-3': 1, 'car-players-2': 1, 'car-players-10': 1 };
+export const STEP_OF = { 'setup-points': 2, 'car-points': 2, 'car-players-1': 1, 'car-players-3': 1, 'car-players-2': 1, 'car-players-5': 1 };
 
 const tick = (room, ms) => {
   room.clock = (() => {
@@ -235,8 +235,8 @@ export function buildFixtures({ stress = false } = {}) {
     out['car-points'] = room.viewFor(ids[0]);
   }
   {
-    const { room, ids } = makeCarRoom({ players: 10, stress: true });
-    out['car-players-10'] = room.viewFor(ids[0]);
+    const { room, ids } = makeCarRoom({ players: 5, stress: true }); // (the most a car holds)
+    out['car-players-5'] = room.viewFor(ids[0]);
   }
   {
     // the phone goes round: Mari (1) is the impostor
@@ -262,14 +262,14 @@ export function buildFixtures({ stress = false } = {}) {
     out['car-summary'] = room.viewFor(petter);
   }
   {
-    // ten players, two impostors: the list of names is as long as it gets
-    const { room, ids } = makeCarRoom({ players: 10, impostor: 1, mate: 4, stress: true });
+    // five players with the widest names: the list of names is as long as it gets
+    const { room, ids } = makeCarRoom({ players: 5, impostor: 1, stress: true });
     room.start(ids[0]);
-    for (const id of ids.slice(0, 6)) room.roleSeen(ids[0], id);
-    out['car-roles-10'] = room.viewFor(ids[0]);
-    for (const id of ids.slice(6)) room.roleSeen(ids[0], id);
+    for (const id of ids.slice(0, 3)) room.roleSeen(ids[0], id);
+    out['car-roles-5'] = room.viewFor(ids[0]);
+    for (const id of ids.slice(3)) room.roleSeen(ids[0], id);
     room.startQuestion(ids[0]);
-    out['car-question-10'] = room.viewFor(ids[0]); // (the sheet "Se rolle igjen" has ten names)
+    out['car-question-5'] = room.viewFor(ids[0]); // (the sheet "Se rolle igjen" has five names)
   }
   for (const [name, outcome, answer] of [['car-summary-none-right', 0, 2], ['car-summary-none-wrong', 0, 0], ['car-summary-two', 2, 0]]) {
     // two players: nobody is the impostor (or the second is), and the group is right (or not)
@@ -316,7 +316,7 @@ export function buildFixtures({ stress = false } = {}) {
     // the longest question and the longest answers the bank can produce
     const longest = QUESTIONS.reduce((a, b) => (b.text.length > a.text.length ? b : a));
     const options = ['Valentina Teresjkova', 'Svetlana Savitskaja', 'Bjørnstjerne Bjørnson', 'Store Skagastølstind'];
-    for (const key of ['question-asker', 'question-asker-selected', 'question-asker-timeup', 'countdown-asker', 'car-question', 'car-question-selected', 'car-question-10', 'car-countdown']) {
+    for (const key of ['question-asker', 'question-asker-selected', 'question-asker-timeup', 'countdown-asker', 'car-question', 'car-question-selected', 'car-question-5', 'car-countdown']) {
       if (out[key]?.question) out[key].question = { ...out[key].question, text: longest.text, options };
     }
     // what was locked is said on every phone during the countdown, and the answer key has both answers
@@ -325,7 +325,7 @@ export function buildFixtures({ stress = false } = {}) {
       out[key].summary.answer = { ...out[key].summary.answer, correctText: options[2], chosenText: options[1] };
     }
     if (out['role-impostor']?.you?.secret) out['role-impostor'].you.secret = { ...out['role-impostor'].you.secret, text: options[2] };
-    for (const key of ['car-roles-start', 'car-roles-next', 'car-roles-done', 'car-roles-10', 'car-question', 'car-question-10']) {
+    for (const key of ['car-roles-start', 'car-roles-next', 'car-roles-done', 'car-roles-5', 'car-question', 'car-question-5']) {
       for (const row of out[key].table ?? []) if (row.secret) row.secret = { ...row.secret, text: options[2] };
     }
   }

@@ -29,7 +29,8 @@ export const PHASE = Object.freeze({
 
 export const LIMITS = Object.freeze({
   minPlayers: 2,
-  maxPlayers: 10,
+  maxPlayers: 10, // a phone each
+  maxPlayersCar: 5, // everybody on one phone: as many as a car holds
   twoImpostorsFrom: 6, // a round with this many players or more has two impostors instead of one
   targetMin: 1,
   targetMax: 99,
@@ -105,6 +106,11 @@ export class Room {
    * Plain-JSON copy of everything needed to carry on later. The peer-to-peer host keeps this in sessionStorage, so a
    * reload (or a browser that discards the tab) does not end the game. `JSON.stringify(room)` uses it too.
    */
+  /** The most players this game takes: ten with a phone each (cabin), five on one phone (car). */
+  get maxPlayers() {
+    return this.mode === MODE.CAR ? LIMITS.maxPlayersCar : LIMITS.maxPlayers;
+  }
+
   toJSON() {
     return {
       v: 1,
@@ -179,15 +185,15 @@ export class Room {
     // A couple may linger (the second chance for the sleeper); beyond that the newcomer takes over the one that has been
     // gone longest, so retries can neither fill the lobby nor lock real players out.
     const ghosts = asHost ? [] : [...this.players.values()].filter((p) => !isReady(p) && !p.connected && p.id !== this.hostId && p.id !== this.creatorId);
-    const crowded = ghosts.length >= MAX_GHOSTS || this.players.size >= LIMITS.maxPlayers;
+    const crowded = ghosts.length >= MAX_GHOSTS || this.players.size >= this.maxPlayers;
     const leftover = crowded ? ghosts.sort((a, b) => a.lastSeen - b.lastSeen)[0] ?? null : null;
     if (!asHost) {
       if (this.mode === MODE.CAR) throw new GameError('single_phone', 'Dette spillet spilles på én telefon, så ingen kan bli med fra en annen.');
       if (this.phase !== PHASE.LOBBY) {
         throw new GameError('started', 'Spillet har allerede startet.', { seats: this.claimableSeats() });
       }
-      if (!leftover && this.players.size >= LIMITS.maxPlayers) {
-        throw new GameError('full', `Rommet er fullt (maks ${LIMITS.maxPlayers} spillere).`);
+      if (!leftover && this.players.size >= this.maxPlayers) {
+        throw new GameError('full', `Rommet er fullt (maks ${this.maxPlayers} spillere).`);
       }
     }
     if (leftover) {
@@ -297,7 +303,7 @@ export class Room {
     this.needCar();
     this.needPhase(PHASE.LOBBY);
     // ('too_many', not the 'full' of a room that cannot take another phone: the page leaves the game when it hears that one)
-    if (this.players.size >= LIMITS.maxPlayers) throw new GameError('too_many', `Dere kan være ${LIMITS.maxPlayers} spillere.`);
+    if (this.players.size >= this.maxPlayers) throw new GameError('too_many', `Dere kan være ${this.maxPlayers} spillere.`);
     const now = this.clock();
     const player = { id: makeId(), token: makeToken(), name: '', avatar: null, score: 0, connected: true, local: true, joinedAt: now, lastSeen: now };
     this.players.set(player.id, player);
@@ -747,7 +753,7 @@ export class Room {
       target: this.target,
       hostId: this.hostId,
       now: this.clock(),
-      limits: { min: LIMITS.minPlayers, max: LIMITS.maxPlayers, twoImpostorsFrom: LIMITS.twoImpostorsFrom },
+      limits: { min: LIMITS.minPlayers, max: this.maxPlayers, twoImpostorsFrom: LIMITS.twoImpostorsFrom },
       timings: { roleMs: this.timings.roleMs, countdownMs: this.timings.countdownMs },
       players: ready.map((p) => ({
         id: p.id,

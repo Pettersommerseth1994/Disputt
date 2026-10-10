@@ -69,9 +69,9 @@ await shot('02-rules', { full: false });
 await page.evaluate(() => window.__disputt.setStore({ sheet: null }));
 // the first step of the host's set-up: the way to play (no game exists yet)
 await page.evaluate(() => window.__disputt.setStore({ modeStep: true }));
-await shot('02-mode-step', { wait: 600 });
+await shot('02-mode-step-empty', { wait: 600 });
 await page.evaluate(() => document.querySelector('.mode')?.click());
-await shot('02-mode-step-chosen', { wait: 500 });
+await shot('02-mode-step', { wait: 500 }); // (the gallery of the style guide shows this one: a card chosen)
 await page.evaluate(() => window.__disputt.setStore({ modeStep: false }));
 
 const f = buildFixtures();
@@ -83,10 +83,10 @@ const order = [
   'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'lobby-host-6',
   'finished-host', 'finished-guest',
   // bilturmodus: everybody on the host's phone
-  'car-players-new', 'car-players-1', 'car-players-2', 'car-players-3', 'car-players-10', 'car-points', 'car-how', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-roles-10',
+  'car-players-new', 'car-players-1', 'car-players-2', 'car-players-3', 'car-players-5', 'car-points', 'car-how', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-roles-5',
   'car-question', 'car-question-selected', 'car-countdown', 'car-reveal', 'car-summary', 'car-summary-none-right', 'car-summary-none-wrong', 'car-summary-two', 'car-finished',
 ];
-const LONG = new Set(['lobby-host-new', 'lobby-host-1', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host', 'car-players-10', 'car-roles-10']);
+const LONG = new Set(['lobby-host-new', 'lobby-host-1', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host', 'car-players-5', 'car-roles-5']);
 let i = 3;
 for (const key of order) {
   // (a key ending in "-held" is the same screen with every hold-to-see button held, as with a finger on the screen)

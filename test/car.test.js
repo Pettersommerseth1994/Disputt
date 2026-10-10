@@ -222,17 +222,22 @@ describe('the car: a room', () => {
     throwsCode(() => room.addPlayer(), 'single_phone');
   });
 
-  it('puts the players in on the host\'s phone, up to ten, and they are always there', () => {
-    const ctx = car(10);
-    assert.equal(ctx.room.players.size, 10);
+  it('puts the players in on the host\'s phone, up to five (as many as a car holds), and they are always there', () => {
+    const ctx = car(5);
+    assert.equal(ctx.room.players.size, 5);
     for (const p of ctx.players.slice(1)) assert.deepEqual([p.local, p.connected], [true, true]);
     const view = ctx.room.viewFor(ctx.host.id);
     assert.equal(view.mode, 'car');
-    assert.equal(view.players.length, 10);
+    assert.equal(view.players.length, 5);
+    assert.equal(view.limits.max, 5, 'the page is told how many fit');
     assert.ok(view.players.every((p) => p.connected), 'nobody shows as disconnected');
     // ('too_many', not 'full': to a page, 'full' means that a room has no seat for another phone, and it leaves the game)
-    throwsCode(() => ctx.room.addLocalPlayer(ctx.host.id, { name: 'Ellevte', avatar: AVATAR_IDS[0] }), 'too_many');
-    assert.equal(ctx.room.players.size, 10, 'and nobody was put in');
+    throwsCode(() => ctx.room.addLocalPlayer(ctx.host.id, { name: 'Sjette', avatar: AVATAR_IDS[5] }), 'too_many');
+    assert.equal(ctx.room.players.size, 5, 'and nobody was put in');
+    // a phone each is still ten
+    const phones = cabin(3);
+    assert.equal(phones.room.viewFor(phones.host.id).limits.max, LIMITS.maxPlayers);
+    assert.equal(LIMITS.maxPlayers, 10);
   });
 
   it('needs a name and an avatar that are not taken, and a refused player leaves nothing behind', () => {
@@ -304,7 +309,7 @@ describe('the car: a round', () => {
 
   it('has the host as the one who asks, every round', () => {
     for (let seed = 1; seed < 12; seed++) {
-      const ctx = car(2 + (seed % 5), { rand: seeded(seed) });
+      const ctx = car(2 + (seed % 4), { rand: seeded(seed) });
       ctx.room.start(ctx.host.id);
       assert.equal(ctx.room.current.askerId, ctx.host.id);
     }

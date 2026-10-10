@@ -101,7 +101,7 @@ function screensFor(fixtures) {
     [
       'car-player-form-edit',
       async () => {
-        await put({ view: fixtures['car-players-10'], step: 1 });
+        await put({ view: fixtures['car-players-5'], step: 1 });
         await sleep(300);
         await page.evaluate(() => document.querySelectorAll('.roster__main')[2].click());
       },
@@ -110,11 +110,11 @@ function screensFor(fixtures) {
     [
       'sheet-roles-held',
       async () => {
-        await put({ view: fixtures['car-question-10'], sheet: 'roles' });
+        await put({ view: fixtures['car-question-5'], sheet: 'roles' });
         await sleep(300);
         await page.evaluate(() => document.querySelectorAll('.sheet .roster__main')[1].click());
         await sleep(200);
-        await put({ view: fixtures['car-question-10'], sheet: 'roles', qaHold: true });
+        await put({ view: fixtures['car-question-5'], sheet: 'roles', qaHold: true });
       },
     ],
     ['sheet-scores-car', () => put({ view: fixtures['car-summary'], sheet: 'scores' })],

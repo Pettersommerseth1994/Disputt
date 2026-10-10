@@ -1,6 +1,6 @@
 // UI end-to-end for bilturmodus: everybody plays on ONE phone, the host's, through the real interface.
 //   node tools/qa/car.mjs [players=3] [target=2] [--p2p] [--subpath] [--pay] [--url=https://…] [--shots]
-//   players 2 tries the rule for two (a round with no impostor); 6 or more has two impostors, who must be told about each other
+//   players 2 tries the rule for two (a round with no impostor); five is the most a car holds
 //   --outcomes  with two players: keep playing (no target) until a round with the first as the impostor, one with the second and one with
 //              nobody have all been seen, and then end the game from the host's menu
 //   --p2p      test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server; a game on one
@@ -22,9 +22,10 @@ const args = process.argv.slice(2);
 const OUTCOMES_ARG = args.includes('--outcomes');
 const flags = args.filter((a) => a.startsWith('--'));
 const nums = args.filter((a) => !a.startsWith('--')).map(Number);
+const MAX = 5; // (what a car holds: LIMITS.maxPlayersCar)
 const PLAYERS = nums[0] ?? 3;
 const TARGET = OUTCOMES_ARG ? 99 : (nums[1] ?? 2);
-assert.ok(Number.isInteger(PLAYERS) && PLAYERS >= 2 && PLAYERS <= 10 && Number.isInteger(TARGET) && TARGET >= 1, 'usage: car.mjs [players 2-10] [target]');
+assert.ok(Number.isInteger(PLAYERS) && PLAYERS >= 2 && PLAYERS <= MAX && Number.isInteger(TARGET) && TARGET >= 1, `usage: car.mjs [players 2-${MAX}] [target]`);
 const SHOTS = flags.includes('--shots');
 const OUTCOMES = flags.includes('--outcomes');
 if (OUTCOMES) assert.ok(PLAYERS === 2, '--outcomes is for two players');
@@ -273,21 +274,21 @@ async function setUp() {
   await enterPlayer(names[1], 'Lagre');
   await page.waitForFunction(() => !document.querySelector('.sheet'), { timeout: 5000 });
   assert.deepEqual(await rosterNames(), names);
-  // up to ten, and no more (and the extra ones go again, with two taps each)
-  const extra = NAMES.slice(PLAYERS);
+  // up to five (as many as a car holds), and no more (and the extra ones go again, with two taps each)
+  const extra = NAMES.slice(PLAYERS, MAX);
   for (const name of extra) {
     await clickButton('Legg til spiller');
     await enterPlayer(name, 'Legg til');
     await page.waitForFunction(() => !document.querySelector('.sheet'), { timeout: 5000 });
   }
-  assert.equal((await rosterNames()).length, 10);
-  assert.equal(await page.$('.roster__add'), null, 'no more than ten');
+  assert.equal((await rosterNames()).length, MAX);
+  assert.equal(await page.$('.roster__add'), null, `no more than ${MAX}`);
   if (extra.length) {
     await page.evaluate((n) => document.querySelector(`button[aria-label="Fjern ${n}"]`).click(), extra.at(-1));
     await waitText(/Fjern\?/);
     assert.ok((await rosterNames()).includes(extra.at(-1)), 'one tap does not take anybody out');
     await page.evaluate((n) => document.querySelector(`button[aria-label="Trykk igjen for å fjerne ${n}"]`).click(), extra.at(-1));
-    await page.waitForFunction((n) => document.querySelectorAll('.roster__main').length === n, { timeout: 5000 }, 9);
+    await page.waitForFunction((n) => document.querySelectorAll('.roster__main').length === n, { timeout: 5000 }, MAX - 1);
     for (const name of extra.slice(0, -1).reverse()) {
       await page.evaluate((n) => document.querySelector(`button[aria-label="Fjern ${n}"]`).click(), name);
       await page.waitForSelector(`button[aria-label="Trykk igjen for å fjerne ${name}"]`, { timeout: 3000 });
@@ -326,13 +327,13 @@ async function setUp() {
   assert.match(how, new RegExp(`${HOST} leser spørsmålet`));
   assert.match(how, new RegExp(`Først til ${TARGET} poeng`));
   assert.match(how, new RegExp(`${PLAYERS} spillere`));
-  if (PLAYERS >= 6) assert.match(how, /to imposterer/);
+  assert.doesNotMatch(how, /to imposterer/, 'a car holds five at most: never two impostors');
   assert.doesNotMatch(how, /Slik går det/);
   await shot('03-how');
   // the rules from the help button are the rules of the car
   await clickLabel('Slik spiller du');
   await waitText(/Send telefonen rundt[\s\S]*Verten stiller spørsmålet/);
-  assert.match(await bodyText(), /Fra 2 til 10 spillere/);
+  assert.match(await bodyText(), /Fra 2 til 5 spillere/);
   await clickLabel('Lukk');
   await page.waitForFunction(() => !document.querySelector('.sheet'));
   await clickButton('Start spillet');
@@ -418,15 +419,11 @@ async function sendPhoneRound(round) {
     if (count === 0) outcomes.none++;
     else if (roles[0] === 'impostor') outcomes.first++;
     else outcomes.second++;
-  } else assert.equal(count, PLAYERS >= 6 ? 2 : 1, `round ${round}: ${PLAYERS >= 6 ? 2 : 1} impostor(s) among ${PLAYERS}, got ${roles}`);
+  } else assert.equal(count, 1, `round ${round}: one impostor among ${PLAYERS}, got ${roles}`);
   for (const [name, { role, strip }] of seenRoles) {
     if (role === 'impostor') assert.match(strip, /Riktig svar: [A-D]: /, `${name} (the impostor) sees the right answer, beside the button`);
     else assert.doesNotMatch(strip, /Riktig svar/, `${name} is loyal and has nothing to look up`);
-    if (PLAYERS >= 6) {
-      const mates = [...seenRoles].filter(([n, r]) => r.role === 'impostor' && n !== name).map(([n]) => n);
-      if (role === 'impostor') assert.match(strip, new RegExp(`Sammen med ${mates[0]}\\b`), `${name} is told who the other impostor is`);
-      else assert.match(strip, /To av dere er imposterer/);
-    } else assert.doesNotMatch(strip, /Sammen med|er imposterer/);
+    assert.doesNotMatch(strip, /Sammen med|er imposterer/, 'never two impostors in a car');
   }
   return { count, roles };
 }
@@ -492,7 +489,7 @@ async function playRound(round) {
   assert.doesNotMatch(await bodyText(), /Riktig!|Feil!|Riktig svar/, 'the countdown does not say whether it was right');
   await waitText(/avslører seg/i, 10000);
   const stage = await page.evaluate(() => ({ body: document.querySelector('.stage__body')?.innerText.replace(/\s+/g, ' ') ?? '', whole: document.body.innerText.replace(/\s+/g, ' ') }));
-  assert.match(stage.body, PLAYERS >= 6 ? /Imposterne avslører seg/ : /Imposteren avslører seg/, 'the reveal says the same, also when nobody is the impostor');
+  assert.match(stage.body, /Imposteren avslører seg/, 'the reveal says the same, also when nobody is the impostor');
   assert.doesNotMatch(stage.whole, /Ingen var imposter|ingen imposter|Gruppa hadde rett|lurte dere|Imposter(en|ne) var/, 'the reveal gives nothing away');
   if (q.options[q.correct].length >= 5) assert.ok(!stage.whole.includes(q.options[q.correct]), 'and does not say the right answer');
   if (round === 1) await shot('08-reveal');
@@ -515,7 +512,7 @@ async function playRound(round) {
     if (count === 0) {
       assert.match(text, /Ingen var imposter denne runden\./);
       assert.match(text, groupRight ? /Dere svarte riktig sammen!/ : /Dere svarte feil\. Ingen fikk poeng\./);
-    } else assert.match(text, groupRight ? /Gruppa hadde rett/ : PLAYERS >= 6 ? /Imposterne lurte dere/ : /Imposteren lurte dere/);
+    } else assert.match(text, groupRight ? /Gruppa hadde rett/ : /Imposteren lurte dere/);
     assert.match(text, /Neste runde får dere nye roller: send telefonen rundt igjen\./);
     assert.doesNotMatch(text, /\(deg\)/, 'nobody is "(deg)": they are all at the table');
     const rows = await page.$$eval('.scoreboard .score', (els) => els.map((el) => ({ name: el.querySelector('.score__name').innerText.trim(), gain: Boolean(el.querySelector('.score__gain')) })));
