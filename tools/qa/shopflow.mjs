@@ -39,7 +39,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
 
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
-  await waitText(host, /Fortsett kvelden/);
+  await waitText(host, /Fortsett quizen/);
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt to runder gratis/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
@@ -53,7 +53,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   for (const p of others) {
     const text = await bodyText(p);
     assert.match(text, /Venter på at verten starter neste runde/, `${p.name} just waits`);
-    assert.doesNotMatch(text, /Fortsett kvelden|Gå til betaling/, `${p.name} is not asked to pay`);
+    assert.doesNotMatch(text, /Fortsett quizen|Gå til betaling/, `${p.name} is not asked to pay`);
   }
   assert.equal(stack.orders.length, orders, 'nothing is bought until the host chooses');
   assert.deepEqual(stack.calls.filter((c) => c.startsWith('/cart/')), [], 'the shop has not been visited yet');
@@ -188,7 +188,7 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   await waitText(phone, /Pakker/);
   const browse = await bodyText(phone);
   assert.match(browse, /Bare verten betaler/);
-  assert.doesNotMatch(browse, /Fortsett kvelden/, 'opened from the start screen it is a list of packages, not a gate');
+  assert.doesNotMatch(browse, /Fortsett quizen/, 'opened from the start screen it is a list of packages, not a gate');
   await shot(phone, '25-paywall-browse-shop');
   await choosePlan(phone, 'year');
   await tick(phone);

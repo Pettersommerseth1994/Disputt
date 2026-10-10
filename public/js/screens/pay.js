@@ -95,7 +95,7 @@ export function Paywall({ view = null }) {
     <div class="paywall__top"><${Button} variant="text" onClick=${() => setStore({ paywall: false })}>‹ Tilbake</${Button}></div>
     <header class="stack stack--tight">
       <p class="eyebrow">${gate ? `Dere har spilt ${rounds(view.round)}${view.round <= pay.freeRounds ? ' gratis' : ''}` : 'For verter'}</p>
-      <h1 class="setup__title rise-in">${gate ? 'Fortsett kvelden' : 'Pakker'}</h1>
+      <h1 class="setup__title rise-in">${gate ? 'Fortsett quizen' : 'Pakker'}</h1>
       <p class="lead muted">${gate ? 'Verten betaler én gang, så kan alle spille videre.' : `Bare verten betaler. ${freeLine(pay.freeRounds)}`}</p>
     </header>
 

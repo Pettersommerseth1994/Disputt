@@ -547,7 +547,7 @@ async function playRound(round) {
 async function payAfterFreeRounds() {
   const before = stack.fake.sessions.size;
   await clickButton('Neste runde');
-  await waitText(/Fortsett kvelden/);
+  await waitText(/Fortsett quizen/);
   const paywall = await bodyText();
   assert.match(paywall, /Dere har spilt to runder gratis/, 'two rounds are free, as in the normal game');
   for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);

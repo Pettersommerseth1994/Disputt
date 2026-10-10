@@ -38,7 +38,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
 
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
-  await waitText(host, /Fortsett kvelden/);
+  await waitText(host, /Fortsett quizen/);
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt to runder gratis/);
   for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
@@ -49,7 +49,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   for (const p of others) {
     const text = await bodyText(p);
     assert.match(text, /Venter på at verten starter neste runde/, `${p.name} just waits`);
-    assert.doesNotMatch(text, /Fortsett kvelden|Betal med/, `${p.name} is not asked to pay`);
+    assert.doesNotMatch(text, /Fortsett quizen|Betal med/, `${p.name} is not asked to pay`);
   }
   assert.equal(stack.fake.sessions.size, before, 'nothing is started at Stripe until the host chooses');
   log('after the free rounds the host gets the packages, and the others only wait');
@@ -78,7 +78,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
 
   // 2) "Livstid" with Vipps, paid
   await clickButton(host, 'Neste runde');
-  await waitText(host, /Fortsett kvelden/);
+  await waitText(host, /Fortsett quizen/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
   await choosePlan(host, 'lifetime');
   await clickButton(host, 'Betal med Vipps');
@@ -143,7 +143,7 @@ export async function buyAndComeBackByTheBackButton(t, { base, stack }) {
   await waitText(phone, /Pakker/);
   const browse = await bodyText(phone);
   assert.match(browse, /Bare verten betaler/);
-  assert.doesNotMatch(browse, /Fortsett kvelden/, 'opened from the start screen it is a list of packages, not a gate');
+  assert.doesNotMatch(browse, /Fortsett quizen/, 'opened from the start screen it is a list of packages, not a gate');
   await shot(phone, '25-paywall-browse');
   await choosePlan(phone, 'year');
   await clickButton(phone, 'Betal med Apple Pay');
