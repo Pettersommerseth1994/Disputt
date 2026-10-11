@@ -76,8 +76,6 @@ export const QUESTIONS = [
   { id: 'stortinget', text: 'Hvor mange representanter har Stortinget?', options: ['150', '165', '169', '175'], correct: 2 },
 
   // ---- Norge: natur og kultur
-  { id: 'naboland', text: 'Hvor mange land grenser til Norge?', options: ['2', '3', '4', '5'], correct: 1 },
-  { id: 'alfabet', text: 'Hvor mange bokstaver har det norske alfabetet?', options: ['26', '27', '29', '31'], correct: 2 },
   {
     id: 'hamsun',
     text: 'Hvilken nordmann fikk Nobels litteraturpris i 1920?',
@@ -124,7 +122,6 @@ export const QUESTIONS = [
   { id: 'tidssoner', text: 'Hvor mange tidssoner har Russland?', options: ['6', '9', '11', '13'], correct: 2 },
   { id: 'bajkal', text: 'Hva er verdens dypeste innsjø?', options: ['Bajkal', 'Tanganyika', 'Superior', 'Victoria'], correct: 0 },
   { id: 'kystlinje', text: 'Hvilket land har verdens lengste kystlinje?', options: ['Norge', 'Russland', 'Indonesia', 'Canada'], correct: 3 },
-  { id: 'folketall', text: 'Hvilket land har flest innbyggere i verden?', options: ['Kina', 'India', 'USA', 'Indonesia'], correct: 1 },
   { id: 'sveits', text: 'Hvor mange nasjonalspråk har Sveits?', options: ['2', '3', '4', '5'], correct: 2 },
   {
     id: 'aconcagua',
@@ -164,7 +161,6 @@ export const QUESTIONS = [
     options: ['California', 'Washington', 'Texas', 'New York'],
     correct: 0,
   },
-  { id: 'dusin', text: 'Hvor mye er et dusin?', options: ['12', '20', '25', '30'], correct: 0 },
   {
     id: 'sorligste-hovedstad',
     text: 'Hva er verdens sørligste hovedstad?',
@@ -238,7 +234,6 @@ export const QUESTIONS = [
 
   // ---- More in the same style: historie
   { id: 'revolusjonen', text: 'Hvilket år brøt den franske revolusjonen ut?', options: ['1689', '1776', '1789', '1815'], correct: 2 },
-  { id: 'sovjet', text: 'Hvilket år ble Sovjetunionen oppløst?', options: ['1985', '1987', '1989', '1991'], correct: 3 },
   { id: 'augustus', text: 'Hvem var Romerrikets første keiser?', options: ['Julius Cæsar', 'Augustus', 'Nero', 'Konstantin'], correct: 1 },
   {
     id: 'mayflower',
@@ -268,6 +263,261 @@ export const QUESTIONS = [
   { id: 'bein', text: 'Hvor mange bein har en voksen person?', options: ['106', '156', '206', '256'], correct: 2 },
   { id: 'blodtype', text: 'Hvilken blodtype er universell giver?', options: ['A positiv', 'AB positiv', 'O negativ', 'B negativ'], correct: 2 },
   { id: 'maaner', text: 'Hvilken planet har flest kjente måner?', options: ['Saturn', 'Jupiter', 'Uranus', 'Neptun'], correct: 0 },
+  // ---- Sammenligninger: høyde, vekt, drektighet, levealder, areal, økonomi, fødsel og død, innbyggere
+  // (two of the four options are close on purpose, so it is mostly a choice between two)
+  { id: 'putin-hoyde', text: 'Hvor høy er Vladimir Putin?', options: ['160 cm', '165 cm', '170 cm', '175 cm'], correct: 2 },
+  { id: 'trump-hoyde', text: 'Hvor høy er Donald Trump?', options: ['175 cm', '180 cm', '185 cm', '190 cm'], correct: 3 },
+  { id: 'obama-hoyde', text: 'Hvor høy er Barack Obama?', options: ['180 cm', '185 cm', '190 cm', '195 cm'], correct: 1 },
+  {
+    id: 'hoyest-politikere',
+    text: 'Hvem er høyest av disse?',
+    options: ['Barack Obama', 'Joe Biden', 'Donald Trump', 'Vladimir Putin'],
+    correct: 2,
+  },
+  {
+    id: 'hoyest-basket',
+    text: 'Hvem er høyest av disse basketballspillerne?',
+    options: ['Kevin Durant', 'Stephen Curry', 'Michael Jordan', 'LeBron James'],
+    correct: 0,
+  },
+  {
+    id: 'hoyest-skuespillere',
+    text: 'Hvem er høyest av disse skuespillerne?',
+    options: ['Sylvester Stallone', 'Dwayne Johnson', 'Tom Cruise', 'Arnold Schwarzenegger'],
+    correct: 1,
+  },
+  {
+    id: 'hoyest-presidenter',
+    text: 'Hvem av disse presidentene var høyest?',
+    options: ['George Washington', 'Theodore Roosevelt', 'John F. Kennedy', 'Abraham Lincoln'],
+    correct: 3,
+  },
+  {
+    id: 'drektighet-kamel',
+    text: 'Hvilket av disse dyrene har lengst drektighetstid?',
+    options: ['Ku', 'Gris', 'Kamel', 'Hest'],
+    correct: 2,
+  },
+  {
+    id: 'drektighet-spekkhogger',
+    text: 'Hvilket av disse pattedyrene går drektig lengst?',
+    options: ['Blåhval', 'Flodhest', 'Spekkhogger', 'Giraff'],
+    correct: 2,
+  },
+  { id: 'drektighet-ku', text: 'Hvilket av disse dyrene er drektig lengst?', options: ['Elg', 'Geit', 'Rein', 'Ku'], correct: 3 },
+  { id: 'drektighet-sau', text: 'Hvilket av disse husdyrene er drektig lengst?', options: ['Hund', 'Kanin', 'Sau', 'Gris'], correct: 2 },
+  {
+    id: 'veier-mest-neshorn',
+    text: 'Hvilket av disse dyrene veier mest?',
+    options: ['Isbjørn', 'Flodhest', 'Hvitt neshorn', 'Giraff'],
+    correct: 2,
+  },
+  {
+    id: 'veier-mest-landdyr',
+    text: 'Hvilket landdyr veier mest?',
+    options: ['Asiatisk elefant', 'Hvitt neshorn', 'Flodhest', 'Afrikansk elefant'],
+    correct: 3,
+  },
+  { id: 'veier-mest-hai', text: 'Hvilken av disse haiene veier mest?', options: ['Tigerhai', 'Brugde', 'Hvithai', 'Hvalhai'], correct: 3 },
+  {
+    id: 'veier-mest-rovdyr',
+    text: 'Hvilket av disse rovdyrene veier mest?',
+    options: ['Grizzlybjørn', 'Isbjørn', 'Tiger', 'Løve'],
+    correct: 1,
+  },
+  { id: 'veier-mest-norske', text: 'Hvilket av disse norske dyrene veier mest?', options: ['Rein', 'Elg', 'Brunbjørn', 'Ulv'], correct: 1 },
+  {
+    id: 'veier-minst-spissmus',
+    text: 'Hvilket av disse dyrene veier minst?',
+    options: ['Husmus', 'Lemen', 'Hamster', 'Vanlig spissmus'],
+    correct: 3,
+  },
+  {
+    id: 'veier-minst-fugl',
+    text: 'Hvilken av disse fuglene veier minst?',
+    options: ['Fuglekonge', 'Gråspurv', 'Svarttrost', 'Blåmeis'],
+    correct: 0,
+  },
+  {
+    id: 'lever-lengst-musling',
+    text: 'Hvilket av disse dyrene lever lengst?',
+    options: ['Grønlandshval', 'Islandsmusling', 'Gigantskilpadde', 'Afrikansk elefant'],
+    correct: 1,
+  },
+  {
+    id: 'lever-lengst-hai',
+    text: 'Hvilken av disse haiene lever lengst?',
+    options: ['Grønlandshai', 'Hvithai', 'Hvalhai', 'Brugde'],
+    correct: 0,
+  },
+  {
+    id: 'lever-lengst-pattedyr',
+    text: 'Hvilket pattedyr lever lengst?',
+    options: ['Blåhval', 'Grønlandshval', 'Afrikansk elefant', 'Spekkhogger'],
+    correct: 1,
+  },
+  {
+    id: 'storst-argentina',
+    text: 'Hvilket land har størst areal av disse?',
+    options: ['Argentina', 'Kasakhstan', 'DR Kongo', 'Algerie'],
+    correct: 0,
+  },
+  {
+    id: 'storst-mexico',
+    text: 'Hvilket av disse landene dekker størst areal?',
+    options: ['Iran', 'Indonesia', 'Peru', 'Mexico'],
+    correct: 3,
+  },
+  {
+    id: 'storst-frankrike',
+    text: 'Hvilket av disse europeiske landene er størst?',
+    options: ['Tyskland', 'Sverige', 'Frankrike', 'Spania'],
+    correct: 2,
+  },
+  {
+    id: 'minst-vatikan',
+    text: 'Hvilket av disse landene er minst?',
+    options: ['Vatikanstaten', 'Liechtenstein', 'Monaco', 'San Marino'],
+    correct: 0,
+  },
+  {
+    id: 'minst-nauru',
+    text: 'Hvilket land har minst areal av disse?',
+    options: ['Nauru', 'Maldivene', 'Marshalløyene', 'Tuvalu'],
+    correct: 0,
+  },
+  {
+    id: 'minst-maldivene',
+    text: 'Hvilket av disse landene har minst landareal?',
+    options: ['Malta', 'Luxembourg', 'Maldivene', 'Barbados'],
+    correct: 2,
+  },
+  {
+    id: 'minst-sanmarino',
+    text: 'Hvilket av disse europeiske landene er minst?',
+    options: ['San Marino', 'Liechtenstein', 'Andorra', 'Malta'],
+    correct: 0,
+  },
+  {
+    id: 'bil-flest-merke',
+    text: 'Hvilket bilmerke produserer flest biler i året?',
+    options: ['Ford', 'Toyota', 'Volkswagen', 'Hyundai'],
+    correct: 1,
+  },
+  {
+    id: 'bil-mest-solgt',
+    text: 'Hvilken bilmodell er verdens mest solgte gjennom tidene?',
+    options: ['Volkswagen Golf', 'Ford F-serien', 'Volkswagen Boble', 'Toyota Corolla'],
+    correct: 3,
+  },
+  {
+    id: 'bil-flest-land',
+    text: 'Hvilket av disse landene produserer flest biler?',
+    options: ['USA', 'India', 'Tyskland', 'Japan'],
+    correct: 0,
+  },
+  {
+    id: 'okonomi-usa',
+    text: 'Hvilket land har størst økonomi, målt i nominelt BNP?',
+    options: ['Tyskland', 'USA', 'Japan', 'Kina'],
+    correct: 1,
+  },
+  {
+    id: 'okonomi-europa',
+    text: 'Hvilket av disse landene har størst økonomi?',
+    options: ['Italia', 'Storbritannia', 'Tyskland', 'Frankrike'],
+    correct: 2,
+  },
+  {
+    id: 'okonomi-norden',
+    text: 'Hvilket nordisk land har størst økonomi?',
+    options: ['Sverige', 'Norge', 'Finland', 'Danmark'],
+    correct: 0,
+  },
+  {
+    id: 'fodt-forst-renessanse',
+    text: 'Hvem av disse ble født først?',
+    options: ['Rafael', 'Sandro Botticelli', 'Michelangelo', 'Leonardo da Vinci'],
+    correct: 1,
+  },
+  {
+    id: 'fodt-forst-nordmenn',
+    text: 'Hvem av disse nordmennene ble født først?',
+    options: ['Henrik Ibsen', 'Edvard Grieg', 'Edvard Munch', 'Bjørnstjerne Bjørnson'],
+    correct: 0,
+  },
+  {
+    id: 'fodt-forst-forskere',
+    text: 'Hvem av disse forskerne ble født først?',
+    options: ['Marie Curie', 'Max Planck', 'Albert Einstein', 'Niels Bohr'],
+    correct: 1,
+  },
+  {
+    id: 'fodt-forst-oppdagere',
+    text: 'Hvilken norsk oppdager ble født først?',
+    options: ['Thor Heyerdahl', 'Roald Amundsen', 'Fridtjof Nansen', 'Otto Sverdrup'],
+    correct: 3,
+  },
+  {
+    id: 'fodt-forst-presidenter',
+    text: 'Hvem av disse presidentene ble født først?',
+    options: ['John Adams', 'Thomas Jefferson', 'James Madison', 'George Washington'],
+    correct: 3,
+  },
+  {
+    id: 'dode-sist-musikere',
+    text: 'Hvem av disse musikerne døde sist?',
+    options: ['Jim Morrison', 'John Lennon', 'Elvis Presley', 'Jimi Hendrix'],
+    correct: 1,
+  },
+  {
+    id: 'dode-sist-historie',
+    text: 'Hvem av disse historiske personene døde sist?',
+    options: ['Napoleon', 'Beethoven', 'Goethe', 'Mozart'],
+    correct: 2,
+  },
+  {
+    id: 'dode-sist-berommelser',
+    text: 'Hvem av disse berømte personene døde sist?',
+    options: ['Mahatma Gandhi', 'Franklin D. Roosevelt', 'Winston Churchill', 'Albert Einstein'],
+    correct: 2,
+  },
+  {
+    id: 'dode-sist-nordmenn',
+    text: 'Hvem av disse nordmennene døde sist?',
+    options: ['Fridtjof Nansen', 'Henrik Ibsen', 'Edvard Grieg', 'Roald Amundsen'],
+    correct: 0,
+  },
+  {
+    id: 'dode-sist-artister',
+    text: 'Hvem av disse artistene døde sist?',
+    options: ['Amy Winehouse', 'Whitney Houston', 'Michael Jackson', 'Prince'],
+    correct: 3,
+  },
+  {
+    id: 'by-flest-istanbul',
+    text: 'Hvilken av disse byene har flest innbyggere?',
+    options: ['London', 'Moskva', 'Paris', 'Istanbul'],
+    correct: 3,
+  },
+  {
+    id: 'by-flest-berlin',
+    text: 'Hvilken av disse EU-byene har flest innbyggere?',
+    options: ['Roma', 'Berlin', 'Paris', 'Madrid'],
+    correct: 1,
+  },
+  {
+    id: 'by-flest-hamburg',
+    text: 'Hvilken av disse europeiske byene har flest innbyggere?',
+    options: ['Hamburg', 'Milano', 'München', 'Barcelona'],
+    correct: 0,
+  },
+  {
+    id: 'by-flest-toronto',
+    text: 'Hvilken av disse byene i Nord-Amerika har flest innbyggere?',
+    options: ['Houston', 'Montréal', 'Toronto', 'Chicago'],
+    correct: 2,
+  },
 ];
 
 export const LETTERS = ['A', 'B', 'C', 'D'];
