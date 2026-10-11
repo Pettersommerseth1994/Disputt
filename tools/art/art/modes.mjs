@@ -42,6 +42,17 @@ function windowEye(x, y, w, rot, gaze, c) {
   };
 }
 
+/** The cabin's eye (its window). hytte() draws it open; hytteLid() draws the same eye shut, as the lid that blinks over it on the page. */
+const hytteEye = () =>
+  windowEye(158, 212, 104, -3, [0.34, 0.1], {
+    socket: '#fff0cc', socketLight: '#ffffff', socketDark: '#e8c27a', socketAlt: '#fdd27a',
+    blend: ['#f9b0b0'],
+    sclera: '#fff9ec', scleraLight: '#ffffff', scleraDark: '#e8d8b8', scleraHi: '#ffffff',
+    iris: '#53a0a7', irisLight: '#c2e2ee', irisDark: '#1b838c', irisRing: '#2e7ece', irisRingDark: '#2230c8', irisInner: '#e8f6fa',
+    pupil: '#1d1652', pupilLight: '#3340c8',
+    lashLine: '#7e1f2c', lashInk: '#4a0c18', lash: '#a62f38', lash2: '#7e1f2c', lowerLine: '#c4364a', water: '#fde6c8', lidShadow: '#e8c27a',
+  });
+
 export function hytte() {
   const cv = new Canvas('hytte', 400, 300);
   const rng = new Rng('hytte');
@@ -68,14 +79,7 @@ export function hytte() {
   const walls = new Shape(roundedPoly(rng.fork('walls'), [[76, 150], [324, 150], [328, 268], [72, 268]], 0.07, 1.6));
   const seamR = rng.fork('seams');
   const seams = [176, 200, 224, 248].map((y) => [[78, y + seamR.range(-1, 1)], [200, y + seamR.range(-2, 2)], [322, y + seamR.range(-1, 1)]]);
-  const E = windowEye(158, 212, 104, -3, [0.34, 0.1], {
-    socket: '#fff0cc', socketLight: '#ffffff', socketDark: '#e8c27a', socketAlt: '#fdd27a',
-    blend: ['#f9b0b0'],
-    sclera: '#fff9ec', scleraLight: '#ffffff', scleraDark: '#e8d8b8', scleraHi: '#ffffff',
-    iris: '#53a0a7', irisLight: '#c2e2ee', irisDark: '#1b838c', irisRing: '#2e7ece', irisRingDark: '#2230c8', irisInner: '#e8f6fa',
-    pupil: '#1d1652', pupilLight: '#3340c8',
-    lashLine: '#7e1f2c', lashInk: '#4a0c18', lash: '#a62f38', lash2: '#7e1f2c', lowerLine: '#c4364a', water: '#fde6c8', lidShadow: '#e8c27a',
-  });
+  const E = hytteEye();
   const er = rng.fork('eye');
   const sock = socketWorld(er, E);
   const exclude = (p) => sock.inside(p) && sock.nearest(p).d > 14;
@@ -115,6 +119,17 @@ export function hytte() {
   return cv.render(s, { filter: f });
 }
 
+/** The car's eye (its window). bil() draws it open; bilLid() draws the same eye shut, as the lid that blinks over it on the page. */
+const bilEye = () =>
+  windowEye(214, 134, 100, 2, [0.4, 0.08], {
+    socket: '#88c6db', socketLight: '#e8f6fa', socketDark: '#2e7ece', socketAlt: '#c2e2ee',
+    blend: ['#fa9a3a'],
+    sclera: '#fff9ec', scleraLight: '#ffffff', scleraDark: '#c2d2d4', scleraHi: '#ffffff',
+    iris: '#f8852c', irisLight: '#fdd27a', irisDark: '#c43d2a', irisRing: '#a62f38', irisRingDark: '#6a1428', irisInner: '#fdf435',
+    pupil: '#1c0a10', pupilLight: '#4a0c18',
+    lashLine: '#2e5f9e', lashInk: '#1d1652', lash: '#2e7ece', lash2: '#2230c8', lowerLine: '#4a86c4', water: '#e8f6fa', lidShadow: '#53a0c0',
+  });
+
 export function bil() {
   const cv = new Canvas('bil', 400, 300);
   const rng = new Rng('bil');
@@ -135,14 +150,7 @@ export function bil() {
   const bodyPts = [[24, 224], [22, 188], [38, 170], [120, 164], [300, 162], [352, 172], [384, 198], [384, 226], [300, 234], [110, 234]];
   const cabinPts = [[92, 170], [112, 118], [146, 88], [214, 76], [262, 86], [298, 114], [330, 170], [210, 174]];
   const body = new Shape([bodyPts, cabinPts]);
-  const E = windowEye(214, 134, 100, 2, [0.4, 0.08], {
-    socket: '#88c6db', socketLight: '#e8f6fa', socketDark: '#2e7ece', socketAlt: '#c2e2ee',
-    blend: ['#fa9a3a'],
-    sclera: '#fff9ec', scleraLight: '#ffffff', scleraDark: '#c2d2d4', scleraHi: '#ffffff',
-    iris: '#f8852c', irisLight: '#fdd27a', irisDark: '#c43d2a', irisRing: '#a62f38', irisRingDark: '#6a1428', irisInner: '#fdf435',
-    pupil: '#1c0a10', pupilLight: '#4a0c18',
-    lashLine: '#2e5f9e', lashInk: '#1d1652', lash: '#2e7ece', lash2: '#2230c8', lowerLine: '#4a86c4', water: '#e8f6fa', lidShadow: '#53a0c0',
-  });
+  const E = bilEye();
   const er = rng.fork('eye');
   const sock = socketWorld(er, E);
   const exclude = (p) => sock.inside(p) && sock.nearest(p).d > 14;
@@ -171,6 +179,20 @@ export function bil() {
   const f = cv.paperFilter({ ...PAPER, seed: 411 });
   return cv.render(s, { filter: f });
 }
+
+/**
+ * The same eye with the lid shut, on a canvas of its own the size of the picture. On the page it lies over the open eye, folded away
+ * (scaleY(0)), and closes over it for a moment now and then: a blink. The grain filter has the picture's own seed, so the lid wobbles
+ * and speckles exactly like the paper around it, and the socket is drawn with the same strokes (same random streams) as in the open eye.
+ */
+function lid(name, eyeOf, seed) {
+  const cv = new Canvas(`${name}-lid`, 400, 300);
+  const er = new Rng(name).fork('eye');
+  const s = eye(cv, er, { ...eyeOf(), closed: 'down' });
+  return cv.render(s, { filter: cv.paperFilter({ ...PAPER, seed }) });
+}
+export const bilLid = () => lid('bil', bilEye, 411);
+export const hytteLid = () => lid('hytte', hytteEye, 401);
 
 // (kept for the contact sheet: the cyan the car is shown on, and the cream the cabin is shown on)
 export const MODE_BG = { bil: CYAN, hytte: CREAM };

@@ -353,6 +353,44 @@
 }
 .mode__blob { position: absolute; left: 50%; top: 50%; width: 150px; height: auto; transform: translate(-50%, -52%); opacity: 0.75; }
 .mode__art { position: relative; width: auto; height: 108px; margin-top: 4px; }
+/* The eye in each picture blinks. The same eye drawn shut (assets/art/*-lid.svg, 5 KB each) lies folded away over the open one and closes over it for a
+   moment. Right after a tap on a card its eye blinks twice (::after, from the class mode--chosen); now and then each card blinks by itself (::before,
+   from the class mode--blink that mode.js sets), so the two never fight over one animation. Only a transform moves, so it costs the phone next to nothing. */
+.mode--bil { --lid-top: 28%; }
+.mode--hytte { --lid-top: 53%; }
+.mode__art,
+.mode__pic::before,
+.mode__pic::after { grid-area: 1 / 1; }
+.mode__pic::before,
+.mode__pic::after {
+  content: '';
+  position: relative;
+  z-index: 1;
+  width: 144px; /* (the box of the picture: .mode__art is 108 px high at 4:3) */
+  height: 108px;
+  margin-top: 4px;
+  background: none center / 100% 100% no-repeat;
+  transform: scaleY(0);
+  transform-origin: 50% var(--lid-top);
+  pointer-events: none;
+}
+.mode--bil .mode__pic::before,
+.mode--bil .mode__pic::after { background-image: url('../assets/art/bil-lid.svg'); }
+.mode--hytte .mode__pic::before,
+.mode--hytte .mode__pic::after { background-image: url('../assets/art/hytte-lid.svg'); }
+/* (half a second: the lid falls in 0.12 s, stays shut for 0.06 s, is lifted in 0.2 s, and the eye rests open for the last 0.12 s, so two blinks in a row flutter) */
+@keyframes mode-blink {
+  0% { transform: scaleY(0); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  24%, 36% { transform: scaleY(1); }
+  36% { animation-timing-function: cubic-bezier(0.2, 0.5, 0.4, 1); }
+  76%, 100% { transform: scaleY(0); }
+}
+.mode--chosen .mode__pic::after { animation: mode-blink 0.5s 0.25s 2; }
+.mode--blink .mode__pic::before { animation: mode-blink 0.5s; }
+@media (prefers-reduced-motion: reduce) {
+  .mode__pic::before,
+  .mode__pic::after { animation: none !important; }
+}
 .mode__chip {
   position: absolute;
   left: 10px;
@@ -512,6 +550,8 @@
   .mode__pic { height: 74px; }
   .mode__blob { width: 108px; }
   .mode__art { height: 66px; margin-top: 3px; }
+  .mode__pic::before,
+  .mode__pic::after { width: 88px; height: 66px; margin-top: 3px; }
   .mode__chip { top: 8px; left: 8px; font-size: 0.74rem; }
   .mode__check { top: 8px; right: 8px; width: 1.6rem; height: 1.6rem; }
   .mode__body { padding: 2px 6px 0; }

@@ -4,7 +4,7 @@
 // (A file of its own: pages are cached for ten minutes, and a module that imports something an older cached copy of another
 // module does not have would not load.)
 
-import { html, useState } from '../vendor/htm-preact.js';
+import { html, useEffect, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { asset } from '../paths.js';
 import { setStore } from '../store.js';
@@ -18,8 +18,38 @@ export const MODES = [
   { id: 'cabin', title: 'Hytteturmodus', text: 'Alle spiller på sin egen telefon.', art: 'hytte', blob: 'blob-4', players: '2-10 deltakere' },
 ];
 
+/**
+ * Now and then one of the two eyes blinks by itself: the id of the card whose eye does it just now, or null. (The blink is drawn in screens.css,
+ * from the class mode--blink; right after a tap the chosen card blinks twice on its own, there, with no help from here.) A timer that wakes up
+ * every few seconds and a transform for half a second is all it costs. Nothing happens while the page is hidden, and nothing at all for those
+ * who have asked for less motion.
+ */
+function useBlinks() {
+  const [who, setWho] = useState(null);
+  useEffect(() => {
+    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    let timer;
+    function rest() {
+      timer = setTimeout(blink, 3500 + Math.random() * 4500);
+    }
+    function blink() {
+      if (document.hidden) return rest();
+      setWho(MODES[Math.floor(Math.random() * MODES.length)].id);
+      timer = setTimeout(() => {
+        setWho(null);
+        rest();
+      }, 700);
+      return undefined;
+    }
+    rest();
+    return () => clearTimeout(timer);
+  }, []);
+  return who;
+}
+
 export function ModeStep() {
   const [mode, setMode] = useState(null);
+  const blinking = useBlinks();
   const back = () => setStore({ modeStep: false });
   return html`<main class="screen setup">
     <header class="row row--between">
@@ -29,7 +59,7 @@ export function ModeStep() {
     <h1 class="setup__title rise-in">Hvordan vil dere spille?</h1>
     <div class="modes" role="radiogroup" aria-label="Spillmodus">
       ${MODES.map(
-        (m) => html`<button type="button" role="radio" class=${cx('mode', `mode--${m.art}`, mode === m.id && 'mode--chosen')} key=${m.id} aria-checked=${mode === m.id} onClick=${() => setMode(m.id)}>
+        (m) => html`<button type="button" role="radio" class=${cx('mode', `mode--${m.art}`, mode === m.id && 'mode--chosen', blinking === m.id && 'mode--blink')} key=${m.id} aria-checked=${mode === m.id} onClick=${() => setMode(m.id)}>
           <span class="mode__pic">
             <img class="mode__blob" src=${asset(`assets/art/${m.blob}.svg`)} alt="" decoding="async" />
             <img class="mode__art" src=${asset(`assets/art/${m.art}.svg`)} alt="" width="400" height="300" decoding="async" />

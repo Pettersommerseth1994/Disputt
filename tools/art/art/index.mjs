@@ -1,7 +1,7 @@
 // Role / reveal / state illustrations and decorative bits.
 import { eyeImpostor, eyeLoyal, eyeRight, eyeWrong, eyeWait } from './eyes.mjs';
 import { crown, lipsArt, star, sparkle, blobs, scribbleUnderline, scribbleCircle } from './decor.mjs';
-import { bil, hytte } from './modes.mjs';
+import { bil, bilLid, hytte, hytteLid } from './modes.mjs';
 
 export const ART_SET = {
   'eye-impostor': eyeImpostor,
@@ -18,4 +18,6 @@ export const ART_SET = {
   'scribble-circle': scribbleCircle,
   bil, // the two ways to play: a car (one phone) and a cabin (a phone each)
   hytte,
+  'bil-lid': bilLid, // the same two eyes shut: the lids that blink over them (public/css/screens.css)
+  'hytte-lid': hytteLid,
 };
