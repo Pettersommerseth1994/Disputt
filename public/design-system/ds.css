@@ -80,6 +80,10 @@ pre.ds-code { margin: 0; padding: 1rem 1.2rem; overflow-x: auto; border-radius: 
 .ds-sheet-preview .sheet-backdrop { position: static; animation: none; background: none; display: block; }
 .ds-banner-preview .banner { position: static; margin: 0; border-radius: var(--r-input); }
 .ds-toast-preview .toast { position: static; margin: 0; animation: none; width: 100%; }
+/* the mantra's strip and the open bubble under it, in a box that has room for both */
+.ds-mantra-preview { min-height: 16.5rem; border-radius: var(--r-card); background: var(--burgundy-700); overflow: hidden; }
+.ds-mantra-preview .mantra { position: relative; z-index: auto; }
+.ds-mantra-preview .mantra__bubble { animation: none; }
 
 /* screens gallery */
 .ds-screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 1.4rem 1rem; }

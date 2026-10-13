@@ -1,0 +1,114 @@
+/* ==========================================================================
+   DISPUTT DESIGN SYSTEM — the mantra
+   A strip at the very top of every screen: a star and a word («Vårt mantra»). A tap opens a bubble with what Team Disputt wants to
+   say: this is a game between people, and the phone is only a tool for the quiz. (public/js/mantra/mantra.js)
+   (A style sheet of its own: the script that draws the strip loads it itself, so a script and an index.html that are not equally
+   new, from the cache, still work.)
+   ========================================================================== */
+
+:root {
+  --mantra-h: 1.5rem; /* the strip, under whatever the phone keeps for its status bar */
+  --mantra-total: calc(var(--mantra-h) + env(safe-area-inset-top, 0px));
+}
+
+/* The strip is in the flow, above the screen, and keeps its place at the top when the screen scrolls. It lies under the sheets, the
+   banner and the toast (z-index 60, 80, 90). The screen makes room for it: it starts a little closer to it, and is as much shorter as
+   the strip is tall, so a screen is still exactly as tall as the phone. */
+.mantra { position: sticky; top: 0; z-index: 50; }
+#app:has(> .mantra) .screen {
+  min-height: calc(100vh - var(--mantra-total));
+  min-height: calc(100dvh - var(--mantra-total));
+  padding-top: 0.2rem;
+}
+
+.mantra__bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--mantra-total);
+  padding: env(safe-area-inset-top, 0px) var(--page-x) 0;
+  background: var(--tex-grain), var(--tex-dark), var(--bg); /* solid: the screen scrolls under it */
+}
+
+.mantra__pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.3rem;
+  padding: 0 0.75rem 0 0.55rem;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.8rem;
+  line-height: 1;
+  white-space: nowrap; /* (the strip stays one line tall) */
+  color: var(--cream);
+  background: var(--tex-grain), var(--burgundy-900);
+  box-shadow: inset 0 0 0 1.5px rgb(var(--cream-rgb) / 0.2), 0 2px 0 var(--edge);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mantra__pill::after { content: ''; position: absolute; inset: -0.3rem -1.2rem; } /* (a bigger place to put a finger than the button looks: as tall as the strip and a little wider than the button) */
+.mantra__pill:active { transform: translateY(1px); }
+.mantra__icon { flex: none; width: 1.2em; height: 1.2em; color: var(--yellow); }
+
+/* anything that closes the bubble when it is tapped: the whole screen under the strip */
+.mantra__catcher { position: fixed; inset: 0; z-index: 1; }
+
+/* The bubble hangs under the button. (Centred with auto margins, not with a transform: the animation sets the transform itself.) */
+.mantra__bubble {
+  position: absolute;
+  z-index: 3;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: min(calc(100% - 2rem), 21rem);
+  margin: 0.65rem auto 0;
+  padding: 1rem 1.15rem 0.85rem;
+  border-radius: var(--r-card);
+  color: var(--cream);
+  background: var(--tex-grain), var(--burgundy-950);
+  box-shadow: 0 6px 0 var(--edge);
+  transform-origin: 50% -0.5rem;
+  animation: mantra-pop 0.34s var(--ease-bounce) both;
+}
+.mantra__bubble::before { /* the tail, pointing up at the button */
+  content: '';
+  position: absolute;
+  top: -0.45rem;
+  left: 50%;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-left: -0.45rem;
+  border-radius: 3px 0 0 0;
+  background: var(--burgundy-950);
+  transform: rotate(45deg);
+}
+@keyframes mantra-pop { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.mantra__line { margin: 0 0 0.5rem; font-style: italic; font-weight: 600; font-size: 1rem; line-height: 1.42; }
+.mantra__sign { margin: 0.3rem 0 0; font-family: var(--font-display); font-weight: 900; font-size: 0.95rem; line-height: 1.2; text-align: right; color: var(--yellow); }
+
+/* ---- Short phones ------------------------------------------------------------------------------------------------------------- */
+/* The strip takes about 11 px at the top of every screen (24 px, minus the top margin the screens no longer need). The screens that were
+   already the tightest give a little air back, in the same way as the short-screen rules in screens.css do: the discussion with the role
+   strip held open by an impostor with a partner, the asker's options, and the packages. (`node tools/qa/fit.mjs` checks them.)
+   (The lower limit keeps these from overriding the smaller sizes that screens.css has for the shortest phones.) */
+@media (min-height: 661px) and (max-height: 700px) {
+  #app:has(> .mantra) .discussion .avatar--lg { --size: 6rem; }
+}
+@media (max-height: 700px) {
+  #app:has(> .mantra) .question .option { min-height: 3.1rem; padding-block: 0.35rem; }
+}
+@media (max-height: 650px) {
+  #app:has(> .mantra) .paywall__top,
+  #app:has(> .mantra) .paywall__top .btn--text { min-height: 1.7rem; }
+  #app:has(> .mantra) .paywall > header { gap: 0.25rem; }
+  #app:has(> .mantra) .plans { padding-top: 0.3rem; }
+}

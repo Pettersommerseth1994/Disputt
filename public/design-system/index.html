@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/screens.css">
+  <link rel="stylesheet" href="../css/mantra.css">
   <link rel="stylesheet" href="ds.css">
   <script type="module" src="ds.js"></script>
 </head>
@@ -350,6 +351,20 @@
       <div class="ds-toast-preview"><div class="toast" role="status">Det navnet er tatt, velg et annet.</div></div>
       <div class="ds-banner-preview"><div class="banner" role="status">Mistet forbindelsen, kobler til igjen</div></div>
       <div class="ds-banner-preview"><div class="banner" role="status">Verten betaler, spillet fortsetter straks</div></div>
+      <div class="ds-stack">
+        <div class="ds-mantra-preview">
+          <div class="mantra">
+            <div class="mantra__bar"><button class="mantra__pill" type="button" aria-expanded="true"><svg class="mantra__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L14.65 8.96L21.13 9.63L16.28 13.99L17.64 20.37L12 17.1L6.36 20.37L7.72 13.99L2.87 9.63L9.35 8.96Z" fill="currentColor"/></svg><span>Vårt mantra</span></button></div>
+            <div class="mantra__bubble" role="note">
+              <p class="mantra__line">Disputt er et sosialt selskapsspill, laget for å spilles mellom mennesker.</p>
+              <p class="mantra__line">Telefonen er bare et støtteverktøy for quizen. Vi vil at du bruker den så lite som mulig.</p>
+              <p class="mantra__line">Se på hverandre, ikke på skjermen.</p>
+              <p class="mantra__sign">Team Disputt</p>
+            </div>
+          </div>
+        </div>
+        <p class="ds-note">Mantraet (<code>.mantra</code>): en stripe øverst på alle skjermer som holder plassen sin når skjermen ruller. Et trykk åpner boblen med det Team Disputt vil si, et trykk hvor som helst lukker den igjen (uten å trykke på noe annet), og den lukkes også når en ny skjerm kommer opp.</p>
+      </div>
       <div class="ds-stack"><button class="btn btn--small" data-toggle-sheet="ds-sheet">Vis / skjul sheet</button>
         <div class="ds-sheet-preview" id="ds-sheet" hidden><div class="sheet-backdrop"><div class="sheet"><div class="sheet__head"><h2>Poengtavle</h2><button class="btn btn--ghost btn--small btn--icon" aria-label="Lukk">✕</button></div><p class="muted">Sheets glir opp nedenfra og dekker maks 90&nbsp;% av høyden.</p></div></div></div>
       </div>

@@ -75,7 +75,7 @@ Utseendet er surrealistisk og lekent: fargestift/oljepastell på dyp burgunder, 
 
 - **Levende stilguide:** start serveren og åpne [`/design-system/`](http://localhost:3000/design-system/). Farger, typografi, avatarer, komponenter og skjermer, bygget med de samme CSS-filene som spillet.
 - **Dokumentasjon:** [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md).
-- **Kode:** `public/css/tokens.css` (farger, typografi, rom, former, bevegelse), `components.css` (knapper, felt, avatarer, klokke, svaralternativer …), `screens.css` (skjermene), `legal.css` (vilkårs- og personvernsiden).
+- **Kode:** `public/css/tokens.css` (farger, typografi, rom, former, bevegelse), `components.css` (knapper, felt, avatarer, klokke, svaralternativer …), `screens.css` (skjermene), `mantra.css` (stripen øverst med mantraet), `legal.css` (vilkårs- og personvernsiden).
 - **Illustrasjoner:** de ti avatarene, rolleskjerm-øyne, teksturer og dekor genereres av `tools/art` (`npm run art`). De kan byttes ut 1:1 med håndtegnede SVG-er (samme filnavn, `viewBox 0 0 400 400`).
 - **Logo:** `public/assets/logo/` (mørk brun, krem og «øye i i-prikken»), generert fra fonten med `npm run logo`.
 

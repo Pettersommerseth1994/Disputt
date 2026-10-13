@@ -5,6 +5,7 @@ import { Finished } from './screens/finale.js';
 import { Connecting, Home, SeatPicker } from './screens/home.js';
 import { Lobby } from './screens/lobby.js';
 import { HomeSheet } from './screens/leave.js';
+import { Mantra } from './mantra/mantra.js';
 import { ModeStep } from './screens/mode.js';
 import { Profile } from './screens/profile.js';
 import { PointsStep, hostStep } from './screens/setup.js';
@@ -65,6 +66,8 @@ export function App() {
 
   // every new screen starts at the top
   useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep]);
+  // ... and what the mantra's bubble goes away for: a new screen under it (the same things, and the packages)
+  const screenKey = [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep, s.paywall].join('|');
 
   const hint = isP2P && s.stuck >= 2 ? STUCK_HINT : null;
   let screen;
@@ -97,6 +100,7 @@ export function App() {
   return html`
     ${s.payBusy && html`<div class="banner" role="status">Sjekker betalingen</div>`}
     ${offline && html`<div class="banner" role="status">${hostAway ? 'Verten betaler, spillet fortsetter straks' : s.everOpened ? 'Mistet forbindelsen, kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}
+    <${Mantra} screen=${screenKey} />
     ${screen}
     ${sheet}
     ${s.toast && html`<div class="toast" role="alert" key=${s.toast}>${s.toast}</div>`}
