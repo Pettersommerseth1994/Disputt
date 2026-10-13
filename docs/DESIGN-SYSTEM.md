@@ -87,11 +87,9 @@ Verten går gjennom fire steg, ett valg per skjerm: 1 «Hvordan vil dere spille?
 
 - `Steps` viser fire striper, «‹ Tilbake» til venstre og «Steg 2 av 4» til høyre. `store.step` husker hvor verten er etter valget av spillemåte (1 profilen, 2 poeng, 3 invitasjonen; i Bilturmodus er 1 spillerlisten og 3 «Klar? Slik funker det»); stripen viser det tallet pluss én. `hostStep` gir steg 1 til en vert uten profil og siste steg etter en omlasting. «Tilbake» fra «Hvem er du?» gir opp spillet og går til valget av spillemåte, men bare mens verten er alene i det.
 - **Spillemåtekortene** (`.mode`) er plakatkort, stablet: et stort bilde øverst (bilen på blå flate, hytta på rosa, begge med en krittflekk bak, `assets/art/bil.svg` og `hytte.svg`, tegnet av `tools/art/art/modes.mjs`), så navnet og én linje om hva det er. Merkelappen («2-5 deltakere» for Bilturmodus, «2-10 deltakere» for Hytteturmodus: det er så mange som får plass) sitter skjevt øverst til venstre på bildet og avkrysningen øverst til høyre; det valgte kortet er gult. Under kortene står det som er likt i begge. Under 700 px høyde krymper bildene (`screens.css`). **Øyet i bildet blunker:** det samme øyet tegnet lukket (`assets/art/bil-lid.svg` og `hytte-lid.svg`, tegnet av samme fil, ca. 2 KB hver over nettet) ligger sammenfoldet over det åpne (`scaleY(0)`) og lukker seg et øyeblikk. Rett etter et trykk blunker øyet på kortet to ganger (`::after`, fra klassen `mode--chosen`), og av og til blunker hvert kort av seg selv (`::before`, fra klassen `mode--blink` som `mode.js` setter med en tidtaker hvert 4. til 8. sekund; ikke mens siden er skjult). Bare en `transform` beveger seg, og med «mindre bevegelse» på i telefonen blunker ingenting. Lokkene lages med `node tools/art/build.mjs --only=bil-lid,hytte-lid --no-textures`.
-OLD
+- Invitasjonen har en liten QR-kode (trykk for å forstørre, det eksisterende arket «Bli med»), koden og «Del lenke», og under dem poengmålet med «Endre». **Hvem som er med vises i bunnfeltet** som en rad med overlappende ansikter (`.facepile`) og en kort tekst over Start-knappen, siden spillerlisten ellers havner under bunnfeltet på en 664 px høy skjerm. Listen med navn og fjerning ligger lenger ned.
+- Ett poeng tar ca. 6 minutter (`MINUTES_PER_POINT` i `setup.js`). Tallet står også i spillereglene, vertsvalget, README og stilguiden.
 
-s.sub!(<<'OLD') { <<'NEW' } or abort 'carsection'
-## Pakker og betaling
-OLD
 ## Bilturmodus: alle på én telefon
 
 Samme spill, samme skjermer, men verten har alle spillerne på sin telefon (`public/js/screens/car.js`, `carstrip.js`, motorens `MODE.CAR`). Det som er annerledes:
@@ -101,10 +99,6 @@ Samme spill, samme skjermer, men verten har alle spillerne på sin telefon (`pub
 - **«Glemt rollen din?»** (`CarStrip`) står der `RoleStrip` ellers står, og «Se rolle» åpner arket «Se rolle igjen» (`RolesSheet`): trykk på navnet ditt, og stripen er der. **Listen i arket holder høyden den har med stripen åpen** (`--rows`): et ark sitter nederst på skjermen, og en liste som vokste da stripen åpnet seg ville skjøvet knappen opp og bort fra fingeren (`tools/qa/car.mjs` sjekker at knappen blir stående).
 - Poengtavlen og resten viser ingen «(deg)»: alle sitter ved bordet.
 - QA: `tools/qa/fixtures.mjs` har bilskjermene (`car-…`), de er med i `qa:fit`, `qa:overlap` og `shots`, og `node tools/qa/car.mjs` spiller hele spillet.
-
-## Pakker og betaling
-- Invitasjonen har en liten QR-kode (trykk for å forstørre, det eksisterende arket «Bli med»), koden og «Del lenke», og under dem poengmålet med «Endre». **Hvem som er med vises i bunnfeltet** som en rad med overlappende ansikter (`.facepile`) og en kort tekst over Start-knappen, siden spillerlisten ellers havner under bunnfeltet på en 664 px høy skjerm. Listen med navn og fjerning ligger lenger ned.
-- Ett poeng tar ca. 6 minutter (`MINUTES_PER_POINT` i `setup.js`). Tallet står også i spillereglene, vertsvalget, README og stilguiden.
 
 ## Pakker og betaling
 
