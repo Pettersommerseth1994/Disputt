@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Takk, Disputt</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#6a1428">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="favicon.svg?v=3" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/screens.css">
+  <script type="module" src="js/takk.js"></script>
+</head>
+<body>
+  <!-- Where Vipps sends the host back to after a payment with the button «Betal med Vipps» (the returnUrl that the payment server gives Vipps).
+       It says whether the payment went through (js/takk.js asks the payment server), and gets the host back to the game, which has been
+       open in the tab behind this one all the time and finds the access by itself. -->
+  <main class="screen screen--padded takk" id="takk">
+    <div class="grow center stack stack--loose" style="align-items:center;justify-content:center">
+      <span class="logo-sticker"><img src="assets/logo/disputt-logo.svg" alt="Disputt" width="300" height="130"></span>
+      <h1 id="takk-title">Et øyeblikk …</h1>
+      <p class="lead muted" id="takk-text" role="status">Vi sjekker betalingen hos Vipps.</p>
+      <div class="stack" id="takk-actions" style="width:100%;max-width:22rem" hidden>
+        <button class="btn btn--block" type="button" id="takk-close" hidden>Lukk fanen og gå tilbake til spillet</button>
+        <p class="small muted" id="takk-stay" hidden>Fanen lot seg ikke lukke her. Bytt tilbake til fanen med spillet, så er du der.</p>
+        <p class="lead" id="takk-switch" hidden>Spillet står i en annen fane. Bytt tilbake til den, så er du der.</p>
+        <a class="btn btn--block btn--cream" id="takk-open" href="./" hidden>Tilbake til spillet</a>
+      </div>
+    </div>
+  </main>
+  <noscript><p style="padding:2rem;text-align:center"><a href="./">Tilbake til spillet</a></p></noscript>
+</body>
+</html>

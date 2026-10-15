@@ -21,7 +21,7 @@ const isLocal = (h) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
 let shopInfo = null;
 let shopAsk = null;
 
-/** What the payment server says about the shop: { shop: 'https://…', variants: { evening, year, lifetime } }. Asked once. */
+/** What the payment server says about the shop: { shop: 'https://…', variants: { evening, year, lifetime }, vipps }. Asked once. `vipps`: show «Betal med Vipps». */
 export function loadShop() {
   if (shopInfo) return Promise.resolve(shopInfo);
   shopAsk ??= (async () => {
@@ -44,7 +44,7 @@ export function loadShop() {
     if (!target || (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) || PLAN_IDS.some((plan) => !/^\d{5,20}$/.test(variants[plan]))) {
       throw new PayError('server', 'Fikk en betalingsside vi ikke stoler på.');
     }
-    return (shopInfo = { shop: target.origin, variants });
+    return (shopInfo = { shop: target.origin, variants, vipps: data.vipps === true });
   })().finally(() => (shopAsk = null));
   return shopAsk;
 }
@@ -161,7 +161,7 @@ export function startShopCheckout(plan) {
 /** The shop once more, for a host who closed the tab or lost it. */
 export function reopenShop() {
   const waiting = store.payWaiting;
-  if (!waiting) return;
+  if (!waiting?.url) return; // (a payment with Vipps that has no address yet: the host is still being sent there)
   if (!openShopTab(waiting.url)) location.assign(waiting.url);
 }
 

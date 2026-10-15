@@ -7,7 +7,7 @@ import { ORIGIN, SITE, WORKER, makeKeys } from './worker.mjs';
 
 const source = readFileSync(new URL('../../payments/worker-shopify.js', import.meta.url), 'utf8');
 if (source.split('export default {').length !== 2) throw new Error('payments/worker-shopify.js must have exactly one "export default {"');
-const exposed = `${source.replace('export default {', 'const worker = {')}\nexport { worker, PLANS, normalizeCode, signPass, bytesToB64url };\n`;
+const exposed = `${source.replace('export default {', 'const worker = {')}\nexport { worker, PLANS, normalizeCode, signPass, bytesToB64url, vippsTokens, shopifyTokens, priceKept, REFERENCE };\n`;
 export const mod = await import(`data:text/javascript;base64,${Buffer.from(exposed).toString('base64')}`);
 export { ORIGIN, SECRET, SHOP, SITE, VARIANTS, WORKER };
 

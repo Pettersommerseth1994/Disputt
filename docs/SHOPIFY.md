@@ -3,6 +3,8 @@
 > Sist kontrollert mot dokumentasjonen til Shopify og Cloudflare: **6. oktober 2026**. Shopify og Cloudflare flytter på menyer og knapper av og til; menynavnene under står på engelsk, slik de heter i Shopify og Cloudflare når kontoen er på engelsk. Finner du ikke en knapp, søk etter navnet i admin. Dette er teknisk veiledning, ikke juridisk eller skattemessig rådgivning: det som handler om vilkår, angrerett, mva og personvern må du få sjekket av en som kan det.
 >
 > Bruker du Stripe i stedet, er veilederen [BETALING.md](BETALING.md). Koden for Stripe ligger urørt ved siden av; bare én av de to settes opp.
+>
+> Vil du i tillegg ha en oransje knapp **Betal med Vipps** i spillet, rett til Vipps uten omveien om butikken, er veilederen [VIPPS.md](VIPPS.md). Den bygger på denne.
 
 Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-det) · [2. Før du begynner](#2-før-du-begynner-virksomhet-skatt-og-jus) · [3. Butikk og domene](#3-shopify-butikk-og-domene) · [4. Betaling](#4-shopify-betaling) · [5. Produktene](#5-shopify-de-tre-produktene) · [6. Kassen og forsiden](#6-shopify-kassen-og-forsiden) · [7. E-posten](#7-shopify-e-postbekreftelsen) · [8. Nøkler](#8-nøkler) · [9. Betalingsserveren](#9-betalingsserveren-cloudflare-worker-og-database) · [10. Webhook](#10-webhook-shopify-sier-fra-når-noe-er-betalt) · [11. Appen på GitHub](#11-koble-til-appen-på-github) · [12. Test alt](#12-test-alt) · [13. Gå live](#13-gå-live) · [14. Drift](#14-drift) · [15. Koden](#15-slik-henger-koden-sammen) · [16. Begrensninger](#16-begrensninger-og-mulige-neste-steg) · [17. Kilder](#17-kilder)
 
@@ -378,6 +380,7 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 | [`tools/pages/build.mjs`](../tools/pages/build.mjs) | bygger inn variablene, sjekker dem, og slipper betalingsserveren gjennom CSP-en |
 | `tools/qa/fakeshopify.mjs`, `fakedb.mjs`, `shop-stack.mjs`, `shopflow.mjs`, `miniliquid.mjs`, `shopify-order.mjs` | falsk Shopify (ordre og signerte webhooker, en butikk med kasse), falsk D1, hele kjeden i en nettleser, og en liten Liquid-tolk med eksempelordrer som prøver filene i `shopify/` |
 | `test/worker-shopify.test.js`, `test/shop-flow.test.js`, `test/shopify-files.test.js` | betalingsserveren, siden mot den, og filene som limes inn i Shopify |
+| Knappen «Betal med Vipps» | egne filer og egne tester, beskrevet i [VIPPS.md, del 9](VIPPS.md#9-slik-henger-koden-sammen) |
 
 ### Betalingsserverens kall
 
@@ -418,7 +421,7 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 - **Kjøp utenom spillet gir ingen kode** ([del 14](#14-drift)). Vil du hindre det, kan produktsidene i temaet fjernes eller stenges.
 - **E-posten kan være på dansk og svensk, men spillet er bare på norsk.** Dansk og svensk tekst brukes først når språkene er publisert i Shopify og kassen åpnes på språket ([del 7](#7-shopify-e-postbekreftelsen)), og knappen i teksten heter fortsatt «Allerede kunde? Logg inn». Teksten er ikke lest av noen som kan språkene, eller av en jurist.
 - **E-posten er prøvd mot en etterlikning av Shopify, ikke mot Shopify.** Testene kjører malen med en eksempelordre og en egen, liten Liquid-tolk. Navnene i malen er hentet fra Shopifys egen standardmal, unntatt språkfeltet (`order.customer_locale`, med `customer.locale` som reserve; ikke dokumentert for e-poster) og variant-ID-en på varelinjen (med navnet på varen som reserve). Mangler de, blir e-posten norsk, og lengden på pakken står i vilkårene i stedet, aldri noe feil. Den ekte e-posten må sees på en ekte ordre ([del 7](#7-shopify-e-postbekreftelsen), punkt 5).
-- **Vipps går som tredjepartsbetaling** i Shopify: ekstra gebyr, og Vipps' hurtigbetaling («express checkout») er ikke støttet. Vipps-tillegget har egen onboarding.
+- **Vipps går som tredjepartsbetaling** i Shopify: ekstra gebyr, og Vipps' hurtigbetaling («express checkout») er ikke støttet. Vipps-tillegget har egen onboarding. En egen knapp i spillet som går rett til Vipps, og som lager ordren i Shopify etterpå, er beskrevet i [VIPPS.md](VIPPS.md).
 - **Apple Pay vises ikke overalt.** Det avhenger av nettleseren og enheten (Safari med kort i Wallet), ikke av oss. Kort er alltid med.
 - **Butikken må være åpen** (uten passord) og produktene må ligge i salgskanalen *Online Store*, ellers virker ikke handlekurvlenkene.
 - **Betaling virker bare med peer-to-peer-bygget (GitHub Pages).** Bygget nekter betaling sammen med `DISPUTT_SERVER_URL`.

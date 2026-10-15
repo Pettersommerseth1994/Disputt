@@ -585,3 +585,18 @@
   .paywall .plans { gap: var(--s-2); }
   .plan { padding-block: 0.5rem; }
 }
+/* «Betal med Vipps» above «Gå til betaling» makes the bar at the bottom about 70 px taller. On a short screen the page gives some of that back, so that the
+   cards and the line about the chosen one stay above the bar (`node tools/qa/fit.mjs` checks it): the sentence under the title goes a little earlier, the bar
+   is made tighter, and on the shortest phones the cards are too. A shop without the button is not touched. */
+@media (max-height: 700px) {
+  .paywall:has(.btn--vipps) .lead { display: none; }
+  .dock:has(.btn--vipps) { padding-top: var(--s-3); }
+  .dock:has(.btn--vipps) > * + * { margin-top: var(--s-2); }
+  .dock:has(.btn--vipps) > .btn + .btn { margin-top: var(--s-3); } /* (the edge under the first button needs room) */
+  .dock:has(.btn--vipps) > .btn { min-height: 3.1rem; padding-block: 0.45rem; font-size: 1.25rem; }
+}
+@media (max-height: 600px) {
+  .paywall:has(.btn--vipps) .plan { padding-block: 0.35rem; }
+  .paywall:has(.btn--vipps) .plans__detail { line-height: 1.25; }
+  .dock:has(.btn--vipps) > .btn { min-height: 2.8rem; }
+}

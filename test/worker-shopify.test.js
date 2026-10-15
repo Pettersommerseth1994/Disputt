@@ -32,6 +32,16 @@ describe('health', () => {
       site: SITE,
       shop: SHOP,
       set: { database: true, webhookSecret: true, signingKey: true, shop: true, evening: true, year: true, lifetime: true },
+      // (Vipps is not set up here: test/worker-vipps.test.js is about it)
+      vipps: {
+        enabled: false,
+        ready: false,
+        env: 'live',
+        set: { VIPPS_MSN: false, VIPPS_CLIENT_ID: false, VIPPS_CLIENT_SECRET: false, VIPPS_SUBSCRIPTION_KEY: false, SHOPIFY_STORE: false, SHOPIFY_CLIENT_ID: false, SHOPIFY_CLIENT_SECRET: false, ADMIN_TOKEN: false },
+        webhook: false,
+        waiting: 0,
+        stuck: 0,
+      },
       hooks: [],
     });
     const text = JSON.stringify(r.body);
@@ -58,7 +68,7 @@ describe('health', () => {
     assert.deepEqual(t.db.sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((r) => r.name), []);
     await t.call('/health');
     const names = t.db.sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all().map((r) => r.name);
-    assert.deepEqual(names, ['hooks', 'orders', 'refunds', 'stops']);
+    assert.deepEqual(names, ['hooks', 'orders', 'refunds', 'settings', 'stops', 'vipps']);
     await t.call('/health'); // (and again is no harm)
   });
 });
@@ -145,7 +155,7 @@ describe('GET /shop', () => {
   it('says where to send the host and which variant is which package, and nothing else', async () => {
     const r = await json(await t.call('/shop'));
     assert.equal(r.status, 200);
-    assert.deepEqual(r.body, { shop: SHOP, variants: VARIANTS });
+    assert.deepEqual(r.body, { shop: SHOP, variants: VARIANTS, vipps: false }, 'and that the button «Betal med Vipps» is not to be shown, as long as Vipps is not set up');
   });
 
   it('gives only the address of the shop, whatever is written after it, and only if it is https', async () => {

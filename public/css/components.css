@@ -47,6 +47,15 @@
 .btn--orange { --btn-bg: var(--orange); --btn-edge: var(--orange-deep); }
 .btn--cream { --btn-bg: var(--cream); --btn-edge: var(--cream-dim); }
 .btn--blue { --btn-bg: var(--blue-light); --btn-edge: var(--teal-light); }
+/* «Betal med Vipps» (screens/shoppay.js): a button like the others, in the orange of Vipps (#ff5b24) with a darker edge and white writing. Without the
+   light crayon strokes of the other buttons (on orange they show as pale patches): only the grain, which here darkens the orange and never lightens it. */
+.btn--vipps {
+  --btn-bg: #ff5b24;
+  --btn-edge: #c7471c;
+  --btn-ink: #fff;
+  background: var(--tex-grain), var(--btn-bg);
+  background-blend-mode: multiply, normal;
+}
 .btn--ghost {
   --btn-ink: var(--cream);
   background: transparent;

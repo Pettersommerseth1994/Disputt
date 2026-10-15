@@ -20,7 +20,7 @@ Repoet bygger og publiserer siden til GitHub Pages ved hver push til `main` ([`.
 
 Gratis GitHub-kontoer får bare Pages fra *offentlige* repoer.
 
-**Betaling** (tre pakker, Vipps, Apple Pay og kort i en Shopify-butikk, eller hos Stripe) er av som standard og slås på med to variabler til (en tredje, `DISPUTT_PAYMENTS_PROVIDER`, sier at det er Shopify): se [SHOPIFY.md](SHOPIFY.md), eller [BETALING.md](BETALING.md) for Stripe.
+**Betaling** (tre pakker, Vipps, Apple Pay og kort i en Shopify-butikk, eller hos Stripe) er av som standard og slås på med to variabler til (en tredje, `DISPUTT_PAYMENTS_PROVIDER`, sier at det er Shopify): se [SHOPIFY.md](SHOPIFY.md), eller [BETALING.md](BETALING.md) for Stripe. Knappen «Betal med Vipps» (rett til Vipps, i tillegg til butikken) har sin egen veileder, [VIPPS.md](VIPPS.md), og er av til du skrur den på i betalingsserveren.
 
 ### Eget domene: disputt.site
 

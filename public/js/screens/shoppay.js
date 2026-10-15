@@ -1,11 +1,13 @@
-// The bar at the bottom of the packages when the shop is Shopify's: the box to tick, the button that opens the shop in a new tab,
-// and what the bar says while the host pays there (screens/pay.js has the rest of the packages screen).
+// The bar at the bottom of the packages when the shop is Shopify's: the box to tick, the button «Betal med Vipps» (when the payment server
+// says that Vipps is set up: straight to Vipps, docs/VIPPS.md; a button of the game's own kind, drawn in Vipps' orange), the button that
+// opens the shop in a new tab, and what the bar says while the host pays there (screens/pay.js has the rest of the packages screen).
 // (A file of its own: pages are cached for ten minutes ...)
 
 import { html, useEffect, useState } from '../vendor/htm-preact.js';
 import { useStore } from '../store.js';
 import { Button } from '../ui.js';
 import { cancelShopPayment, knownShop, loadShop, reopenShop, startShopCheckout } from '../pay/shop.js';
+import { startVippsCheckout } from '../pay/vipps.js';
 
 export function ShopDock({ plan }) {
   const s = useStore();
@@ -35,6 +37,18 @@ export function ShopDock({ plan }) {
     }
   };
 
+  // «Betal med Vipps»: the same consent, and a new try has to be agreed to again. A tab is opened inside the tap, and what goes wrong is told here.
+  const goVipps = () => {
+    setError('');
+    try {
+      startVippsCheckout(plan)
+        .then(() => setAgreed(false))
+        .catch((err) => setError(err.message));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   if (s.payWaiting) {
     return html`
       <div class="paywait" role="status">
@@ -52,5 +66,6 @@ export function ShopDock({ plan }) {
       <span class="consent__box" aria-hidden="true"></span>
       <span>Jeg godtar <a href=${pay.termsUrl} target="_blank" rel="noopener">vilkårene</a> og at tilgangen leveres med en gang.</span>
     </label>
+    ${shop?.vipps && html`<${Button} block variant="vipps" disabled=${!agreed} onClick=${goVipps}>Betal med Vipps</${Button}>`}
     <${Button} block disabled=${!agreed || !shop} onClick=${go}>Gå til betaling</${Button}>`;
 }

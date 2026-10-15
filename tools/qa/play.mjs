@@ -8,6 +8,8 @@
 //           Stripe (tools/qa/payments-stack.mjs, tools/qa/payflow.mjs); --pay-slow also keeps the host away for 75 s while paying
 //   --pay-shopify   the same, with a pretend Shopify shop that opens in a new tab (tools/qa/shop-stack.mjs, tools/qa/shopflow.mjs);
 //           --pay-shopify-slow also keeps the host in the shop for 75 s
+//   --pay-vipps   the same with Shopify's shop and «Betal med Vipps» switched on: the host pays straight at a pretend Vipps, in a new tab, and the paid
+//           order is made in the pretend Shopify (tools/qa/vippsflow.mjs; the shop stack with `vipps: true`)
 // Needs Google Chrome (CHROME_PATH to override). Exits non-zero on the first thing that does not behave.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -21,6 +23,7 @@ import { startShopStack } from './shop-stack.mjs';
 import { buyAndComeBackShop, payAfterFreeRoundsShop } from './shopflow.mjs';
 import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
+import { buyAndComeBackVipps, payAfterFreeRoundsVipps } from './vippsflow.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -35,7 +38,8 @@ const SUBPATH = flags.includes('--subpath');
 const PAY_SLOW = flags.includes('--pay-slow');
 const PAY = flags.includes('--pay') || PAY_SLOW;
 const PAY_SHOP_SLOW = flags.includes('--pay-shopify-slow');
-const PAY_SHOP = flags.includes('--pay-shopify') || PAY_SHOP_SLOW;
+const PAY_VIPPS = flags.includes('--pay-vipps');
+const PAY_SHOP = flags.includes('--pay-shopify') || PAY_SHOP_SLOW || PAY_VIPPS; // (Vipps is a button in the Shopify edition)
 const FREE_ROUNDS = 2; // (the page's default)
 const P2P = LIVE || SUBPATH || flags.includes('--p2p');
 const SLOW = LIVE ? 2 : 1; // the deployed site runs on the real timers and a real network
@@ -46,7 +50,7 @@ const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(...a);
 
-const stack = PAY ? await startPaymentsStack() : PAY_SHOP ? await startShopStack() : null; // the payment server with a pretend Stripe, or with a pretend Shopify
+const stack = PAY ? await startPaymentsStack() : PAY_SHOP ? await startShopStack({ vipps: PAY_VIPPS }) : null; // the payment server with a pretend Stripe, or with a pretend Shopify
 const site = LIVE
   ? { base: LIVE_URL.replace(/\/+$/, ''), stop: async () => {} }
   : P2P
@@ -576,9 +580,11 @@ try {
       await guest.page.waitForSelector('.sheet-backdrop');
       if ((PAY || PAY_SHOP) && round === FREE_ROUNDS) {
         // the host has to pay before the third round (and the first round of the paid part starts from the thank-you sheet)
-        payment = PAY_SHOP
-          ? await payAfterFreeRoundsShop(tools, { host, others, stack, holdMs: PAY_SHOP_SLOW ? 75_000 : 0 })
-          : await payAfterFreeRounds(tools, { host, others, stack, holdMs: PAY_SLOW ? 75_000 : 0 });
+        payment = PAY_VIPPS
+          ? await payAfterFreeRoundsVipps(tools, { host, others, stack })
+          : PAY_SHOP
+            ? await payAfterFreeRoundsShop(tools, { host, others, stack, holdMs: PAY_SHOP_SLOW ? 75_000 : 0 })
+            : await payAfterFreeRounds(tools, { host, others, stack, holdMs: PAY_SLOW ? 75_000 : 0 });
       } else await clickButton(host, 'Neste runde');
       await waitText(guest, /din rolle/i);
       assert.equal(await guest.page.$('.sheet-backdrop'), null, 'sheets close when a new round starts');
@@ -595,7 +601,8 @@ try {
   if (PAY || PAY_SHOP) {
     assert.ok(payment, 'the host was asked to pay after the free rounds');
     // (no more packages after that: the host has paid, and every round up to the winner started without asking again)
-    if (PAY_SHOP) await buyAndComeBackShop(tools, { base, stack });
+    if (PAY_VIPPS) await buyAndComeBackVipps(tools, { base, stack });
+    else if (PAY_SHOP) await buyAndComeBackShop(tools, { base, stack });
     else await buyAndComeBackByTheBackButton(tools, { base, stack });
     await restoreOnNewPhone(tools, { base, code: payment.code });
   }

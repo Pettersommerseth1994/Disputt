@@ -6,12 +6,22 @@
 // that carries a code the page has made up (a cart attribute called "kode"). When the order is paid, Shopify calls this Worker (a
 // webhook), which writes down "this code was paid, for this package, at this time". The game then asks for the pass with the code.
 //
-//   GET  /shop            { shop, variants }      where the game sends the host: the shop's address and the packages' variant ids
+// The button «Betal med Vipps» in the game is the other way in (docs/VIPPS.md): the payment goes straight to Vipps (the ePayment API),
+// and when Vipps has the money, this Worker makes a paid order in Shopify (with the code and the consent on it), so that the receipt, the
+// VAT and the list of orders are in the shop as before. From there on it is an order like any other.
+//
+//   GET  /shop            { shop, variants, vipps }  where the game sends the host: the shop's address and the packages' variant ids;
+//                                                 `vipps` says whether the button «Betal med Vipps» is to be shown
 //   POST /restore         { code }                has this code been paid? returns the pass. The page asks while the host pays in the
 //                                                 other tab, and a customer on a new phone asks with the code from the e-mail
 //   POST /shopify/webhook                         Shopify says that an order was paid, cancelled or refunded (signed: nobody else gets in)
-//   GET  /health                                  { ok, provider, mode: "test" | "live", site, shop, set, hooks }   (to check the set-up and to see
-//                                                 what became of the last calls from Shopify; no secrets, no names, no order numbers)
+//   POST /vipps/start     { plan, code, samtykke }  makes a payment at Vipps: { url, reference }, where to send the host
+//   POST /vipps/status    { reference }           { state: "started" | "done" | "failed" }: what the page the host comes back to shows
+//   POST /vipps/webhook                           Vipps says that a payment was authorized, aborted or has expired (signed)
+//   POST /vipps/admin/webhook   (Bearer ADMIN_TOKEN)  registers that webhook at Vipps (once, and again if it is ever lost)
+//   GET  /vipps/admin/check     (Bearer ADMIN_TOKEN)  tries every connection (Vipps, Shopify, the prices) and says what works
+//   GET  /health                                  { ok, provider, mode: "test" | "live", site, shop, set, vipps, hooks }   (to check the set-up and to see
+//                                                 what became of the last calls from Shopify and Vipps; no secrets, no names, no order numbers)
 //
 // A pass is a JWT signed with ES256; the page checks it with the matching public key (public/js/pay/pass.js). What the end of
 // the access is (12 hours, a year, never) is decided here and signed into the pass; Shopify only says what was paid, and when.
@@ -27,6 +37,19 @@
 //   SHOP_URL                text     the shop, e.g. https://shop.disputt.site
 //   VARIANT_EVENING, VARIANT_YEAR, VARIANT_LIFETIME   text   the variant ids of the three products (numbers)
 //   ACCEPT_TEST_ORDERS      text     optional: "true" while testing with Shopify's test mode, so that test orders count. Never in live use.
+// ... and for the button «Betal med Vipps» (all of them, or the button stays hidden; docs/VIPPS.md):
+//   VIPPS_ENABLED           text     "true" shows the button. Everything below must be set too.
+//   VIPPS_ENV               text     "test" (Vipps' test environment, and the orders in Shopify are test orders) or "live" (the default)
+//   VIPPS_MSN, VIPPS_CLIENT_ID                       text     from Vipps' business portal, For developers
+//   VIPPS_CLIENT_SECRET, VIPPS_SUBSCRIPTION_KEY      secret   the same place
+//   SHOPIFY_STORE           text     the shop's own name at Shopify: the «xxx» of xxx.myshopify.com
+//   SHOPIFY_CLIENT_ID       text     the app in Shopify's Dev Dashboard that is allowed to read the prices and make orders
+//   SHOPIFY_CLIENT_SECRET   secret   the same
+//   ADMIN_TOKEN             secret   a long made-up text: whoever has it can register the Vipps webhook and run the check (16 characters at least)
+//   SHOPIFY_API_VERSION     text     optional: the version of Shopify's Admin API (a default is built in)
+//   VIPPS_API_URL, SHOPIFY_ADMIN_URL   text   only for the tests: a pretend Vipps and a pretend Shopify on this machine
+// And, for the payments that are not finished when the host leaves: Triggers > Cron Triggers > every five minutes (the Worker has a
+// scheduled() for it, which finishes what Vipps has authorized but the page has not heard of).
 
 /** One calendar year after `seconds` (the same day and time, UTC; a year bought on 29 February ends on 1 March). */
 function plusOneYear(seconds) {
@@ -169,6 +192,19 @@ const SCHEMA = [
   // what became of the last calls from Shopify (the topic, and "ok", "ignored: why", "error: why" or "bad_signature"), so that a person who
   // wonders why a paid order never gave access can look at /health. Nothing about the order itself, and only the last HOOKS_KEPT.
   'CREATE TABLE IF NOT EXISTS hooks (id INTEGER PRIMARY KEY, at INTEGER NOT NULL, topic TEXT NOT NULL, result TEXT NOT NULL)',
+  // one row per payment started with Vipps (the button «Betal med Vipps»). `state`: started (made at Vipps, the host is paying) | captured
+  // (Vipps has the money, the order in Shopify is not made yet) | done (the order is made and written down in `orders`) | failed (the host
+  // backed out, or the time ran out: no money was taken). Amounts are in øre, the times in seconds. `locked_until` keeps two calls (the
+  // webhook, the page asking, the clock) from finishing the same payment at once. `order_id` is the order in Shopify. No names, no e-mail.
+  `CREATE TABLE IF NOT EXISTS vipps (
+    reference TEXT PRIMARY KEY, code TEXT NOT NULL, plan TEXT NOT NULL, amount INTEGER NOT NULL, consented_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, state TEXT NOT NULL DEFAULT 'started', order_id TEXT, test INTEGER NOT NULL DEFAULT 0,
+    locked_until INTEGER NOT NULL DEFAULT 0, order_started_at INTEGER NOT NULL DEFAULT 0, note TEXT NOT NULL DEFAULT ''
+  )`,
+  'CREATE INDEX IF NOT EXISTS vipps_code ON vipps (code)',
+  'CREATE INDEX IF NOT EXISTS vipps_open ON vipps (state, created_at)',
+  // small things the Worker keeps for itself: the signing secret of the webhook that was registered at Vipps
+  'CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
 ];
 const HOOKS_KEPT = 100;
 const prepared = new WeakSet(); // (the databases whose tables are known to be there)
@@ -367,6 +403,564 @@ async function webhook(request, env) {
   }
 }
 
+// ------------------------------------------------------------------------------------------------ Vipps: the button «Betal med Vipps»
+
+// How a payment goes (docs/VIPPS.md has the same in pictures):
+//   1. the game calls /vipps/start: a row is written down (state "started"), a payment is made at Vipps, and the host is sent there
+//   2. the host approves in the Vipps app. Vipps calls /vipps/webhook (and the game asks /restore, and the clock calls scheduled()):
+//      all three do the same, settle(): ask Vipps what became of the payment, take the money (capture), make a paid order in Shopify
+//      (the receipt goes to the e-mail address the host shared in the Vipps app), and write down the order in `orders`
+//   3. from then on the order is like one Shopify made itself: the pass comes from it, and a refund or a cancel in Shopify stops it
+// Nothing is delivered before Vipps has confirmed that the money was captured, and nothing is captured that is not the amount we asked for.
+
+const VIPPS_NAMES = ['VIPPS_MSN', 'VIPPS_CLIENT_ID', 'VIPPS_CLIENT_SECRET', 'VIPPS_SUBSCRIPTION_KEY'];
+const SHOPIFY_NAMES = ['SHOPIFY_STORE', 'SHOPIFY_CLIENT_ID', 'SHOPIFY_CLIENT_SECRET'];
+const REFERENCE = /^disputt-[0-9a-hjkmnp-tv-z]{24}$/; // what a payment is called at Vipps: letters, digits and hyphens, and ours alone on the sales unit
+const WEBHOOK_EVENTS = ['epayments.payment.authorized.v1', 'epayments.payment.aborted.v1', 'epayments.payment.expired.v1', 'epayments.payment.terminated.v1'];
+const FAILED_STATES = ['ABORTED', 'EXPIRED', 'TERMINATED']; // (Vipps' own words for a payment that was not made)
+const VAT_RATE = 0.25;
+const CALL_MS = 8000; // (Vipps calls the webhook again if it takes more than ten seconds)
+const MAX_STARTS_PER_HOUR = 200;
+const OPEN_DAYS = 7; // the clock looks after payments that are not finished for this long
+const GIVE_UP_SECONDS = 24 * 3600; // a payment the host never finished
+const LOCK_SECONDS = 90;
+const ORDER_WAIT_SECONDS = 120; // after a call to make an order that got no answer: wait before trying again (Shopify may have made it)
+const PRICE_KEPT_MS = 10 * 60_000;
+
+const clean = (value) => String(value ?? '').trim();
+const isSet = (env, name) => clean(env[name]) !== '';
+const vippsTest = (env) => clean(env.VIPPS_ENV).toLowerCase() === 'test';
+
+/** Why the button cannot be used, in words, or null when it can. (`enabled: false`: for the calls that finish payments already started.) */
+function vippsProblem(env, { enabled = true } = {}) {
+  if (enabled && clean(env.VIPPS_ENABLED).toLowerCase() !== 'true') return 'Vipps er ikke slått på (VIPPS_ENABLED).';
+  const missing = [...VIPPS_NAMES, ...SHOPIFY_NAMES].filter((name) => !isSet(env, name));
+  if (missing.length > 0) return `Vipps er ikke satt opp ennå (${missing.join(', ')} mangler).`;
+  if (vippsTest(env) && !testOrders(env)) return 'Vipps står i testmodus, så ACCEPT_TEST_ORDERS må være true (en testbetaling gir ellers ingen tilgang).';
+  return null;
+}
+const needVipps = (env, options) => {
+  const problem = vippsProblem(env, options);
+  if (problem) throw new HttpError(503, 'unavailable', problem);
+};
+
+const isLocalUrl = (u) => u.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname);
+/** An address that was typed into a setting: https (plain http only for a pretend server on this machine, in the tests), no slash at the end. */
+function baseUrl(text, fallback, name) {
+  const raw = clean(text);
+  if (!raw) return fallback;
+  let u = null;
+  try {
+    u = new URL(raw);
+  } catch {
+    /* reported below */
+  }
+  if (!u || (u.protocol !== 'https:' && !isLocalUrl(u))) throw new HttpError(503, 'unavailable', `${name} er ikke en https-adresse.`);
+  return `${u.origin}${u.pathname.replace(/\/+$/, '')}`;
+}
+const vippsBase = (env) => baseUrl(env.VIPPS_API_URL, vippsTest(env) ? 'https://apitest.vipps.no' : 'https://api.vipps.no', 'VIPPS_API_URL');
+function shopifyBase(env) {
+  if (clean(env.SHOPIFY_ADMIN_URL)) return baseUrl(env.SHOPIFY_ADMIN_URL, '', 'SHOPIFY_ADMIN_URL');
+  const store = clean(env.SHOPIFY_STORE).toLowerCase().replace(/\.myshopify\.com$/, '');
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(store)) throw new HttpError(503, 'unavailable', 'SHOPIFY_STORE er ikke riktig (bare navnet foran .myshopify.com).');
+  return `https://${store}.myshopify.com`;
+}
+const apiVersion = (env) => (/^\d{4}-\d{2}$/.test(clean(env.SHOPIFY_API_VERSION)) ? clean(env.SHOPIFY_API_VERSION) : '2026-07');
+
+/** A call to Vipps or Shopify that gives up after a few seconds. */
+async function call(url, init) {
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(CALL_MS) });
+  } catch (err) {
+    throw new HttpError(502, 'upstream', 'Fikk ikke kontakt med Vipps eller butikken. Prøv igjen om litt.', String(err?.message ?? err));
+  }
+}
+const answerOf = (res) => res.json().catch(() => ({}));
+const short = (value) => String(typeof value === 'string' ? value : JSON.stringify(value)).slice(0, 300);
+
+const kroner = (ore) => (ore / 100).toFixed(2);
+const newReference = () => `disputt-${[...crypto.getRandomValues(new Uint8Array(24))].map((b) => '0123456789abcdefghjkmnpqrstvwxyz'[b & 31]).join('')}`;
+
+/** Two texts compared without telling, by how long it takes, how much of the start they share. */
+async function sameText(a, b) {
+  const [x, y] = await Promise.all([a, b].map(async (text) => new Uint8Array(await crypto.subtle.digest('SHA-256', te.encode(String(text))))));
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
+// ---- Vipps' API
+
+const vippsTokens = new Map(); // (kept while this copy of the Worker lives; a token lasts an hour)
+const SYSTEM_HEADERS = { 'Vipps-System-Name': 'disputt', 'Vipps-System-Version': '1', 'Vipps-System-Plugin-Name': 'disputt-pay', 'Vipps-System-Plugin-Version': '1' };
+
+async function vippsToken(env, fresh = false) {
+  const base = vippsBase(env);
+  const key = `${base}|${clean(env.VIPPS_MSN)}|${clean(env.VIPPS_CLIENT_ID)}`;
+  const kept = vippsTokens.get(key);
+  if (!fresh && kept && kept.expires > Date.now() + 60_000) return kept.token;
+  const res = await call(`${base}/accesstoken/get`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      client_id: clean(env.VIPPS_CLIENT_ID),
+      client_secret: clean(env.VIPPS_CLIENT_SECRET),
+      'Ocp-Apim-Subscription-Key': clean(env.VIPPS_SUBSCRIPTION_KEY),
+      'Merchant-Serial-Number': clean(env.VIPPS_MSN),
+      ...SYSTEM_HEADERS,
+    },
+    body: '',
+  });
+  const data = await answerOf(res);
+  if (!res.ok || !data.access_token) throw new HttpError(502, 'vipps_auth', 'Vipps ville ikke slippe oss inn. Sjekk nøklene.', `${res.status} ${short(data)}`);
+  vippsTokens.set(key, { token: data.access_token, expires: Date.now() + (Number(data.expires_in) || 3000) * 1000 });
+  return data.access_token;
+}
+
+/** One call to Vipps. `idempotency` makes a call that is made twice count once. */
+async function vipps(env, method, path, { body, idempotency } = {}) {
+  const run = async (fresh) =>
+    call(`${vippsBase(env)}${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${await vippsToken(env, fresh)}`,
+        'Ocp-Apim-Subscription-Key': clean(env.VIPPS_SUBSCRIPTION_KEY),
+        'Merchant-Serial-Number': clean(env.VIPPS_MSN),
+        ...(idempotency ? { 'Idempotency-Key': idempotency } : {}),
+        ...SYSTEM_HEADERS,
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+  let res = await run(false);
+  if (res.status === 401) res = await run(true); // (the token was withdrawn: one new one, once)
+  const data = await answerOf(res);
+  if (!res.ok) throw new HttpError(502, 'vipps', 'Vipps svarte ikke som det skulle.', `${method} ${path.split('?')[0]} ${res.status} ${short(data)}`);
+  return data;
+}
+const vippsPayment = (reference) => `/epayment/v1/payments/${encodeURIComponent(reference)}`;
+const capturedOf = (payment) => Number(payment?.aggregate?.capturedAmount?.value ?? 0);
+
+// ---- Shopify's Admin API (an app in the Dev Dashboard, with the client credentials grant: a token that lasts 24 hours)
+
+const shopifyTokens = new Map();
+
+async function shopifyToken(env, fresh = false) {
+  const base = shopifyBase(env);
+  const key = `${base}|${clean(env.SHOPIFY_CLIENT_ID)}`;
+  const kept = shopifyTokens.get(key);
+  if (!fresh && kept && kept.expires > Date.now() + 120_000) return kept.token;
+  const res = await call(`${base}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clean(env.SHOPIFY_CLIENT_ID), client_secret: clean(env.SHOPIFY_CLIENT_SECRET) }),
+  });
+  const data = await answerOf(res);
+  if (!res.ok || !data.access_token) throw new HttpError(502, 'shopify_auth', 'Butikken ville ikke slippe oss inn. Sjekk appen i Shopify.', `${res.status} ${short(data)}`);
+  shopifyTokens.set(key, { token: data.access_token, expires: Date.now() + (Number(data.expires_in) || 3600) * 1000 });
+  return data.access_token;
+}
+
+async function shopifyGraphql(env, query, variables) {
+  const run = async (fresh) =>
+    call(`${shopifyBase(env)}/admin/api/${apiVersion(env)}/graphql.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': await shopifyToken(env, fresh) },
+      body: JSON.stringify({ query, variables }),
+    });
+  let res = await run(false);
+  if (res.status === 401) res = await run(true);
+  const data = await answerOf(res);
+  if (!res.ok || data.errors) throw new HttpError(502, 'shopify', 'Butikken svarte ikke som den skulle.', `${res.status} ${short(data.errors ?? data)}`);
+  return data.data;
+}
+
+const priceKept = new Map();
+/** What a package costs in the shop, and what it is called there: the price is Shopify's, so it is changed in one place only. */
+async function variantInfo(env, plan) {
+  const id = variantIds(env)[plan];
+  if (!id) throw new HttpError(503, 'unavailable', `Betalingen er ikke satt opp ennå (${VARIANT_VARS[plan]} mangler).`);
+  const key = `${shopifyBase(env)}|${id}`;
+  const kept = priceKept.get(key);
+  if (kept && kept.expires > Date.now()) return kept.info;
+  const data = await shopifyGraphql(env, 'query($id: ID!) { shop { currencyCode } productVariant(id: $id) { title price product { title } } }', { id: `gid://shopify/ProductVariant/${id}` });
+  const variant = data?.productVariant;
+  if (!variant) throw new HttpError(503, 'unavailable', `Fant ikke «${PLANS[plan].name}» i butikken (sjekk ${VARIANT_VARS[plan]}).`);
+  if (data.shop?.currencyCode !== 'NOK') throw new HttpError(503, 'unavailable', 'Butikken må selge i norske kroner (NOK) for å ta imot Vipps.');
+  const amount = toOre(variant.price);
+  if (amount <= 0) throw new HttpError(503, 'unavailable', `«${PLANS[plan].name}» har ingen pris i butikken.`);
+  const info = { amount, title: clean(variant.product?.title) || PLANS[plan].name, variantTitle: clean(variant.title) };
+  priceKept.set(key, { info, expires: Date.now() + PRICE_KEPT_MS });
+  return info;
+}
+
+const ORDER_FIND = 'query($q: String!) { orders(first: 1, query: $q) { nodes { id name processedAt } } }';
+const ORDER_CREATE = `mutation($order: OrderCreateOrderInput!, $options: OrderCreateOptionsInput) {
+  orderCreate(order: $order, options: $options) { userErrors { field message } order { id name processedAt } }
+}`;
+
+/**
+ * The paid order in Shopify for a payment that Vipps has taken: the package, the price with the VAT in it (25 %), the code and the consent
+ * as attributes (the e-mail and the pass read them), and "Vipps" as the way it was paid. Shopify sends the receipt to the e-mail address
+ * the host shared in the Vipps app. The reference is a tag on the order, so that an order that was made but never written down is found
+ * again instead of made twice.
+ */
+async function shopifyOrderFor(env, row, payer, info) {
+  const found = (await shopifyGraphql(env, ORDER_FIND, { q: `tag:${row.reference}` }))?.orders?.nodes?.[0];
+  if (found) return found;
+  const money = { shopMoney: { amount: kroner(row.amount), currencyCode: 'NOK' } };
+  const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean(payer.email)) ? clean(payer.email) : null;
+  const test = row.test === 1;
+  const data = await shopifyGraphql(env, ORDER_CREATE, {
+    order: {
+      currency: 'NOK',
+      ...(email ? { email } : {}),
+      financialStatus: 'PAID',
+      taxesIncluded: true,
+      test,
+      tags: ['vipps', row.reference],
+      sourceName: 'Vipps',
+      note: `Betalt med Vipps. Referanse hos Vipps: ${row.reference}`,
+      customAttributes: [
+        { key: 'kode', value: row.code },
+        { key: 'samtykke', value: new Date(row.consented_at * 1000).toISOString() },
+        { key: 'betaling', value: 'Vipps' },
+        { key: 'vipps_referanse', value: row.reference },
+      ],
+      lineItems: [
+        {
+          variantId: `gid://shopify/ProductVariant/${variantIds(env)[row.plan]}`,
+          quantity: 1,
+          title: info.title,
+          ...(info.variantTitle && info.variantTitle !== 'Default Title' ? { variantTitle: info.variantTitle } : {}),
+          priceSet: money,
+          taxable: true,
+          requiresShipping: false,
+          taxLines: [{ title: 'MVA', rate: VAT_RATE, priceSet: { shopMoney: { amount: kroner(Math.round((row.amount * VAT_RATE) / (1 + VAT_RATE))), currencyCode: 'NOK' } } }],
+        },
+      ],
+      transactions: [{ kind: 'SALE', status: 'SUCCESS', gateway: 'Vipps', amountSet: money, processedAt: new Date().toISOString(), test }],
+    },
+    options: { sendReceipt: email !== null, inventoryBehaviour: 'BYPASS' },
+  });
+  const made = data?.orderCreate;
+  if (made?.userErrors?.length > 0 || !made?.order?.id) throw new HttpError(502, 'shopify', 'Butikken tok ikke imot ordren.', short(made?.userErrors ?? data));
+  return made.order;
+}
+
+// ---- finishing a payment
+
+/**
+ * Looks after one payment as far as it can go, and is safe to call as often as anybody likes (the webhook, the page asking and the clock all
+ * do, at the same time and again and again): what Vipps says is what is done, each step is done once, and one call at a time works on a payment.
+ * Returns the row as it is afterwards. A call that fails halfway leaves the row where it got to, and the next call goes on from there.
+ */
+async function settle(env, reference) {
+  needVipps(env, { enabled: false });
+  const db = await database(env);
+  const row = await db.prepare('SELECT * FROM vipps WHERE reference = ?').bind(reference).first();
+  if (!row || row.state === 'done' || row.state === 'failed') return row;
+  const now = Math.floor(Date.now() / 1000);
+  const claimed = await db.prepare('UPDATE vipps SET locked_until = ? WHERE reference = ? AND locked_until < ?').bind(now + LOCK_SECONDS, reference, now).run();
+  if (claimed.meta?.changes !== 1) return row; // somebody else is finishing it just now
+  try {
+    return await finish(env, db, row, now);
+  } catch (err) {
+    await db
+      .prepare('UPDATE vipps SET note = ?, updated_at = ? WHERE reference = ?')
+      .bind(String(err instanceof Error ? err.message : err).slice(0, 160), now, reference)
+      .run()
+      .catch(() => {});
+    throw err;
+  } finally {
+    await db.prepare('UPDATE vipps SET locked_until = 0 WHERE reference = ?').bind(reference).run().catch(() => {});
+  }
+}
+
+async function finish(env, db, row, now) {
+  const reference = row.reference;
+  const payment = await vipps(env, 'GET', vippsPayment(reference));
+  let captured = capturedOf(payment);
+  if (captured === 0 && FAILED_STATES.includes(payment.state)) {
+    await db.prepare("UPDATE vipps SET state = 'failed', note = ?, updated_at = ? WHERE reference = ?").bind(`Vipps: ${payment.state}`, now, reference).run();
+    return { ...row, state: 'failed' };
+  }
+  if (captured === 0 && payment.state !== 'AUTHORIZED') {
+    // still waiting for the host (the payment is "CREATED"); one that was never finished is given up after a day
+    if (now - row.created_at > GIVE_UP_SECONDS) {
+      await db.prepare("UPDATE vipps SET state = 'failed', note = 'ikke fullført', updated_at = ? WHERE reference = ?").bind(now, reference).run();
+      return { ...row, state: 'failed' };
+    }
+    return row;
+  }
+  // The amount must be what we asked for. If it is not, nothing is taken, and the reserved amount is let go.
+  if (Number(payment.amount?.value) !== row.amount || payment.amount?.currency !== 'NOK') {
+    if (captured === 0) await vipps(env, 'POST', `${vippsPayment(reference)}/cancel`, { idempotency: `${reference}-cancel` }).catch(() => {});
+    await db.prepare("UPDATE vipps SET state = 'failed', note = 'beløpet stemte ikke', updated_at = ? WHERE reference = ?").bind(now, reference).run();
+    console.error('Vipps payment', reference, 'was for another amount than asked for:', short(payment.amount));
+    return { ...row, state: 'failed' };
+  }
+  // the money: taken once (Vipps keeps the idempotency key), and checked in what Vipps answers, not in the status code
+  if (captured < row.amount) {
+    const taken = await vipps(env, 'POST', `${vippsPayment(reference)}/capture`, {
+      body: { modificationAmount: { currency: 'NOK', value: row.amount } },
+      idempotency: `${reference}-capture`,
+    });
+    captured = capturedOf(taken);
+    if (captured < row.amount) throw new HttpError(502, 'vipps', 'Vipps trakk ikke pengene.', short(taken));
+  }
+  await db.prepare("UPDATE vipps SET state = 'captured', updated_at = ? WHERE reference = ? AND state = 'started'").bind(now, reference).run();
+  // the order: not made again within a couple of minutes after a call that got no answer (it may have been made all the same)
+  if (row.order_started_at > 0 && now - row.order_started_at < ORDER_WAIT_SECONDS) return { ...row, state: 'captured' };
+  await db.prepare('UPDATE vipps SET order_started_at = ? WHERE reference = ?').bind(now, reference).run();
+  let order;
+  try {
+    order = await shopifyOrderFor(env, row, payment.userDetails ?? {}, await variantInfo(env, row.plan));
+  } catch (err) {
+    if (!(err instanceof HttpError && err.code === 'upstream')) await db.prepare('UPDATE vipps SET order_started_at = 0 WHERE reference = ?').bind(reference).run().catch(() => {});
+    throw err;
+  }
+  const orderId = String(order.id).match(/(\d+)$/)?.[1];
+  if (!orderId) throw new HttpError(502, 'shopify', 'Butikken svarte uten et ordrenummer.', short(order));
+  const paidAt = toSeconds(order.processedAt) ?? now;
+  await db.batch([
+    db
+      .prepare('INSERT INTO orders (order_id, code, plan, paid_at, consented_at, amount, currency, name, test) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (order_id) DO NOTHING')
+      .bind(orderId, row.code, row.plan, paidAt, row.consented_at, row.amount, 'NOK', String(order.name ?? ''), row.test),
+    db.prepare("UPDATE vipps SET state = 'done', order_id = ?, note = '', updated_at = ? WHERE reference = ?").bind(orderId, now, reference),
+    applyRefunds(db, orderId), // (a refund or a cancel that came before, if Shopify's calls arrived in the wrong order: the same care as in orderPaid)
+    applyStops(db, orderId),
+  ]);
+  return { ...row, state: 'done', order_id: orderId };
+}
+
+/** The payments of a code that are not finished: the page asks about the code while the host pays, and that is a good time to look. */
+async function settleCode(env, code) {
+  if (vippsProblem(env, { enabled: false })) return;
+  try {
+    const db = await database(env);
+    const { results } = await db.prepare("SELECT reference FROM vipps WHERE code = ? AND state NOT IN ('done', 'failed') ORDER BY created_at DESC LIMIT 3").bind(code).all();
+    for (const { reference } of results ?? []) await settle(env, reference);
+  } catch (err) {
+    console.error('Vipps: could not look at the payment for a code:', err instanceof Error ? err.message : err); // (a code paid in Shopify is restored all the same)
+  }
+}
+
+/**
+ * The clock (a Cron Trigger, every five minutes): finishes what Vipps has authorized but nobody has heard of, for example a host who left.
+ * A few at a time (a Worker may only make so many calls in one go), and those where the money is already taken come first.
+ */
+async function reconcile(env) {
+  if (vippsProblem(env, { enabled: false })) return 0;
+  const db = await database(env);
+  const now = Math.floor(Date.now() / 1000);
+  const { results } = await db
+    .prepare("SELECT reference FROM vipps WHERE state NOT IN ('done', 'failed') AND created_at > ? ORDER BY CASE state WHEN 'captured' THEN 0 ELSE 1 END, created_at LIMIT 10")
+    .bind(now - OPEN_DAYS * 86400)
+    .all();
+  let looked = 0;
+  for (const { reference } of results ?? []) {
+    try {
+      await settle(env, reference);
+      looked++;
+    } catch (err) {
+      console.error('Vipps: could not finish', reference, err instanceof Error ? err.message : err);
+    }
+  }
+  return looked;
+}
+
+// ---- the calls from the game and from Vipps
+
+async function vippsStart(request, env) {
+  const body = await readJson(request);
+  const plan = typeof body.plan === 'string' && Object.hasOwn(PLANS, body.plan) ? body.plan : null;
+  if (!plan) throw bad('Ukjent pakke.');
+  const code = normalizeCode(body.code);
+  if (!code) throw bad('Koden ser ikke riktig ut.');
+  const now = Math.floor(Date.now() / 1000);
+  const consentedAt = toSeconds(body.samtykke);
+  if (consentedAt === null || consentedAt > now + 300 || consentedAt < now - 6 * 3600) throw bad('Samtykket mangler eller er for gammelt. Kryss av på nytt og prøv igjen.');
+  needVipps(env);
+  const db = await database(env);
+  const { n } = (await db.prepare('SELECT COUNT(*) AS n FROM vipps WHERE created_at > ?').bind(now - 3600).first()) ?? { n: 0 };
+  if (n >= MAX_STARTS_PER_HOUR) throw new HttpError(429, 'busy', 'Mange betaler akkurat nå. Prøv igjen om litt.');
+  const info = await variantInfo(env, plan);
+  const reference = newReference();
+  // written down BEFORE the payment is made: a payment that Vipps knows and we do not could be paid with nobody to deliver it to
+  await db
+    .prepare('INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at, test) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(reference, code, plan, info.amount, consentedAt, now, now, vippsTest(env) ? 1 : 0)
+    .run();
+  let made;
+  try {
+    made = await vipps(env, 'POST', '/epayment/v1/payments', {
+      idempotency: reference,
+      body: {
+        amount: { currency: 'NOK', value: info.amount },
+        paymentMethod: { type: 'WALLET' },
+        reference,
+        returnUrl: new URL(`takk.html?ref=${reference}`, siteUrl(env)).href,
+        userFlow: 'WEB_REDIRECT',
+        paymentDescription: `Disputt: ${PLANS[plan].name}`,
+        profile: { scope: 'email' }, // (the receipt goes to this address, and nothing else is asked for: the host agrees to sharing it in the Vipps app, on a screen with one line)
+      },
+    });
+    const to = new URL(String(made.redirectUrl ?? ''));
+    if (to.protocol !== 'https:' && !isLocalUrl(to)) throw new Error('redirectUrl');
+  } catch (err) {
+    await db.prepare("UPDATE vipps SET state = 'failed', note = ?, updated_at = ? WHERE reference = ?").bind(String(err instanceof Error ? err.message : err).slice(0, 160), now, reference).run().catch(() => {});
+    throw err instanceof HttpError ? err : new HttpError(502, 'vipps', 'Vipps ga ikke en adresse å betale på.');
+  }
+  return { url: made.redirectUrl, reference };
+}
+
+/** What the page the host comes back to from Vipps (takk.html) asks: is it done? Looks at the payment on the way. */
+async function vippsStatus(request, env) {
+  const body = await readJson(request);
+  const reference = clean(body.reference);
+  if (!REFERENCE.test(reference)) throw bad('Ugyldig referanse.');
+  const db = await database(env);
+  let row = await db.prepare('SELECT state FROM vipps WHERE reference = ?').bind(reference).first();
+  if (!row) throw new HttpError(404, 'not_found', 'Fant ingen betaling med den referansen.');
+  if (row.state !== 'done' && row.state !== 'failed') {
+    try {
+      row = (await settle(env, reference)) ?? row;
+    } catch (err) {
+      console.error('Vipps: could not look at the payment:', err instanceof Error ? err.message : err);
+    }
+  }
+  return { state: row.state === 'done' ? 'done' : row.state === 'failed' ? 'failed' : 'started' };
+}
+
+/** The signing secret of the webhook that was registered at Vipps: kept in the database when it is registered (or set by hand). */
+async function vippsWebhookSecret(env) {
+  if (clean(env.VIPPS_WEBHOOK_SECRET)) return clean(env.VIPPS_WEBHOOK_SECRET);
+  try {
+    const db = await database(env);
+    return clean((await db.prepare("SELECT value FROM settings WHERE key = 'vipps_webhook_secret'").first())?.value);
+  } catch {
+    return '';
+  }
+}
+
+/** Vipps signs each call: the date, the hash of the body and the address go into a text that is signed with the secret (as the docs have it). */
+async function checkVippsSignature(env, request, bytes) {
+  const secret = await vippsWebhookSecret(env);
+  if (secret.length < MIN_SECRET) throw new HttpError(503, 'unavailable', 'Vipps-webhooken er ikke registrert ennå (se docs/VIPPS.md).');
+  const hash = request.headers.get('x-ms-content-sha256') ?? '';
+  const date = request.headers.get('x-ms-date') ?? '';
+  const host = request.headers.get('host') ?? new URL(request.url).host;
+  const url = new URL(request.url);
+  const expectedHash = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))));
+  const key = await crypto.subtle.importKey('raw', te.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const signature = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.sign('HMAC', key, te.encode(`POST\n${url.pathname}${url.search}\n${date};${host};${hash}`)))));
+  const expected = `HMAC-SHA256 SignedHeaders=x-ms-date;host;x-ms-content-sha256&Signature=${signature}`;
+  const sameHash = await sameText(hash, expectedHash);
+  const sameSignature = await sameText(request.headers.get('authorization') ?? '', expected);
+  if (!sameHash || !sameSignature) throw new HttpError(401, 'bad_signature', 'Ugyldig signatur.');
+}
+
+async function vippsWebhook(request, env) {
+  if (Number(request.headers.get('Content-Length')) > MAX_WEBHOOK_BYTES) throw new HttpError(413, 'too_large', 'For stor forespørsel.');
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (bytes.byteLength > MAX_WEBHOOK_BYTES) throw new HttpError(413, 'too_large', 'For stor forespørsel.');
+  try {
+    await checkVippsSignature(env, request, bytes);
+  } catch (err) {
+    if (err instanceof HttpError && err.code === 'bad_signature') await recordBadSignature(env, 'vipps');
+    throw err;
+  }
+  let data = null;
+  try {
+    data = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    /* reported below */
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw bad('Ugyldig innhold.');
+  const topic = `vipps:${clean(data.name).slice(0, 20)}`;
+  const reference = clean(data.reference);
+  // (the sales unit may be used by something else too, for instance Vipps' own plugin in Shopify: what is not ours is none of our business)
+  if (!REFERENCE.test(reference)) {
+    await record(env, topic, 'ignored: reference');
+    return ignored('reference');
+  }
+  const db = await database(env);
+  if (!(await db.prepare('SELECT 1 AS ok FROM vipps WHERE reference = ?').bind(reference).first())) {
+    await record(env, topic, 'ignored: unknown');
+    return ignored('unknown');
+  }
+  let after;
+  try {
+    after = await settle(env, reference);
+  } catch (err) {
+    await record(env, topic, `error: ${err instanceof Error ? err.message : String(err)}`);
+    throw err; // (a 5xx makes Vipps call again: after two seconds, then a minute, then hourly)
+  }
+  // not finished (somebody else is working on it, or the order has to wait): Vipps is asked to call again, which is what a 5xx does
+  if (after && after.state !== 'done' && after.state !== 'failed') {
+    await record(env, topic, `waiting: ${after.state}`);
+    throw new HttpError(503, 'pending', 'Ikke ferdig ennå.');
+  }
+  await record(env, topic, 'ok');
+  return { ok: true };
+}
+
+async function checkAdmin(request, env) {
+  const want = clean(env.ADMIN_TOKEN);
+  if (want.length < MIN_SECRET) throw new HttpError(503, 'unavailable', 'ADMIN_TOKEN mangler, eller er for kort (16 tegn minst).');
+  const got = (request.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
+  if (!(await sameText(got, want))) throw new HttpError(401, 'unauthorized', 'Feil ADMIN_TOKEN.');
+}
+
+/** Registers this Worker's address at Vipps as the place to say what became of the payments, and keeps the secret that comes with it. */
+async function vippsAdminWebhook(request, env) {
+  await checkAdmin(request, env);
+  needVipps(env, { enabled: false });
+  const url = `${new URL(request.url).origin}/vipps/webhook`;
+  const listed = await vipps(env, 'GET', '/webhooks/v1/webhooks');
+  for (const hook of listed.webhooks ?? []) if (hook.url === url) await vipps(env, 'DELETE', `/webhooks/v1/webhooks/${encodeURIComponent(hook.id)}`); // (an old one for this address: its secret is lost)
+  const made = await vipps(env, 'POST', '/webhooks/v1/webhooks', { body: { url, events: WEBHOOK_EVENTS } });
+  if (!made.id || !made.secret) throw new HttpError(502, 'vipps', 'Vipps ga ikke en nøkkel for webhooken.', short(made));
+  const db = await database(env);
+  await db.prepare("INSERT INTO settings (key, value) VALUES ('vipps_webhook_secret', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value").bind(made.secret).run();
+  return { ok: true, url, events: WEBHOOK_EVENTS, id: made.id };
+}
+
+/** Tries each connection in turn and says which work: Vipps, the webhook, Shopify, and the prices of the three packages (never the keys). */
+async function vippsAdminCheck(request, env) {
+  await checkAdmin(request, env);
+  const out = { ok: false, env: vippsTest(env) ? 'test' : 'live', enabled: clean(env.VIPPS_ENABLED).toLowerCase() === 'true', problem: vippsProblem(env, { enabled: false }), vipps: false, webhook: false, shopify: false, prices: null };
+  if (out.problem) return out;
+  const trouble = (err) => (err instanceof HttpError ? `${err.message} ${err.detail ?? ''}`.trim() : String(err));
+  try {
+    await vippsToken(env, true);
+    out.vipps = true;
+  } catch (err) {
+    out.vippsError = trouble(err);
+  }
+  if (out.vipps) {
+    try {
+      const url = `${new URL(request.url).origin}/vipps/webhook`;
+      const listed = await vipps(env, 'GET', '/webhooks/v1/webhooks');
+      out.webhook = (listed.webhooks ?? []).some((hook) => hook.url === url) && (await vippsWebhookSecret(env)).length >= MIN_SECRET;
+    } catch (err) {
+      out.webhookError = trouble(err);
+    }
+  }
+  try {
+    await shopifyToken(env, true);
+    out.shopify = true;
+    out.prices = {};
+    for (const plan of Object.keys(PLANS)) out.prices[plan] = (await variantInfo(env, plan)).amount / 100;
+  } catch (err) {
+    out.shopifyError = trouble(err);
+    out.prices = null;
+  }
+  out.ok = out.vipps && out.webhook && out.shopify && out.prices !== null;
+  return out;
+}
+
 // ------------------------------------------------------------------------------------------------ the endpoints
 
 async function readJson(request) {
@@ -379,11 +973,14 @@ async function readJson(request) {
   throw bad('Ugyldig forespørsel.');
 }
 
-/** Where to send the host, and which variant is which package. The page builds the cart link from this, in the tap that opens the tab. */
+/**
+ * Where to send the host, and which variant is which package. The page builds the cart link from this, in the tap that opens the tab.
+ * `vipps` says whether the page is to show the button «Betal med Vipps» (only when everything it needs is set, and it has been switched on).
+ */
 function shop(env) {
   const ids = variantIds(env);
   for (const [plan, name] of Object.entries(VARIANT_VARS)) if (!ids[plan]) throw new HttpError(503, 'unavailable', `Betalingen er ikke satt opp ennå (${name} mangler).`);
-  return { shop: shopOrigin(env), variants: ids };
+  return { shop: shopOrigin(env), variants: ids, vipps: vippsProblem(env) === null };
 }
 
 /** When the access of an order ends, in milliseconds since 1970 (Infinity for a lifetime package). */
@@ -423,6 +1020,7 @@ async function restore(request, env) {
   const body = await readJson(request);
   const code = normalizeCode(body.code);
   if (!code) throw bad('Koden ser ikke riktig ut. Den har tolv tegn, som K7M2-9QXD-4TRB.');
+  await settleCode(env, code); // (a payment with Vipps that the host is making just now is finished here, if Vipps has it)
   const orders = await ordersFor(env, code);
   // (Shopify can need a moment to say that the order is paid: the page asks again until it does)
   if (orders.length === 0) throw new HttpError(404, 'not_found', 'Fant ingen betaling med den koden. Har du nettopp betalt, kan det gå et øyeblikk før koden virker.');
@@ -461,7 +1059,29 @@ async function health(env) {
       /* none to show */
     }
   }
-  return { ok: true, provider: 'shopify', mode: testOrders(env) ? 'test' : 'live', site: siteUrl(env).href, shop: shopUrl, set, hooks };
+  // Vipps: what is set (true or false), and how many payments are being paid just now, and how many have had their money taken without
+  // an order being made for five minutes (those need a look: docs/VIPPS.md, Drift)
+  const vipps = {
+    enabled: clean(env.VIPPS_ENABLED).toLowerCase() === 'true',
+    ready: vippsProblem(env) === null,
+    env: vippsTest(env) ? 'test' : 'live',
+    set: { ...Object.fromEntries([...VIPPS_NAMES, ...SHOPIFY_NAMES].map((name) => [name, isSet(env, name)])), ADMIN_TOKEN: clean(env.ADMIN_TOKEN).length >= MIN_SECRET },
+    webhook: false,
+    waiting: 0,
+    stuck: 0,
+  };
+  if (set.database) {
+    try {
+      const db = await database(env);
+      const now = Math.floor(Date.now() / 1000);
+      vipps.webhook = (await vippsWebhookSecret(env)).length >= MIN_SECRET;
+      vipps.waiting = (await db.prepare("SELECT COUNT(*) AS n FROM vipps WHERE state = 'started' AND created_at > ?").bind(now - 2 * 3600).first())?.n ?? 0;
+      vipps.stuck = (await db.prepare("SELECT COUNT(*) AS n FROM vipps WHERE state = 'captured' AND updated_at < ?").bind(now - 300).first())?.n ?? 0;
+    } catch {
+      /* none to show */
+    }
+  }
+  return { ok: true, provider: 'shopify', mode: testOrders(env) ? 'test' : 'live', site: siteUrl(env).href, shop: shopUrl, set, vipps, hooks };
 }
 
 // ------------------------------------------------------------------------------------------------ routing and CORS
@@ -499,10 +1119,19 @@ async function route(request, env) {
   if (request.method === 'GET' && url.pathname === '/shop') return json(200, shop(env), request, env);
   if (request.method === 'POST' && url.pathname === '/restore') return json(200, await restore(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/shopify/webhook') return json(200, await webhook(request, env), request, env);
+  if (request.method === 'POST' && url.pathname === '/vipps/start') return json(200, await vippsStart(request, env), request, env);
+  if (request.method === 'POST' && url.pathname === '/vipps/status') return json(200, await vippsStatus(request, env), request, env);
+  if (request.method === 'POST' && url.pathname === '/vipps/webhook') return json(200, await vippsWebhook(request, env), request, env);
+  if (request.method === 'POST' && url.pathname === '/vipps/admin/webhook') return json(200, await vippsAdminWebhook(request, env), request, env);
+  if (request.method === 'GET' && url.pathname === '/vipps/admin/check') return json(200, await vippsAdminCheck(request, env), request, env);
   throw new HttpError(404, 'not_found', 'Fant ikke siden.');
 }
 
 export default {
+  /** The clock: a Cron Trigger (docs/VIPPS.md) finishes the Vipps payments that nobody has heard of. */
+  async scheduled(controller, env, ctx) {
+    ctx.waitUntil(reconcile(env).catch((err) => console.error('Vipps: the clock failed:', err instanceof Error ? err.message : err)));
+  },
   async fetch(request, env) {
     try {
       return await route(request, env);

@@ -3,6 +3,7 @@
 // shop's front page (the real shopify/forside.liquid), all behind one local HTTP server.
 //
 //   const stack = await startShopStack();                 // { apiUrl, publicKey, shop, orders, … }
+//   const stack = await startShopStack({ vipps: true });  // the same with «Betal med Vipps» switched on: a pretend Vipps and a pretend Shopify Admin API too
 //   const site = await startP2PSite({ payments: { url: stack.apiUrl, key: stack.publicKey, provider: 'shopify' } });
 //   stack.setSite(`${site.base}/`);                       // the payment server needs to know where the game lives
 //
@@ -14,6 +15,8 @@ import { readFileSync } from 'node:fs';
 import worker from '../../payments/worker-shopify.js';
 import { createFakeD1 } from './fakedb.mjs';
 import { PRICES, SECRET, VARIANTS, dispute, order, refund, webhookRequest } from './fakeshopify.mjs';
+import { APP, startFakeShopifyAdmin } from './fakeshopifyadmin.mjs';
+import { KEYS, startFakeVipps } from './fakevipps.mjs';
 import { renderLiquid } from './miniliquid.mjs';
 
 const readBody = (req) =>
@@ -28,7 +31,9 @@ const FRONT = readFileSync(new URL('../../shopify/forside.liquid', import.meta.u
 const PLAN_OF = Object.fromEntries(Object.entries(VARIANTS).map(([plan, id]) => [id, plan]));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function startShopStack() {
+export const ADMIN_TOKEN = 'qa-admin-token-0123456789';
+
+export async function startShopStack({ vipps = false } = {}) {
   const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
   const b64 = (buf) => Buffer.from(buf).toString('base64');
   const privateKey = b64(await crypto.subtle.exportKey('pkcs8', pair.privateKey));
@@ -144,6 +149,30 @@ export async function startShopStack() {
   origin = `http://127.0.0.1:${server.address().port}`;
   env.SHOP_URL = origin;
 
+  // «Betal med Vipps»: a pretend Vipps (with a landing page where the pretend customer approves) and a pretend Shopify Admin API (which says
+  // "orders/paid" for the orders the payment server makes, like Shopify), and the webhook registered at Vipps the way the owner does it
+  let fakeVipps = null;
+  let admin = null;
+  if (vipps) {
+    fakeVipps = await startFakeVipps(); // (its webhooks go to the payment server over HTTP: through this stack's own server)
+    admin = await startFakeShopifyAdmin({ deliver: (topic, payload) => void deliver(topic, payload) });
+    Object.assign(env, {
+      VIPPS_ENABLED: 'true',
+      VIPPS_API_URL: fakeVipps.url,
+      VIPPS_MSN: KEYS.msn,
+      VIPPS_CLIENT_ID: KEYS.clientId,
+      VIPPS_CLIENT_SECRET: KEYS.clientSecret,
+      VIPPS_SUBSCRIPTION_KEY: KEYS.subscriptionKey,
+      SHOPIFY_STORE: 'disputt-test',
+      SHOPIFY_ADMIN_URL: admin.url,
+      SHOPIFY_CLIENT_ID: APP.clientId,
+      SHOPIFY_CLIENT_SECRET: APP.clientSecret,
+      ADMIN_TOKEN,
+    });
+    const registered = await worker.fetch(new Request(`${origin}/vipps/admin/webhook`, { method: 'POST', headers: { Authorization: `Bearer ${ADMIN_TOKEN}` } }), env);
+    if (registered.status !== 200) throw new Error(`the Vipps webhook was not registered: ${registered.status} ${await registered.text()}`);
+  }
+
   return {
     apiUrl: origin,
     shop: origin,
@@ -169,7 +198,12 @@ export async function startShopStack() {
     refund: (placed, amount = PRICES[PLAN_OF[placed.line_items[0].variant_id]]) => deliver('refunds/create', refund(placed.id, amount)),
     cancel: (placed) => deliver('orders/cancelled', placed),
     dispute: (placed) => deliver('disputes/create', dispute(placed.id)),
+    /** The pretend Vipps and the pretend Shopify Admin API (only with `vipps: true`). */
+    vipps: fakeVipps,
+    admin,
     stop: async () => {
+      await fakeVipps?.stop();
+      await admin?.stop();
       server.closeAllConnections?.();
       server.close();
     },

@@ -15,7 +15,8 @@ export const PAY = {
 export const CODE = 'K7M2-9QXD-4TRB';
 /** The same, with a Shopify shop: no methods to choose between (the customer chooses in the shop), and the shop that the page knows about. */
 export const PAY_SHOP = { enabled: true, provider: 'shopify', apiUrl: 'http://127.0.0.1:1', publicKey: 'qa', methods: ['applepay'], freeRounds: 2, termsUrl: PAY.termsUrl, privacyUrl: PAY.privacyUrl };
-export const SHOP_INFO = { shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' } };
+/** (`vipps: true`: the packages are drawn with «Betal med Vipps» above «Gå til betaling», the tallest the bar at the bottom gets; without it the bar is shorter and fits where this one does) */
+export const SHOP_INFO = { shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true };
 
 /** What the payment fields of the store go back to between two screens. */
 export const PAY_BASE = { payments: null, pass: null, passCode: null, paywall: false, payBusy: false, payWaiting: null, hostAwayUntil: 0 };
