@@ -15,8 +15,10 @@
 //   POST /restore         { code }                has this code been paid? returns the pass. The page asks while the host pays in the
 //                                                 other tab, and a customer on a new phone asks with the code from the e-mail
 //   POST /shopify/webhook                         Shopify says that an order was paid, cancelled or refunded (signed: nobody else gets in)
-//   POST /vipps/start     { plan, code, samtykke }  makes a payment at Vipps: { url, reference }, where to send the host
+//   POST /vipps/start     { plan, code, samtykke, rabatt? }  makes a payment at Vipps: { url, reference }, where to send the host (`rabatt`: a discount code)
 //   POST /vipps/status    { reference }           { state: "started" | "done" | "failed" }: what the page the host comes back to shows
+//   POST /discount        { code }                is this a discount code of the shop's, and what do the packages cost with it? (the same codes as
+//                                                 in Shopify's checkout, which the owner makes in Shopify; needs the access read_discounts)
 //   POST /vipps/webhook                           Vipps says that a payment was authorized, aborted or has expired (signed)
 //   POST /vipps/admin/webhook   (Bearer ADMIN_TOKEN)  registers that webhook at Vipps (once, and again if it is ever lost)
 //   GET  /vipps/admin/check     (Bearer ADMIN_TOKEN)  tries every connection (Vipps, Shopify, the prices) and says what works
@@ -205,15 +207,27 @@ const SCHEMA = [
   'CREATE INDEX IF NOT EXISTS vipps_open ON vipps (state, created_at)',
   // small things the Worker keeps for itself: the signing secret of the webhook that was registered at Vipps
   'CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
+  // one row for every time somebody asks whether a discount code is good (to keep the number of questions to Shopify in check)
+  'CREATE TABLE IF NOT EXISTS discount_checks (at INTEGER NOT NULL)',
 ];
 const HOOKS_KEPT = 100;
 const prepared = new WeakSet(); // (the databases whose tables are known to be there)
 
 /** The database, with the tables made. A binding that is missing says so in words. */
+// Columns that came later (a table that was made before them gets them here; one that has them already says so, which is no harm)
+const ADDED_COLUMNS = ["ALTER TABLE vipps ADD COLUMN discount_code TEXT NOT NULL DEFAULT ''", 'ALTER TABLE vipps ADD COLUMN list_amount INTEGER NOT NULL DEFAULT 0'];
+
 async function database(env) {
   if (typeof env.DB?.prepare !== 'function') throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp ennå (databasen DB mangler).');
   if (!prepared.has(env.DB)) {
     await env.DB.batch(SCHEMA.map((sql) => env.DB.prepare(sql)));
+    for (const sql of ADDED_COLUMNS) {
+      await env.DB.prepare(sql)
+        .run()
+        .catch((err) => {
+          if (!/duplicate column/i.test(String(err?.message ?? err))) throw err;
+        });
+    }
     prepared.add(env.DB);
   }
   return env.DB;
@@ -583,13 +597,13 @@ async function variantInfo(env, plan) {
   const key = `${shopifyBase(env)}|${id}`;
   const kept = priceKept.get(key);
   if (kept && kept.expires > Date.now()) return kept.info;
-  const data = await shopifyGraphql(env, 'query($id: ID!) { shop { currencyCode } productVariant(id: $id) { title price product { title } } }', { id: `gid://shopify/ProductVariant/${id}` });
+  const data = await shopifyGraphql(env, 'query($id: ID!) { shop { currencyCode } productVariant(id: $id) { title price product { id title } } }', { id: `gid://shopify/ProductVariant/${id}` });
   const variant = data?.productVariant;
   if (!variant) throw new HttpError(503, 'unavailable', `Fant ikke «${PLANS[plan].name}» i butikken (sjekk ${VARIANT_VARS[plan]}).`);
   if (data.shop?.currencyCode !== 'NOK') throw new HttpError(503, 'unavailable', 'Butikken må selge i norske kroner (NOK) for å ta imot Vipps.');
   const amount = toOre(variant.price);
   if (amount <= 0) throw new HttpError(503, 'unavailable', `«${PLANS[plan].name}» har ingen pris i butikken.`);
-  const info = { amount, title: clean(variant.product?.title) || PLANS[plan].name, variantTitle: clean(variant.title) };
+  const info = { amount, title: clean(variant.product?.title) || PLANS[plan].name, variantTitle: clean(variant.title), variantId: `gid://shopify/ProductVariant/${id}`, productId: clean(variant.product?.id) };
   priceKept.set(key, { info, expires: Date.now() + PRICE_KEPT_MS });
   return info;
 }
@@ -618,14 +632,15 @@ async function shopifyOrderFor(env, row, payer, info) {
       financialStatus: 'PAID',
       taxesIncluded: true,
       test,
-      tags: ['vipps', row.reference],
+      tags: ['vipps', row.reference, ...(row.discount_code ? ['rabatt'] : [])],
       sourceName: 'Vipps',
-      note: `Betalt med Vipps. Referanse hos Vipps: ${row.reference}`,
+      note: `Betalt med Vipps. Referanse hos Vipps: ${row.reference}${row.discount_code ? `. Rabattkode: ${row.discount_code} (ordinær pris ${kroner(row.list_amount)} kr)` : ''}`,
       customAttributes: [
         { key: 'kode', value: row.code },
         { key: 'samtykke', value: new Date(row.consented_at * 1000).toISOString() },
         { key: 'betaling', value: 'Vipps' },
         { key: 'vipps_referanse', value: row.reference },
+        ...(row.discount_code ? [{ key: 'rabattkode', value: row.discount_code }, { key: 'ordinaer_pris', value: kroner(row.list_amount) }] : []),
       ],
       lineItems: [
         {
@@ -770,6 +785,101 @@ async function reconcile(env) {
   return looked;
 }
 
+// ---- discount codes: the codes the owner makes in Shopify (for the checkout), which the packages' prices and the button «Betal med Vipps» understand too
+
+// What Shopify says about a code. Only the plain kinds are understood here (an amount or a percentage off, for everybody, on everything or on
+// some products): anything else is turned away, because the price must not be a guess. (The checkout in the shop knows all kinds, and is where
+// those go.) The parts of Shopify's schema that are used: DiscountCodeBasic, DiscountCustomerGets, DiscountPercentage, DiscountAmount, AllDiscountItems, DiscountProducts.
+const DISCOUNT_QUERY = `query($code: String!) {
+  codeDiscountNodeByCode(code: $code) {
+    codeDiscount {
+      __typename
+      ... on DiscountCodeBasic {
+        title status startsAt endsAt usageLimit asyncUsageCount appliesOncePerCustomer
+        context { __typename }
+        minimumRequirement {
+          __typename
+          ... on DiscountMinimumSubtotal { greaterThanOrEqualToSubtotal { amount } }
+          ... on DiscountMinimumQuantity { greaterThanOrEqualToQuantity }
+        }
+        customerGets {
+          value {
+            __typename
+            ... on DiscountPercentage { percentage }
+            ... on DiscountAmount { amount { amount } appliesOnEachItem }
+          }
+          items {
+            __typename
+            ... on DiscountProducts { products(first: 50) { nodes { id } } productVariants(first: 50) { nodes { id } } }
+          }
+        }
+      }
+    }
+  }
+}`;
+const MAX_DISCOUNT_CHECKS_PER_HOUR = 600;
+const shopifySet = (env) => SHOPIFY_NAMES.every((name) => isSet(env, name));
+
+/** What a package costs with the discount, in øre, and whether the button «Betal med Vipps» can take that price. */
+function priceWith(discount, info) {
+  const price = info.amount;
+  const gets = discount.customerGets ?? {};
+  const kind = gets.items?.__typename;
+  let applies = false;
+  if (kind === 'AllDiscountItems') applies = true;
+  else if (kind === 'DiscountProducts') applies = (gets.items.productVariants?.nodes ?? []).some((n) => n.id === info.variantId) || (gets.items.products?.nodes ?? []).some((n) => n.id === info.productId);
+  else throw new HttpError(400, 'discount_unsupported', 'Den typen rabattkode kan ikke brukes her. Skriv den inn i butikkens kasse (Gå til betaling).');
+  const min = discount.minimumRequirement;
+  if (min?.__typename === 'DiscountMinimumSubtotal' && toOre(min.greaterThanOrEqualToSubtotal?.amount) > price) applies = false;
+  if (min?.__typename === 'DiscountMinimumQuantity' && Number(min.greaterThanOrEqualToQuantity) > 1) applies = false;
+  let off = 0;
+  if (applies) {
+    const value = gets.value ?? {};
+    if (value.__typename === 'DiscountPercentage') off = Math.round(price * Number(value.percentage));
+    else if (value.__typename === 'DiscountAmount') off = Math.min(price, toOre(value.amount?.amount));
+    else throw new HttpError(400, 'discount_unsupported', 'Den typen rabattkode kan ikke brukes her. Skriv den inn i butikkens kasse (Gå til betaling).');
+  }
+  const now = Math.max(0, price - Math.max(0, off));
+  // Vipps cannot take a price of nothing or under a krone, and a code that is meant for each customer once or for chosen customers cannot be kept to here
+  const vipps = now >= 100 && !discount.appliesOncePerCustomer && discount.context?.__typename === 'DiscountBuyerSelectionAll';
+  return { price, now, vipps };
+}
+
+/** Is it a good code, and what do the three packages cost with it? Throws (400, with words for the host) when it is not. */
+async function checkDiscount(env, rawCode) {
+  const text = clean(rawCode);
+  if (text === '' || text.length > 64 || /[\u0000-\u001f]/.test(text)) throw bad('Skriv inn en rabattkode.');
+  if (!shopifySet(env)) throw new HttpError(503, 'unavailable', 'Rabattkoder er ikke satt opp ennå.');
+  const db = await database(env);
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare('DELETE FROM discount_checks WHERE at < ?').bind(now - 3600).run();
+  const { n } = (await db.prepare('SELECT COUNT(*) AS n FROM discount_checks').first()) ?? { n: 0 };
+  if (n >= MAX_DISCOUNT_CHECKS_PER_HOUR) throw new HttpError(429, 'busy', 'Mange sjekker rabattkoder akkurat nå. Prøv igjen om litt.');
+  await db.prepare('INSERT INTO discount_checks (at) VALUES (?)').bind(now).run();
+  const data = await shopifyGraphql(env, DISCOUNT_QUERY, { code: text });
+  const discount = data?.codeDiscountNodeByCode?.codeDiscount;
+  if (!discount) throw new HttpError(400, 'discount_unknown', 'Fant ikke den rabattkoden.');
+  if (discount.__typename !== 'DiscountCodeBasic') throw new HttpError(400, 'discount_unsupported', 'Den typen rabattkode kan ikke brukes her. Skriv den inn i butikkens kasse (Gå til betaling).');
+  if (discount.status !== 'ACTIVE') throw new HttpError(400, 'discount_inactive', 'Rabattkoden er ikke gyldig akkurat nå.');
+  const code = text.toUpperCase();
+  const plans = {};
+  for (const plan of Object.keys(PLANS)) plans[plan] = priceWith(discount, await variantInfo(env, plan));
+  if (Object.values(plans).every((p) => p.now === p.price)) throw new HttpError(400, 'discount_none', 'Rabattkoden gjelder ikke disse pakkene.');
+  if (discount.usageLimit !== null && discount.usageLimit !== undefined) {
+    // (what the shop has counted, and what has been paid with Vipps with it: those are not counted in the shop)
+    const { used } = (await db.prepare("SELECT COUNT(*) AS used FROM vipps WHERE discount_code = ? AND (state IN ('captured', 'done') OR (state = 'started' AND created_at > ?))").bind(code, now - 2 * 3600).first()) ?? { used: 0 };
+    if (Number(discount.asyncUsageCount ?? 0) + used >= discount.usageLimit) throw new HttpError(400, 'discount_used', 'Rabattkoden er brukt opp.');
+  }
+  const value = discount.customerGets?.value ?? {};
+  const summary = value.__typename === 'DiscountPercentage' ? `${Math.round(Number(value.percentage) * 1000) / 10} % rabatt` : `${Math.round(toOre(value.amount?.amount) / 100)} kr rabatt`;
+  return { ok: true, code, summary: summary.replace('.', ','), plans };
+}
+
+async function discountEndpoint(request, env) {
+  const body = await readJson(request);
+  return checkDiscount(env, body.code);
+}
+
 // ---- the calls from the game and from Vipps
 
 async function vippsStart(request, env) {
@@ -786,18 +896,27 @@ async function vippsStart(request, env) {
   const { n } = (await db.prepare('SELECT COUNT(*) AS n FROM vipps WHERE created_at > ?').bind(now - 3600).first()) ?? { n: 0 };
   if (n >= MAX_STARTS_PER_HOUR) throw new HttpError(429, 'busy', 'Mange betaler akkurat nå. Prøv igjen om litt.');
   const info = await variantInfo(env, plan);
+  // a discount code: checked again here (the price is the shop's, not what the page says), and the price at Vipps is the price with it
+  let amount = info.amount;
+  let discountCode = '';
+  if (clean(body.rabatt) !== '') {
+    const found = await checkDiscount(env, body.rabatt);
+    if (!found.plans[plan].vipps) throw new HttpError(400, 'discount_vipps', 'Den rabattkoden kan bare brukes i butikkens kasse (Gå til betaling).');
+    amount = found.plans[plan].now;
+    discountCode = found.code;
+  }
   const reference = newReference();
   // written down BEFORE the payment is made: a payment that Vipps knows and we do not could be paid with nobody to deliver it to
   await db
-    .prepare('INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at, test) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(reference, code, plan, info.amount, consentedAt, now, now, vippsTest(env) ? 1 : 0)
+    .prepare('INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at, test, discount_code, list_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(reference, code, plan, amount, consentedAt, now, now, vippsTest(env) ? 1 : 0, discountCode, info.amount)
     .run();
   let made;
   try {
     made = await vipps(env, 'POST', '/epayment/v1/payments', {
       idempotency: reference,
       body: {
-        amount: { currency: 'NOK', value: info.amount },
+        amount: { currency: 'NOK', value: amount },
         paymentMethod: { type: 'WALLET' },
         reference,
         returnUrl: new URL(`takk.html?ref=${reference}`, siteUrl(env)).href,
@@ -957,6 +1076,16 @@ async function vippsAdminCheck(request, env) {
     out.shopifyError = trouble(err);
     out.prices = null;
   }
+  // (rabattkoder are not needed for the rest to work: the access read_discounts is only for the discount field in the game)
+  out.discounts = false;
+  if (out.shopify) {
+    try {
+      await shopifyGraphql(env, DISCOUNT_QUERY, { code: 'DISPUTT-SJEKK-FINNES-IKKE' });
+      out.discounts = true;
+    } catch (err) {
+      out.discountsError = trouble(err);
+    }
+  }
   out.ok = out.vipps && out.webhook && out.shopify && out.prices !== null;
   return out;
 }
@@ -980,7 +1109,7 @@ async function readJson(request) {
 function shop(env) {
   const ids = variantIds(env);
   for (const [plan, name] of Object.entries(VARIANT_VARS)) if (!ids[plan]) throw new HttpError(503, 'unavailable', `Betalingen er ikke satt opp ennå (${name} mangler).`);
-  return { shop: shopOrigin(env), variants: ids, vipps: vippsProblem(env) === null };
+  return { shop: shopOrigin(env), variants: ids, vipps: vippsProblem(env) === null, discounts: shopifySet(env) };
 }
 
 /** When the access of an order ends, in milliseconds since 1970 (Infinity for a lifetime package). */
@@ -1119,6 +1248,7 @@ async function route(request, env) {
   if (request.method === 'GET' && url.pathname === '/shop') return json(200, shop(env), request, env);
   if (request.method === 'POST' && url.pathname === '/restore') return json(200, await restore(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/shopify/webhook') return json(200, await webhook(request, env), request, env);
+  if (request.method === 'POST' && url.pathname === '/discount') return json(200, await discountEndpoint(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/vipps/start') return json(200, await vippsStart(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/vipps/status') return json(200, await vippsStatus(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/vipps/webhook') return json(200, await vippsWebhook(request, env), request, env);

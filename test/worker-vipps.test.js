@@ -651,3 +651,151 @@ describe('a Worker without Vipps', () => {
     assert.equal(t.vipps.calls.length, 0, 'the clock has nothing to do');
   });
 });
+
+describe('discount codes (the same codes as in Shopify\'s checkout)', () => {
+  const PERCENT = { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.2 }, items: { __typename: 'AllDiscountItems' } } };
+  const KRONER = (n) => ({ customerGets: { value: { __typename: 'DiscountAmount', amount: { amount: String(n) }, appliesOnEachItem: false }, items: { __typename: 'AllDiscountItems' } } });
+
+  it('says what the three packages cost with a percentage off, for any spelling of the code', async () => {
+    const t = await make();
+    t.admin.addDiscount('VENN20', { ...PERCENT, title: 'Venner' });
+    const r = await t.discount('venn20');
+    assert.equal(r.status, 200);
+    assert.equal(r.body.code, 'VENN20');
+    assert.equal(r.body.summary, '20 % rabatt');
+    assert.deepEqual(r.body.plans, { evening: { price: 8900, now: 7120, vipps: true }, year: { price: 24900, now: 19920, vipps: true }, lifetime: { price: 29900, now: 23920, vipps: true } });
+  });
+
+  it('takes an amount off, never more than the price, and says that Vipps cannot take a price of nothing', async () => {
+    const t = await make();
+    t.admin.addDiscount('FEMTI', KRONER(50));
+    const r = await t.discount('FEMTI');
+    assert.equal(r.body.summary, '50 kr rabatt');
+    assert.deepEqual(Object.values(r.body.plans).map((p) => p.now), [3900, 19900, 24900]);
+    t.admin.addDiscount('GRATIS', KRONER(500));
+    const free = await t.discount('GRATIS');
+    assert.deepEqual(Object.values(free.body.plans).map((p) => [p.now, p.vipps]), [[0, false], [0, false], [0, false]], 'for nothing: the shop\'s checkout does that');
+    t.admin.addDiscount('HELT', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 1 }, items: { __typename: 'AllDiscountItems' } } });
+    assert.equal((await t.discount('HELT')).body.plans.year.vipps, false);
+  });
+
+  it('turns away what is not a good code, in words for the host', async () => {
+    const t = await make();
+    t.admin.addDiscount('GAMMEL', { ...PERCENT, status: 'EXPIRED' });
+    t.admin.addDiscount('SNART', { ...PERCENT, status: 'SCHEDULED' });
+    t.admin.addDiscount('TREFOR', { __typename: 'DiscountCodeBxgy' });
+    t.admin.addDiscount('SAMLING', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.5 }, items: { __typename: 'DiscountCollections' } } });
+    for (const [code, error] of [['finnesikke', 'discount_unknown'], ['GAMMEL', 'discount_inactive'], ['SNART', 'discount_inactive'], ['TREFOR', 'discount_unsupported'], ['SAMLING', 'discount_unsupported'], ['', 'bad_request']]) {
+      const r = await t.discount(code);
+      assert.equal(r.status, 400, code);
+      assert.equal(r.body.error, error, code);
+      assert.ok(r.body.message.length > 10);
+    }
+  });
+
+  it('applies to the packages it is for and not the others, and says so when it is for none of them', async () => {
+    const t = await make();
+    t.admin.addDiscount('KUNAAR', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.5 }, items: { __typename: 'DiscountProducts', products: { nodes: [] }, productVariants: { nodes: [{ id: `gid://shopify/ProductVariant/${mod.VARIANT_IDS?.year ?? '44000000000002'}` }] } } } });
+    const r = await t.discount('KUNAAR');
+    const looks = Object.entries(r.body.plans).map(([plan, p]) => [plan, p.now === p.price]);
+    assert.deepEqual(looks, [['evening', true], ['year', false], ['lifetime', true]]);
+    t.admin.addDiscount('INGEN', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.5 }, items: { __typename: 'DiscountProducts', products: { nodes: [] }, productVariants: { nodes: [] } } } });
+    assert.equal((await t.discount('INGEN')).body.error, 'discount_none');
+    t.admin.addDiscount('MINST', { ...PERCENT, minimumRequirement: { __typename: 'DiscountMinimumSubtotal', greaterThanOrEqualToSubtotal: { amount: '1000' } } });
+    assert.equal((await t.discount('MINST')).body.error, 'discount_none', 'a minimum that no package reaches');
+  });
+
+  it('keeps Vipps out of a code that cannot be kept to there (one use for each customer, chosen customers), and the shop\'s checkout takes it', async () => {
+    const t = await make();
+    t.admin.addDiscount('EN', { ...PERCENT, appliesOncePerCustomer: true });
+    t.admin.addDiscount('UTVALGT', { ...PERCENT, context: { __typename: 'DiscountCustomers' } });
+    for (const code of ['EN', 'UTVALGT']) {
+      const r = await t.discount(code);
+      assert.equal(r.status, 200, 'the code is good, and the price is shown');
+      assert.equal(r.body.plans.year.vipps, false);
+      const started = await t.start({ plan: 'year', rabatt: code });
+      assert.equal(started.status, 400);
+      assert.equal(started.body.error, 'discount_vipps');
+    }
+    assert.equal(t.vipps.payments.size, 0, 'nothing was made at Vipps');
+  });
+
+  it('counts the uses of a code with a limit, those in the shop and those paid with Vipps', async () => {
+    const t = await make();
+    await t.register();
+    t.admin.addDiscount('TO', { ...PERCENT, usageLimit: 2, asyncUsageCount: 1 });
+    assert.equal((await t.discount('TO')).status, 200, 'one use left');
+    await t.payVipps({ plan: 'evening', rabatt: 'to' });
+    await t.settled();
+    const r = await t.discount('TO');
+    assert.equal(r.status, 400);
+    assert.equal(r.body.error, 'discount_used');
+    assert.equal((await t.start({ rabatt: 'TO' })).body.error, 'discount_used', 'and a payment with it is not started either');
+  });
+
+  it('is paid with Vipps at the price with the code, and the order says what it was and what it cost', async () => {
+    const t = await make();
+    await t.register();
+    t.admin.addDiscount('VENN20', PERCENT);
+    const { body } = await t.start({ plan: 'year', rabatt: 'venn20' });
+    assert.equal(t.vipps.payments.get(body.reference).amount, 19920, 'Vipps is asked for the price with the code');
+    assert.equal(t.row(body.reference).discount_code, 'VENN20');
+    assert.equal(t.row(body.reference).list_amount, 24900);
+    await t.vipps.approve(body.reference);
+    await t.settled();
+    assert.equal(t.vipps.payments.get(body.reference).captured, 19920, 'and that is what is taken');
+    const order = t.admin.orders[0].input;
+    assert.equal(order.lineItems[0].priceSet.shopMoney.amount, '199.20');
+    assert.equal(order.lineItems[0].taxLines[0].priceSet.shopMoney.amount, '39.84', 'the VAT is of the price that was paid');
+    assert.equal(order.transactions[0].amountSet.shopMoney.amount, '199.20');
+    assert.deepEqual(order.customAttributes.filter((a) => ['rabattkode', 'ordinaer_pris'].includes(a.key)), [{ key: 'rabattkode', value: 'VENN20' }, { key: 'ordinaer_pris', value: '249.00' }]);
+    assert.ok(order.tags.includes('rabatt'));
+    assert.equal(t.ordersRows()[0].amount, 19920);
+    assert.equal((await t.restore()).status, 200, 'and the code gives the pass as before');
+  });
+
+  it('is paid at the ordinary price when there is no code, and a bad code stops a payment before it starts', async () => {
+    const t = await make();
+    const plain = await t.start({ plan: 'evening' });
+    assert.equal(t.vipps.payments.get(plain.body.reference).amount, 8900);
+    assert.equal(t.row(plain.body.reference).discount_code, '');
+    const before = t.vipps.payments.size;
+    const bad = await t.start({ plan: 'evening', rabatt: 'finnesikke' });
+    assert.equal(bad.status, 400);
+    assert.equal(t.vipps.payments.size, before, 'no payment at Vipps');
+    assert.equal(t.db.sqlite.prepare('SELECT COUNT(*) AS n FROM vipps').get().n, 1, 'and nothing written down');
+  });
+
+  it('is not shown without the shop\'s keys, and says so when the access to discounts is missing', async () => {
+    const off = await make({ SHOPIFY_STORE: undefined });
+    assert.equal((await json(await off.call('/shop'))).body.discounts, false);
+    assert.equal((await off.discount('VENN20')).status, 503);
+    const on = await make();
+    assert.equal((await json(await on.call('/shop'))).body.discounts, true);
+    const denied = await make({}, { admin: { discountsAccess: false } });
+    quiet();
+    assert.equal((await denied.discount('VENN20')).status, 502);
+    const check = await json(await denied.adminCall('/vipps/admin/check'));
+    assert.equal(check.body.discounts, false, 'the owner is told, the rest still works');
+    assert.match(check.body.discountsError, /read_discounts/);
+    assert.equal(check.body.shopify, true);
+    assert.equal((await json(await (await make()).adminCall('/vipps/admin/check'))).body.discounts, true);
+  });
+
+  it('stops at a number of questions an hour, so that the code cannot be guessed at without end', async () => {
+    const t = await make();
+    await t.discount('x'); // (the first question makes the tables)
+    const now = Math.floor(Date.now() / 1000);
+    for (let i = 0; i < 600; i++) t.db.sqlite.prepare('INSERT INTO discount_checks (at) VALUES (?)').run(now);
+    assert.equal((await t.discount('x')).status, 429);
+  });
+
+  it('adds the new columns to a table that was made before them', async () => {
+    const t = await make();
+    t.db.sqlite.exec('CREATE TABLE vipps (reference TEXT PRIMARY KEY, code TEXT NOT NULL, plan TEXT NOT NULL, amount INTEGER NOT NULL, consented_at INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, state TEXT NOT NULL DEFAULT \'started\', order_id TEXT, test INTEGER NOT NULL DEFAULT 0, locked_until INTEGER NOT NULL DEFAULT 0, order_started_at INTEGER NOT NULL DEFAULT 0, note TEXT NOT NULL DEFAULT \'\')');
+    await t.call('/health');
+    const columns = t.db.sqlite.prepare('PRAGMA table_info(vipps)').all().map((c) => c.name);
+    assert.ok(columns.includes('discount_code') && columns.includes('list_amount'));
+    assert.equal((await t.start({ plan: 'evening' })).status, 200, 'and a payment can be made');
+  });
+});

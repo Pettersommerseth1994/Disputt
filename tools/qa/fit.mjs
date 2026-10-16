@@ -24,7 +24,7 @@ const MUST_FIT = [
   // the reveal with the role strip held open (the strip is three lines tall for an impostor in a round with two)
   'reveal-wait-held', 'reveal-asker-held', 'reveal-duo-wait-held', 'reveal-duo-asker-held',
   // the packages the host meets after the free rounds: the three cards, what the chosen one means, and the buttons to pay with
-  'pay-gate', 'pay-gate-applepay-only', 'pay-gate-shop',
+  'pay-gate', 'pay-gate-applepay-only', 'pay-gate-shop', 'pay-gate-shop-deal',
   // bilturmodus: the countdown and the reveal are the same screens as in the normal game, with the strip that asks "Glemt rollen din?"
   'car-countdown', 'car-reveal', 'car-reveal-held'];
 // ... and these should at least keep their main action and the text above it in view

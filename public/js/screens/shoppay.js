@@ -7,6 +7,7 @@ import { html, useEffect, useState } from '../vendor/htm-preact.js';
 import { useStore } from '../store.js';
 import { Button } from '../ui.js';
 import { cancelShopPayment, knownShop, loadShop, reopenShop, startShopCheckout } from '../pay/shop.js';
+import { dealFor } from '../pay/discount.js';
 import { startVippsCheckout } from '../pay/vipps.js';
 
 export function ShopDock({ plan }) {
@@ -16,6 +17,7 @@ export function ShopDock({ plan }) {
   const [shop, setShop] = useState(knownShop());
   const [error, setError] = useState('');
   const [tries, setTries] = useState(0);
+  const deal = dealFor(s.discount, plan); // the code the host has taken, if it takes something off this package
   // the shop's address is asked for as soon as the packages are on screen, so that the tap can open the tab at once
   useEffect(() => {
     if (shop) return undefined;
@@ -30,7 +32,7 @@ export function ShopDock({ plan }) {
   const go = () => {
     setError('');
     try {
-      startShopCheckout(plan); // (inside the tap: nothing is waited for before the tab opens)
+      startShopCheckout(plan, deal ? s.discount.code : ''); // (inside the tap: nothing is waited for before the tab opens)
       setAgreed(false); // (the consent is for this purchase: a new try has to be agreed to again)
     } catch (err) {
       setError(err.message);
@@ -41,7 +43,7 @@ export function ShopDock({ plan }) {
   const goVipps = () => {
     setError('');
     try {
-      startVippsCheckout(plan)
+      startVippsCheckout(plan, deal ? s.discount.code : '')
         .then(() => setAgreed(false))
         .catch((err) => setError(err.message));
     } catch (err) {
@@ -66,6 +68,6 @@ export function ShopDock({ plan }) {
       <span class="consent__box" aria-hidden="true"></span>
       <span>Jeg godtar <a href=${pay.termsUrl} target="_blank" rel="noopener">vilkårene</a> og at tilgangen leveres med en gang.</span>
     </label>
-    ${shop?.vipps && html`<${Button} block variant="vipps" disabled=${!agreed} onClick=${goVipps}>Betal med Vipps</${Button}>`}
+    ${shop?.vipps && html`<${Button} block variant="vipps" disabled=${!agreed || (deal && !deal.vipps)} onClick=${goVipps}>Betal med Vipps</${Button}>`}
     <${Button} block disabled=${!agreed || !shop} onClick=${go}>Gå til betaling</${Button}>`;
 }

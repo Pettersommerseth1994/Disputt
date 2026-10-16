@@ -57,7 +57,7 @@ Kortversjonen av [VIPPS.md](VIPPS.md) for deg som setter det opp direkte i live.
 
 ## Steg 5: Koden ut på disputt.site
 
-Si fra til meg når steg 1 til 4 er gjort. Da committer og pusher jeg til main (GitHub bygger siden på nytt, ca. 2 til 3 minutter). Dette går også live: den nye knappen (skjult), «Takk!»-siden og de omskrevne vilkårene og personvernerklæringen (få juristen til å lese dem).
+Si fra til meg når steg 1 til 4 er gjort. Da committer og pusher jeg til main (GitHub bygger siden på nytt, ca. 2 til 3 minutter). Dette går også live: den nye knappen (skjult), «Velkommen!»-siden og de omskrevne vilkårene og personvernerklæringen (få juristen til å lese dem).
 
 ## Steg 6: Skru på
 
@@ -67,10 +67,20 @@ Si fra til meg når steg 1 til 4 er gjort. Da committer og pusher jeg til main (
 ## Steg 7: Første ekte kjøp, og refusjon
 
 1. [ ] Spill to runder, kryss av, trykk **Betal med Vipps**, velg «En kveld» (89 kr), godkjenn i din egen Vipps og del e-postadressen.
-2. [ ] Du skal få «Takk!» og «Velkommen!» i spillet, e-posten med koden, og i Shopify en **betalt** ordre (ikke test) med kilde «Vipps» og taggene `vipps` og `disputt-…`.
+2. [ ] Du skal få «Velkommen!» i spillet, e-posten med koden, og i Shopify en **betalt** ordre (ikke test) med kilde «Vipps» og taggene `vipps` og `disputt-…`.
 3. [ ] `…/health`: `waiting` og `stuck` skal være 0.
 4. [ ] Refunder: i Vipps-portalen (*Transactions*, finn betalingen) og i Shopify (*Orders → ordren → Refund*, manuelt). Sjekk at «Logg inn» med koden nå sier at betalingen er refundert.
 
 **Skru av når som helst:** slett `VIPPS_ENABLED`. Betalinger i gang blir ferdige likevel.
 
 **Vipps' merkevareregler:** knappen er vår egen tegnede, uten Vipps' logo. Spør Vipps om den godtas (se VIPPS.md del 10).
+
+## Etterpå: rabattkoder (ny funksjon)
+
+Under pakkene kommer en linje **Har du rabattkode?**. Koden lager du i Shopify (*Discounts*), og den virker både i butikkens kasse og med Vipps. For at den skal virke må du gjøre to ting i tillegg:
+
+1. [ ] **Ny tilgang i Shopify-appen:** Dev Dashboard → appen «Disputt Vipps» → **Versions** → ny versjon, med `read_discounts` lagt til i Scopes (komma, uten mellomrom: `read_products,read_orders,write_orders,read_discounts`) → **Release**. Åpne så butikkens admin og godkjenn oppdateringen av appen.
+2. [ ] **Lim inn den nye betalingsserveren** (ny `payments/worker-shopify.js`): Cloudflare → `disputt-pay-shopify-test` → **Edit code** → Cmd+A, slett, lim inn → **Deploy**. Variablene og webhooken står som de er.
+3. [ ] **Sjekk:** dobbeltklikk Registrer-Vipps-webhook-filen igjen (jeg lager den på nytt hvis du ber om det). Sjekken skal nå også vise `"discounts":true`.
+
+Hvilke typer koder som virker med Vipps står i [VIPPS.md, del 5.8](VIPPS.md#58-rabattkoder).

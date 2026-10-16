@@ -37,6 +37,13 @@ async function vippsTab(host) {
   await page.waitForSelector('#amount');
   return page;
 }
+/** The tab that «Gå til betaling» opened: the pretend shop's checkout. */
+async function checkoutTab(host) {
+  const target = await host.ctx.waitForTarget((x) => x.type() === 'page' && new URL(x.url(), 'http://x').pathname.startsWith('/checkouts/'), { timeout: 20000 });
+  const page = await target.page();
+  await page.waitForSelector('#attributes');
+  return page;
+}
 const referenceOf = (tab) => new URL(tab.url()).pathname.split('/').pop();
 const onTakk = (tab, title) => tab.waitForFunction((text) => document.getElementById('takk-title')?.textContent === text, { timeout: 20000 }, title);
 
@@ -150,12 +157,51 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   await waitText(host, /Gå til betaling/);
   log('a payment that is turned down in Vipps ends on a page that says so, and nothing is bought');
 
-  // 3) "Livstid", paid in the new tab: Vipps keeps quiet about it, and the page and the game find the payment themselves
+  // The discount code: a field under the packages. A code that is no good is told so; a code that takes everything off is for the shop's checkout
+  // (Vipps takes no price of nothing), which gets the code in the cart link; a good code changes the prices, and Vipps is paid the price with it.
+  admin.addDiscount('VENN20', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.2 }, items: { __typename: 'AllDiscountItems' } } });
+  admin.addDiscount('GRATIS', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 1 }, items: { __typename: 'AllDiscountItems' } } });
+  assert.equal(await host.page.$$eval('.plan__was', (els) => els.length), 0, 'no code, no struck-out prices');
+  await clickButton(host, 'Har du rabattkode?');
+  await host.page.type('#discount-code', 'finnesikke');
+  await clickButton(host, 'Bruk');
+  await waitText(host, /Fant ikke den rabattkoden/);
+  assert.equal(await host.page.$$eval('.plan__was', (els) => els.length), 0, 'a code that is no good changes no price');
+  await host.page.$eval('#discount-code', (el) => {
+    el.focus();
+    el.select(); // (what stands there is replaced by what is typed)
+  });
+  await host.page.keyboard.type('gratis');
+  await clickButton(host, 'Bruk');
+  await waitText(host, /GRATIS/);
+  await waitText(host, /Denne koden gjelder i butikkens kasse/);
+  await tick(host);
+  assert.equal((await button(host, 'Betal med Vipps')).disabled, true, 'Vipps takes no price of nothing');
+  await shot(host, '37-discount-free');
+  await clickButton(host, 'Gå til betaling');
+  const checkout = await checkoutTab(host);
+  assert.equal(await checkout.$eval('#discount', (el) => el.textContent), 'GRATIS', 'the shop\'s checkout gets the code in the cart link, and counts it itself');
+  await checkout.close();
+  await clickButton(host, 'Avbryt');
+  await waitText(host, /Gå til betaling/);
+  await clickButton(host, 'Fjern');
+  await waitText(host, /Har du rabattkode\?/);
+  assert.equal(await host.page.$$eval('.plan__was', (els) => els.length), 0, 'taken away: the ordinary prices');
+  await clickButton(host, 'Har du rabattkode?');
+  await host.page.type('#discount-code', 'venn20');
+  await host.page.keyboard.press('Enter');
+  await waitText(host, /20 % rabatt/);
+  const deals = await host.page.$$eval('.plan', (els) => els.map((el) => el.querySelector('.plan__price').innerText.replace(/\s+/g, ' ').trim()));
+  assert.deepEqual(deals, ['89 kr 71,20 kr', '249 kr 199,20 kr', '299 kr 239,20 kr'], 'every package shows the old price struck out and the new one');
+  await shot(host, '38-discount-20');
+  log('a discount code: a bad one is told so, one for nothing is kept to the shop\'s checkout (which gets the code), and a good one changes the prices');
+
+  // 3) "Livstid" with the code, paid in the new tab: Vipps keeps quiet about it, and the page and the game find the payment themselves
   await choosePlan(host, 'lifetime');
   await tick(host);
   await clickButton(host, 'Betal med Vipps');
   const third = await vippsTab(host);
-  assert.equal(await third.$eval('#amount', (el) => el.textContent), '299,00 kr');
+  assert.equal(await third.$eval('#amount', (el) => el.textContent), '239,20 kr', 'the price at Vipps is the price with the code');
   const ref3 = referenceOf(third);
   const code = JSON.parse(await host.page.evaluate(() => sessionStorage.getItem('disputt:shop'))).code;
   assert.match(code, CODE);
@@ -171,7 +217,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   await third.click('#approve');
   await third.waitForFunction(() => location.pathname.endsWith('/takk.html'));
   // (the page asks the payment server, which asks Vipps itself: no webhook is needed for the answer. The tab may close while this is being read.)
-  const sawThanks = await onTakk(third, 'Takk!').then(
+  const sawThanks = await onTakk(third, 'Velkommen!').then(
     () => true,
     () => false,
   );
@@ -191,16 +237,19 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   const sheetButtons = await host.page.$$eval('.sheet button', (els) => els.map((b) => b.innerText.trim()));
   assert.ok(sheetButtons.includes('Start runde 3'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
   await shot(host, '33-thanks-vipps');
-  log(`paid in the tab for Vipps with the webhook held back: "Velkommen!" with the code ${shown}${sawThanks ? ', and the page in the tab said «Takk!»' : ''}`);
+  log(`paid in the tab for Vipps with the webhook held back: "Velkommen!" with the code ${shown}${sawThanks ? ', and the page in the tab said «Velkommen!»' : ''}`);
 
   // what Vipps and the shop were told: one payment taken, one paid order that carries the code, and the receipt goes to the address from Vipps
-  assert.equal(vipps.payments.get(ref3).captured, 29900, 'the money was taken once, for the whole price');
+  assert.equal(vipps.payments.get(ref3).captured, 23920, 'the money was taken once, for the price with the code');
   assert.equal(vipps.calls.filter((c) => c.method === 'POST' && c.path.endsWith('/capture')).length, 1, 'with one capture');
   assert.equal(admin.orders.length, 1, 'one paid order for one payment');
   const order = admin.orders[0];
   assert.equal(order.input.financialStatus, 'PAID');
   assert.ok(order.tags.includes(ref3), 'the order is tagged with the reference at Vipps');
-  assert.equal(order.input.lineItems[0].priceSet.shopMoney.amount, '299.00');
+  assert.equal(order.input.lineItems[0].priceSet.shopMoney.amount, '239.20');
+  assert.equal(attribute(order, 'rabattkode'), 'VENN20', 'the order says which code it was');
+  assert.equal(attribute(order, 'ordinaer_pris'), '299.00', 'and what the package costs without it');
+  assert.ok(order.tags.includes('rabatt'));
   assert.equal(attribute(order, 'kode'), code, 'the order carries the code, which is what the e-mail and the pass read');
   assert.match(attribute(order, 'samtykke'), /^\d{4}-\d{2}-\d{2}T[\d:]+\.\d{3}Z$/, 'and the time of the consent');
   assert.equal(order.email, 'kari@example.com');
@@ -230,7 +279,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   // somebody who opens the page without being sent from the game (a link in an e-mail, a bookmark) is told, and gets a link instead of a button
   const visitor = await host.ctx.newPage();
   await visitor.goto(`${stack.env.SITE_URL}takk.html?ref=${ref3}`);
-  await onTakk(visitor, 'Takk!');
+  await onTakk(visitor, 'Velkommen!');
   assert.equal(await visitor.$eval('#takk-close', (el) => el.hidden), true, 'no button that closes a tab that nobody opened');
   assert.equal(await visitor.$eval('#takk-switch', (el) => el.hidden), false, 'the Vipps app opens this tab on a phone: the game is in another one, and it is told so');
   assert.equal(await visitor.$eval('#takk-open', (el) => el.textContent), 'Åpne spillet her i stedet', 'and a link to the game is only the last way (it would open the game a second time)');
@@ -240,7 +289,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   await visitor.goto(`${stack.env.SITE_URL}takk.html`);
   await onTakk(visitor, 'Vi fikk ikke svar');
   await visitor.close();
-  log('the page the host comes back to says «Takk!» for a payment that is in, and asks for nothing when it is opened with nothing');
+  log('the page the host comes back to says «Velkommen!» for a payment that is in, and asks for nothing when it is opened with nothing');
 
   await host.page.bringToFront();
   await clickButton(host, 'Start runde 3');
@@ -282,7 +331,7 @@ export async function buyAndComeBackVipps(t, { base, stack }) {
   const reference = referenceOf(phone.page);
   await phone.page.click('#approve');
   await phone.page.waitForFunction(() => location.pathname.endsWith('/takk.html'), { timeout: 20000 });
-  await onTakk(phone.page, 'Takk!');
+  await onTakk(phone.page, 'Velkommen!');
   assert.equal(await phone.page.$eval('#takk-close', (el) => el.hidden), true, 'this is the game\'s own tab: there is no tab to close');
   assert.equal(await phone.page.$eval('#takk-open', (el) => el.hidden), false);
   assert.equal(await phone.page.$eval('#takk-open', (el) => el.textContent), 'Tilbake til spillet', 'the game\'s own tab: the link back is the way on');
@@ -302,5 +351,5 @@ export async function buyAndComeBackVipps(t, { base, stack }) {
   assert.equal(await phone.page.evaluate(() => sessionStorage.getItem('disputt:shop')), null, 'and has forgotten it now');
   await clickButton(phone, 'Fortsett spillet');
   await waitText(phone, /Du har tilgang/);
-  log('bought from the start screen with no new tab: the page was sent to Vipps and came back by the link on the «Takk!» page, and found the payment itself');
+  log('bought from the start screen with no new tab: the page was sent to Vipps and came back by the link on the «Velkommen!» page, and found the payment itself');
 }

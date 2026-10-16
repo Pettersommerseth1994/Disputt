@@ -53,7 +53,10 @@ export async function setupVipps(overrides = {}, fakes = {}) {
   const call = base.call;
   const read = async (res) => ({ status: res.status, body: await res.json().catch(() => null) });
   /** The game: "Betal med Vipps". `consent` is the time the host ticked the box. */
-  const start = async ({ plan = 'year', code = CODE, consent = new Date() } = {}) => read(await call('/vipps/start', { method: 'POST', body: { plan, code, samtykke: consent instanceof Date ? consent.toISOString() : consent } }));
+  const start = async ({ plan = 'year', code = CODE, consent = new Date(), rabatt } = {}) =>
+    read(await call('/vipps/start', { method: 'POST', body: { plan, code, samtykke: consent instanceof Date ? consent.toISOString() : consent, ...(rabatt === undefined ? {} : { rabatt }) } }));
+  /** The game: "Har du rabattkode?" */
+  const discount = async (rabatt) => read(await call('/discount', { method: 'POST', body: { code: rabatt } }));
   const status = async (reference) => read(await call('/vipps/status', { method: 'POST', body: { reference } }));
   const restore = async (code = CODE) => read(await call('/restore', { method: 'POST', body: { code } }));
   /** The owner (a person with the admin token): registers the webhook at Vipps. */
@@ -80,5 +83,5 @@ export async function setupVipps(overrides = {}, fakes = {}) {
     await vipps.stop();
     await admin.stop();
   };
-  return { ...base, vipps, admin, start, status, restore, register, hook, payVipps, row, ordersRows, adminCall, settled, stop, SECRET };
+  return { ...base, vipps, admin, start, discount, status, restore, register, hook, payVipps, row, ordersRows, adminCall, settled, stop, SECRET };
 }

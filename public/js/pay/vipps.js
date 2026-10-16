@@ -39,6 +39,28 @@ function vippsAddress(text) {
   return null;
 }
 
+/**
+ * What the new tab shows until Vipps is ready: the game's own look (the logo, its style sheets, by their full addresses: a blank tab has no
+ * base address of its own), not a bare page. Only what the tab has to say: the game stands in the tab behind.
+ */
+export function openingPage() {
+  let base = '';
+  try {
+    base = new URL(document.baseURI || location.href).href;
+  } catch {
+    /* the plain addresses are used */
+  }
+  const at = (path) => {
+    try {
+      return new URL(path, base).href;
+    } catch {
+      return path;
+    }
+  };
+  const sheets = ['tokens', 'base', 'components', 'screens'].map((name) => `<link rel="stylesheet" href="${at(`css/${name}.css`)}">`).join('');
+  return `<!doctype html><html lang="nb"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Åpner Vipps</title><meta name="theme-color" content="#6a1428"><meta name="color-scheme" content="dark">${sheets}<body><main class="screen screen--padded takk"><div class="grow center stack stack--loose" style="align-items:center;justify-content:center"><span class="logo-sticker"><img src="${at('assets/logo/disputt-logo.svg')}" alt="Disputt" width="300" height="130"></span><h1>Åpner Vipps …</h1><p class="lead muted">Et øyeblikk. Vipps åpner seg her, og spillet venter i fanen bak.</p></div></main>`;
+}
+
 function remember(waiting) {
   try {
     sessionStorage.setItem(WAITING_KEY, JSON.stringify(waiting));
@@ -71,7 +93,7 @@ let starting = false;
  * The host tapped «Betal med Vipps» for `plan`. Resolves when the host has been sent to Vipps (or to the page that explains why not: it
  * rejects with a PayError whose message is for the host). Must be called inside the tap, as the first thing that happens there.
  */
-export function startVippsCheckout(plan) {
+export function startVippsCheckout(plan, discount = '') {
   if (starting || store.payWaiting) return Promise.resolve(); // (a double tap)
   const info = knownShop();
   const apiUrl = store.payments?.apiUrl;
@@ -88,7 +110,7 @@ export function startVippsCheckout(plan) {
     throw new PayError('storage', 'Nettleseren din åpner ikke en ny fane og lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.');
   }
   try {
-    tab?.document.write('<!doctype html><title>Vipps</title><body style="font:20px system-ui;padding:2rem;background:#6a1428;color:#f8e6b8">Åpner Vipps …');
+    tab?.document.write(openingPage());
   } catch {
     /* a tab that cannot be written to is sent on all the same */
   }
@@ -107,7 +129,7 @@ export function startVippsCheckout(plan) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'omit',
-    body: JSON.stringify({ plan, code: waiting.code, samtykke: consent }),
+    body: JSON.stringify({ plan, code: waiting.code, samtykke: consent, ...(discount ? { rabatt: discount } : {}) }),
   })
     .catch(() => fail(new PayError('network', 'Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.')))
     .then(async (res) => {

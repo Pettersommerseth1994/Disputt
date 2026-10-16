@@ -1,4 +1,4 @@
-// The mantra: the strip at the top of every screen with «★ Vårt mantra», and the bubble it opens (public/js/mantra/mantra.js, css/mantra.css).
+// The mantra: the strip at the top of every screen with «★ Mantra», and the bubble it opens (public/js/mantra/mantra.js, css/mantra.css).
 // What this guards: the strip must not cost a screen its height or lie over what has to be on top of it, it must not need an index.html
 // that is as new as the script (pages are cached for ten minutes), and the words must keep to the rules for what players read.
 import assert from 'node:assert/strict';
@@ -20,7 +20,7 @@ const zIndex = (declarations) => Number(declarations.match(/z-index:\s*(\d+)/)?.
 
 describe('the words', () => {
   it('say who speaks, and what the game is and is not', () => {
-    assert.equal(MANTRA.label, 'Vårt mantra');
+    assert.equal(MANTRA.label, 'Mantra');
     assert.equal(MANTRA.signature, 'Team Disputt');
     const said = MANTRA.lines.join(' ');
     assert.match(said, /mellom mennesker/, 'a game between people');

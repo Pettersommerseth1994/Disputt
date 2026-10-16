@@ -15,7 +15,7 @@ const $ = (id) => document.getElementById(id);
 
 const TEXTS = {
   checking: ['Et øyeblikk …', 'Vi sjekker betalingen hos Vipps.'],
-  done: ['Takk!', 'Betalingen er gjennomført, og tilgangen dukker opp i spillet av seg selv. Kvitteringen kommer på e-post.'],
+  done: ['Velkommen!', 'Betalingen er gjennomført, og tilgangen dukker opp i spillet av seg selv. Kvitteringen kommer på e-post.'],
   failed: ['Betalingen ble ikke gjennomført', 'Ingen penger er trukket. Gå tilbake til spillet og prøv igjen.'],
   slow: ['Vi venter fortsatt på Vipps', 'Har du godkjent betalingen i Vipps, dukker tilgangen opp i spillet av seg selv så snart Vipps har meldt fra. Kvitteringen kommer på e-post.'],
   lost: ['Vi fikk ikke svar', 'Gå tilbake til spillet. Har du betalt, dukker tilgangen opp av seg selv, og koden kommer på e-post.'],

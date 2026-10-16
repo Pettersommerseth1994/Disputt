@@ -1,6 +1,6 @@
 /* ==========================================================================
    DISPUTT DESIGN SYSTEM — the mantra
-   A strip at the very top of every screen: a star and a word («Vårt mantra»). A tap opens a bubble with what Team Disputt wants to
+   A strip at the very top of every screen: a star and a word («Mantra»). A tap opens a bubble with what Team Disputt wants to
    say: this is a game between people, and the phone is only a tool for the quiz. (public/js/mantra/mantra.js)
    (A style sheet of its own: the script that draws the strip loads it itself, so a script and an index.html that are not equally
    new, from the cache, still work.)
@@ -25,8 +25,8 @@
   position: relative;
   z-index: 2;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: flex-start; /* the button hangs from the very top edge of the screen */
   height: var(--mantra-total);
   padding: env(safe-area-inset-top, 0px) var(--page-x) 0;
   background: var(--tex-grain), var(--tex-dark), var(--bg); /* solid: the screen scrolls under it */
@@ -37,10 +37,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  height: 1.3rem;
-  padding: 0 0.75rem 0 0.55rem;
+  height: 1.4rem;
+  padding: 0 0.8rem 0 0.6rem;
   border: 0;
-  border-radius: var(--r-pill);
+  border-radius: 0 0 0.75rem 0.75rem; /* square at the top, where it meets the edge */
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 0.8rem;

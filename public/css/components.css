@@ -641,3 +641,16 @@
 /* ---- Decorative crayon blobs --------------------------------------------------- */
 .decor { position: absolute; z-index: -1; pointer-events: none; user-select: none; }
 .decor--float { animation: float 7s ease-in-out infinite; }
+
+/* A discount code (screens/discount.js): a line under the packages that opens a field, and a chip with the code once it has been taken. On a package that
+   gets a lower price, the old price is struck out above the new one. */
+.discount { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s-2) var(--s-3); }
+.discount--form { flex-direction: column; align-items: stretch; }
+.discount--form .field__label { font-size: 1rem; }
+.discount__row { display: flex; align-items: center; gap: var(--s-3); }
+.discount__row .input { flex: 1; min-width: 0; text-transform: uppercase; }
+.discount__line { display: flex; align-items: center; gap: var(--s-2); margin: 0; font-weight: 700; }
+.discount__note { flex-basis: 100%; margin: 0; text-align: center; }
+.input--small { min-height: 2.9rem; padding: 0.4rem 0.9rem; font-size: 1.1rem; letter-spacing: 0.04em; box-shadow: 3px 4px 0 var(--edge); }
+.plan__price--deal { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; }
+.plan__was { font-size: 0.85rem; font-weight: 700; opacity: 0.6; text-decoration-thickness: 2px; }

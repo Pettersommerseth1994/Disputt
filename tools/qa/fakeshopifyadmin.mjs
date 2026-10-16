@@ -11,6 +11,31 @@ import { PRICES, VARIANTS, order as webhookOrder, webhookRequest } from './fakes
 
 export const APP = { clientId: 'qa-shopify-client-id', clientSecret: 'qa-shopify-client-secret' };
 
+/** The names that a query for a discount code may use (the fields and types of DiscountCodeBasic and what is inside it, from shopify.dev/docs/api/admin-graphql). */
+const DISCOUNT_NAMES = new Set(
+  `query code String codeDiscountNodeByCode codeDiscount __typename on DiscountCodeBasic title status startsAt endsAt usageLimit asyncUsageCount appliesOncePerCustomer context
+  minimumRequirement DiscountMinimumSubtotal greaterThanOrEqualToSubtotal amount DiscountMinimumQuantity greaterThanOrEqualToQuantity customerGets value DiscountPercentage percentage
+  DiscountAmount appliesOnEachItem items DiscountProducts products first nodes id productVariants`.split(/\s+/),
+);
+
+/** A code of the shop's as Shopify's API tells it. `spec` changes what the defaults say (a percentage off everything, for everybody, no limit). */
+export function discount(spec = {}) {
+  return {
+    __typename: 'DiscountCodeBasic',
+    title: 'Rabatt',
+    status: 'ACTIVE',
+    startsAt: '2026-01-01T00:00:00Z',
+    endsAt: null,
+    usageLimit: null,
+    asyncUsageCount: 0,
+    appliesOncePerCustomer: false,
+    context: { __typename: 'DiscountBuyerSelectionAll' },
+    minimumRequirement: null,
+    customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.2 }, items: { __typename: 'AllDiscountItems' } },
+    ...spec,
+  };
+}
+
 /** The fields of the inputs, from Shopify's documentation (2026-07 and later). A field that is not here is an error. */
 const SCHEMA = {
   order: ['billingAddress', 'currency', 'customAttributes', 'customer', 'discountCode', 'email', 'financialStatus', 'fulfillment', 'fulfillmentStatus', 'lineItems', 'metafields', 'name', 'note', 'phone', 'poNumber', 'presentmentCurrency', 'processedAt', 'referringSite', 'shippingAddress', 'shippingLines', 'sourceIdentifier', 'sourceName', 'sourceUrl', 'tags', 'taxLines', 'taxesIncluded', 'test', 'transactions', 'customer'],
@@ -43,7 +68,8 @@ const money = (set, where, problems) => {
  * @param shop       the shop's name at Shopify: the xxx of xxx.myshopify.com
  * @param deliver    how the webhook "orders/paid" reaches the payment server: (topic, payload) => void. Left out: no webhook.
  */
-export async function startFakeShopifyAdmin({ app = APP, prices: given = PRICES, currency = 'NOK', deliver } = {}) {
+export async function startFakeShopifyAdmin({ app = APP, prices: given = PRICES, currency = 'NOK', deliver, discountsAccess = true } = {}) {
+  const discounts = new Map(); // CODE -> the discount (see discount() above)
   const prices = { ...given }; // (a copy: a test that changes a price changes it for itself)
   const kroner = (n) => n.toFixed(2);
   const tokens = new Set();
@@ -88,7 +114,15 @@ export async function startFakeShopifyAdmin({ app = APP, prices: given = PRICES,
         if (/productVariant\(id:/.test(query)) {
           const id = String(variables.id ?? '').replace('gid://shopify/ProductVariant/', '');
           const plan = PLAN_OF[id];
-          return send(200, { data: { shop: { currencyCode: currency }, productVariant: plan ? { title: 'Default Title', price: prices[plan], product: { title: `Disputt: ${plan}` } } : null } }, 'variant');
+          return send(200, { data: { shop: { currencyCode: currency }, productVariant: plan ? { title: 'Default Title', price: prices[plan], product: { id: `gid://shopify/Product/${7_000_000_000_000 + Number(id)}`, title: `Disputt: ${plan}` } } : null } }, 'variant');
+        }
+        // ---- a discount code
+        if (/codeDiscountNodeByCode\(/.test(query)) {
+          const unknown = [...new Set(query.match(/[A-Za-z_][A-Za-z0-9_]*/g))].filter((w) => !DISCOUNT_NAMES.has(w));
+          if (unknown.length > 0) return send(200, { errors: unknown.map((w) => ({ message: `Field or type '${w}' doesn't exist (the query for a discount code uses a name that Shopify's schema does not have)` })) }, 'discount');
+          if (!discountsAccess) return send(200, { errors: [{ message: 'Access denied for codeDiscountNodeByCode field. Required access: `read_discounts` access scope.' }] }, 'discount');
+          const found = discounts.get(String(variables.code ?? '').toUpperCase());
+          return send(200, { data: { codeDiscountNodeByCode: found ? { codeDiscount: found } : null } }, 'discount');
         }
         // ---- is there an order with this tag?
         if (/orders\(first:/.test(query)) {
@@ -186,6 +220,9 @@ export async function startFakeShopifyAdmin({ app = APP, prices: given = PRICES,
     },
     /** Every token is withdrawn. */
     revokeTokens: () => tokens.clear(),
+    /** A code the shop has: addDiscount('VENN20', { customerGets: … }) (see discount()). The same code in any case finds it, as in Shopify. */
+    addDiscount: (code, spec) => discounts.set(String(code).toUpperCase(), discount(spec)).get(String(code).toUpperCase()),
+    discounts,
     setPrice: (plan, price) => {
       prices[plan] = price;
     },

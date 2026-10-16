@@ -11,6 +11,8 @@ import { formatCodeInput, isActive, normalizeCode } from '../pay/pass.js';
 import { requestNextRound } from '../pay/gate.js';
 import { forgetPass, restoreWithCode, startCheckout } from '../pay/payments.js';
 import { DEFAULT_PLAN, PERKS, PLANS, describeValidity, formatPrice, planById } from '../pay/plans.js';
+import { dealFor, kr } from '../pay/discount.js';
+import { DiscountField } from './discount.js';
 import { ShopDock } from './shoppay.js';
 
 const close = () => setStore({ sheet: null });
@@ -46,7 +48,7 @@ const Check = () => html`<svg class="perk__check" viewBox="0 0 24 24" width="20"
 
 // ------------------------------------------------------------------------------------------------ the packages
 
-function PlanCard({ plan, selected, locked = false, onSelect }) {
+function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
   return html`<label class=${cx('plan', selected && 'is-selected', locked && 'plan--locked')}>
     <input type="radio" name="plan" value=${plan.id} checked=${selected} disabled=${locked} onChange=${() => onSelect(plan.id)} />
     <span class="plan__radio" aria-hidden="true"></span>
@@ -54,7 +56,9 @@ function PlanCard({ plan, selected, locked = false, onSelect }) {
       <span class="plan__name">${plan.name}</span>
       <span class="plan__sub">${plan.length}</span>
     </span>
-    <span class="plan__price">${formatPrice(plan.price)}</span>
+    ${deal
+      ? html`<span class="plan__price plan__price--deal"><s class="plan__was">${formatPrice(plan.price)}</s><span>${kr(deal.now)}</span></span>`
+      : html`<span class="plan__price">${formatPrice(plan.price)}</span>`}
     ${plan.badge && html`<span class="plan__badge">${plan.badge}</span>`}
   </label>`;
 }
@@ -102,9 +106,10 @@ export function Paywall({ view = null }) {
     ${have && html`<p class="chip chip--yellow paywall__have" role="status">Du har tilgang: ${planById(s.pass.plan)?.name} · ${describeValidity(s.pass)}</p>`}
 
     <div class="plans" role="radiogroup" aria-label="Velg pakke">
-      ${PLANS.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} onSelect=${setPlan} />`)}
+      ${PLANS.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} deal=${dealFor(s.discount, p.id)} onSelect=${setPlan} />`)}
     </div>
     <p class="small muted center plans__detail" aria-live="polite">${chosen.detail}</p>
+    ${pay.provider === 'shopify' && html`<${DiscountField} plan=${plan} />`}
 
     <section class="card stack stack--tight perks">
       <h3>Dette får du</h3>

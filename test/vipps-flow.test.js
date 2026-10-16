@@ -88,6 +88,7 @@ let away;
 let store;
 let shop;
 let vippsPage;
+let discountPage;
 const PASS_KEY = `disputt:pass:${PAY_SERVER}`;
 
 before(async () => {
@@ -96,6 +97,7 @@ before(async () => {
   store = (await import('../public/js/store.js')).store;
   shop = await import('../public/js/pay/shop.js');
   vippsPage = await import('../public/js/pay/vipps.js');
+  discountPage = await import('../public/js/pay/discount.js');
 });
 after(() => {
   Object.assign(globalThis, { setInterval: realSetInterval, clearInterval: realClearInterval, fetch: realFetch });
@@ -147,6 +149,24 @@ describe('the tap on «Betal med Vipps»', () => {
     assert.equal(store.payWaiting.url, '', 'with no address yet');
     release();
     await started;
+  });
+
+  it('asks the server what a discount code comes to, shows it in kroner, and takes the code along to Vipps, where the price is the price with it', async () => {
+    t.admin.addDiscount('VENN20', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.2 }, items: { __typename: 'AllDiscountItems' } } });
+    const found = await discountPage.lookUpDiscount(' venn20 ');
+    assert.equal(found.code, 'VENN20');
+    assert.equal(found.summary, '20 % rabatt');
+    assert.deepEqual(found.plans.year, { price: 24900, now: 19920, vipps: true });
+    assert.equal(discountPage.kr(found.plans.year.now), '199,20 kr');
+    assert.equal(discountPage.kr(8900), '89 kr');
+    assert.deepEqual(discountPage.dealFor(found, 'year'), found.plans.year);
+    assert.equal(discountPage.dealFor(null, 'year'), null);
+    assert.equal(discountPage.dealFor({ plans: { year: { price: 100, now: 100, vipps: true } } }, 'year'), null, 'a code that takes nothing off this package is no deal');
+    await assert.rejects(discountPage.lookUpDiscount('finnesikke'), (err) => err.code === 'discount_unknown' && /Fant ikke/.test(err.message));
+    await vippsPage.startVippsCheckout('year', 'VENN20');
+    const call = asked.find((a) => a.url.endsWith('/vipps/start'));
+    assert.equal(call.body.rabatt, 'VENN20');
+    assert.equal([...t.vipps.payments.values()][0].amount, 19920);
   });
 
   it('asks the server for a payment with the code, the package and the time of the consent, and sends the tab to Vipps', async () => {

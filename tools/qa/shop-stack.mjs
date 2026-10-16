@@ -93,7 +93,7 @@ export async function startShopStack({ vipps = false } = {}) {
         if (!plan) return html(404, page('Fant ikke produktet', '<p>Fant ikke produktet.</p>'));
         const attributes = [...url.searchParams].flatMap(([k, v]) => (k.match(/^attributes\[(.+)\]$/) ? [{ name: k.match(/^attributes\[(.+)\]$/)[1], value: v }] : []));
         const id = `c${nextCart++}`;
-        carts.set(id, { plan, attributes });
+        carts.set(id, { plan, attributes, discount: url.searchParams.get('discount') ?? '' });
         res.writeHead(303, { Location: `/checkouts/${id}` });
         return res.end();
       }
@@ -114,7 +114,7 @@ export async function startShopStack({ vipps = false } = {}) {
           page(
             'Kassen',
             `<h1 id="amount">${esc(PRICES[plan].replace('.00', ''))} kr</h1><p id="what">Disputt – ${esc(plan)}</p>
-<p id="attributes">${esc(cartOf.attributes.map((a) => `${a.name}: ${a.value}`).join('; '))}</p>
+<p id="attributes">${esc(cartOf.attributes.map((a) => `${a.name}: ${a.value}`).join('; '))}</p><p id="discount">${esc(cartOf.discount)}</p>
 <form method="post" action="/checkouts/${checkout[1]}/pay"><button id="pay" style="font-size:20px;padding:12px 24px">Betal</button></form>
 <p><a id="back" href="/">Tilbake til butikken</a></p>`,
           ),

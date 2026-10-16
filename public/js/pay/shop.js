@@ -44,7 +44,7 @@ export function loadShop() {
     if (!target || (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) || PLAN_IDS.some((plan) => !/^\d{5,20}$/.test(variants[plan]))) {
       throw new PayError('server', 'Fikk en betalingsside vi ikke stoler på.');
     }
-    return (shopInfo = { shop: target.origin, variants, vipps: data.vipps === true });
+    return (shopInfo = { shop: target.origin, variants, vipps: data.vipps === true, discounts: data.discounts === true });
   })().finally(() => (shopAsk = null));
   return shopAsk;
 }
@@ -67,9 +67,9 @@ export function newPayCode() {
  * The cart link: the package in the cart and straight on to the checkout. The code goes along as a cart attribute ("kode"), and
  * so does the time of the host's consent to getting the access at once ("samtykke"): both end up on the order, where the owner sees them.
  */
-export function cartLink(shop, variant, code, at = new Date()) {
-  // (the brackets are written as they are in Shopify's documentation of cart links, not as %5B and %5D)
-  return `${new URL(`/cart/${variant}:1`, shop).href}?attributes[kode]=${encodeURIComponent(code)}&attributes[samtykke]=${encodeURIComponent(at.toISOString())}`;
+export function cartLink(shop, variant, code, at = new Date(), discount = '') {
+  // (the brackets are written as they are in Shopify's documentation of cart links, not as %5B and %5D; a discount code goes as `discount`, which the checkout counts itself)
+  return `${new URL(`/cart/${variant}:1`, shop).href}?attributes[kode]=${encodeURIComponent(code)}&attributes[samtykke]=${encodeURIComponent(at.toISOString())}${discount ? `&discount=${encodeURIComponent(discount)}` : ''}`;
 }
 
 // ---- the payment this tab is waiting for ------------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ function closeShopTabs() {
  * The host chose a package and tapped: the shop opens in a new tab. This runs inside the tap on purpose, with nothing waited for
  * before the tab opens (the shop's address was asked for when the packages came on screen): a tab that is opened later is taken for a pop-up.
  */
-export function startShopCheckout(plan) {
+export function startShopCheckout(plan, discount = '') {
   // A second tap before the bar has changed (a double tap) does nothing, and a later one opens the same cart again: it must not make a
   // second code, because the code that is waited for is the one in the first cart, and a host who pays in the second would never be found.
   if (store.payWaiting) {
@@ -144,7 +144,7 @@ export function startShopCheckout(plan) {
   const variant = info?.variants[plan];
   if (!variant) throw new PayError('unavailable', 'Betalingen er ikke klar ennå. Prøv igjen om et øyeblikk.');
   const waiting = { code: newPayCode(), plan, at: Date.now() };
-  waiting.url = cartLink(info.shop, variant, waiting.code, new Date(waiting.at));
+  waiting.url = cartLink(info.shop, variant, waiting.code, new Date(waiting.at), discount);
   const told = announceAway('pay'); // (the guests are told before anything else: this tab may sleep once the shop is on top of it)
   const tab = openShopTab(waiting.url);
   // A browser that does not open a new tab sends this one to the shop, like the Stripe edition does: the room is kept in the tab,

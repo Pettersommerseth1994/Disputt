@@ -1,4 +1,4 @@
-// The mantra: a small strip at the very top of every screen, «★ Vårt mantra». A tap opens a bubble with what Team Disputt wants to say:
+// The mantra: a small strip at the very top of every screen, «★ Mantra». A tap opens a bubble with what Team Disputt wants to say:
 // Disputt is a game between people, and the phone is only a tool for the quiz, to be used as little as possible.
 // The strip is in the flow above the screen and keeps its place at the top while the screen scrolls (css/mantra.css makes the room for it).
 // The bubble hangs under it and lies over the screen. A tap anywhere closes it, and does nothing else, so the tap that closes it never
@@ -11,7 +11,7 @@ import { useMantraStyles } from './styles.js';
 
 /** What the strip says and what the bubble says. The signature is Team Disputt: the people who made the game. */
 export const MANTRA = {
-  label: 'Vårt mantra',
+  label: 'Mantra',
   lines: [
     'Disputt er et sosialt selskapsspill, laget for å spilles mellom mennesker.',
     'Telefonen er bare et støtteverktøy for quizen. Vi vil at du bruker den så lite som mulig.',

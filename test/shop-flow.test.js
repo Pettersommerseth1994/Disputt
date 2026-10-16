@@ -130,7 +130,7 @@ describe('the settings', () => {
 describe('the shop', () => {
   it('is asked for once, and says where to go and which variant is which package', async () => {
     const info = await shop.loadShop();
-    assert.deepEqual(info, { shop: 'https://shop.example.test', variants: VARIANTS, vipps: false }, 'and that Vipps is not set up (the answer of this pretend payment server has no such thing)');
+    assert.deepEqual(info, { shop: 'https://shop.example.test', variants: VARIANTS, vipps: false, discounts: false }, 'and that neither Vipps nor discount codes are set up (the answer of this pretend payment server has no such things)');
     await shop.loadShop();
     assert.equal(asked.filter((a) => a.url.endsWith('/shop')).length, 1);
     assert.equal(shop.knownShop(), info);
@@ -166,6 +166,8 @@ describe('the shop', () => {
 
 describe('the cart link', () => {
   it('puts the package in the cart and carries the code and the time of the consent along as cart attributes', () => {
+    assert.equal(new URL(shop.cartLink('https://shop.example.test', VARIANTS.year, 'K7M2-9QXD-4TRB', new Date('2026-10-06T08:15:00Z'))).searchParams.get('discount'), null, 'no discount code unless there is one');
+    assert.equal(new URL(shop.cartLink('https://shop.example.test', VARIANTS.year, 'K7M2-9QXD-4TRB', new Date('2026-10-06T08:15:00Z'), 'VENN 20')).searchParams.get('discount'), 'VENN 20', 'the discount code goes with the cart, for the checkout to count');
     const url = new URL(shop.cartLink('https://shop.example.test', VARIANTS.year, 'K7M2-9QXD-4TRB', new Date('2026-10-06T08:15:00Z')));
     assert.equal(url.origin + url.pathname, `https://shop.example.test/cart/${VARIANTS.year}:1`);
     assert.equal(url.searchParams.get('attributes[kode]'), 'K7M2-9QXD-4TRB');
