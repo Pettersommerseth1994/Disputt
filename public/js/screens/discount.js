@@ -49,7 +49,7 @@ export function DiscountField({ plan }) {
     return html`<div class="discount discount--on" role="status">
       <p class="discount__line"><span class="chip chip--yellow">${s.discount.code}</span> <span>${s.discount.summary}${here ? '' : '. Gjelder ikke denne pakken.'}</span></p>
       <${Button} variant="text" size="small" onClick=${() => setStore({ discount: null })}>Fjern</${Button}>
-      ${here && !here.vipps && html`<p class="small muted discount__note">Denne koden gjelder i butikkens kasse (Gå til betaling), ikke med Vipps.</p>`}
+      ${here && !here.vipps && html`<p class="small muted discount__note">Denne koden gjelder i butikkens kasse (Betal med kort), ikke med Vipps.</p>`}
     </div>`;
   }
   if (!open) {

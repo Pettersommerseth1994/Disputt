@@ -27,6 +27,37 @@
 .decor--home-c { bottom: 15.2rem; left: -0.9rem; --size: 4.4rem; }
 .decor--home-d { bottom: 14rem; right: -0.7rem; --size: 4.2rem; }
 @media (max-height: 740px) { .decor--home-c, .decor--home-d { display: none; } }
+/* The green and the orange eye on the start screen blink now and then, each in its own time. The same eye drawn shut (assets/art/lime-lid.svg and mandarin-lid.svg)
+   lies folded away over the open one, in the box of the picture (the same box as the avatar's img: 118 %, a little above the middle), and closes over it for a
+   moment. Only a transform moves, as for the cards in the set-up (mode-blink above). `--lid-y` is where the eye sits in the picture. */
+.decor--home-a { --lid: url('../assets/art/lime-lid.svg'); --lid-y: 47.5%; --blink: 10s; --blink-at: -3.5s; }
+.decor--home-b { --lid: url('../assets/art/mandarin-lid.svg'); --lid-y: 58.5%; --blink: 13s; --blink-at: -9s; }
+.decor--home-a::after,
+.decor--home-b::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 118%;
+  height: 118%;
+  margin: -61.4% 0 0 -59%; /* (the same place as the picture: it is moved by -50 % and -52 % of its own size) */
+  background: var(--lid) center / 100% 100% no-repeat;
+  transform: scaleY(0);
+  transform-origin: 50% var(--lid-y);
+  pointer-events: none;
+  animation: eye-blink var(--blink) var(--blink-at) infinite;
+}
+/* (a blink takes a good third of a second, near the end of each round: the lid falls, is shut for a moment, and is lifted; the rest of the round the eye is open) */
+@keyframes eye-blink {
+  0%, 86% { transform: scaleY(0); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  87.5%, 88.5% { transform: scaleY(1); }
+  88.5% { animation-timing-function: cubic-bezier(0.2, 0.5, 0.4, 1); }
+  92.5%, 100% { transform: scaleY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .decor--home-a::after,
+  .decor--home-b::after { animation: none !important; }
+}
 
 /* ---- Lobby ------------------------------------------------------------------ */
 .qr { width: min(62vw, 14rem); aspect-ratio: 1; margin-inline: auto; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 3px var(--ink); }
@@ -585,7 +616,7 @@
   .paywall .plans { gap: var(--s-2); }
   .plan { padding-block: 0.5rem; }
 }
-/* «Betal med Vipps» above «Gå til betaling» makes the bar at the bottom about 70 px taller. On a short screen the page gives some of that back, so that the
+/* «Betal med Vipps» above «Betal med kort» makes the bar at the bottom about 70 px taller. On a short screen the page gives some of that back, so that the
    cards and the line about the chosen one stay above the bar (`node tools/qa/fit.mjs` checks it): the sentence under the title goes a little earlier, the bar
    is made tighter, and on the shortest phones the cards are too. A shop without the button is not touched. */
 @media (max-height: 700px) {

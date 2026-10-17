@@ -8,7 +8,7 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 
 ## Kort fortalt
 
-**Det som er laget (i koden):** en oransje knapp **Betal med Vipps** rett over **Gå til betaling** på pakkeskjermen, tegnet i spillets egen stil (som de andre knappene) i Vipps' oransje. Verten velger pakke, krysser av for vilkårene (samme boks som før) og trykker knappen. Vipps åpner seg i en **ny fane** (i Vipps-appen på telefonen), verten godkjenner, og spillet viser **«Velkommen!»** av seg selv, akkurat som etter en betaling i butikken. Bak knappen ligger en vanlig, betalt ordre i Shopify, så kvittering, mva og ordreoversikt er der som før, og tilgangen og koden virker som før. **Alt er av som standard:** knappen vises først når alt i denne veiledningen er satt opp og du har skrudd på `VIPPS_ENABLED`. «Gå til betaling» (Shopifys kasse med kort, Apple Pay og Vipps) er der fortsatt.
+**Det som er laget (i koden):** en oransje knapp **Betal med Vipps** rett over **Betal med kort** på pakkeskjermen, tegnet i spillets egen stil (som de andre knappene) i Vipps' oransje. Verten velger pakke, krysser av for vilkårene (samme boks som før) og trykker knappen. Vipps åpner seg i en **ny fane** (i Vipps-appen på telefonen), verten godkjenner, og spillet viser **«Velkommen!»** av seg selv, akkurat som etter en betaling i butikken. Bak knappen ligger en vanlig, betalt ordre i Shopify, så kvittering, mva og ordreoversikt er der som før, og tilgangen og koden virker som før. **Alt er av som standard:** knappen vises først når alt i denne veiledningen er satt opp og du har skrudd på `VIPPS_ENABLED`. «Betal med kort» (Shopifys kasse med kort, Apple Pay og Vipps) er der fortsatt.
 
 **Hvorfor ikke «hurtigkasse»?** Det du har satt opp i Shopify (hurtigkasse og Vipps MobilePay-tillegget) virker i Shopifys kasse, og det blir stående som det er. Men Vipps' tillegg for Shopify kan ikke starte en betaling fra en knapp utenfor kassen: tillegget har ikke hurtigbetaling («Express»). Skal knappen ligge i spillet og gå rett til Vipps, må spillet (via betalingsserveren) snakke med Vipps selv. Det er det denne veiledningen setter opp.
 
@@ -31,7 +31,7 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 
 **Det jeg har antatt** (si fra hvis noe skal være annerledes):
 
-- Knappen er **i tillegg til** «Gå til betaling», ikke i stedet. Kunder som vil bruke kort eller Apple Pay har fortsatt butikken.
+- Knappen er **i tillegg til** «Betal med kort», ikke i stedet. Kunder som vil bruke kort eller Apple Pay har fortsatt butikken.
 - Pengene **tas ut med en gang** verten har godkjent (capture). Det er et digitalt produkt som leveres med en gang, så det er ingen grunn til å vente.
 - Fra Vipps hentes **bare e-postadressen**, og bare for at kvitteringen har et sted å gå. Ikke navn og ikke telefonnummer. Vipps ber kunden godkjenne delingen i appen (én linje). Godkjenner kunden ikke, blir betalingen ikke gjennomført.
 - Ordrer fra Vipps merkes i Shopify med kilden «Vipps», taggene `vipps` og referansen hos Vipps, og betalingsmåten «Vipps».
@@ -298,7 +298,7 @@ Test i test-kopien, med testsalgsstedet, testappen og `ACCEPT_TEST_ORDERS` = `tr
 
 | # | Test | Du skal se |
 | --- | --- | --- |
-| 1 | Start et spill med to eller tre telefoner, spill to runder, trykk **Neste runde** | pakkene, og **Betal med Vipps** (oransje) over **Gå til betaling**. Begge er grå til boksen er krysset av. De andre telefonene sier bare «Venter på at verten starter neste runde». |
+| 1 | Start et spill med to eller tre telefoner, spill to runder, trykk **Neste runde** | pakkene, og **Betal med Vipps** (oransje) over **Betal med kort**. Begge er grå til boksen er krysset av. De andre telefonene sier bare «Venter på at verten starter neste runde». |
 | 2 | Kryss av og trykk **Betal med Vipps** | en ny fane åpner seg hos Vipps (testmiljøet), med riktig beløp. Spillet står bak og sier «Venter på betalingen …». |
 | 3 | Åpne testappen og godkjenn (kode 1236), del e-postadressen når den spør | Vipps sender deg tilbake til «Velkommen!»-siden. I spillet: **Velkommen!** med kode og pakke, innen noen sekunder. Vipps-fanen lukker seg. |
 | 4 | I Shopify admin, åpne ordren | merket som test, **betalt**, kilde «Vipps», taggene `vipps` og `disputt-…`, betalingsmåte «Vipps», riktig pris med mva, og under *Additional details* `kode`, `samtykke`, `betaling` og `vipps_referanse` |
@@ -362,7 +362,7 @@ npm run qa:overlap        # ingen tekst oppå annen tekst, heller ikke på betal
 | [`payments/worker-shopify.js`](../payments/worker-shopify.js) | Betalingsserveren. Delen «Vipps: the button «Betal med Vipps»» har alt som er nytt: kallene til Vipps og Shopify, å bli ferdig med en betaling (`settle`), webhooken, klokken (`scheduled`) og de to admin-kallene. |
 | [`public/js/pay/vipps.js`](../public/js/pay/vipps.js) | Siden: åpner en fane i selve trykket, ber betalingsserveren lage betalingen, sender fanen til Vipps, og lukker den når betalingen er funnet. |
 | [`public/js/screens/discount.js`](../public/js/screens/discount.js), [`public/js/pay/discount.js`](../public/js/pay/discount.js) | Feltet «Har du rabattkode?» og kallet til `/discount`. Koden og prisene ligger i `store.discount`, som kortene og betalingen leser. |
-| [`public/js/screens/shoppay.js`](../public/js/screens/shoppay.js), `public/css/components.css` (`.btn--vipps`) | Bunnlinjen på pakkeskjermen: avkrysning, **Betal med Vipps** (en vanlig knapp i spillets stil, i Vipps' oransje `#ff5b24`) og **Gå til betaling** |
+| [`public/js/screens/shoppay.js`](../public/js/screens/shoppay.js), `public/css/components.css` (`.btn--vipps`) | Bunnlinjen på pakkeskjermen: avkrysning, **Betal med Vipps** (en vanlig knapp i spillets stil, i Vipps' oransje `#ff5b24`) og **Betal med kort** |
 | [`public/takk.html`](../public/takk.html), [`public/js/takk.js`](../public/js/takk.js) | Siden Vipps sender verten tilbake til. Den kjenner bare referansen, spør betalingsserveren og sier «Velkommen!», «Betalingen ble ikke gjennomført» eller «Vi venter fortsatt på Vipps». Den vet om fanen er åpnet av spillet (da kan den lukkes derfra), er spillets egen (da er lenken tilbake veien videre), eller er en annen fane (da sier den at verten skal bytte tilbake til spillet). |
 | `tools/qa/fakevipps.mjs`, `fakeshopifyadmin.mjs`, `shop-stack.mjs`, `vippsflow.mjs` | falsk Vipps (med en side der «kunden» godkjenner eller avviser), falsk Shopify Admin (like streng som dokumentasjonen om feltene), hele kjeden, og kjøringen i nettleseren |
 | `test/worker-vipps.test.js`, `test/vipps-flow.test.js` | betalingsserveren mot de falske tjenestene (63 tester), og siden (15 tester) |
@@ -413,7 +413,7 @@ Sidene i spillet blir liggende i nettleserens hurtigminne i ca. ti minutter, så
 - **Bare NOK**, og bare ordinære Vipps- og MobilePay-brukere (wallet). Ingen kortbetaling hos Vipps.
 - **Vipps' hurtigbetaling («Express»)** er ikke i bruk: den er laget for varer som sendes og trengs ikke her.
 - **Webhook-nøkkelen ligger i databasen**, ikke som en hemmelighet i Cloudflare. Den brukes bare til å sjekke signaturen på varsler fra Vipps. Skal den byttes: kjør registreringen på nytt (del 5.5).
-- **Alle kan banke på Workeren** (`/vipps/start` kan kalles med `curl`): den lager bare betalinger som ingen betaler, og stopper på 200 starter i timen. Gjør noen det med vilje, kan knappen svare «Mange betaler akkurat nå» resten av timen, og kundene har «Gå til betaling» så lenge. Klokken ser på ti ufullførte betalinger om gangen (de der pengene alt er tatt ut først), så mange halvferdige gjør den tregere; webhooken og siden gjør jobben først, så en ekte betaling blir likevel ferdig. De to admin-kallene krever `ADMIN_TOKEN`.
+- **Alle kan banke på Workeren** (`/vipps/start` kan kalles med `curl`): den lager bare betalinger som ingen betaler, og stopper på 200 starter i timen. Gjør noen det med vilje, kan knappen svare «Mange betaler akkurat nå» resten av timen, og kundene har «Betal med kort» så lenge. Klokken ser på ti ufullførte betalinger om gangen (de der pengene alt er tatt ut først), så mange halvferdige gjør den tregere; webhooken og siden gjør jobben først, så en ekte betaling blir likevel ferdig. De to admin-kallene krever `ADMIN_TOKEN`.
 - **Gratisrunder, koden som kan deles, myk betalingsmur:** som i [SHOPIFY.md, del 16](SHOPIFY.md#16-begrensninger-og-mulige-neste-steg).
 - **Mulige neste steg:** et refusjonskall; å kreve at Vipps-betalinger også kan kanselleres fra spillet; å vise kunden «Betalingen ble ikke gjennomført» i selve spillet (nå står det bare på «Velkommen!»-siden); en egen side for en kunde som lukket alt.
 

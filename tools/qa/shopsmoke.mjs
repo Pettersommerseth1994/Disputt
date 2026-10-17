@@ -1,6 +1,6 @@
 // The real thing, up to the checkout and not a step further: a deployed copy of the game, its payment server and the real Shopify shop.
 // Nothing is bought and nothing is typed into the checkout. The host's phone is made to show the packages (through the page's ?debug hook,
-// the way toast.mjs does), the box is ticked, "Gå til betaling" is pressed, and the new tab is looked at: is it the shop, does the checkout
+// the way toast.mjs does), the box is ticked, "Betal med kort" is pressed, and the new tab is looked at: is it the shop, does the checkout
 // show the price of the package, does the order carry the code and the time of the consent, and is it the same code that the game tab is
 // waiting for? Then the tab is closed and the host gives up.
 //   node tools/qa/shopsmoke.mjs --url=https://pettersommerseth1994.github.io/Disputt-test [--plan=evening|year|lifetime] [--shot]
@@ -49,16 +49,16 @@ try {
   await page.evaluate((p) => document.querySelector(`input[name=plan][value=${p}]`).click(), plan);
   await page.click('.consent__box');
   const goButton = () => page.evaluate(() => {
-    const b = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('Gå til betaling'));
+    const b = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('Betal med kort'));
     return b ? { disabled: b.disabled } : null;
   });
   // the shop's address comes from the payment server (/shop) as soon as the packages are on screen: the button waits for it
-  await page.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.innerText.includes('Gå til betaling') && !b.disabled), { timeout: 20000 })
+  await page.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.innerText.includes('Betal med kort') && !b.disabled), { timeout: 20000 })
     .catch(async () => assert.fail(`the button stays off: ${JSON.stringify(await goButton())} ${await page.evaluate(() => document.querySelector('[role=alert]')?.innerText ?? '(no error shown)')}`));
   log('the payment server told the page where the shop is, and the box is ticked: the button is on');
 
   const pagesBefore = (await ctx.pages()).length;
-  await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Gå til betaling')).click());
+  await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Betal med kort')).click());
   const target = await ctx.waitForTarget((t) => t.type() === 'page' && new URL(t.url(), 'http://x').pathname.startsWith('/checkouts/'), { timeout: 60000 })
     .catch(async () => assert.fail(`no checkout opened; the tabs are: ${(await ctx.pages()).map((p) => p.url()).join(' | ')}`));
   const shop = await target.page();
@@ -86,7 +86,7 @@ try {
   await sleep(500);
   assert.match(await page.evaluate(() => document.body.innerText), /Venter på betalingen/, 'closing the tab does not make the game forget');
   await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.trim() === 'Avbryt').click());
-  await page.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.innerText.includes('Gå til betaling')), { timeout: 10000 });
+  await page.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.innerText.includes('Betal med kort')), { timeout: 10000 });
   assert.equal(await page.evaluate(() => sessionStorage.getItem('disputt:shop')), null, 'giving up forgets the payment');
   log('the tab was closed without paying, the host gave up, and nothing was bought');
   ok = true;

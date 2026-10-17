@@ -15,7 +15,7 @@ export const PAY = {
 export const CODE = 'K7M2-9QXD-4TRB';
 /** The same, with a Shopify shop: no methods to choose between (the customer chooses in the shop), and the shop that the page knows about. */
 export const PAY_SHOP = { enabled: true, provider: 'shopify', apiUrl: 'http://127.0.0.1:1', publicKey: 'qa', methods: ['applepay'], freeRounds: 2, termsUrl: PAY.termsUrl, privacyUrl: PAY.privacyUrl };
-/** (`vipps: true`: the packages are drawn with «Betal med Vipps» above «Gå til betaling», the tallest the bar at the bottom gets; without it the bar is shorter and fits where this one does) */
+/** (`vipps: true`: the packages are drawn with «Betal med Vipps» above «Betal med kort», the tallest the bar at the bottom gets; without it the bar is shorter and fits where this one does) */
 export const SHOP_INFO = { shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true, discounts: true };
 /** A discount code that the host has taken (20 % off): the cards show the old price struck out and the new one under it. */
 export const DEAL = { code: 'VENN20', summary: '20 % rabatt', plans: { evening: { price: 8900, now: 7120, vipps: true }, year: { price: 24900, now: 19920, vipps: true }, lifetime: { price: 29900, now: 23920, vipps: true } } };

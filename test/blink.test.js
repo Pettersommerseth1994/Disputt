@@ -27,3 +27,19 @@ test('nothing blinks for a phone that asks for less motion', () => {
   assert.match(js, /matchMedia\('\(prefers-reduced-motion: reduce\)'\)\.matches\) return undefined/, 'and the timer that makes the cards blink by itself does not even start');
   assert.match(js, /document\.hidden/, 'and it rests while the page is hidden');
 });
+
+// The green and the orange eye on the start screen (screens.css, `eye-blink`): the same rules.
+for (const art of ['lime', 'mandarin']) {
+  test(`the eye of the ${art} on the start screen blinks with a small picture of its own`, () => {
+    const size = statSync(new URL(`../public/assets/art/${art}-lid.svg`, import.meta.url)).size;
+    assert.ok(size < 12 * 1024, `${art}-lid.svg is ${size} bytes: it is fetched for nothing but a blink, so it stays a few KB`);
+    assert.match(css, new RegExp(`url\\('\\.\\./assets/art/${art}-lid\\.svg'\\)`), 'the stylesheet uses it');
+  });
+}
+
+test('the blink of the start screen moves only a transform, and rests for a phone that asks for less motion', () => {
+  const frames = css.match(/@keyframes eye-blink \{[\s\S]*?\n\}/)?.[0];
+  assert.ok(frames, 'the keyframes are there');
+  assert.deepEqual([...new Set([...frames.matchAll(/([a-z-]+)\s*:/g)].map((m) => m[1]))].sort(), ['animation-timing-function', 'transform']);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.decor--home-a::after,\s*\.decor--home-b::after \{ animation: none !important; \}/);
+});

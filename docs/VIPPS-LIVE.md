@@ -62,7 +62,7 @@ Si fra til meg når steg 1 til 4 er gjort. Da committer og pusher jeg til main (
 ## Steg 6: Skru på
 
 1. [ ] Legg inn `VIPPS_ENABLED` = `true` i Cloudflare → **Deploy**.
-2. [ ] Last disputt.site på nytt og gå til pakkeskjermen: den oransje knappen står over «Gå til betaling».
+2. [ ] Last disputt.site på nytt og gå til pakkeskjermen: den oransje knappen står over «Betal med kort».
 
 ## Steg 7: Første ekte kjøp, og refusjon
 

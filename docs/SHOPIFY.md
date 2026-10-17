@@ -49,7 +49,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 
 1. De to første rundene i hvert spill er gratis.
 2. Etter runde 2 trykker verten **Neste runde** og får **pakkene**. De andre spillerne ser det de alltid ser mellom runder: «Venter på at verten starter neste runde».
-3. Verten velger pakke, **krysser av** for at de godtar vilkårene og at tilgangen leveres med en gang (da faller angreretten bort, som vilkårene forklarer), og trykker **Gå til betaling**.
+3. Verten velger pakke, **krysser av** for at de godtar vilkårene og at tilgangen leveres med en gang (da faller angreretten bort, som vilkårene forklarer), og trykker **Betal med kort**.
 4. Butikken åpner seg i en **ny fane**, rett i kassen med pakken valgt. Verten velger Vipps, Apple Pay eller kort og betaler. Spillet står i fanen bak og sier «Venter på betalingen …».
 5. Når Shopify har meldt at betalingen er gjennomført, viser spillet **«Velkommen!»** med tilgangen og en kode, og **lukker butikk-fanen** hvis den fortsatt er åpen. **Start runde 3** fortsetter spillet. Gjestene har vært tilkoblet hele tiden.
 6. Har nettleseren lagt spillfanen i dvale mens verten betalte (en telefon gjør det), trykker verten **Fortsett å handle** på Shopifys takkeside. Forsiden i butikken har da en knapp som lukker fanen, og spillet viser «Velkommen!» så snart verten er tilbake i det. Verten får også en e-post med koden.
@@ -63,7 +63,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
  ────────────────────                ─────────────────                  ─────────────────────────
  «Neste runde» etter runde 2
  → pakkene, avkrysning
- «Gå til betaling»
+ «Betal med kort»
  lager en kode, åpner en NY fane ──▶ kassen: pakken i handlekurven,
                                      koden og samtykket på ordren
  spillet blir åpent bak              kunden betaler (Vipps / Apple Pay / kort)
@@ -85,7 +85,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 
 **Tilgangen (passet)** er en signert tekst (JWT, ES256) som sier «dette er pakken `year`, betalt på tidspunkt T, gyldig til U». Betalingsserveren signerer den med en privat nøkkel som bare finnes i Cloudflare. Appen har den offentlige nøkkelen (den ligger åpent i `config.js`) og sjekker signaturen i nettleseren. **Hvor lenge tilgangen varer bestemmes i betalingsserveren, ikke i Shopify:** Shopify sier bare hva som er betalt og når, og serveren regner ut slutten (12 timer, ett år, ingen) fra Shopifys tidspunkt på ordren, ikke fra når varselet kommer.
 
-**Koden** (for eksempel `K7M2-9QXD-4TRB`) er tolv tegn (60 bit) som **siden** lager når verten trykker «Gå til betaling». Den følger med i handlekurven (som en handlekurvattributt kalt `kode`), ligger på ordren, står i e-posten, og er det kunden skriver under «Logg inn». Den som kjenner koden og har betalt for den, kan få tilgangen på en ny telefon. Appen er snill med skrivemåten: små bokstaver, mellomrom og bindestreker spiller ingen rolle, og O, I og L regnes som 0, 1 og 1.
+**Koden** (for eksempel `K7M2-9QXD-4TRB`) er tolv tegn (60 bit) som **siden** lager når verten trykker «Betal med kort». Den følger med i handlekurven (som en handlekurvattributt kalt `kode`), ligger på ordren, står i e-posten, og er det kunden skriver under «Logg inn». Den som kjenner koden og har betalt for den, kan få tilgangen på en ny telefon. Appen er snill med skrivemåten: små bokstaver, mellomrom og bindestreker spiller ingen rolle, og O, I og L regnes som 0, 1 og 1.
 
 **Samtykket** til at tilgangen leveres med en gang (og at angreretten da faller bort) gis i spillet, i boksen over knappen, som sier «Jeg godtar vilkårene og at tilgangen leveres med en gang» (at angreretten da faller bort, står i vilkårene, punkt 4), og tidspunktet følger med på ordren (attributten `samtykke`). **En ordre uten samtykket gir ingen tilgang**: da ender ikke angreretten ved leveringen, så betalingsserveren leverer ingenting før et menneske har sett på ordren ([del 14](#14-drift)). Shopifys vanlige kasse har ikke plass til en avkrysningsboks (det går bare på Plus), så boksen ligger i spillet, før verten forlater det.
 
@@ -296,8 +296,8 @@ Test først i test-kopien, med Shopify Payments' testmodus. **Slå på testmodus
 
 | # | Test | Du skal se |
 | --- | --- | --- |
-| 1 | Start et spill med to–tre telefoner, spill to runder, trykk **Neste runde** | pakkene. Knappen **Gå til betaling** er grå til du har krysset av. De andre telefonene sier bare «Venter på at verten starter neste runde». |
-| 2 | Kryss av og trykk **Gå til betaling** | butikken åpner seg i en **ny fane**, i kassen, med pakken og prisen. Spillet står bak og sier «Venter på betalingen …». Gjestene merker ingenting. |
+| 1 | Start et spill med to–tre telefoner, spill to runder, trykk **Neste runde** | pakkene. Knappen **Betal med kort** er grå til du har krysset av. De andre telefonene sier bare «Venter på at verten starter neste runde». |
+| 2 | Kryss av og trykk **Betal med kort** | butikken åpner seg i en **ny fane**, i kassen, med pakken og prisen. Spillet står bak og sier «Venter på betalingen …». Gjestene merker ingenting. |
 | 3 | Betal med testkortet | i butikken: takkesiden. I spillet: **Velkommen!** med kode og pakke, innen få sekunder. Trykk **Start runde 3**. |
 | 4 | I Shopify admin, åpne ordren | under merknader (*Additional details*) står `kode: …` og `samtykke: …` |
 | 5 | Lukk butikk-fanen før du har betalt (ny pakke, ny runde) | spillet venter fortsatt. **Åpne betalingen igjen** åpner den samme handlekurven. **Avbryt** tar deg tilbake, og avkrysningen må settes igjen. |
@@ -373,7 +373,7 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 | --- | --- |
 | [`payments/worker-shopify.js`](../payments/worker-shopify.js) | Betalingsserveren for Shopify. Én fil, bare `export default { fetch }`. |
 | [`public/js/pay/shop.js`](../public/js/pay/shop.js) | Siden: spør om butikken, lager koden og handlekurvlenken, åpner fanen, spør om koden er betalt |
-| [`public/js/screens/shoppay.js`](../public/js/screens/shoppay.js) | Bunnlinjen på pakkeskjermen: avkrysning, «Gå til betaling», og «Venter på betalingen» |
+| [`public/js/screens/shoppay.js`](../public/js/screens/shoppay.js) | Bunnlinjen på pakkeskjermen: avkrysning, «Betal med kort», og «Venter på betalingen» |
 | [`public/js/pay/payments.js`](../public/js/pay/payments.js), [`pass.js`](../public/js/pay/pass.js), [`plans.js`](../public/js/pay/plans.js) | det samme som for Stripe: tilgangen, koden, pakkene |
 | [`shopify/forside.liquid`](../shopify/forside.liquid), [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) | det som limes inn i Shopify: forsiden, og hele ordrebekreftelsen (tre språk) |
 | [`public/assets/email/disputt-epost-logo.png`](../public/assets/email/disputt-epost-logo.png), [`tools/logo/email-header.html`](../tools/logo/email-header.html) | bildet øverst i e-posten (logoen på den gule ovalen, som PNG fordi Gmail og Outlook ikke viser SVG), og oppskriften på å lage det |

@@ -1,4 +1,4 @@
-// The paid part of a game when the host pays with «Betal med Vipps» (the button above «Gå til betaling»), played through the real interface
+// The paid part of a game when the host pays with «Betal med Vipps» (the button above «Betal med kort»), played through the real interface
 // against the whole pretend chain (tools/qa/shop-stack.mjs with `vipps: true`: the real payment server, a pretend Vipps with a page where
 // the customer approves or turns the payment down, and a pretend Shopify that receives the paid order). The host ticks the box and taps the
 // button, is sent to Vipps in a NEW tab, gives up once, has a payment turned down once, and pays the third time, while the guests wait,
@@ -37,7 +37,7 @@ async function vippsTab(host) {
   await page.waitForSelector('#amount');
   return page;
 }
-/** The tab that «Gå til betaling» opened: the pretend shop's checkout. */
+/** The tab that «Betal med kort» opened: the pretend shop's checkout. */
 async function checkoutTab(host) {
   const target = await host.ctx.waitForTarget((x) => x.type() === 'page' && new URL(x.url(), 'http://x').pathname.startsWith('/checkouts/'), { timeout: 20000 });
   const page = await target.page();
@@ -62,21 +62,21 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt to runder gratis/);
   assert.match(paywall, /Betal med Vipps/);
-  assert.match(paywall, /Gå til betaling/, 'the shop is still there for those who want a card or Apple Pay');
+  assert.match(paywall, /Betal med kort/, 'the shop is still there for those who want a card or Apple Pay');
   assert.match(paywall, /Jeg godtar vilkårene og at tilgangen leveres med en gang\./);
   assert.doesNotMatch(paywall, /Stripe|Shopify/, 'the page does not name the shop');
   const above = await rect(host, '.btn--vipps');
   const below = await rect(host, '.dock .btn:not(.btn--vipps)');
-  assert.ok(above.bottom <= below.top, 'the Vipps button sits above «Gå til betaling»');
+  assert.ok(above.bottom <= below.top, 'the Vipps button sits above «Betal med kort»');
   assert.ok(Math.abs(above.height - below.height) <= 4, `and is as tall as it (${above.height} and ${below.height} px): a button like the other, in the orange of Vipps`);
   assert.equal(await host.page.$eval('.btn--vipps', (b) => getComputedStyle(b).backgroundColor === 'rgb(255, 91, 36)' || getComputedStyle(b).backgroundImage.includes('rgb(255, 91, 36)')), true, 'in the orange of Vipps (#ff5b24)');
   assert.equal(await waitsForBox(host), true, 'the Vipps button waits for the box, like the other one');
-  assert.equal((await button(host, 'Gå til betaling')).disabled, true);
+  assert.equal((await button(host, 'Betal med kort')).disabled, true);
   await shot(host, '30-paywall-vipps');
   for (const p of others) {
     const text = await bodyText(p);
     assert.match(text, /Venter på at verten starter neste runde/, `${p.name} just waits`);
-    assert.doesNotMatch(text, /Fortsett quizen|Gå til betaling|Betal med Vipps/, `${p.name} is not asked to pay`);
+    assert.doesNotMatch(text, /Fortsett quizen|Betal med kort|Betal med Vipps/, `${p.name} is not asked to pay`);
     assert.equal(await p.page.$('.btn--vipps'), null, `${p.name} has no Vipps button`);
   }
   // a tap on a button that waits for the box does nothing, whether it comes from a finger or from a script
@@ -91,7 +91,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   assert.equal((await host.ctx.pages()).length, pagesBefore, 'no tab was opened');
   assert.equal(vipps.payments.size, 0, 'and nothing was started at Vipps');
   assert.equal(admin.orders.length, 0);
-  log('after the free rounds the host gets the Vipps button above «Gå til betaling», both wait for the box, and the others only wait');
+  log('after the free rounds the host gets the Vipps button above «Betal med kort», both wait for the box, and the others only wait');
 
   // 1) "En kveld": the box, the button, a new tab at Vipps; the host gives up in the game, which closes the tab
   await choosePlan(host, 'evening');
@@ -121,7 +121,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
     assert.equal(await p.page.$('.banner'), null, `${p.name} has not lost the host`);
   }
   await clickButton(host, 'Avbryt');
-  await waitText(host, /Gå til betaling/);
+  await waitText(host, /Betal med kort/);
   for (let i = 0; i < 20 && !first.isClosed(); i++) await sleep(250);
   assert.equal(first.isClosed(), true, 'the game closes the tab for Vipps when the host gives up');
   assert.equal(await waitsForBox(host), true, 'after giving up the box has to be ticked again');
@@ -154,7 +154,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   assert.equal(admin.orders.length, 0, 'a payment that was turned down is no order');
   assert.equal(vipps.payments.get(ref2).state, 'ABORTED');
   await clickButton(host, 'Avbryt');
-  await waitText(host, /Gå til betaling/);
+  await waitText(host, /Betal med kort/);
   log('a payment that is turned down in Vipps ends on a page that says so, and nothing is bought');
 
   // The discount code: a field under the packages. A code that is no good is told so; a code that takes everything off is for the shop's checkout
@@ -178,12 +178,12 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   await tick(host);
   assert.equal((await button(host, 'Betal med Vipps')).disabled, true, 'Vipps takes no price of nothing');
   await shot(host, '37-discount-free');
-  await clickButton(host, 'Gå til betaling');
+  await clickButton(host, 'Betal med kort');
   const checkout = await checkoutTab(host);
   assert.equal(await checkout.$eval('#discount', (el) => el.textContent), 'GRATIS', 'the shop\'s checkout gets the code in the cart link, and counts it itself');
   await checkout.close();
   await clickButton(host, 'Avbryt');
-  await waitText(host, /Gå til betaling/);
+  await waitText(host, /Betal med kort/);
   await clickButton(host, 'Fjern');
   await waitText(host, /Har du rabattkode\?/);
   assert.equal(await host.page.$$eval('.plan__was', (els) => els.length), 0, 'taken away: the ordinary prices');

@@ -8,6 +8,30 @@ import { Rng } from '../lib/rng.mjs';
 import { pastelSpec, PAPER } from '../lib/recipes.mjs';
 import { leaf, tube, GREEN } from '../lib/parts.mjs';
 
+/** The eye of the mandarin, as the open picture and the shut one (the lid that blinks over it on the start screen) both draw it. */
+const mandarinEye = () => ({
+  x: 198, y: 234, w: 216, rot: 11, hu: 0.25, hl: 0.19, gaze: [0.8, 0.32], iris: 0.18, pupil: 0.42, peak: 0.2,
+  socket: { rx: 1.02, ry: 0.86, dy: -0.04 }, lashes: { up: 0, down: 0, len: 0.08 }, crease: 0.16, lidW: 1.5,
+  c: {
+    ...EYE_LIME,
+    socket: '#e8604a', socketLight: '#fbb08a', socketDark: '#a62f38', socketAlt: '#f48b8f',
+    blend: ['#fa9a3a'],
+    sclera: '#fde54a', scleraLight: '#fff59a', scleraDark: '#e8a62a', scleraHi: '#fffbe0',
+    iris: '#5aae35', irisLight: '#c4d74a', irisDark: '#2a7a3a', irisRing: '#2f8a3a', irisRingDark: '#1f5a2a', irisInner: '#e2ee8a',
+    pupil: '#3a1a6e', pupilLight: '#7b3f9e',
+    lashLine: '#7e1f2c', lashInk: '#4a0c18', lash: '#a62f38', lash2: '#a62f38', lowerLine: '#c4364a', water: '#f8b0a0', lidShadow: '#a62f38',
+  },
+});
+
+/** The same eye with the lid shut: see limeLid() in lime.mjs. */
+export function mandarinLid() {
+  const cv = new Canvas('mandarin-lid');
+  const er = new Rng('mandarin').fork('eye');
+  socketWorld(er, mandarinEye());
+  const s = eye(cv, er, { ...mandarinEye(), closed: 'down' });
+  return cv.render(s, { filter: cv.paperFilter({ ...PAPER, seed: 21 }) });
+}
+
 export default function mandarin() {
   const cv = new Canvas('mandarin');
   const rng = new Rng('mandarin');
@@ -18,19 +42,7 @@ export default function mandarin() {
   const body = new Shape(blobPoints(rng.fork('body'), {
     cx: 200, cy: 234, rx: 166, ry: 142, n: 14, jitter: 0.025, harmonics: [[2, 0.02], [3, 0.025]], shape: dent, start: -Math.PI / 2,
   }));
-  const E = {
-    x: 198, y: 234, w: 216, rot: 11, hu: 0.25, hl: 0.19, gaze: [0.8, 0.32], iris: 0.18, pupil: 0.42, peak: 0.2,
-    socket: { rx: 1.02, ry: 0.86, dy: -0.04 }, lashes: { up: 0, down: 0, len: 0.08 }, crease: 0.16, lidW: 1.5,
-    c: {
-      ...EYE_LIME,
-      socket: '#e8604a', socketLight: '#fbb08a', socketDark: '#a62f38', socketAlt: '#f48b8f',
-      blend: ['#fa9a3a'],
-      sclera: '#fde54a', scleraLight: '#fff59a', scleraDark: '#e8a62a', scleraHi: '#fffbe0',
-      iris: '#5aae35', irisLight: '#c4d74a', irisDark: '#2a7a3a', irisRing: '#2f8a3a', irisRingDark: '#1f5a2a', irisInner: '#e2ee8a',
-      pupil: '#3a1a6e', pupilLight: '#7b3f9e',
-      lashLine: '#7e1f2c', lashInk: '#4a0c18', lash: '#a62f38', lash2: '#a62f38', lowerLine: '#c4364a', water: '#f8b0a0', lidShadow: '#a62f38',
-    },
-  };
+  const E = mandarinEye();
   const er = rng.fork('eye');
   const sock = socketWorld(er, E);
   const exclude = (p) => sock.inside(p) && sock.nearest(p).d > 20;

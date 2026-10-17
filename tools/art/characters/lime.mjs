@@ -7,6 +7,25 @@ import { Canvas } from '../lib/svg.mjs';
 import { Rng } from '../lib/rng.mjs';
 import { pastelSpec, PAPER } from '../lib/recipes.mjs';
 
+/** The eye of the lime, as the open picture and the shut one (the lid that blinks over it on the start screen) both draw it. */
+const limeEye = () => ({
+  x: 200, y: 190, w: 238, rot: -5, hu: 0.2, hl: 0.2, gaze: [0.18, 0.08], iris: 0.205, pupil: 0.44, peak: 0.1,
+  socket: { rx: 1.12, ry: 0.84, dy: -0.06 }, veins: 4, lashes: { up: 9, down: 6, len: 0.12 },
+  c: { ...EYE_LIME, blend: ['#a6d244', '#c4d74a'] },
+});
+
+/**
+ * The same eye with the lid shut, on a canvas of its own the size of the picture (see the same thing for the car and the cabin in art/modes.mjs):
+ * on the page it lies over the open eye, folded away, and closes over it for a moment now and then. Same grain, same random streams.
+ */
+export function limeLid() {
+  const cv = new Canvas('lime-lid');
+  const er = new Rng('lime').fork('eye');
+  socketWorld(er, limeEye()); // (the open eye draws its socket after this: the shut one has to be at the same place in the stream)
+  const s = eye(cv, er, { ...limeEye(), closed: 'down' });
+  return cv.render(s, { filter: cv.paperFilter({ ...PAPER, seed: 11 }) });
+}
+
 export default function lime() {
   const cv = new Canvas('lime');
   const rng = new Rng('lime');
@@ -15,11 +34,7 @@ export default function lime() {
     harmonics: [[2, 0.025], [3, 0.03]],
     shape: (t) => 1 - 0.08 * Math.max(0, Math.sin(t)) ** 3 + 0.02 * Math.cos(2 * t),
   }));
-  const E = {
-    x: 200, y: 190, w: 238, rot: -5, hu: 0.2, hl: 0.2, gaze: [0.18, 0.08], iris: 0.205, pupil: 0.44, peak: 0.1,
-    socket: { rx: 1.12, ry: 0.84, dy: -0.06 }, veins: 4, lashes: { up: 9, down: 6, len: 0.12 },
-    c: { ...EYE_LIME, blend: ['#a6d244', '#c4d74a'] },
-  };
+  const E = limeEye();
   const er = rng.fork('eye');
   const sock = socketWorld(er, E);
   const exclude = (p) => sock.inside(p) && sock.nearest(p).d > 22;

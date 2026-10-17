@@ -44,16 +44,16 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   assert.match(paywall, /Dere har spilt to runder gratis/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
   for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
-  assert.match(paywall, /Gå til betaling/);
+  assert.match(paywall, /Betal med kort/);
   assert.match(paywall, /Jeg godtar vilkårene og at tilgangen leveres med en gang\./);
   assert.doesNotMatch(paywall, /Betal med (Vipps|Apple Pay)/, 'the shop lets the customer choose the way to pay: there is one button');
   assert.doesNotMatch(paywall, /Stripe|Shopify/, 'the page does not name the shop');
-  assert.equal((await button(host, 'Gå til betaling')).disabled, true, 'the button waits for the box to be ticked');
+  assert.equal((await button(host, 'Betal med kort')).disabled, true, 'the button waits for the box to be ticked');
   await shot(host, '20-paywall-shop');
   for (const p of others) {
     const text = await bodyText(p);
     assert.match(text, /Venter på at verten starter neste runde/, `${p.name} just waits`);
-    assert.doesNotMatch(text, /Fortsett quizen|Gå til betaling/, `${p.name} is not asked to pay`);
+    assert.doesNotMatch(text, /Fortsett quizen|Betal med kort/, `${p.name} is not asked to pay`);
   }
   assert.equal(stack.orders.length, orders, 'nothing is bought until the host chooses');
   assert.deepEqual(stack.calls.filter((c) => c.startsWith('/cart/')), [], 'the shop has not been visited yet');
@@ -63,9 +63,9 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   await choosePlan(host, 'evening');
   await waitText(host, /Gjelder i 12 timer fra du betaler/);
   await tick(host);
-  assert.equal((await button(host, 'Gå til betaling')).disabled, false, 'ticked: the button is on');
+  assert.equal((await button(host, 'Betal med kort')).disabled, false, 'ticked: the button is on');
   const pagesBefore = (await host.ctx.pages()).length;
-  await clickButton(host, 'Gå til betaling');
+  await clickButton(host, 'Betal med kort');
   const first = await shopTab(host);
   assert.equal((await host.ctx.pages()).length, pagesBefore + 1, 'the shop opened in a new tab, and the game is still where it was');
   assert.equal(await first.$eval('#amount', (el) => el.textContent), '89 kr');
@@ -101,8 +101,8 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   assert.equal(again.isClosed(), true, 'the button on the shop\'s front page closes the tab that the game opened');
   assert.equal((await host.ctx.pages()).length, pagesWithoutShop);
   await clickButton(host, 'Avbryt');
-  await waitText(host, /Gå til betaling/);
-  assert.equal((await button(host, 'Gå til betaling')).disabled, true, 'after giving up the box has to be ticked again');
+  await waitText(host, /Betal med kort/);
+  assert.equal((await button(host, 'Betal med kort')).disabled, true, 'after giving up the box has to be ticked again');
   assert.equal(await host.page.evaluate(() => sessionStorage.getItem('disputt:shop')), null);
   assert.equal(stack.orders.length, orders, 'and nothing was bought');
   log('a closed tab is no payment: the host can open the shop again, or give up, and the guests never notice');
@@ -110,7 +110,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   // 2) "Livstid", paid in the new tab: the game tab finds the payment itself
   await choosePlan(host, 'lifetime');
   await tick(host);
-  await clickButton(host, 'Gå til betaling');
+  await clickButton(host, 'Betal med kort');
   const shop = await shopTab(host);
   assert.equal(await shop.$eval('#amount', (el) => el.textContent), '299 kr');
   const code = await codeOnCheckout(shop);
@@ -193,7 +193,7 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   await choosePlan(phone, 'year');
   await tick(phone);
   const orders = stack.orders.length;
-  await clickButton(phone, 'Gå til betaling');
+  await clickButton(phone, 'Betal med kort');
   await phone.page.waitForFunction(() => location.pathname.startsWith('/checkouts/'), { timeout: 20000 });
   assert.equal(await phone.page.$eval('#amount', (el) => el.textContent), '249 kr');
   await phone.page.click('#pay');
@@ -228,7 +228,7 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   await waitText(other, /Pakker/);
   await choosePlan(other, 'evening');
   await tick(other);
-  await clickButton(other, 'Gå til betaling');
+  await clickButton(other, 'Betal med kort');
   await other.page.waitForFunction(() => location.pathname.startsWith('/checkouts/'), { timeout: 20000 });
   await other.page.click('#pay');
   await other.page.waitForSelector('#thanks');

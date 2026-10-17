@@ -69,5 +69,5 @@ export function ShopDock({ plan }) {
       <span>Jeg godtar <a href=${pay.termsUrl} target="_blank" rel="noopener">vilkårene</a> og at tilgangen leveres med en gang.</span>
     </label>
     ${shop?.vipps && html`<${Button} block variant="vipps" disabled=${!agreed || (deal && !deal.vipps)} onClick=${goVipps}>Betal med Vipps</${Button}>`}
-    <${Button} block disabled=${!agreed || !shop} onClick=${go}>Gå til betaling</${Button}>`;
+    <${Button} block disabled=${!agreed || !shop} onClick=${go}>Betal med kort</${Button}>`;
 }

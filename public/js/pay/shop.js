@@ -1,4 +1,4 @@
-// Paying through Shopify, seen from the page: the host taps "Gå til betaling", the shop opens in a NEW tab with the package in the
+// Paying through Shopify, seen from the page: the host taps "Betal med kort", the shop opens in a NEW tab with the package in the
 // cart (a cart link that carries a code this page has made up), and this page, which stays open behind it, asks the payment server
 // (payments/worker-shopify.js) now and then whether that code has been paid. When it has, the pass comes back and "Takk!" shows.
 // The shop's address and the variants come from the payment server, so they are set in one place only (its settings).
