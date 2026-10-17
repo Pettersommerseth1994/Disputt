@@ -27,8 +27,7 @@ const mandarinEye = () => ({
 export function mandarinLid() {
   const cv = new Canvas('mandarin-lid');
   const er = new Rng('mandarin').fork('eye');
-  socketWorld(er, mandarinEye());
-  const s = eye(cv, er, { ...mandarinEye(), closed: 'down' });
+  const s = eye(cv, er, { ...mandarinEye(), closed: 'down', socket: false, lidFill: true });
   return cv.render(s, { filter: cv.paperFilter({ ...PAPER, seed: 21 }) });
 }
 

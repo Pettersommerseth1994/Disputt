@@ -27,11 +27,12 @@
 .decor--home-c { bottom: 15.2rem; left: -0.9rem; --size: 4.4rem; }
 .decor--home-d { bottom: 14rem; right: -0.7rem; --size: 4.2rem; }
 @media (max-height: 740px) { .decor--home-c, .decor--home-d { display: none; } }
-/* The green and the orange eye on the start screen blink now and then, each in its own time. The same eye drawn shut (assets/art/lime-lid.svg and mandarin-lid.svg)
-   lies folded away over the open one, in the box of the picture (the same box as the avatar's img: 118 %, a little above the middle), and closes over it for a
-   moment. Only a transform moves, as for the cards in the set-up (mode-blink above). `--lid-y` is where the eye sits in the picture. */
-.decor--home-a { --lid: url('../assets/art/lime-lid.svg'); --lid-y: 47.5%; --blink: 10s; --blink-at: -3.5s; }
-.decor--home-b { --lid: url('../assets/art/mandarin-lid.svg'); --lid-y: 58.5%; --blink: 13s; --blink-at: -9s; }
+/* The green and the orange eye on the start screen blink now and then, each in its own time. The eyelid alone, drawn shut (assets/art/lime-lid.svg and
+   mandarin-lid.svg: the skin from the upper edge of the opening down to the line where the lids meet), hangs from the upper edge of the opening and is let down
+   over the open eye, like a real lid, in about a tenth of a second, and lifted again a little slower. The one eye blinks once, the other now and then twice in a
+   row. Only a transform moves (as for the cards in the set-up, mode-blink above). `--lid-y` is where the upper edge of the opening sits in the picture. */
+.decor--home-a { --lid: url('../assets/art/lime-lid.svg'); --lid-y: 35.6%; --blink: 10s; --blink-at: -3.5s; --blinks: eye-blink; }
+.decor--home-b { --lid: url('../assets/art/mandarin-lid.svg'); --lid-y: 45%; --blink: 13s; --blink-at: -9s; --blinks: eye-blink-twice; }
 .decor--home-a::after,
 .decor--home-b::after {
   content: '';
@@ -45,14 +46,20 @@
   transform: scaleY(0);
   transform-origin: 50% var(--lid-y);
   pointer-events: none;
-  animation: eye-blink var(--blink) var(--blink-at) infinite;
+  animation: var(--blinks) var(--blink) var(--blink-at) infinite;
 }
-/* (a blink takes a good third of a second, near the end of each round: the lid falls, is shut for a moment, and is lifted; the rest of the round the eye is open) */
+/* (a round is ten seconds or so, and the blink is the last bit of it: down in 0.7 %, shut for 0.3 %, up in 1.2 %; the rest of the round the eye is open) */
 @keyframes eye-blink {
-  0%, 86% { transform: scaleY(0); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
-  87.5%, 88.5% { transform: scaleY(1); }
-  88.5% { animation-timing-function: cubic-bezier(0.2, 0.5, 0.4, 1); }
-  92.5%, 100% { transform: scaleY(0); }
+  0%, 86% { transform: scaleY(0); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5); }
+  86.7%, 87% { transform: scaleY(1); animation-timing-function: cubic-bezier(0.2, 0.55, 0.4, 1); }
+  88.2%, 100% { transform: scaleY(0); }
+}
+@keyframes eye-blink-twice {
+  0%, 86% { transform: scaleY(0); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5); }
+  86.7%, 87% { transform: scaleY(1); animation-timing-function: cubic-bezier(0.2, 0.55, 0.4, 1); }
+  88%, 89.3% { transform: scaleY(0); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5); }
+  90%, 90.3% { transform: scaleY(1); animation-timing-function: cubic-bezier(0.2, 0.55, 0.4, 1); }
+  91.5%, 100% { transform: scaleY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .decor--home-a::after,

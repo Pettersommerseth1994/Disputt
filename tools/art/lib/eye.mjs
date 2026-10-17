@@ -71,7 +71,7 @@ export function eye(cv, rng, o) {
     lashes = { up: 8, down: 5, len: 0.13 },
     closed = null, tear = null, brow = null, veins = 0,
     hlPos = [0.62, -0.62], hlSize = 1, crease = 0.12,
-    lidW = 1, detail = 1,
+    lidW = 1, detail = 1, lidFill = false,
   } = o;
   const socket = o.socket === false ? null : { ...DEF_SOCKET, ...(o.socket || {}) };
   const hw = w / 2;
@@ -152,6 +152,23 @@ export function eye(cv, rng, o) {
     const cr = rng.fork('closed');
     const bulge = closed === 'up' ? -HU * 0.9 : HL * 1.1;
     const lid = [P0, [-hw * 0.5, bulge * 4 / 3], [hw * 0.5, bulge * 4 / 3], P3];
+    if (lidFill) {
+      // The lid as a piece of its own (no socket around it): the eyelid skin from the upper edge of the opening down to the line where the lids meet, painted
+      // like the socket around the eye. On the page it hangs from the upper edge and is let down over the open eye, so it has to be the whole lid and nothing else.
+      const lf = rng.fork('lidfill');
+      const skin = new Shape([...cubicPts(up, 18).slice(0, -1), ...cubicPts(lid, 18).reverse().slice(0, -1)]);
+      const pl = { follow: 0.35, band: S(0.05), angle: 0, jitter: 13, bend: 0.16, soft: 0.2, toneJitter: 0.13 };
+      const sp = Math.max(6, S(0.032)) * detail, ln = [Math.max(10, S(0.07)), Math.max(18, S(0.16))];
+      s += paint(cv, skin, lf, {
+        base: c.socket, clipTo: null, outside: 0, toneFn: (p) => clamp(0.55 + 0.35 * (p[1] / Math.max(1, HL))),
+        passes: [
+          { ...pl, c: c.socket, w: W(0.034, 2.8), op: 0.75, sp: sp * 1.3, len: ln },
+          { ...pl, c: c.socketAlt, w: W(0.03, 2.8), op: 0.45, sp: sp * 1.5, len: ln, tone: [0.3, 0.85] },
+          { ...pl, c: c.socketDark, w: W(0.028, 2.8), op: 0.6, sp, len: ln, tone: [0, 0.5] },
+          { ...pl, c: c.socketLight, w: W(0.03, 2.8), op: 0.62, sp, len: ln, tone: [0.55, 1] },
+        ],
+      }).svg;
+    }
     s += G_OPEN;
     s += lashLine(lid, c, W, S, cr, lidW * 1.15);
     const ls = [];

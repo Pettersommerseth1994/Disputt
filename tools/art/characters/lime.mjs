@@ -15,14 +15,13 @@ const limeEye = () => ({
 });
 
 /**
- * The same eye with the lid shut, on a canvas of its own the size of the picture (see the same thing for the car and the cabin in art/modes.mjs):
+ * The lid of the same eye, shut, on a canvas of its own the size of the picture (not the whole socket, as for the car and the cabin in art/modes.mjs: just the eyelid):
  * on the page it lies over the open eye, folded away, and closes over it for a moment now and then. Same grain, same random streams.
  */
 export function limeLid() {
   const cv = new Canvas('lime-lid');
   const er = new Rng('lime').fork('eye');
-  socketWorld(er, limeEye()); // (the open eye draws its socket after this: the shut one has to be at the same place in the stream)
-  const s = eye(cv, er, { ...limeEye(), closed: 'down' });
+  const s = eye(cv, er, { ...limeEye(), closed: 'down', socket: false, lidFill: true });
   return cv.render(s, { filter: cv.paperFilter({ ...PAPER, seed: 11 }) });
 }
 

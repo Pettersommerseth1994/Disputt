@@ -38,8 +38,10 @@ for (const art of ['lime', 'mandarin']) {
 }
 
 test('the blink of the start screen moves only a transform, and rests for a phone that asks for less motion', () => {
-  const frames = css.match(/@keyframes eye-blink \{[\s\S]*?\n\}/)?.[0];
-  assert.ok(frames, 'the keyframes are there');
-  assert.deepEqual([...new Set([...frames.matchAll(/([a-z-]+)\s*:/g)].map((m) => m[1]))].sort(), ['animation-timing-function', 'transform']);
+  for (const name of ['eye-blink', 'eye-blink-twice']) {
+    const frames = css.match(new RegExp(`@keyframes ${name} \\{[\\s\\S]*?\\n\\}`))?.[0];
+    assert.ok(frames, `the keyframes ${name} are there`);
+    assert.deepEqual([...new Set([...frames.matchAll(/([a-z-]+)\s*:/g)].map((m) => m[1]))].sort(), ['animation-timing-function', 'transform']);
+  }
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.decor--home-a::after,\s*\.decor--home-b::after \{ animation: none !important; \}/);
 });
