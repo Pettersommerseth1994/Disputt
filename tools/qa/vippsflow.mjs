@@ -30,6 +30,16 @@ const rect = (p, selector) =>
 const attribute = (order, key) => order.input.customAttributes.find((a) => a.key === key)?.value;
 const waitsForBox = (p) => p.page.$eval('.btn--vipps', (b) => b.disabled);
 
+/** For the web flow the pretend phone is a computer to the page (no touch): the game then opens a tab of its own for Vipps, instead of opening the Vipps app. */
+const asComputer = async (page) => {
+  const patch = () => {
+    const real = window.matchMedia.bind(window);
+    window.matchMedia = (q) => (/pointer|hover/.test(q) ? { matches: false, media: q, addEventListener() {}, removeEventListener() {} } : real(q)); // (no touch, a mouse that hovers)
+  };
+  await page.evaluate(patch);
+  await page.evaluateOnNewDocument(patch);
+};
+
 /** The tab that the host's tap opened: the pretend Vipps, where the customer decides. */
 async function vippsTab(host) {
   const target = await host.ctx.waitForTarget((x) => x.type() === 'page' && new URL(x.url(), 'http://x').pathname.startsWith('/landing/'), { timeout: 20000 });
@@ -54,6 +64,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   const { clickButton, waitText, bodyText, shot, sleep, log } = t;
   const { vipps, admin } = stack;
   const guest = others[0];
+  await asComputer(host.page);
 
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
@@ -305,6 +316,7 @@ export async function buyAndComeBackVipps(t, { base, stack }) {
   const { clickButton, waitText, bodyText, newPhone, shot, log } = t;
   const { vipps, admin } = stack;
   const phone = await newPhone('Kjøper');
+  await asComputer(phone.page);
   await phone.page.evaluateOnNewDocument(() => {
     window.open = () => null; // (a pop-up blocker)
   });
@@ -352,4 +364,55 @@ export async function buyAndComeBackVipps(t, { base, stack }) {
   await clickButton(phone, 'Fortsett spillet');
   await waitText(phone, /Du har tilgang/);
   log('bought from the start screen with no new tab: the page was sent to Vipps and came back by the link on the «Velkommen!» page, and found the payment itself');
+}
+
+/**
+ * The same, on a phone: «Betal med Vipps» opens the Vipps app from the game tab, so the game opens no tab at all,
+ * and the only new tab is the one the phone opens when Vipps sends the host back (here: the same page, opened by hand in a new tab, with no opener).
+ * (A browser on a computer cannot open the app, and ignores the deep link; what the host sees is the game still waiting, as on a phone that is in the app.)
+ */
+export async function payAfterFreeRoundsVippsApp(t, { host, others, stack }) {
+  const { clickButton, waitText, bodyText, shot, log } = t;
+  const { vipps, admin } = stack;
+  await clickButton(host, 'Neste runde');
+  await waitText(host, /Fortsett quizen/);
+  await host.page.waitForSelector('.btn--vipps', { timeout: 10000 });
+  await choosePlan(host, 'lifetime');
+  await tick(host);
+  const gameAt = host.page.url();
+  const pagesBefore = (await host.ctx.pages()).length;
+  await clickButton(host, 'Betal med Vipps');
+  await waitText(host, /Fullfør betalingen i Vipps-appen/);
+  assert.equal((await host.ctx.pages()).length, pagesBefore, 'no tab was opened for Vipps');
+  assert.equal(host.page.url(), gameAt, 'and the game tab is still the game');
+  assert.equal(await button(host, 'Åpne Vipps igjen').then((b) => Boolean(b)), true, 'the bar offers to open the app again');
+  const reference = [...vipps.payments.keys()].at(-1);
+  const payment = vipps.payments.get(reference);
+  assert.equal(payment.flow, 'NATIVE_REDIRECT', 'Vipps was asked for the flow of the app');
+  assert.equal(payment.amount, 29900);
+  for (const p of others) assert.match(await bodyText(p), /Venter på at verten starter neste runde/, `${p.name} just waits`);
+  await shot(host, '39-waiting-app');
+  log('on a phone: no tab for Vipps, the game tab stays where it is, and the bar says that it is the app that is waited for');
+
+  // the host approves in the app, and the phone opens the page Vipps was given as the return address: a new tab, with no opener
+  await vipps.approve(reference);
+  const back = await host.ctx.newPage();
+  await back.goto(payment.returnUrl);
+  await onTakk(back, 'Velkommen!');
+  assert.equal(await back.$eval('#takk-switch', (el) => el.hidden), false, 'the page tells the host to go back to the game, which is in another tab');
+  assert.equal((await host.ctx.pages()).length, pagesBefore + 1, 'one new tab in all: the one the phone opened on the way back');
+  await host.page.bringToFront();
+  await waitText(host, /Velkommen!/, 30000);
+  const thanks = await host.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
+  assert.match(thanks, /Livstid/);
+  const code = (await host.page.$eval('.passcode', (el) => el.textContent)).trim();
+  assert.match(code, CODE);
+  assert.equal(admin.orders.length, 1);
+  assert.equal(attribute(admin.orders[0], 'kode'), code);
+  assert.equal(payment.captured, 29900);
+  await back.close();
+  await host.page.bringToFront();
+  log(`paid in the app: the pass came to the game tab by itself ("Velkommen!", the code ${code}), with one extra tab in all`);
+  await clickButton(host, 'Start runde 3');
+  return { code };
 }

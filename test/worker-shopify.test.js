@@ -155,7 +155,7 @@ describe('GET /shop', () => {
   it('says where to send the host and which variant is which package, and nothing else', async () => {
     const r = await json(await t.call('/shop'));
     assert.equal(r.status, 200);
-    assert.deepEqual(r.body, { shop: SHOP, variants: VARIANTS, vipps: false, discounts: false }, 'and that neither the button «Betal med Vipps» nor a field for discount codes is to be shown, as long as the shop\'s keys are not set');
+    assert.deepEqual(r.body, { shop: SHOP, variants: VARIANTS, vipps: false, vippsApp: false, discounts: false }, 'and that neither the button «Betal med Vipps» nor a field for discount codes is to be shown, as long as the shop\'s keys are not set');
   });
 
   it('gives only the address of the shop, whatever is written after it, and only if it is https', async () => {

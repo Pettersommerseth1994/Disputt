@@ -130,7 +130,7 @@ describe('the settings', () => {
 describe('the shop', () => {
   it('is asked for once, and says where to go and which variant is which package', async () => {
     const info = await shop.loadShop();
-    assert.deepEqual(info, { shop: 'https://shop.example.test', variants: VARIANTS, vipps: false, discounts: false }, 'and that neither Vipps nor discount codes are set up (the answer of this pretend payment server has no such things)');
+    assert.deepEqual(info, { shop: 'https://shop.example.test', variants: VARIANTS, vipps: false, vippsApp: false, discounts: false }, 'and that neither Vipps nor discount codes are set up (the answer of this pretend payment server has no such things)');
     await shop.loadShop();
     assert.equal(asked.filter((a) => a.url.endsWith('/shop')).length, 1);
     assert.equal(shop.knownShop(), info);

@@ -28,11 +28,20 @@ function tabCanRemember() {
   }
 }
 
-/** Only Vipps' own https address, or a pretend one on this machine (the tests), is somewhere to send the host. */
-function vippsAddress(text) {
+/** A phone: the Vipps app can be opened from the game tab itself (the owner has to allow it too: the shop's answer says so). */
+function isPhone() {
+  const ua = typeof navigator === 'object' ? String(navigator.userAgent ?? '') : '';
+  if (/Android|iPhone|iPod|iPad/i.test(ua)) return true;
+  return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches && matchMedia('(hover: none)').matches;
+}
+
+const APP_SCHEMES = /^(vipps|vippsmt|vippsmobilepay|mobilepay|mobilepaymt):$/;
+
+/** Only Vipps' own https address (or its app's address, for the app flow), or a pretend one on this machine (the tests), is somewhere to send the host. */
+function vippsAddress(text, app = false) {
   try {
     const u = new URL(String(text));
-    if (u.protocol === 'https:' || (u.protocol === 'http:' && isLocal(u.hostname))) return u.href;
+    if (u.protocol === 'https:' || (u.protocol === 'http:' && isLocal(u.hostname)) || (app && APP_SCHEMES.test(u.protocol))) return u.href;
   } catch {
     /* refused below */
   }
@@ -98,14 +107,16 @@ export function startVippsCheckout(plan, discount = '') {
   const info = knownShop();
   const apiUrl = store.payments?.apiUrl;
   if (!info?.vipps || !apiUrl) throw new PayError('unavailable', 'Vipps er ikke klart ennå. Prøv igjen om et øyeblikk.');
+  // On a phone the Vipps app is opened from this very tab: no tab of our own, so the only new tab is the one that Vipps opens when it sends the host back.
+  const app = Boolean(info.vippsApp) && isPhone();
   const waiting = { code: newPayCode(), plan, at: Date.now(), url: '' };
   const consent = new Date(waiting.at).toISOString(); // the time of the tap: the host has just ticked the box
   starting = true;
   const told = announceAway('pay'); // (the guests are told before anything else: this tab may sleep once Vipps is on top of it)
-  const tab = window.open('about:blank', '_blank');
+  const tab = app ? null : window.open('about:blank', '_blank');
   // A browser that does not open a new tab sends this one to Vipps, as for the shop: the room is kept in the tab, and the page finds the
   // payment when the host comes back. A browser that keeps nothing would lose the room.
-  if (!tab && store.view && !tabCanRemember()) {
+  if (!app && !tab && store.view && !tabCanRemember()) {
     starting = false;
     throw new PayError('storage', 'Nettleseren din åpner ikke en ny fane og lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.');
   }
@@ -129,17 +140,21 @@ export function startVippsCheckout(plan, discount = '') {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'omit',
-    body: JSON.stringify({ plan, code: waiting.code, samtykke: consent, ...(discount ? { rabatt: discount } : {}) }),
+    body: JSON.stringify({ plan, code: waiting.code, samtykke: consent, ...(app ? { flow: 'app' } : {}), ...(discount ? { rabatt: discount } : {}) }),
   })
     .catch(() => fail(new PayError('network', 'Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.')))
     .then(async (res) => {
       const data = await res.json().catch(() => ({}));
-      const to = res.ok ? vippsAddress(data.url) : null;
+      const to = res.ok ? vippsAddress(data.url, data.flow === 'app') : null;
       if (!to) return fail(new PayError(data.error ?? 'server', data.message ?? 'Noe gikk galt hos Vipps. Prøv igjen om litt.'));
       waiting.url = to;
+      if (data.flow === 'app') waiting.app = true; // (the bar says «Vipps-appen», and «Åpne Vipps igjen» opens the app again)
       remember(waiting);
       setStore({ payWaiting: { ...waiting } });
-      if (tab && !tab.closed) {
+      if (data.flow === 'app') {
+        await told; // (not before the guests have been told)
+        location.assign(to); // (a deep link: the phone opens the app, and this tab stays where it is)
+      } else if (tab && !tab.closed) {
         tab.location.href = to;
         closeWhenDone(tab);
       } else {

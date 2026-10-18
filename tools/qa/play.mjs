@@ -8,6 +8,7 @@
 //           Stripe (tools/qa/payments-stack.mjs, tools/qa/payflow.mjs); --pay-slow also keeps the host away for 75 s while paying
 //   --pay-shopify   the same, with a pretend Shopify shop that opens in a new tab (tools/qa/shop-stack.mjs, tools/qa/shopflow.mjs);
 //           --pay-shopify-slow also keeps the host in the shop for 75 s
+//   --pay-vipps-app   as --pay-vipps on a phone where the Vipps app is opened from the game tab (no tab of its own for Vipps; only the return page is a new tab)
 //   --pay-vipps   the same with Shopify's shop and «Betal med Vipps» switched on: the host pays straight at a pretend Vipps, in a new tab, and the paid
 //           order is made in the pretend Shopify (tools/qa/vippsflow.mjs; the shop stack with `vipps: true`)
 // Needs Google Chrome (CHROME_PATH to override). Exits non-zero on the first thing that does not behave.
@@ -23,7 +24,7 @@ import { startShopStack } from './shop-stack.mjs';
 import { buyAndComeBackShop, payAfterFreeRoundsShop } from './shopflow.mjs';
 import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
-import { buyAndComeBackVipps, payAfterFreeRoundsVipps } from './vippsflow.mjs';
+import { buyAndComeBackVipps, payAfterFreeRoundsVipps, payAfterFreeRoundsVippsApp } from './vippsflow.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -38,7 +39,8 @@ const SUBPATH = flags.includes('--subpath');
 const PAY_SLOW = flags.includes('--pay-slow');
 const PAY = flags.includes('--pay') || PAY_SLOW;
 const PAY_SHOP_SLOW = flags.includes('--pay-shopify-slow');
-const PAY_VIPPS = flags.includes('--pay-vipps');
+const PAY_VIPPS_APP = flags.includes('--pay-vipps-app');
+const PAY_VIPPS = flags.includes('--pay-vipps') || PAY_VIPPS_APP;
 const PAY_SHOP = flags.includes('--pay-shopify') || PAY_SHOP_SLOW || PAY_VIPPS; // (Vipps is a button in the Shopify edition)
 const FREE_ROUNDS = 2; // (the page's default)
 const P2P = LIVE || SUBPATH || flags.includes('--p2p');
@@ -580,7 +582,9 @@ try {
       await guest.page.waitForSelector('.sheet-backdrop');
       if ((PAY || PAY_SHOP) && round === FREE_ROUNDS) {
         // the host has to pay before the third round (and the first round of the paid part starts from the thank-you sheet)
-        payment = PAY_VIPPS
+        payment = PAY_VIPPS_APP
+          ? await payAfterFreeRoundsVippsApp(tools, { host, others, stack })
+          : PAY_VIPPS
           ? await payAfterFreeRoundsVipps(tools, { host, others, stack })
           : PAY_SHOP
             ? await payAfterFreeRoundsShop(tools, { host, others, stack, holdMs: PAY_SHOP_SLOW ? 75_000 : 0 })
@@ -601,7 +605,8 @@ try {
   if (PAY || PAY_SHOP) {
     assert.ok(payment, 'the host was asked to pay after the free rounds');
     // (no more packages after that: the host has paid, and every round up to the winner started without asking again)
-    if (PAY_VIPPS) await buyAndComeBackVipps(tools, { base, stack });
+    if (PAY_VIPPS_APP) log('(buying from the start screen with no new tab is for the web flow: --pay-vipps)');
+    else if (PAY_VIPPS) await buyAndComeBackVipps(tools, { base, stack });
     else if (PAY_SHOP) await buyAndComeBackShop(tools, { base, stack });
     else await buyAndComeBackByTheBackButton(tools, { base, stack });
     await restoreOnNewPhone(tools, { base, code: payment.code });

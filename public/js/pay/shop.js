@@ -44,7 +44,7 @@ export function loadShop() {
     if (!target || (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) || PLAN_IDS.some((plan) => !/^\d{5,20}$/.test(variants[plan]))) {
       throw new PayError('server', 'Fikk en betalingsside vi ikke stoler på.');
     }
-    return (shopInfo = { shop: target.origin, variants, vipps: data.vipps === true, discounts: data.discounts === true });
+    return (shopInfo = { shop: target.origin, variants, vipps: data.vipps === true, vippsApp: data.vippsApp === true, discounts: data.discounts === true });
   })().finally(() => (shopAsk = null));
   return shopAsk;
 }
@@ -162,6 +162,7 @@ export function startShopCheckout(plan, discount = '') {
 export function reopenShop() {
   const waiting = store.payWaiting;
   if (!waiting?.url) return; // (a payment with Vipps that has no address yet: the host is still being sent there)
+  if (!/^https?:/i.test(waiting.url)) return void location.assign(waiting.url); // (the Vipps app: it opens from this tab, and no tab is made for it)
   if (!openShopTab(waiting.url)) location.assign(waiting.url);
 }
 

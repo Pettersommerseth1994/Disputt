@@ -84,3 +84,10 @@ Under pakkene kommer en linje **Har du rabattkode?**. Koden lager du i Shopify (
 3. [ ] **Sjekk:** dobbeltklikk Registrer-Vipps-webhook-filen igjen (jeg lager den på nytt hvis du ber om det). Sjekken skal nå også vise `"discounts":true`.
 
 Hvilke typer koder som virker med Vipps står i [VIPPS.md, del 5.8](VIPPS.md#58-rabattkoder).
+
+## Etterpå: færre faner på telefon
+
+En telefon åpner nå Vipps-appen rett fra spillfanen, uten en egen Vipps-fane. Den eneste nye fanen er siden telefonen åpner når Vipps sender deg tilbake. Det er ingen bryter: det gjelder for alle telefoner.
+
+1. [ ] Lim inn den nye `payments/worker-shopify.js` i Cloudflare (`disputt-pay-shopify-test` → **Edit code** → Cmd+A, slett, lim inn → **Deploy**). Uten den nye koden i Cloudflare bruker spillet den gamle veien med en egen Vipps-fane, så ingenting går i stykker i mellomtiden.
+2. [ ] **Prøv på telefonen din** (last siden på nytt først): **Betal med Vipps** → Vipps-appen åpner seg → godkjenn → du kommer til en side som sier «Velkommen!» → bytt tilbake til spillfanen, som viser «Velkommen!» med koden. Refunder kjøpet.

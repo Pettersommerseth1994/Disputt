@@ -53,8 +53,8 @@ export async function setupVipps(overrides = {}, fakes = {}) {
   const call = base.call;
   const read = async (res) => ({ status: res.status, body: await res.json().catch(() => null) });
   /** The game: "Betal med Vipps". `consent` is the time the host ticked the box. */
-  const start = async ({ plan = 'year', code = CODE, consent = new Date(), rabatt } = {}) =>
-    read(await call('/vipps/start', { method: 'POST', body: { plan, code, samtykke: consent instanceof Date ? consent.toISOString() : consent, ...(rabatt === undefined ? {} : { rabatt }) } }));
+  const start = async ({ plan = 'year', code = CODE, consent = new Date(), rabatt, flow } = {}) =>
+    read(await call('/vipps/start', { method: 'POST', body: { plan, code, samtykke: consent instanceof Date ? consent.toISOString() : consent, ...(rabatt === undefined ? {} : { rabatt }), ...(flow === undefined ? {} : { flow }) } }));
   /** The game: "Har du rabattkode?" */
   const discount = async (rabatt) => read(await call('/discount', { method: 'POST', body: { code: rabatt } }));
   const status = async (reference) => read(await call('/vipps/status', { method: 'POST', body: { reference } }));

@@ -35,6 +35,7 @@
     "play:pay-shopify": "node tools/qa/play.mjs 4 3 --p2p --pay-shopify",
     "play:pay-shopify-slow": "node tools/qa/play.mjs 3 3 --p2p --pay-shopify-slow",
     "play:pay-vipps": "node tools/qa/play.mjs 4 3 --p2p --pay-vipps",
+    "play:pay-vipps-app": "node tools/qa/play.mjs 4 3 --p2p --pay-vipps-app",
     "qa:shop-live": "node tools/qa/shopsmoke.mjs",
     "play:live": "node tools/qa/play.mjs --url=https://disputt.site",
     "qa:stuck": "node tools/qa/stuck.mjs",

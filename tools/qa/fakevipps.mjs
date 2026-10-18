@@ -55,6 +55,8 @@ export async function startFakeVipps({ keys = KEYS, user = { email: 'kari@exampl
   let origin = '';
   const post = deliver ?? ((url, init) => fetch(url, { method: 'POST', ...init }));
 
+  // (a payment in the web flow is paid at a page; one in the app flow is paid in the app, which a deep link opens: vippsMT:// is the test app's)
+  const addressOf = (p) => (p.flow === 'NATIVE_REDIRECT' ? `vippsmt://?token=${p.reference}` : `${origin}/landing/${p.reference}`);
   const aggregate = (p) => {
     const money = (value) => ({ currency: 'NOK', value });
     return { authorizedAmount: money(p.state === 'AUTHORIZED' ? p.amount : 0), cancelledAmount: money(p.cancelled), capturedAmount: money(p.captured), refundedAmount: money(p.refunded) };
@@ -192,13 +194,13 @@ export async function startFakeVipps({ keys = KEYS, user = { email: 'kari@exampl
         if (!Number.isInteger(body.amount?.value) || body.amount.value < 100) problems.push('amount.value (øre, an integer, 100 at least)');
         if (body.paymentMethod?.type !== 'WALLET') problems.push('paymentMethod.type');
         if (!/^[A-Za-z0-9-]{6,64}$/.test(String(body.reference ?? ''))) problems.push('reference (letters, digits and hyphens)');
-        if (body.userFlow !== 'WEB_REDIRECT') problems.push('userFlow');
+        if (!['WEB_REDIRECT', 'NATIVE_REDIRECT'].includes(body.userFlow)) problems.push('userFlow');
         if (!/^https:\/\/|^http:\/\/127\.0\.0\.1/.test(String(body.returnUrl ?? ''))) problems.push('returnUrl (https)');
         if (body.profile?.scope !== undefined && typeof body.profile.scope !== 'string') problems.push('profile.scope');
         if (problems.length > 0) return send(400, { title: 'Bad Request', detail: `invalid: ${problems.join(', ')}` });
         const existing = payments.get(body.reference);
         if (existing) {
-          if (existing.idempotencyKey === key) return send(200, { redirectUrl: `${origin}/landing/${existing.reference}`, reference: existing.reference });
+          if (existing.idempotencyKey === key) return send(200, { redirectUrl: addressOf(existing), reference: existing.reference });
           return send(409, { title: 'Conflict', detail: 'the reference is used' });
         }
         const payment = {
@@ -210,13 +212,14 @@ export async function startFakeVipps({ keys = KEYS, user = { email: 'kari@exampl
           cancelled: 0,
           refunded: 0,
           returnUrl: body.returnUrl,
+          flow: body.userFlow,
           description: String(body.paymentDescription ?? ''),
           scope: body.profile?.scope ?? '',
           pspReference: crypto.randomUUID(),
           captures: new Set(),
         };
         payments.set(payment.reference, payment);
-        return send(202, { redirectUrl: `${origin}/landing/${payment.reference}`, reference: payment.reference });
+        return send(202, { redirectUrl: addressOf(payment), reference: payment.reference });
       }
       const op = url.pathname.match(/^\/epayment\/v1\/payments\/([^/]+)(?:\/(capture|cancel|refund))?$/);
       if (op) {

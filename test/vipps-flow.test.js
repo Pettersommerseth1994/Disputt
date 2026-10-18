@@ -137,6 +137,46 @@ afterEach(async () => {
   await t.stop();
 });
 
+describe('on a phone', () => {
+  const asPhone = (ua) => Object.defineProperty(globalThis, 'navigator', { value: { userAgent: ua }, configurable: true, writable: true });
+  const app = () => shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true, vippsApp: true });
+  let realNavigator;
+  before(() => (realNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')));
+  afterEach(() => (realNavigator ? Object.defineProperty(globalThis, 'navigator', realNavigator) : delete globalThis.navigator));
+
+  it('opens the Vipps app from this tab, and makes no tab of its own: the only new tab is the one that Vipps opens when it sends the host back', async () => {
+    app();
+    asPhone('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)');
+    await vippsPage.startVippsCheckout('year');
+    assert.equal(opened().length, 0, 'no tab');
+    const call = asked.find((a) => a.url.endsWith('/vipps/start'));
+    assert.equal(call.body.flow, 'app');
+    const reference = [...t.vipps.payments.keys()][0];
+    assert.equal(t.vipps.payments.get(reference).flow, 'NATIVE_REDIRECT');
+    assert.deepEqual(events.filter((e) => e[0] === 'assign'), [['assign', `vippsmt://?token=${reference}`]], 'the deep link opens the app, from this tab');
+    assert.equal(store.payWaiting.app, true, 'and the bar knows it is the app that is waited for');
+    assert.equal(JSON.parse(sessionStorage.getItem('disputt:shop')).app, true);
+    events.length = 0;
+    shop.reopenShop();
+    assert.deepEqual(events, [['assign', `vippsmt://?token=${reference}`]], '«Åpne Vipps igjen» opens the app again, still with no tab');
+  });
+
+  it('keeps to the tab of its own on a computer, and when the payment server does not offer the app (a server from before)', async () => {
+    app();
+    asPhone('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/130');
+    await vippsPage.startVippsCheckout('year');
+    assert.equal(opened().length, 1, 'a computer: a tab, as before');
+    assert.equal(asked.find((a) => a.url.endsWith('/vipps/start')).body.flow, undefined);
+    shop.cancelShopPayment();
+    events.length = 0;
+    asked.length = 0;
+    shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true });
+    asPhone('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)');
+    await vippsPage.startVippsCheckout('year');
+    assert.equal(opened().length, 1, 'a phone, but a server that does not offer the app: a tab, as before');
+  });
+});
+
 describe('the tap on «Betal med Vipps»', () => {
   it('opens the tab at once, inside the tap, and says «Venter på betalingen» before the server has answered', async () => {
     let release;

@@ -55,9 +55,9 @@ export function ShopDock({ plan }) {
     return html`
       <div class="paywait" role="status">
         <p class="paywait__title">Venter på betalingen …</p>
-        <p class="small">Fullfør betalingen i den andre fanen. Siden her henter tilgangen selv når den er gjennomført. Har du allerede betalt, kommer den om et øyeblikk.</p>
+        <p class="small">${s.payWaiting.app ? 'Fullfør betalingen i Vipps-appen.' : 'Fullfør betalingen i den andre fanen.'} Siden her henter tilgangen selv når den er gjennomført. Har du allerede betalt, kommer den om et øyeblikk.</p>
       </div>
-      <${Button} block variant="cream" onClick=${reopenShop}>Åpne betalingen igjen</${Button}>
+      <${Button} block variant="cream" onClick=${reopenShop}>${s.payWaiting.app ? 'Åpne Vipps igjen' : 'Åpne betalingen igjen'}</${Button}>
       <${Button} block variant="text" onClick=${cancelShopPayment}>Avbryt</${Button}>`;
   }
   return html`

@@ -443,6 +443,7 @@ const PRICE_KEPT_MS = 10 * 60_000;
 
 const clean = (value) => String(value ?? '').trim();
 const isSet = (env, name) => clean(env[name]) !== '';
+const APP_SCHEMES = /^(vipps|vippsmt|vippsmobilepay|mobilepay|mobilepaymt):$/; // (what Vipps gives to open its app: vipps:// for the app, vippsMT:// for the test app)
 const vippsTest = (env) => clean(env.VIPPS_ENV).toLowerCase() === 'test';
 
 /** Why the button cannot be used, in words, or null when it can. (`enabled: false`: for the calls that finish payments already started.) */
@@ -906,6 +907,7 @@ async function vippsStart(request, env) {
     discountCode = found.code;
   }
   const reference = newReference();
+  const app = clean(body.flow) === 'app'; // (a phone that opens the Vipps app straight from the game tab, so that the only new tab is the one Vipps opens when it sends the host back)
   // written down BEFORE the payment is made: a payment that Vipps knows and we do not could be paid with nobody to deliver it to
   await db
     .prepare('INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at, test, discount_code, list_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
@@ -920,18 +922,18 @@ async function vippsStart(request, env) {
         paymentMethod: { type: 'WALLET' },
         reference,
         returnUrl: new URL(`takk.html?ref=${reference}`, siteUrl(env)).href,
-        userFlow: 'WEB_REDIRECT',
+        userFlow: app ? 'NATIVE_REDIRECT' : 'WEB_REDIRECT',
         paymentDescription: `Disputt: ${PLANS[plan].name}`,
         profile: { scope: 'email' }, // (the receipt goes to this address, and nothing else is asked for: the host agrees to sharing it in the Vipps app, on a screen with one line)
       },
     });
     const to = new URL(String(made.redirectUrl ?? ''));
-    if (to.protocol !== 'https:' && !isLocalUrl(to)) throw new Error('redirectUrl');
+    if (to.protocol !== 'https:' && !isLocalUrl(to) && !(app && APP_SCHEMES.test(to.protocol))) throw new Error('redirectUrl');
   } catch (err) {
     await db.prepare("UPDATE vipps SET state = 'failed', note = ?, updated_at = ? WHERE reference = ?").bind(String(err instanceof Error ? err.message : err).slice(0, 160), now, reference).run().catch(() => {});
     throw err instanceof HttpError ? err : new HttpError(502, 'vipps', 'Vipps ga ikke en adresse å betale på.');
   }
-  return { url: made.redirectUrl, reference };
+  return { url: made.redirectUrl, reference, flow: app ? 'app' : 'web' };
 }
 
 /** What the page the host comes back to from Vipps (takk.html) asks: is it done? Looks at the payment on the way. */
@@ -1109,7 +1111,7 @@ async function readJson(request) {
 function shop(env) {
   const ids = variantIds(env);
   for (const [plan, name] of Object.entries(VARIANT_VARS)) if (!ids[plan]) throw new HttpError(503, 'unavailable', `Betalingen er ikke satt opp ennå (${name} mangler).`);
-  return { shop: shopOrigin(env), variants: ids, vipps: vippsProblem(env) === null, discounts: shopifySet(env) };
+  return { shop: shopOrigin(env), variants: ids, vipps: vippsProblem(env) === null, vippsApp: vippsProblem(env) === null, discounts: shopifySet(env) };
 }
 
 /** When the access of an order ends, in milliseconds since 1970 (Infinity for a lifetime package). */

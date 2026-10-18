@@ -61,7 +61,7 @@ describe('POST /vipps/start', () => {
     assert.equal(r.status, 200);
     assert.match(r.body.reference, mod.REFERENCE);
     assert.equal(r.body.url, `${t.vipps.url}/landing/${r.body.reference}`);
-    assert.deepEqual(Object.keys(r.body).sort(), ['reference', 'url']);
+    assert.deepEqual(Object.keys(r.body).sort(), ['flow', 'reference', 'url']);
     const payment = t.vipps.payments.get(r.body.reference);
     assert.equal(payment.amount, 8900, 'the price of "En kveld" in øre, from the shop');
     assert.equal(payment.returnUrl, `${SITE}takk.html?ref=${r.body.reference}`, 'back to the thank-you page of the site, which only knows the reference');
@@ -797,5 +797,40 @@ describe('discount codes (the same codes as in Shopify\'s checkout)', () => {
     const columns = t.db.sqlite.prepare('PRAGMA table_info(vipps)').all().map((c) => c.name);
     assert.ok(columns.includes('discount_code') && columns.includes('list_amount'));
     assert.equal((await t.start({ plan: 'evening' })).status, 200, 'and a payment can be made');
+  });
+});
+
+describe('the app flow (a phone opens the Vipps app straight from the game tab)', () => {
+  it('is offered to the page when Vipps is set up, and not otherwise', async () => {
+    assert.equal((await json(await (await make()).call('/shop'))).body.vippsApp, true);
+    assert.equal((await json(await (await make({ VIPPS_ENABLED: undefined })).call('/shop'))).body.vippsApp, false, 'not without the button itself');
+  });
+
+  it('makes the payment for the app and gives the address that opens it, when the page asks', async () => {
+    const t = await make();
+    const r = await t.start({ flow: 'app' });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.flow, 'app');
+    assert.equal(t.vipps.payments.get(r.body.reference).flow, 'NATIVE_REDIRECT', 'Vipps is asked for the flow of the app');
+    assert.equal(r.body.url, `vippsmt://?token=${r.body.reference}`, 'and the address is the one that opens the app');
+  });
+
+  it('keeps to the web flow for a page that does not ask (a computer, or a page from before)', async () => {
+    const t = await make();
+    const plain = await t.start();
+    assert.equal(plain.body.flow, 'web');
+    assert.equal(t.vipps.payments.get(plain.body.reference).flow, 'WEB_REDIRECT');
+    assert.match(plain.body.url, /\/landing\//);
+  });
+
+  it('is paid and finished like any other payment', async () => {
+    const t = await make();
+    await t.register();
+    const { body } = await t.start({ flow: 'app' });
+    await t.vipps.approve(body.reference);
+    await t.settled();
+    assert.equal(t.row(body.reference).state, 'done');
+    assert.equal(t.admin.orders.length, 1);
+    assert.equal((await t.restore()).status, 200);
   });
 });
