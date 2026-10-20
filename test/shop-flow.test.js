@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import { VARIANTS, mod, setupShopify } from './helpers/shopify.mjs';
 
+const { lifetime: _retired, ...FOR_SALE } = VARIANTS; // (what the page is told: the retired Livstid is not offered)
+
 // ---- a pretend browser (the page modules read these when they are loaded, so this comes first)
 const realSetTimeout = globalThis.setTimeout;
 const realClearTimeout = globalThis.clearTimeout;
@@ -130,7 +132,7 @@ describe('the settings', () => {
 describe('the shop', () => {
   it('is asked for once, and says where to go and which variant is which package', async () => {
     const info = await shop.loadShop();
-    assert.deepEqual(info, { shop: 'https://shop.example.test', variants: VARIANTS, vipps: false, vippsApp: false, discounts: false }, 'and that neither Vipps nor discount codes are set up (the answer of this pretend payment server has no such things)');
+    assert.deepEqual(info, { shop: 'https://shop.example.test', variants: FOR_SALE, vipps: false, vippsApp: false, discounts: false }, 'and that neither Vipps nor discount codes are set up (the answer of this pretend payment server has no such things)');
     await shop.loadShop();
     assert.equal(asked.filter((a) => a.url.endsWith('/shop')).length, 1);
     assert.equal(shop.knownShop(), info);
@@ -157,7 +159,7 @@ describe('the shop', () => {
     const realFetch = globalThis.fetch;
     globalThis.fetch = async () => new Response(JSON.stringify({ shop: 'javascript:alert(1)', variants: VARIANTS }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     await assert.rejects(shop.loadShop(), (err) => err.message.includes('stoler'));
-    globalThis.fetch = async () => new Response(JSON.stringify({ shop: 'https://evil.test', variants: { evening: '12345', year: '12345', lifetime: 'x' } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    globalThis.fetch = async () => new Response(JSON.stringify({ shop: 'https://evil.test', variants: { evening: '12345', year: 'x' } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     await assert.rejects(shop.loadShop(), Error);
     globalThis.fetch = realFetch;
     assert.equal(shop.knownShop(), null, 'nothing was kept from any of them');
@@ -220,11 +222,11 @@ describe('the tap that goes to pay', () => {
     await shop.loadShop();
     shop.startShopCheckout('year');
     const first = { ...store.payWaiting };
-    shop.startShopCheckout('lifetime'); // (a double tap: the first one is already on its way)
+    shop.startShopCheckout('year'); // (a double tap: the first one is already on its way)
     assert.deepEqual({ ...store.payWaiting }, first);
     assert.equal(opened().length, 1, 'one tab, not two');
     store.payWaiting.at -= 2000;
-    shop.startShopCheckout('lifetime'); // (a tap that comes later, before the bar has changed)
+    shop.startShopCheckout('year'); // (a tap that comes later, before the bar has changed)
     assert.equal(opened().length, 2);
     assert.equal(opened()[1][1], opened()[0][1], 'the same cart again');
     assert.equal(store.payWaiting.code, first.code);
@@ -234,9 +236,9 @@ describe('the tap that goes to pay', () => {
     assert.equal(store.sheet, 'thanks', 'and a payment in either of the two tabs is found');
   });
 
-  it('chooses the variant of the package that was tapped, for each of the three', async () => {
+  it('chooses the variant of the package that was tapped, for each of the three on sale', async () => {
     await shop.loadShop();
-    for (const plan of ['evening', 'year', 'lifetime']) {
+    for (const plan of ['evening', 'weekend', 'year']) {
       shop.startShopCheckout(plan);
       assert.equal(new URL(opened().at(-1)[1]).pathname, `/cart/${VARIANTS[plan]}:1`, plan);
       shop.cancelShopPayment();
@@ -349,7 +351,7 @@ describe('asking whether it was paid', () => {
   it('asks only with the code it made up, and nothing else', async () => {
 
     await shop.loadShop();
-    shop.startShopCheckout('lifetime');
+    shop.startShopCheckout('year');
     await ring();
     const question = asked.at(-1);
     assert.equal(question.url, `${PAY_SERVER}/restore`);
@@ -424,7 +426,7 @@ describe('asking whether it was paid', () => {
 
   it('tells the host, and stops waiting, when the order was refunded, cancelled or disputed, or the package has run out', async () => {
     for (const [what, act, wording] of [
-      ['refunded', (o) => t.deliver('refunds/create', { id: 1 + Math.floor(Math.random() * 1e9), order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '89.00', currency: 'NOK' }] }), /refundert/],
+      ['refunded', (o) => t.deliver('refunds/create', { id: 1 + Math.floor(Math.random() * 1e9), order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '149.00', currency: 'NOK' }] }), /refundert/],
       ['cancelled', (o) => t.deliver('orders/cancelled', o), /kansellert/],
       ['disputed', (o) => t.deliver('disputes/create', { id: 7, order_id: o.id }), /bestridt/],
     ]) {
@@ -447,14 +449,14 @@ describe('asking whether it was paid', () => {
 
 describe('when the host comes back some other way', () => {
   it('takes up a payment that this tab was waiting for when the page is opened again (a reload, or the back button)', async () => {
-    const { code } = await startAndPay('lifetime');
+    const { code } = await startAndPay('year');
     // the page is gone and comes back: the store is new, the tab's storage is the same
     Object.assign(store, { payWaiting: null, pass: null, passCode: null, paywall: true, sheet: null });
     const again = await import(`../public/js/pay/shop.js?test=again${imports}`);
     again.initShop();
     await new Promise((resolve) => realSetTimeout(resolve, 20)); // (the check that initShop starts)
     assert.equal(store.sheet, 'thanks');
-    assert.equal(store.pass.plan, 'lifetime');
+    assert.equal(store.pass.plan, 'year');
     assert.equal(store.passCode, code);
   });
 

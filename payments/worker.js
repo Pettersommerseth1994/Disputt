@@ -14,7 +14,7 @@
 //   STRIPE_KEY         secret   a Stripe *restricted* key (see docs/BETALING.md for the permissions)
 //   JWT_PRIVATE_KEY    secret   the private signing key, base64 of the PKCS#8 DER (docs/BETALING.md shows how to make it)
 //   SITE_URL           text     where the game lives, e.g. https://disputt.site/
-//   PRICE_EVENING, PRICE_YEAR, PRICE_LIFETIME   text   the Stripe price ids (price_…) of the three packages
+//   PRICE_EVENING, PRICE_WEEKEND, PRICE_YEAR   text   the Stripe price ids (price_…) of the three packages that are for sale
 //   VIPPS_ENABLED      text     "true" once Stripe has given you access to Vipps (private preview)
 //   STRIPE_VIPPS_VERSION  text  optional: the Stripe-Version header for the Vipps preview, as shown in Stripe's Vipps docs
 //   METHOD_MODE        text     optional: how the two buttons choose the payment method on Stripe's page. Default: the button asks for
@@ -38,12 +38,14 @@ function plusOneYear(seconds) {
  * `paidAt` (seconds); null means never.
  */
 const PLANS = {
-  evening: { name: 'En kveld', amount: 8900, ends: (paidAt) => paidAt + 12 * 3600 },
-  year: { name: 'For ett år', amount: 24900, ends: plusOneYear },
+  evening: { name: 'En kveld', amount: 14900, ends: (paidAt) => paidAt + 12 * 3600 },
+  weekend: { name: 'En helg', amount: 19900, ends: (paidAt) => paidAt + 72 * 3600 },
+  year: { name: 'For ett år', amount: 29900, ends: plusOneYear },
+  // (the game's page no longer offers Livstid since the price model of 2026-10-20; this edition, which is not in use, still takes it)
   lifetime: { name: 'Livstid', amount: 29900, ends: () => null },
 };
 
-const PRICE_VARS = { evening: 'PRICE_EVENING', year: 'PRICE_YEAR', lifetime: 'PRICE_LIFETIME' };
+const PRICE_VARS = { evening: 'PRICE_EVENING', weekend: 'PRICE_WEEKEND', year: 'PRICE_YEAR', lifetime: 'PRICE_LIFETIME' };
 const VIPPS_VERSION = '2026-09-30.preview; vipps_preview=v1';
 const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const te = new TextEncoder();

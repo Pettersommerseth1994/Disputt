@@ -43,7 +43,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt to runder gratis/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
-  for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
+  for (const [name, price] of [['En kveld', 149], ['En helg', 199], ['For ett år', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Betal med kort/);
   assert.match(paywall, /Jeg godtar vilkårene og at tilgangen leveres med en gang\./);
   assert.doesNotMatch(paywall, /Betal med (Vipps|Apple Pay)/, 'the shop lets the customer choose the way to pay: there is one button');
@@ -68,7 +68,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   await clickButton(host, 'Betal med kort');
   const first = await shopTab(host);
   assert.equal((await host.ctx.pages()).length, pagesBefore + 1, 'the shop opened in a new tab, and the game is still where it was');
-  assert.equal(await first.$eval('#amount', (el) => el.textContent), '89 kr');
+  assert.equal(await first.$eval('#amount', (el) => el.textContent), '149 kr');
   assert.match(await first.$eval('#what', (el) => el.textContent), /evening/);
   const attributes = await first.$eval('#attributes', (el) => el.textContent);
   assert.match(attributes, /samtykke: \d{4}-\d{2}-\d{2}T[\d:.]+Z/, 'the time of the consent is on the order');
@@ -107,12 +107,12 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   assert.equal(stack.orders.length, orders, 'and nothing was bought');
   log('a closed tab is no payment: the host can open the shop again, or give up, and the guests never notice');
 
-  // 2) "Livstid", paid in the new tab: the game tab finds the payment itself
-  await choosePlan(host, 'lifetime');
+  // 2) "En helg", paid in the new tab: the game tab finds the payment itself
+  await choosePlan(host, 'weekend');
   await tick(host);
   await clickButton(host, 'Betal med kort');
   const shop = await shopTab(host);
-  assert.equal(await shop.$eval('#amount', (el) => el.textContent), '299 kr');
+  assert.equal(await shop.$eval('#amount', (el) => el.textContent), '199 kr');
   const code = await codeOnCheckout(shop);
   assert.notEqual(code, firstCode, 'a new try is a new code');
   if (holdMs) {
@@ -136,8 +136,8 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   await stack.release();
   await waitText(host, /Velkommen!/, 30000);
   const thanks = await host.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
-  assert.match(thanks, /Livstid/);
-  assert.match(thanks, /Gjelder for alltid/);
+  assert.match(thanks, /En helg/);
+  assert.match(thanks, /Gjelder til/);
   assert.match(thanks, /Den står også i bestillingsbekreftelsen på e-post/);
   const shown = (await host.page.$eval('.passcode', (el) => el.textContent)).trim();
   assert.equal(shown, code, 'the code on the thank-you sheet is the one on the order');
@@ -195,7 +195,7 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   const orders = stack.orders.length;
   await clickButton(phone, 'Betal med kort');
   await phone.page.waitForFunction(() => location.pathname.startsWith('/checkouts/'), { timeout: 20000 });
-  assert.equal(await phone.page.$eval('#amount', (el) => el.textContent), '249 kr');
+  assert.equal(await phone.page.$eval('#amount', (el) => el.textContent), '299 kr');
   await phone.page.click('#pay');
   await phone.page.waitForSelector('#thanks');
   assert.equal(stack.orders.length, orders + 1);

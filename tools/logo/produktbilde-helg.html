@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Disputt: produktbilde «En helg»</title>
+<!--
+  Produktbildet til «Disputt – En helg (72 timer)» i Shopify, i samme stil som bildene til «En kveld» og «For ett år»: burgunder bunn med
+  krittekstur, kremfarget tittel, en tegning i midten og lengden i gult. 2048 x 2048 piksler (1024 x 1024 i dobbel oppløsning).
+  Lag det på nytt med `node tools/logo/produktbilde.mjs`, som tegner denne siden og legger bildet i ~/Disputt-Produktbilder/.
+-->
+<style>
+  @font-face { font-family: 'Disputt Display'; src: url('../../public/assets/fonts/fraunces-italic.woff2') format('woff2'); font-weight: 600 900; }
+  @font-face { font-family: 'Disputt Text'; src: url('../../public/assets/fonts/lora-italic.woff2') format('woff2'); font-weight: 400 700; font-style: italic; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; }
+  body {
+    position: relative;
+    background: url('../../public/assets/textures/grain-soft.png'), url('../../public/assets/textures/crayon-dark.png'), #6a1428;
+    color: #f8e6b8;
+    font-family: 'Disputt Display', serif;
+    font-weight: 900;
+    text-align: center;
+  }
+  .title, .name { position: absolute; left: 0; right: 0; margin: 0; line-height: 1; text-shadow: 0 7px 0 rgba(32, 12, 6, 0.55); }
+  .title { top: 58px; font-size: 148px; }
+  .name { top: 758px; font-size: 128px; }
+  .length { position: absolute; left: 0; right: 0; top: 905px; font: italic 600 44px 'Disputt Text', serif; color: #fae025; }
+  img { position: absolute; }
+  .cabin { left: 212px; top: 275px; width: 600px; transform: rotate(-2deg); filter: drop-shadow(0 12px 0 rgba(32, 12, 6, 0.45)); }
+  .moon { left: 686px; top: 262px; width: 126px; transform: rotate(12deg); }
+  .star { left: 705px; top: 258px; width: 110px; }
+  .s1 { left: 170px; top: 300px; width: 78px; }
+  .s2 { left: 842px; top: 462px; width: 96px; }
+  .s3 { left: 120px; top: 560px; width: 60px; }
+  .circle { left: 150px; top: 215px; width: 724px; transform: rotate(8deg); opacity: 0.9; }
+</style>
+<body>
+  <p class="title">Disputt</p>
+  <img class="star" src="../../public/assets/art/star.svg" alt="">
+  <img class="s1" src="../../public/assets/art/sparkle.svg" alt="">
+  <img class="s2" src="../../public/assets/art/sparkle.svg" alt="">
+  <img class="s3" src="../../public/assets/art/sparkle.svg" alt="">
+  <img class="cabin" src="../../public/assets/art/hytte.svg" alt="">
+  <p class="name">En helg</p>
+  <p class="length">72 timer</p>
+</body>

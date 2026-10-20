@@ -37,7 +37,9 @@
 //   JWT_PRIVATE_KEY         secret   the private signing key, base64 of the PKCS#8 DER (docs/BETALING.md shows how to make it)
 //   SITE_URL                text     where the game lives, e.g. https://disputt.site/
 //   SHOP_URL                text     the shop, e.g. https://shop.disputt.site
-//   VARIANT_EVENING, VARIANT_YEAR, VARIANT_LIFETIME   text   the variant ids of the three products (numbers)
+//   VARIANT_EVENING, VARIANT_YEAR   text   the variant ids of the two products that are always for sale (numbers)
+//   VARIANT_WEEKEND         text     the variant id of the weekend product (72 hours); until it is set, the weekend is not offered
+//   VARIANT_LIFETIME        text     no longer for sale; may stay set so that orders of it that are paid later still count, or be left out
 //   ACCEPT_TEST_ORDERS      text     optional: "true" while testing with Shopify's test mode, so that test orders count. Never in live use.
 // ... and for the button «Betal med Vipps» (all of them, or the button stays hidden; docs/VIPPS.md):
 //   VIPPS_ENABLED           text     "true" shows the button. Everything below must be set too.
@@ -66,11 +68,15 @@ function plusOneYear(seconds) {
  */
 const PLANS = {
   evening: { name: 'En kveld', rank: 1, ends: (paidAt) => paidAt + 12 * 3600 },
-  year: { name: 'For ett år', rank: 2, ends: plusOneYear },
-  lifetime: { name: 'Livstid', rank: 3, ends: () => null },
+  weekend: { name: 'En helg', rank: 2, ends: (paidAt) => paidAt + 72 * 3600 },
+  year: { name: 'For ett år', rank: 3, ends: plusOneYear },
+  // not for sale any more (the price model of 2026-10-20), but passes and orders of it keep working, so it stays here
+  lifetime: { name: 'Livstid', rank: 4, ends: () => null, retired: true },
 };
 
-const VARIANT_VARS = { evening: 'VARIANT_EVENING', year: 'VARIANT_YEAR', lifetime: 'VARIANT_LIFETIME' };
+const VARIANT_VARS = { evening: 'VARIANT_EVENING', weekend: 'VARIANT_WEEKEND', year: 'VARIANT_YEAR', lifetime: 'VARIANT_LIFETIME' };
+/** The ones that must be set for the shop to work at all: the weekend is added when its product exists. */
+const REQUIRED_VARIANTS = ['evening', 'year'];
 const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const te = new TextEncoder();
 const MAX_WEBHOOK_BYTES = 1_000_000;
@@ -153,6 +159,9 @@ function variantIds(env) {
   }
   return ids;
 }
+
+/** The packages that are for sale: not the retired ones, and only those that have a variant. */
+const forSale = (env) => Object.keys(PLANS).filter((plan) => !PLANS[plan].retired && variantIds(env)[plan]);
 
 // ------------------------------------------------------------------------------------------------ passes
 
@@ -290,7 +299,7 @@ async function orderPaid(env, order) {
   if (order.financial_status !== 'paid') return ignored('not_paid', `financial_status ${String(order.financial_status).slice(0, 30)}`);
   const ids = variantIds(env);
   const plansByVariant = new Map(Object.entries(ids).map(([plan, id]) => [id, plan]));
-  if (plansByVariant.size === 0) throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp ennå (VARIANT_EVENING, VARIANT_YEAR og VARIANT_LIFETIME mangler).');
+  if (plansByVariant.size === 0) throw new HttpError(503, 'unavailable', 'Betalingen er ikke satt opp ennå (VARIANT_EVENING og VARIANT_YEAR mangler).');
   const lines = Array.isArray(order.line_items) ? order.line_items : [];
   const plan = lines
     .map((line) => plansByVariant.get(String(line?.variant_id)))
@@ -864,7 +873,7 @@ async function checkDiscount(env, rawCode) {
   if (discount.status !== 'ACTIVE') throw new HttpError(400, 'discount_inactive', 'Rabattkoden er ikke gyldig akkurat nå.');
   const code = text.toUpperCase();
   const plans = {};
-  for (const plan of Object.keys(PLANS)) plans[plan] = priceWith(discount, await variantInfo(env, plan));
+  for (const plan of forSale(env)) plans[plan] = priceWith(discount, await variantInfo(env, plan));
   if (Object.values(plans).every((p) => p.now === p.price)) throw new HttpError(400, 'discount_none', 'Rabattkoden gjelder ikke disse pakkene.');
   if (discount.usageLimit !== null && discount.usageLimit !== undefined) {
     // (what the shop has counted, and what has been paid with Vipps with it: those are not counted in the shop)
@@ -885,7 +894,7 @@ async function discountEndpoint(request, env) {
 
 async function vippsStart(request, env) {
   const body = await readJson(request);
-  const plan = typeof body.plan === 'string' && Object.hasOwn(PLANS, body.plan) ? body.plan : null;
+  const plan = typeof body.plan === 'string' && forSale(env).includes(body.plan) ? body.plan : null;
   if (!plan) throw bad('Ukjent pakke.');
   const code = normalizeCode(body.code);
   if (!code) throw bad('Koden ser ikke riktig ut.');
@@ -1073,7 +1082,7 @@ async function vippsAdminCheck(request, env) {
     await shopifyToken(env, true);
     out.shopify = true;
     out.prices = {};
-    for (const plan of Object.keys(PLANS)) out.prices[plan] = (await variantInfo(env, plan)).amount / 100;
+    for (const plan of forSale(env)) out.prices[plan] = (await variantInfo(env, plan)).amount / 100;
   } catch (err) {
     out.shopifyError = trouble(err);
     out.prices = null;
@@ -1110,7 +1119,9 @@ async function readJson(request) {
  */
 function shop(env) {
   const ids = variantIds(env);
-  for (const [plan, name] of Object.entries(VARIANT_VARS)) if (!ids[plan]) throw new HttpError(503, 'unavailable', `Betalingen er ikke satt opp ennå (${name} mangler).`);
+  for (const plan of REQUIRED_VARIANTS) if (!ids[plan]) throw new HttpError(503, 'unavailable', `Betalingen er ikke satt opp ennå (${VARIANT_VARS[plan]} mangler).`);
+  // (the page offers the packages that have a variant here, the retired one excepted; the Livstid variant is still handed out so that a page
+  // that was cached before the change, and wants all three, keeps working)
   return { shop: shopOrigin(env), variants: ids, vipps: vippsProblem(env) === null, vippsApp: vippsProblem(env) === null, discounts: shopifySet(env) };
 }
 
@@ -1160,7 +1171,7 @@ async function restore(request, env) {
 
 /** What is set and what is not, so that a person setting this up can see it (true or false, never the values). */
 async function health(env) {
-  const set = { database: false, webhookSecret: webhookSecret(env).length >= MIN_SECRET, signingKey: false, shop: false, ...Object.fromEntries(Object.keys(VARIANT_VARS).map((p) => [p, Boolean(variantIds(env)[p])])) };
+  const set = { database: false, webhookSecret: webhookSecret(env).length >= MIN_SECRET, signingKey: false, shop: false, ...Object.fromEntries(Object.keys(VARIANT_VARS).filter((p) => !PLANS[p].retired).map((p) => [p, Boolean(variantIds(env)[p])])) };
   try {
     await (await database(env)).prepare('SELECT 1 AS ok').first();
     set.database = true;

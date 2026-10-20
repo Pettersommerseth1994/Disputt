@@ -41,7 +41,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   await waitText(host, /Fortsett quizen/);
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt to runder gratis/);
-  for (const [name, price] of [['En kveld', 89], ['For ett år', 249], ['Livstid', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
+  for (const [name, price] of [['En kveld', 149], ['En helg', 199], ['For ett år', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Betal med Vipps/);
   assert.match(paywall, /Betal med Apple Pay/);
   assert.match(paywall, /Allerede kunde\?/);
@@ -61,9 +61,9 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   await onStripe(host);
   const first = lastSession(stack);
   assert.equal(first.metadata.plan, 'evening');
-  assert.equal(first.amount_total, 8900);
+  assert.equal(first.amount_total, 14900);
   assert.deepEqual(first.allowed_payment_method_types, ['card'], 'Apple Pay is part of "card" on Stripe\'s page');
-  await waitText(host, /89 kr/);
+  await waitText(host, /149 kr/);
   // the guests are told where the host is
   await waitText(guest, /Verten betaler/, 25000);
   await shot(guest, '21-guest-host-pays');
@@ -76,16 +76,16 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   }
   log('a cancelled payment leaves the game as it was, and the guests are back');
 
-  // 2) "Livstid" with Vipps, paid
+  // 2) "En helg" with Vipps, paid
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
-  await choosePlan(host, 'lifetime');
+  await choosePlan(host, 'weekend');
   await clickButton(host, 'Betal med Vipps');
   await onStripe(host);
   const second = lastSession(stack);
-  assert.equal(second.metadata.plan, 'lifetime');
-  assert.equal(second.amount_total, 29900);
+  assert.equal(second.metadata.plan, 'weekend');
+  assert.equal(second.amount_total, 19900);
   assert.deepEqual(second.allowed_payment_method_types, ['vipps']);
   // the code is on Stripe's page too, so that a customer who pays always has it
   const shown = (await host.page.$eval('#note', (el) => el.textContent)).match(/\*\*([0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4})\*\*/)?.[1];
@@ -105,8 +105,8 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   await host.page.click('#pay');
   await waitText(host, /Velkommen!/, 30000);
   const thanks = await host.page.$eval('.sheet', (el) => el.innerText.replace(/\s+/g, ' '));
-  assert.match(thanks, /Livstid/);
-  assert.match(thanks, /Gjelder for alltid/);
+  assert.match(thanks, /En helg/);
+  assert.match(thanks, /Gjelder til/);
   const code = (await host.page.$eval('.passcode', (el) => el.textContent)).trim();
   assert.match(code, CODE, 'the code on the thank-you sheet');
   const stored = await storedPass(host);
@@ -114,7 +114,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   assert.equal(stored.token.split('.').length, 3, 'a signed pass is kept on the phone');
   const paid = [...stack.fake.payments.values()].at(-1);
   assert.equal(paid.metadata.code, code, 'the code on the sheet is the one in the receipt');
-  assert.equal(paid.amount, 29900);
+  assert.equal(paid.amount, 19900);
   assert.equal(new URL(host.page.url()).search, '');
   const sheetButtons = await host.page.$$eval('.sheet button', (els) => els.map((b) => b.innerText.trim()));
   assert.ok(sheetButtons.includes('Start runde 3'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
@@ -150,7 +150,7 @@ export async function buyAndComeBackByTheBackButton(t, { base, stack }) {
   await onStripe(phone);
   const session = lastSession(stack);
   assert.equal(session.metadata.plan, 'year');
-  assert.equal(session.amount_total, 24900);
+  assert.equal(session.amount_total, 29900);
   // (the page remembered where it sent the customer, in this tab's own storage, which Stripe's page cannot see)
   // the customer pays in the app, not on this page: the redirect never happens
   stack.fake.pay(session.id);
@@ -202,7 +202,7 @@ export async function restoreOnNewPhone(t, { base, code }) {
 
   // "Min tilgang" on the start screen: what the phone has, and taking it off takes two taps
   await clickButton(phone, 'Min tilgang');
-  await waitText(phone, /Du har tilgang: Livstid/);
+  await waitText(phone, /Du har tilgang: En helg/);
   assert.ok((await bodyText(phone)).includes(code));
   await shot(phone, '24-access');
   await clickButton(phone, 'Fjern tilgangen fra denne telefonen');

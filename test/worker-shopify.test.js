@@ -31,7 +31,7 @@ describe('health', () => {
       mode: 'live',
       site: SITE,
       shop: SHOP,
-      set: { database: true, webhookSecret: true, signingKey: true, shop: true, evening: true, year: true, lifetime: true },
+      set: { database: true, webhookSecret: true, signingKey: true, shop: true, evening: true, weekend: true, year: true },
       // (Vipps is not set up here: test/worker-vipps.test.js is about it)
       vipps: {
         enabled: false,
@@ -51,17 +51,18 @@ describe('health', () => {
   });
 
   it('shows each missing part as false, so that a person setting it up can see what is left', async () => {
-    for (const [name, key] of [['database', 'DB'], ['webhookSecret', 'SHOPIFY_WEBHOOK_SECRET'], ['signingKey', 'JWT_PRIVATE_KEY'], ['shop', 'SHOP_URL'], ['year', 'VARIANT_YEAR']]) {
+    for (const [name, key] of [['database', 'DB'], ['webhookSecret', 'SHOPIFY_WEBHOOK_SECRET'], ['signingKey', 'JWT_PRIVATE_KEY'], ['shop', 'SHOP_URL'], ['weekend', 'VARIANT_WEEKEND'], ['year', 'VARIANT_YEAR']]) {
       const { call } = await setupShopify({ [key]: undefined });
       const r = await json(await call('/health'));
       assert.equal(r.status, 200);
       assert.equal(r.body.set[name], false, `${key} missing`);
       assert.equal(Object.values(r.body.set).filter((v) => !v).length, 1, 'and only that');
     }
-    const garbled = await setupShopify({ JWT_PRIVATE_KEY: 'not a key', VARIANT_LIFETIME: 'abc' });
+    const garbled = await setupShopify({ JWT_PRIVATE_KEY: 'not a key', VARIANT_WEEKEND: 'abc' });
     const g = await json(await garbled.call('/health'));
     assert.equal(g.body.set.signingKey, false);
-    assert.equal(g.body.set.lifetime, false, 'a variant id is a number');
+    assert.equal(g.body.set.weekend, false, 'a variant id is a number');
+    assert.equal('lifetime' in g.body.set, false, 'and the package that is no longer sold is not on the list');
   });
 
   it('makes its tables the first time it is asked, and only needs an empty database', async () => {
@@ -171,6 +172,14 @@ describe('GET /shop', () => {
     assert.equal((await json(await t.call('/shop'))).status, 503);
   });
 
+  it('leaves the weekend out until its variant is set, and goes on selling the rest', async () => {
+    delete t.env.VARIANT_WEEKEND;
+    const r = await json(await t.call('/shop'));
+    assert.equal(r.status, 200);
+    assert.equal('weekend' in r.body.variants, false);
+    assert.equal(r.body.variants.evening, VARIANTS.evening);
+  });
+
   it('says it is not set up when a package has no variant', async () => {
     t.env.VARIANT_YEAR = '';
     const r = await json(await t.call('/shop'));
@@ -251,7 +260,7 @@ describe('POST /shopify/webhook: orders/paid', () => {
       plan: 'year',
       paid_at: Math.floor(Date.parse(o.processed_at) / 1000),
       consented_at: Math.floor(Date.parse(o.note_attributes.find((a) => a.name === 'samtykke').value) / 1000),
-      amount: 24900,
+      amount: 29900,
       currency: 'NOK',
       name: o.name,
       test: 0,
@@ -273,7 +282,7 @@ describe('POST /shopify/webhook: orders/paid', () => {
     const disputed = order({ code: 'MMMM-MMMM-MMM1' });
     for (const o of [cancelled, refunded, disputed]) await t.deliver('orders/paid', o);
     await t.deliver('orders/cancelled', cancelled);
-    await t.deliver('refunds/create', refund(refunded.id, '249.00'));
+    await t.deliver('refunds/create', refund(refunded.id, '299.00'));
     await t.deliver('disputes/create', dispute(disputed.id));
     for (const o of [cancelled, refunded, disputed]) assert.equal((await t.deliver('orders/paid', o)).status, 200);
     assert.deepEqual(rows().map((r) => r.state).sort(), ['cancelled', 'disputed', 'refunded']);
@@ -373,7 +382,7 @@ describe('POST /shopify/webhook: orders/paid', () => {
   });
 
   it('says it is not set up, and not "ignored", when it does not know the variants', async () => {
-    for (const name of ['VARIANT_EVENING', 'VARIANT_YEAR', 'VARIANT_LIFETIME']) delete t.env[name];
+    for (const name of ['VARIANT_EVENING', 'VARIANT_WEEKEND', 'VARIANT_YEAR', 'VARIANT_LIFETIME']) delete t.env[name];
     const r = await json(await t.deliver('orders/paid', order()));
     assert.equal(r.status, 503, 'Shopify tries again later, when the set-up is done');
   });
@@ -406,11 +415,11 @@ describe('POST /shopify/webhook: cancelled, refunded, disputed', () => {
     await t.deliver('refunds/create', refund(o.id, '100.00'));
     assert.equal((await claim()).status, 200, 'a part of it back (a goodwill refund) does not take the access away');
     assert.equal(rows()[0].refunded, 10000);
-    await t.deliver('refunds/create', refund(o.id, '149.00'));
+    await t.deliver('refunds/create', refund(o.id, '199.00'));
     const r = await claim();
     assert.equal(r.status, 410);
     assert.equal(r.body.error, 'refunded');
-    assert.equal(rows()[0].refunded, 24900);
+    assert.equal(rows()[0].refunded, 29900);
   });
 
   it('counts a refund once, however many times Shopify calls about it, and does not count one that did not go through', async () => {
@@ -428,27 +437,27 @@ describe('POST /shopify/webhook: cancelled, refunded, disputed', () => {
 
   it('counts a refund that has been asked for but has not cleared yet (a payment app such as Vipps), and stops the code at once', async () => {
     const { order: o } = await t.pay({ plan: 'year' });
-    await t.deliver('refunds/create', refund(o.id, '249.00', { status: 'pending' }));
+    await t.deliver('refunds/create', refund(o.id, '299.00', { status: 'pending' }));
     assert.equal((await claim()).body.error, 'refunded');
   });
 
   it('counts a refund that does not say which currency it is in as one in the currency of the order', async () => {
     const { order: o } = await t.pay({ plan: 'evening' });
-    await t.deliver('refunds/create', { id: 77, order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '89.00' }] });
+    await t.deliver('refunds/create', { id: 77, order_id: o.id, transactions: [{ kind: 'refund', status: 'success', amount: '149.00' }] });
     assert.equal((await claim()).body.error, 'refunded');
   });
 
   it('counts a refund only in the currency of the order: a sum in another currency is not the same sum', async () => {
     const { order: o } = await t.pay({ plan: 'year' });
     await t.deliver('refunds/create', refund(o.id, '36.00', { currency: 'EUR' }));
-    await t.deliver('refunds/create', refund(o.id, '249.00', { currency: 'EUR' }));
+    await t.deliver('refunds/create', refund(o.id, '299.00', { currency: 'EUR' }));
     assert.equal(rows()[0].refunded, 0, 'what was paid back in euros does not add up to what was paid in kroner');
     assert.equal((await claim()).status, 200);
   });
 
   it('applies a refund that Shopify\'s calls delivered before the order', async () => {
     const o = order({ plan: 'evening' });
-    await t.deliver('refunds/create', refund(o.id, '89.00'));
+    await t.deliver('refunds/create', refund(o.id, '149.00'));
     await t.deliver('orders/paid', o);
     assert.equal((await claim()).body.error, 'refunded');
   });
@@ -516,6 +525,20 @@ describe('POST /restore: the pass for a code', () => {
     const c = await claim('DDDD-DDDD-DDD1');
     assert.equal(c.body.expiresAt, null);
     assert.equal((await verifyPass(c.body.token, t.keys.publicKey)).pass.expiresAt, null);
+  });
+
+  it('counts "En helg" as 72 hours from the payment, and lets it count for more than a night and less than a year', async () => {
+    await t.pay({ plan: 'weekend' });
+    const a = await claim();
+    assert.equal(a.body.plan, 'weekend');
+    assert.equal(a.body.expiresAt, a.body.paidAt + 72 * HOUR);
+    assert.equal((await verifyPass(a.body.token, t.keys.publicKey)).pass.plan, 'weekend');
+    await t.pay({ code: 'EEEE-EEEE-EEE1', lines: [{ plan: 'evening' }, { plan: 'weekend' }] });
+    assert.equal((await claim('EEEE-EEEE-EEE1')).body.plan, 'weekend');
+    await t.pay({ code: 'FFFF-FFFF-FFF1', lines: [{ plan: 'weekend' }, { plan: 'year' }] });
+    assert.equal((await claim('FFFF-FFFF-FFF1')).body.plan, 'year');
+    await t.pay({ plan: 'weekend', code: 'GGGG-GGGG-GGG1', paidAt: new Date(Date.now() - 73 * HOUR) });
+    assert.equal((await claim('GGGG-GGGG-GGG1')).body.error, 'expired', 'and after 72 hours it has run out');
   });
 
   it('says that it knows no payment with the code to one it has not heard of (yet), so that the page asks again', async () => {
@@ -594,7 +617,7 @@ describe('POST /restore: a customer on a new phone', () => {
     assert.equal(unknown.status, 404);
     assert.match(unknown.body.message, /Fant ingen betaling/);
     const { order: o } = await t.pay({ plan: 'year' });
-    await t.deliver('refunds/create', refund(o.id, '249.00'));
+    await t.deliver('refunds/create', refund(o.id, '299.00'));
     assert.equal((await post(CODE)).body.error, 'refunded');
     await t.pay({ plan: 'evening', code: 'HHHH-HHHH-HHH1', paidAt: new Date(Date.now() - 13 * HOUR) });
     assert.equal((await post('HHHH-HHHH-HHH1')).body.error, 'expired');

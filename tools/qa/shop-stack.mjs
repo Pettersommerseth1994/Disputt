@@ -48,6 +48,7 @@ export async function startShopStack({ vipps = false } = {}) {
     SITE_URL: 'http://127.0.0.1:1/', // set by setSite(): the game's own address, which is only known once the site is up
     SHOP_URL: '', // this server, once it is up
     VARIANT_EVENING: VARIANTS.evening,
+    VARIANT_WEEKEND: VARIANTS.weekend,
     VARIANT_YEAR: VARIANTS.year,
     VARIANT_LIFETIME: VARIANTS.lifetime,
     ACCEPT_TEST_ORDERS: 'false',

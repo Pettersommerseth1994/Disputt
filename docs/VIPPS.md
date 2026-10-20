@@ -258,7 +258,7 @@ Sjekken prøver hver forbindelse for seg og sier hva som virker. Den viser aldri
 curl -s -H "Authorization: Bearer $ADMIN_TOKEN" https://disputt-pay-shopify-test.<ditt-navn>.workers.dev/vipps/admin/check
 ```
 
-**Du skal se** (omtrent): `{"ok":true,"env":"test","enabled":false,"problem":null,"vipps":true,"webhook":true,"shopify":true,"prices":{"evening":89,"year":249,"lifetime":299}}`. Alt skal være `true`, og prisene skal være dem du har satt i Shopify.
+**Du skal se** (omtrent): `{"ok":true,"env":"test","enabled":false,"problem":null,"vipps":true,"webhook":true,"shopify":true,"prices":{"evening":149,"weekend":199,"year":299}}`. Alt skal være `true`, og prisene skal være dem du har satt i Shopify.
 
 | Du ser … | Betyr |
 | --- | --- |
@@ -333,7 +333,7 @@ npm run qa:overlap        # ingen tekst oppå annen tekst, heller ikke på betal
 3. - [ ] **Registrer webhooken for den ekte Workeren** ([del 5.5](#55-registrer-webhooken-hos-vipps)), med den ekte Worker-adressen, og kjør sjekken ([del 5.6](#56-kjør-sjekken)). Skal vise `"env":"live"` og alt `true`.
 4. - [ ] **Vipps vil se at løpet fungerer i produksjon.** Vipps' egen liste for direkte integrasjoner sier: kjør en komplett ordre i produksjon som ender i **AUTHORIZED, CAPTURED, REFUNDED og CANCELLED**, og sjekk helst det via API-et. Slik gjør du det med Disputt: kjøp «En kveld» (89 kr) med din egen Vipps (da er betalingen **AUTHORIZED** og **CAPTURED**: betalingsserveren tar ut pengene med en gang), og refunder den (**REFUNDED**, [del 8](#8-drift)). Disputt kansellerer nesten aldri selv: en godkjent betaling tas alltid ut med en gang. Den eneste kanselleringen er om beløpet hos Vipps ikke er det Disputt ba om (da tas ingenting ut, og beløpet som er reservert slippes), og det skal ikke skje. Skulle Vipps kreve å se en kansellering også (**CANCELLED**), si fra til meg, så finner vi en måte å lage den på. Ellers er kravene: Vipps' merkevare skal brukes etter designreglene deres (**se del 10: knappen vår er tegnet i spillets stil, så spør Vipps om den godtas**), håndter betalinger som avbrytes eller går ut (det gjør vi), og abonner på **Vipps MobilePay Operational Status Page** (lenke under [kilder](#11-kilder)).
 5. - [ ] **Sett `VIPPS_ENABLED` = `true`** i den ekte Workeren. Spillet viser knappen neste gang siden lastes.
-6. - [ ] **Ett lite, ekte kjøp** med din egen Vipps: «En kveld» på 89 kr. Sjekk at «Velkommen!» og e-posten kommer, og at ordren står i Shopify med riktig pris og mva. Refunder så kjøpet i Vipps-portalen og i Shopify ([del 8](#8-drift)), og sjekk at «Logg inn» med koden nå sier at betalingen er refundert.
+6. - [ ] **Ett lite, ekte kjøp** med din egen Vipps: «En kveld» på 149 kr. Sjekk at «Velkommen!» og e-posten kommer, og at ordren står i Shopify med riktig pris og mva. Refunder så kjøpet i Vipps-portalen og i Shopify ([del 8](#8-drift)), og sjekk at «Logg inn» med koden nå sier at betalingen er refundert.
 7. - [ ] **Skru av igjen når som helst:** slett `VIPPS_ENABLED` (eller sett den til `false`). Knappen forsvinner neste gang siden lastes. Betalinger som allerede er i gang blir ferdige likevel, og klokken fortsetter.
 
 ## 8. Drift

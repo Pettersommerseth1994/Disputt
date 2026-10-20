@@ -16,6 +16,8 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 | **For ett år** (mest populær) | 249 kr | 12 måneder fra betalingen |
 | **Livstid** (best verdi) | 299 kr | én betaling, ingen utløpsdato |
 
+> **Merk (20. oktober 2026):** Stripe-utgaven brukes ikke, og denne guiden er ikke skrevet om. Prismodellen i koden er nå En kveld 149 kr, En helg 199 kr (72 timer, `PRICE_WEEKEND`) og For ett år 299 kr, og spillet tilbyr ikke Livstid lenger (Stripe-Workeren tar den fortsatt imot). Tallene og tabellene under er de gamle. Hva som gjelder nå, står i [SHOPIFY.md](SHOPIFY.md).
+
 Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betaler; de andre spiller gratis på sine egne telefoner.
 
 <table>

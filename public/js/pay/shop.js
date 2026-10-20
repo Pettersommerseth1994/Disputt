@@ -11,7 +11,8 @@ import { PayError, restoreWithCode } from './payments.js';
 
 const WAITING_KEY = 'disputt:shop'; // sessionStorage: the payment this tab sent the host to make, until the pass has been fetched
 const WAITING_MAX_MS = 2 * 60 * 60_000; // a payment that was started and never finished is forgotten after two hours
-const PLAN_IDS = ['evening', 'year', 'lifetime'];
+const PLAN_IDS = ['evening', 'weekend', 'year']; // (what is for sale; Livstid is not)
+const REQUIRED = ['evening', 'year']; // (the weekend is offered when the shop has a variant for it)
 /** How often to ask: every few seconds for the first minutes (the host is paying right now), then now and then. */
 export const POLL = { fastMs: 3000, fastForMs: 3 * 60_000, slowMs: 15_000 };
 
@@ -21,7 +22,7 @@ const isLocal = (h) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
 let shopInfo = null;
 let shopAsk = null;
 
-/** What the payment server says about the shop: { shop: 'https://…', variants: { evening, year, lifetime }, vipps }. Asked once. `vipps`: show «Betal med Vipps». */
+/** What the payment server says about the shop: { shop: 'https://…', variants: { evening, weekend?, year }, vipps }. Asked once. `vipps`: show «Betal med Vipps». */
 export function loadShop() {
   if (shopInfo) return Promise.resolve(shopInfo);
   shopAsk ??= (async () => {
@@ -39,9 +40,9 @@ export function loadShop() {
     } catch {
       /* refused below */
     }
-    const variants = Object.fromEntries(PLAN_IDS.map((plan) => [plan, String(data.variants?.[plan] ?? '')]));
+    const variants = Object.fromEntries(PLAN_IDS.map((plan) => [plan, String(data.variants?.[plan] ?? '')]).map(([plan, id]) => [plan, /^\d{5,20}$/.test(id) || REQUIRED.includes(plan) ? id : '']));
     // (a page that does not get a proper address is not sent anywhere)
-    if (!target || (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) || PLAN_IDS.some((plan) => !/^\d{5,20}$/.test(variants[plan]))) {
+    if (!target || (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) || REQUIRED.some((plan) => !/^\d{5,20}$/.test(variants[plan]))) {
       throw new PayError('server', 'Fikk en betalingsside vi ikke stoler på.');
     }
     return (shopInfo = { shop: target.origin, variants, vipps: data.vipps === true, vippsApp: data.vippsApp === true, discounts: data.discounts === true });

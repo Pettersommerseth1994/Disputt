@@ -22,6 +22,7 @@ export async function setupShopify(overrides = {}) {
     SITE_URL: SITE,
     SHOP_URL: `${SHOP}/`,
     VARIANT_EVENING: VARIANTS.evening,
+    VARIANT_WEEKEND: VARIANTS.weekend,
     VARIANT_YEAR: VARIANTS.year,
     VARIANT_LIFETIME: VARIANTS.lifetime,
     ...overrides,

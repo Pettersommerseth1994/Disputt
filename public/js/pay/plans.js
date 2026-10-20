@@ -7,32 +7,42 @@ export const PLANS = [
   {
     id: 'evening',
     name: 'En kveld',
-    price: 89,
+    price: 149,
     length: '12 timer',
     detail: 'Til én spillkveld eller biltur. Gjelder i 12 timer fra du betaler, og fornyes ikke av seg selv.',
   },
   {
+    id: 'weekend',
+    name: 'En helg',
+    price: 199,
+    length: '72 timer',
+    detail: 'Til en helg eller hyttetur. Gjelder i 72 timer fra du betaler, og fornyes ikke av seg selv.',
+  },
+  {
     id: 'year',
     name: 'For ett år',
-    price: 249,
+    price: 299,
     length: '12 måneder',
     detail: 'For faste spillekvelder. Gjelder i 12 måneder fra du betaler, og fornyes ikke av seg selv.',
     badge: 'Mest populær',
   },
+];
+
+/** Not for sale since 2026-10-20, but what a host who bought it earlier has on their phone is still told by name. */
+const RETIRED_PLANS = [
   {
     id: 'lifetime',
     name: 'Livstid',
     price: 299,
     length: 'Én betaling',
     detail: 'Betal én gang, spill for alltid. Gjelder så lenge Disputt finnes.',
-    badge: 'Best verdi',
   },
 ];
 
 /** The package that is chosen when the page opens. */
 export const DEFAULT_PLAN = 'year';
 
-export const planById = (id) => PLANS.find((p) => p.id === id) ?? null;
+export const planById = (id) => PLANS.find((p) => p.id === id) ?? RETIRED_PLANS.find((p) => p.id === id) ?? null;
 
 /** What every package gives. Only the host pays: the others play for free, whatever the host has bought. */
 export const PERKS = [

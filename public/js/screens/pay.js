@@ -10,10 +10,11 @@ import { cx } from '../util.js';
 import { formatCodeInput, isActive, normalizeCode } from '../pay/pass.js';
 import { requestNextRound } from '../pay/gate.js';
 import { forgetPass, restoreWithCode, startCheckout } from '../pay/payments.js';
-import { DEFAULT_PLAN, PERKS, PLANS, describeValidity, formatPrice, planById } from '../pay/plans.js';
+import { DEFAULT_PLAN, PERKS, describeValidity, formatPrice, planById } from '../pay/plans.js';
 import { dealFor, kr } from '../pay/discount.js';
 import { DiscountField } from './discount.js';
 import { ShopDock } from './shoppay.js';
+import { useOffered } from './offer.js';
 
 const close = () => setStore({ sheet: null });
 const COUNT = ['ingen', 'én', 'to', 'tre', 'fire', 'fem'];
@@ -70,7 +71,9 @@ function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
 export function Paywall({ view = null }) {
   const s = useStore();
   const pay = s.payments;
-  const [plan, setPlan] = useState(s.payWaiting?.plan ?? DEFAULT_PLAN); // (a payment that is waited for keeps its package chosen, also after a reload)
+  const offered = useOffered(pay.provider);
+  const [picked, setPlan] = useState(s.payWaiting?.plan ?? DEFAULT_PLAN); // (a payment that is waited for keeps its package chosen, also after a reload)
+  const plan = offered.some((p) => p.id === picked) ? picked : (offered.find((p) => p.id === DEFAULT_PLAN) ?? offered[0]).id; // (one that is not for sale here is not chosen)
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState('');
   // coming back with the back button must not leave the buttons waiting for a page that never opens
@@ -106,7 +109,7 @@ export function Paywall({ view = null }) {
     ${have && html`<p class="chip chip--yellow paywall__have" role="status">Du har tilgang: ${planById(s.pass.plan)?.name} · ${describeValidity(s.pass)}</p>`}
 
     <div class="plans" role="radiogroup" aria-label="Velg pakke">
-      ${PLANS.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} deal=${dealFor(s.discount, p.id)} onSelect=${setPlan} />`)}
+      ${offered.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} deal=${dealFor(s.discount, p.id)} onSelect=${setPlan} />`)}
     </div>
     <p class="small muted center plans__detail" aria-live="polite">${chosen.detail}</p>
     ${pay.provider === 'shopify' && html`<${DiscountField} plan=${plan} />`}

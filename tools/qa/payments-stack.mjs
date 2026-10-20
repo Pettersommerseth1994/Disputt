@@ -34,6 +34,7 @@ export async function startPaymentsStack({ vipps = true } = {}) {
     JWT_PRIVATE_KEY: privateKey,
     SITE_URL: 'http://127.0.0.1:1/', // set by setSite(): the game's own address, which is only known once the site is up
     PRICE_EVENING: 'price_evening',
+    PRICE_WEEKEND: 'price_weekend',
     PRICE_YEAR: 'price_year',
     PRICE_LIFETIME: 'price_lifetime',
     VIPPS_ENABLED: vipps ? 'true' : 'false',

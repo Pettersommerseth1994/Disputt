@@ -3,7 +3,7 @@
 //
 // It is a JWT signed with ES256 (ECDSA, P-256), which every browser's built-in crypto can check:
 //   header   {"alg":"ES256","typ":"JWT"}
-//   payload  {"iss":"disputt","aud":<the payment server's address>,"plan":"evening"|"year"|"lifetime","pa":<paid at, s>,"iat":<issued at, s>,
+//   payload  {"iss":"disputt","aud":<the payment server's address>,"plan":"evening"|"weekend"|"year"|"lifetime","pa":<paid at, s>,"iat":<issued at, s>,
 //            "exp":<end, s; none for lifetime>}
 // `aud` ties a pass to the payment server that made it, so that a pass from a test server is no use on the live page, even if the
 // two were given the same key.
@@ -11,7 +11,7 @@
 // This file has no dependencies on the page, so the tests run it in Node too. (A file of its own: pages are cached for ten
 // minutes, and a module that imports something an older cached copy of another module does not have would not load.)
 
-export const PLAN_IDS = ['evening', 'year', 'lifetime'];
+export const PLAN_IDS = ['evening', 'weekend', 'year', 'lifetime'];
 
 const te = new TextEncoder();
 const td = new TextDecoder();

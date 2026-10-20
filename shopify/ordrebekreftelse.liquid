@@ -15,7 +15,7 @@
   ingen tilgang uten samtykke), og da står det en linje om å ta kontakt, i stedet for en kode som ikke virker.
 
   Pakken kjennes på variant-ID (tallene under «Hvilken pakke», de samme som VARIANT_EVENING, VARIANT_YEAR og VARIANT_LIFETIME hos betalingsserveren),
-  og er den ikke å få i en e-post, på navnet på varen («En kveld», «For ett år» og «Livstid»). Det brukes bare til å skrive hvor lenge tilgangen varer.
+  og er den ikke å få i en e-post, på navnet på varen («En kveld», «En helg», «For ett år» og «Livstid»). Livstid selges ikke lenger, men kunder som kjøpte den, får fortsatt riktig tekst. Det brukes bare til å skrive hvor lenge tilgangen varer.
   Har ordren flere pakker, teller den dyreste, slik betalingsserveren gjør. Lager du produktene på nytt, må tallene (og navnene) byttes.
 
   Toppbildet ligger på disputt.site (public/assets/email/disputt-epost-logo.png, laget av tools/logo/email-header.html).
@@ -35,6 +35,7 @@
   {%- assign t_ready = 'Adgangen er allerede klar i spillet.' -%}
   {%- assign t_not_paid = 'Adgangen aktiveres, så snart betalingen er bekræftet.' -%}
   {%- assign t_plan_evening = 'Gælder i 12 timer fra betalingen' -%}
+  {%- assign t_plan_weekend = 'Gælder i 72 timer fra betalingen' -%}
   {%- assign t_plan_year = 'Gælder i 12 måneder fra betalingen' -%}
   {%- assign t_plan_lifetime = 'Gælder, så længe Disputt findes' -%}
   {%- assign t_renew = 'Fornyes ikke automatisk.' -%}
@@ -70,6 +71,7 @@
   {%- assign t_ready = 'Tillgången är redan klar i spelet.' -%}
   {%- assign t_not_paid = 'Tillgången aktiveras så snart betalningen är bekräftad.' -%}
   {%- assign t_plan_evening = 'Gäller i 12 timmar från betalningen' -%}
+  {%- assign t_plan_weekend = 'Gäller i 72 timmar från betalningen' -%}
   {%- assign t_plan_year = 'Gäller i 12 månader från betalningen' -%}
   {%- assign t_plan_lifetime = 'Gäller så länge Disputt finns' -%}
   {%- assign t_renew = 'Förnyas inte automatiskt.' -%}
@@ -106,6 +108,7 @@
   {%- assign t_ready = 'Tilgangen er klar i spillet allerede.' -%}
   {%- assign t_not_paid = 'Tilgangen aktiveres så snart betalingen er bekreftet.' -%}
   {%- assign t_plan_evening = 'Gjelder i 12 timer fra betalingen' -%}
+  {%- assign t_plan_weekend = 'Gjelder i 72 timer fra betalingen' -%}
   {%- assign t_plan_year = 'Gjelder i 12 måneder fra betalingen' -%}
   {%- assign t_plan_lifetime = 'Gjelder så lenge Disputt finnes' -%}
   {%- assign t_renew = 'Fornyes ikke av seg selv.' -%}
@@ -145,15 +148,17 @@
   {%- assign is_waiting = true -%}
 {%- endif -%}
 
-{%- comment %} Hvilken pakke: kjennes på variant-ID, ellers på navnet. Har ordren flere, teller den dyreste (3 Livstid, 2 For ett år, 1 En kveld) {% endcomment -%}
+{%- comment %} Hvilken pakke: kjennes på variant-ID, ellers på navnet. Har ordren flere, teller den dyreste (4 Livstid, 3 For ett år, 2 En helg, 1 En kveld) {% endcomment -%}
 {%- assign rank = 0 -%}
 {%- for line in subtotal_line_items -%}
   {%- assign variant = line.variant_id | default: line.variant.id | append: '' -%}
   {%- assign line_name = line.title | default: line.product.title | append: '' -%}
   {%- assign line_rank = 0 -%}
   {%- if variant == '67625896870022' or line_name contains 'Livstid' -%}
-    {%- assign line_rank = 3 -%}
+    {%- assign line_rank = 4 -%}
   {%- elsif variant == '67625896280198' or line_name contains 'For ett år' -%}
+    {%- assign line_rank = 3 -%}
+  {%- elsif variant == '67733188804742' or line_name contains 'En helg' -%}
     {%- assign line_rank = 2 -%}
   {%- elsif variant == '67625895526534' or line_name contains 'En kveld' -%}
     {%- assign line_rank = 1 -%}
@@ -168,9 +173,12 @@
   {%- assign plan_text = t_plan_evening -%}
   {%- assign plan_note = t_renew -%}
 {%- elsif rank == 2 -%}
-  {%- assign plan_text = t_plan_year -%}
+  {%- assign plan_text = t_plan_weekend -%}
   {%- assign plan_note = t_renew -%}
 {%- elsif rank == 3 -%}
+  {%- assign plan_text = t_plan_year -%}
+  {%- assign plan_note = t_renew -%}
+{%- elsif rank == 4 -%}
   {%- assign plan_text = t_plan_lifetime -%}
   {%- assign plan_note = t_once -%}
 {%- else -%}

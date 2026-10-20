@@ -4,8 +4,9 @@
 export const SECRET = 'shpss_qa_signing_secret';
 export const SHOP = 'https://shop.example.test';
 /** Like the real ones: numbers of 14 digits. */
-export const VARIANTS = { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' };
-export const PRICES = { evening: '89.00', year: '249.00', lifetime: '299.00' };
+export const VARIANTS = { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003', weekend: '44000000000004' };
+// (the prices of 2026-10-20; Livstid is no longer sold, but its old price and variant stay so that old orders can be tested)
+export const PRICES = { evening: '149.00', weekend: '199.00', year: '299.00', lifetime: '299.00' };
 export const CODE = 'K7M2-9QXD-4TRB';
 
 let nextOrder = 1001;

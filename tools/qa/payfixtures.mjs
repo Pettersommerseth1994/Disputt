@@ -16,16 +16,16 @@ export const CODE = 'K7M2-9QXD-4TRB';
 /** The same, with a Shopify shop: no methods to choose between (the customer chooses in the shop), and the shop that the page knows about. */
 export const PAY_SHOP = { enabled: true, provider: 'shopify', apiUrl: 'http://127.0.0.1:1', publicKey: 'qa', methods: ['applepay'], freeRounds: 2, termsUrl: PAY.termsUrl, privacyUrl: PAY.privacyUrl };
 /** (`vipps: true`: the packages are drawn with «Betal med Vipps» above «Betal med kort», the tallest the bar at the bottom gets; without it the bar is shorter and fits where this one does) */
-export const SHOP_INFO = { shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true, discounts: true };
+export const SHOP_INFO = { shop: 'https://shop.example.test', variants: { evening: '44000000000001', weekend: '44000000000004', year: '44000000000002' }, vipps: true, discounts: true };
 /** A discount code that the host has taken (20 % off): the cards show the old price struck out and the new one under it. */
-export const DEAL = { code: 'VENN20', summary: '20 % rabatt', plans: { evening: { price: 8900, now: 7120, vipps: true }, year: { price: 24900, now: 19920, vipps: true }, lifetime: { price: 29900, now: 23920, vipps: true } } };
+export const DEAL = { code: 'VENN20', summary: '20 % rabatt', plans: { evening: { price: 14900, now: 11920, vipps: true }, weekend: { price: 19900, now: 15920, vipps: true }, year: { price: 29900, now: 23920, vipps: true } } };
 
 /** What the payment fields of the store go back to between two screens. */
 export const PAY_BASE = { payments: null, discount: null, pass: null, passCode: null, paywall: false, payBusy: false, payWaiting: null, hostAwayUntil: 0 };
 
 const DAY = 86_400_000;
 /** A pass as the page keeps it after checking it (pay/pass.js). */
-export const passOf = (plan, now = Date.now()) => ({ plan, paidAt: now, issuedAt: now, expiresAt: plan === 'lifetime' ? null : now + (plan === 'year' ? 365 * DAY : 12 * 3600_000) });
+export const passOf = (plan, now = Date.now()) => ({ plan, paidAt: now, issuedAt: now, expiresAt: plan === 'lifetime' ? null : now + (plan === 'year' ? 365 * DAY : plan === 'weekend' ? 72 * 3600_000 : 12 * 3600_000) });
 
 export function payScreens(fixtures = buildFixtures()) {
   const atRound2 = (key) => {

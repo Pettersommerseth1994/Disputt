@@ -149,19 +149,22 @@ describe('the restore code', () => {
 
 describe('the packages', () => {
   it('are the three the host can buy, with the prices from the plan', () => {
-    assert.deepEqual(PLANS.map((p) => [p.id, p.name, p.price]), [['evening', 'En kveld', 89], ['year', 'For ett år', 249], ['lifetime', 'Livstid', 299]]);
+    assert.deepEqual(PLANS.map((p) => [p.id, p.name, p.price]), [['evening', 'En kveld', 149], ['weekend', 'En helg', 199], ['year', 'For ett år', 299]]);
     assert.equal(planById(DEFAULT_PLAN).id, 'year');
     assert.equal(planById('nope'), null);
-    assert.equal(formatPrice(89), '89 kr');
+    assert.equal(planById('lifetime').name, 'Livstid', 'Livstid is not for sale, but a host who bought it is still told its name');
+    assert.equal(formatPrice(149), '149 kr');
     assert.ok(PERKS.length >= 3);
   });
 
   it('cost on the page what the payment server will accept (and nothing else)', () => {
-    assert.deepEqual(PLANS.map((p) => p.id).sort(), Object.keys(mod.PLANS).sort());
+    assert.deepEqual(PLANS.map((p) => p.id).sort(), Object.keys(mod.PLANS).filter((id) => id !== 'lifetime').sort(), 'the page offers what the Stripe edition has, Livstid excepted');
     for (const p of PLANS) assert.equal(p.price * 100, mod.PLANS[p.id].amount, `${p.id}: the price on the page and in payments/worker.js must be the same`);
     const noon = Date.UTC(2027, 0, 15, 12) / 1000;
     assert.equal(mod.PLANS.evening.ends(noon), noon + 12 * 3600);
     assert.match(PLANS.find((p) => p.id === 'evening').length, /^12 timer$/);
+    assert.equal(mod.PLANS.weekend.ends(noon), noon + 72 * 3600);
+    assert.match(PLANS.find((p) => p.id === 'weekend').length, /^72 timer$/);
     assert.equal(mod.PLANS.year.ends(noon), Date.UTC(2028, 0, 15, 12) / 1000, 'a year is twelve months, and 2028 has a 29 February');
     assert.equal(mod.PLANS.year.ends(Date.UTC(2028, 1, 29, 12) / 1000), Date.UTC(2029, 2, 1, 12) / 1000, 'bought on 29 February: ends on 1 March');
     assert.equal(mod.PLANS.lifetime.ends(noon), null);

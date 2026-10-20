@@ -2,7 +2,7 @@
 
 Kortversjonen av [VIPPS.md](VIPPS.md) for deg som setter det opp direkte i live. Alt skjer i den **ekte** betalingsserveren (i Cloudflare heter den `disputt-pay-shopify-test`, men det er den ekte: `disputt.site` bruker den, og `/health` sier `"mode":"live"`. Rør ikke Workeren `disputt` i listen, den har ikke med betalingen å gjøre). Knappen vises ikke for noen før siste steg, så du kan gjøre steg 1 til 4 uten at spillet endrer seg.
 
-**Hva du hopper over, og hva det koster:** testmiljøet hos Vipps. Det første ekte kjøpet er derfor testen. Gjør det selv, med «En kveld» (89 kr), og refunder det. Går noe galt, skru knappen av (slett `VIPPS_ENABLED`) og send meg svaret fra `…/health` og sjekken.
+**Hva du hopper over, og hva det koster:** testmiljøet hos Vipps. Det første ekte kjøpet er derfor testen. Gjør det selv, med «En kveld» (149 kr), og refunder det. Går noe galt, skru knappen av (slett `VIPPS_ENABLED`) og send meg svaret fra `…/health` og sjekken.
 
 ## Steg 1: Vipps-nøkler (live)
 
@@ -53,7 +53,7 @@ Kortversjonen av [VIPPS.md](VIPPS.md) for deg som setter det opp direkte i live.
    curl -s -H "Authorization: Bearer $ADMIN_TOKEN" https://disputt-pay-shopify-test.kontakt-276.workers.dev/vipps/admin/check
    ```
 
-   Skal vise `"ok":true,"env":"live"`, `vipps`, `webhook` og `shopify` alle `true`, og prisene 89, 249 og 299. Ellers: se feiltabellen i VIPPS.md del 5.5 og 5.6.
+   Skal vise `"ok":true,"env":"live"`, `vipps`, `webhook` og `shopify` alle `true`, og prisene 149, 199 og 299. Ellers: se feiltabellen i VIPPS.md del 5.5 og 5.6.
 
 ## Steg 5: Koden ut på disputt.site
 
@@ -66,7 +66,7 @@ Si fra til meg når steg 1 til 4 er gjort. Da committer og pusher jeg til main (
 
 ## Steg 7: Første ekte kjøp, og refusjon
 
-1. [ ] Spill to runder, kryss av, trykk **Betal med Vipps**, velg «En kveld» (89 kr), godkjenn i din egen Vipps og del e-postadressen.
+1. [ ] Spill to runder, kryss av, trykk **Betal med Vipps**, velg «En kveld» (149 kr), godkjenn i din egen Vipps og del e-postadressen.
 2. [ ] Du skal få «Velkommen!» i spillet, e-posten med koden, og i Shopify en **betalt** ordre (ikke test) med kilde «Vipps» og taggene `vipps` og `disputt-…`.
 3. [ ] `…/health`: `waiting` og `stuck` skal være 0.
 4. [ ] Refunder: i Vipps-portalen (*Transactions*, finn betalingen) og i Shopify (*Orders → ordren → Refund*, manuelt). Sjekk at «Logg inn» med koden nå sier at betalingen er refundert.

@@ -3,10 +3,10 @@
 // guide (docs/SHOPIFY.md, part 7) says to look at in a real test order. `order(plan, over)` is a paid order of one package, and `over` replaces any
 // of its parts (a part that is set to undefined is left out, as a part that a real order does not have).
 
-/** The variant ids of the three packages in the shop (shop.disputt.site/products.json); the same as VARIANT_EVENING/YEAR/LIFETIME at the payment server. */
-export const VARIANT = { evening: 67625895526534, year: 67625896280198, lifetime: 67625896870022 };
-const TITLE = { evening: 'Disputt – En kveld (12 timer)', year: 'Disputt – For ett år (12 måneder)', lifetime: 'Disputt – Livstid' };
-const PRICE = { evening: 8900, year: 24900, lifetime: 29900 };
+/** The variant ids of the packages in the shop (shop.disputt.site/products.json); the same as VARIANT_EVENING/YEAR/LIFETIME at the payment server. */
+export const VARIANT = { evening: 67625895526534, weekend: 67733188804742, year: 67625896280198, lifetime: 67625896870022 };
+const TITLE = { evening: 'Disputt – En kveld (12 timer)', weekend: 'Disputt – En helg (72 timer)', year: 'Disputt – For ett år (12 måneder)', lifetime: 'Disputt – Livstid' };
+const PRICE = { evening: 14900, weekend: 19900, year: 29900, lifetime: 29900 };
 
 /** 8900 → "89,00 kr", the way the shop writes money. */
 export const kr = (øre) => `${(øre / 100).toFixed(2).replace('.', ',')} kr`;

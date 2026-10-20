@@ -10,13 +10,15 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 
 ## Kort fortalt
 
-**Det som er laget (i koden):** tre pakker, en betalingsmur etter to gratis runder, betaling i en Shopify-butikk som åpner seg i en **ny fane** (Vipps, Apple Pay og kort), ingen innlogging, og en kode som gir tilgangen tilbake på en ny telefon. Spillet blir stående åpent i fanen bak, så rommet og vennene er der når verten kommer tilbake, og «Velkommen!» dukker opp av seg selv så snart betalingen er gjennomført. **Alt er av som standard.** Uten to variabler på GitHub vises ingenting om betaling, og spillet er gratis, helt som i dag.
+**Det som er laget (i koden):** tre pakker (fra 20. oktober 2026: En kveld, En helg og For ett år; Livstid selges ikke lenger, men kunder som kjøpte den beholder den), en betalingsmur etter to gratis runder, betaling i en Shopify-butikk som åpner seg i en **ny fane** (Vipps, Apple Pay og kort), ingen innlogging, og en kode som gir tilgangen tilbake på en ny telefon. Spillet blir stående åpent i fanen bak, så rommet og vennene er der når verten kommer tilbake, og «Velkommen!» dukker opp av seg selv så snart betalingen er gjennomført. **Alt er av som standard.** Uten to variabler på GitHub vises ingenting om betaling, og spillet er gratis, helt som i dag.
 
 | Pakke | Pris | Varighet |
 | --- | --- | --- |
-| **En kveld** | 89 kr | 12 timer fra betalingen |
-| **For ett år** (mest populær) | 249 kr | 12 måneder fra betalingen |
-| **Livstid** (best verdi) | 299 kr | én betaling, ingen utløpsdato |
+| **En kveld** | 149 kr | 12 timer fra betalingen |
+| **En helg** | 199 kr | 72 timer fra betalingen |
+| **For ett år** (mest populær) | 299 kr | 12 måneder fra betalingen |
+
+*Livstid (299 kr) ble solgt til 20. oktober 2026. Produktet er arkivert i Shopify, men betalingsserveren og spillet kjenner det fortsatt, så en som har kjøpt den beholder den.*
 
 Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betaler; de andre spiller gratis på sine egne telefoner. Prisene står i Shopify; hvor lenge tilgangen varer står i koden ([del 15](#15-slik-henger-koden-sammen)).
 
@@ -125,13 +127,13 @@ Butikken er en egen butikk for Disputt, med egen månedspris. Planen *Basic* hol
 
 ## 5. Shopify: de tre produktene
 
-*Products → Add product.* Lag tre produkter, ett for hver pakke. Navnene og prisene skal være akkurat disse, for kassen og e-postene viser dem:
+*Products → Add product.* Lag tre produkter, ett for hver pakke som selges. Navnene og prisene skal være akkurat disse, for kassen og e-postene viser dem:
 
 | Tittel | Pris | Beskrivelse (lim inn) |
 | --- | --- | --- |
-| **Disputt – En kveld (12 timer)** | 89 kr | Tilgang til alle runder i Disputt i 12 timer fra du betaler, til én spillekveld. Én betaling, ingenting fornyes. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
-| **Disputt – For ett år (12 måneder)** | 249 kr | Tilgang til alle runder i Disputt i 12 måneder fra du betaler, til faste spillekvelder. Én betaling, og tilgangen fornyes ikke av seg selv. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
-| **Disputt – Livstid** | 299 kr | Tilgang til alle runder i Disputt så lenge Disputt tilbys (se vilkårene). Én betaling. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
+| **Disputt – En kveld (12 timer)** | 149 kr | Tilgang til alle runder i Disputt i 12 timer fra du betaler, til én spillekveld. Én betaling, ingenting fornyes. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
+| **Disputt – En helg (72 timer)** | 199 kr | Tilgang til alle runder i Disputt i 72 timer fra du betaler, til en helg eller en hyttetur. Én betaling, ingenting fornyes. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
+| **Disputt – For ett år (12 måneder)** | 299 kr | Tilgang til alle runder i Disputt i 12 måneder fra du betaler, til faste spillekvelder. Én betaling, og tilgangen fornyes ikke av seg selv. Bare verten betaler: de andre spiller gratis på sine egne telefoner. Du får en kode på e-post som gir deg tilgangen tilbake på en annen telefon. |
 
 For hvert produkt:
 
@@ -145,9 +147,10 @@ For hvert produkt:
 
 | Pakke | Variant-ID | Skal inn i Cloudflare som |
 | --- | --- | --- |
-| En kveld | | `VARIANT_EVENING` |
-| For ett år | | `VARIANT_YEAR` |
-| Livstid | | `VARIANT_LIFETIME` |
+| En kveld | `67625895526534` | `VARIANT_EVENING` |
+| En helg | `67733188804742` | `VARIANT_WEEKEND` (valgfri: uten den tilbys ikke helgen) |
+| For ett år | `67625896280198` | `VARIANT_YEAR` |
+| Livstid (selges ikke) | `67625896870022` | `VARIANT_LIFETIME` (kan bli stående eller fjernes) |
 
 > Endrer du **prisen** i Shopify, endres den i kassen med en gang og trenger ikke noe i koden (men teksten på pakkeskjermen står i [`public/js/pay/plans.js`](../public/js/pay/plans.js): endre den også). Rabattkoder du lager i Shopify virker i kassen, og betalingsserveren spør ikke hva som ble betalt: en bestilling med rabatt gir tilgang. Gir du bort tilgang med en rabattkode på 100 %, så prøv det først, siden det er Shopify som bestemmer om en gratis bestilling sender varselet «Order payment». Oppretter du et **nytt** produkt eller en ny variant, får den en ny ID, og da må Cloudflare-variabelen byttes.
 
@@ -187,7 +190,7 @@ Filen [`shopify/ordrebekreftelse.liquid`](../shopify/ordrebekreftelse.liquid) er
 
 **Språk.** Teksten velges i denne rekkefølgen: handlekurvattributten `sprak` (spillet kan sette den den dagen det er oversatt), kundens språk på ordren (`order.customer_locale`), kundens språk (`customer.locale`). `da` gir dansk, `sv` svensk, alt annet norsk. Bare `sprak` står i Shopifys egen dokumentasjon; de to andre er hentet fra Shopify-miljøets erfaringer og ikke bekreftet for e-poster. Finner malen ikke noe språk, blir e-posten norsk (aldri feil, bare ikke dansk). For at en kunde skal få dansk eller svensk, må språket være lagt til og **publisert** (*Settings → Languages*), og kassen må åpnes på det språket. Hvordan det gjøres fra spillet (en språkmappe, `/da/`, foran stien i handlekurvlenken, eller språkvelgeren i butikken) er ikke prøvd, og må prøves den dagen spillet oversettes; så lenge spillet bare er på norsk, får alle den norske e-posten. Knappen i spillet heter fortsatt «Allerede kunde? Logg inn» i alle tre språk, fordi kunden skal se det som står i spillet: bytt `login_button` øverst i filen når spillet er oversatt. Alle tekstene står samlet per språk øverst i filen, og en test sørger for at de tre språkene har de samme tekstene. **Den danske og svenske teksten, særlig avsnittet om angreretten, må leses av noen som kan språket og av en jurist**, slik som den norske. **Slik sjekker du hva Shopify oppgir**, før dansk og svensk tas i bruk: lag en kopi av malen med linjen `{{ order.customer_locale }} / {{ customer.locale }}` midt i teksten, send en ordre fra en dansk kasse på nytt, og se hva som står. Lenkene til vilkår og personvern nederst går til de norske sidene på disputt.site, også i den danske og svenske e-posten.
 
-**Pakken.** Malen kjenner pakkene på variant-ID (tre tall i filen, de samme som `VARIANT_EVENING`, `VARIANT_YEAR` og `VARIANT_LIFETIME` i betalingsserveren), og er variant-ID-en ikke å få i en e-post, på navnet på varen («En kveld», «For ett år», «Livstid»). Det brukes bare til å skrive hvor lenge tilgangen varer. Har ordren flere pakker, teller den dyreste, slik betalingsserveren gjør. Lager du produktene på nytt, må tallene (og navnene) byttes. Kjenner malen ikke pakken, står det i stedet at lengden står i pakken du kjøpte og i vilkårene. **Sjekk på den ekte e-posten at den gule pillen («Gjelder i 12 timer fra betalingen», «… 12 måneder …» eller «Gjelder så lenge Disputt finnes») vises.**
+**Pakken.** Malen kjenner pakkene på variant-ID (tre tall i filen, de samme som `VARIANT_EVENING`, `VARIANT_YEAR` og `VARIANT_LIFETIME` i betalingsserveren), og er variant-ID-en ikke å få i en e-post, på navnet på varen («En kveld», «En helg», «For ett år», «Livstid»). Det brukes bare til å skrive hvor lenge tilgangen varer. Har ordren flere pakker, teller den dyreste, slik betalingsserveren gjør. Lager du produktene på nytt, må tallene (og navnene) byttes. Kjenner malen ikke pakken, står det i stedet at lengden står i pakken du kjøpte og i vilkårene. **Sjekk på den ekte e-posten at den gule pillen («Gjelder i 12 timer fra betalingen», «… 72 timer …», «… 12 måneder …» eller «Gjelder så lenge Disputt finnes») vises.**
 
 **Toppbildet** (logoen på den gule ovalen) er en PNG som ligger på `https://disputt.site/assets/email/disputt-epost-logo.png`, fordi Gmail og Outlook ikke viser SVG. Den er laget med [`tools/logo/email-header.html`](../tools/logo/email-header.html) (oppskriften står øverst i den filen). **Adressen må ikke flyttes eller slettes:** e-poster blir liggende i innbokser i årevis. Programmer som ikke viser bilder, viser ordet «Disputt» i gult i stedet.
 
@@ -220,8 +223,9 @@ Filen er [`payments/worker-shopify.js`](../payments/worker-shopify.js): ca. 450 
    | `SITE_URL` | Text | adressen til **siden som skal bruke betalingen**, med skråstrek på slutten (live: `https://disputt.site/`; for test-kopien: `https://pettersommerseth1994.github.io/Disputt-test/`, se del 11) |
    | `SHOP_URL` | Text | `https://shop.disputt.site` |
    | `VARIANT_EVENING` | Text | variant-ID for «En kveld» (del 5) |
+   | `VARIANT_WEEKEND` | Text | variant-ID for «En helg» (valgfri: uten den vises ikke helgen) |
    | `VARIANT_YEAR` | Text | variant-ID for «For ett år» |
-   | `VARIANT_LIFETIME` | Text | variant-ID for «Livstid» |
+   | `VARIANT_LIFETIME` | Text | selges ikke lenger; kan stå eller fjernes |
    | `ACCEPT_TEST_ORDERS` | Text | `true` **bare mens du tester** med Shopifys testmodus. Fjernes før live. |
 
    Trykk **Deploy** etter at du har lagt dem inn.
@@ -235,7 +239,7 @@ Filen er [`payments/worker-shopify.js`](../payments/worker-shopify.js): ca. 450 
 | `"webhookSecret":false` | `SHOPIFY_WEBHOOK_SECRET` mangler |
 | `"signingKey":false` | `JWT_PRIVATE_KEY` mangler, er kuttet, har linjeskift midt i, eller er ikke fra BETALING.md del 7.2 |
 | `"shop":false` / `Betalingen er ikke satt opp riktig (SHOP_URL …)` | `SHOP_URL` mangler, eller er ikke en https-adresse |
-| `"evening":false` (eller `year`, `lifetime`) | variabelen mangler eller er ikke et tall (variant-ID-en er bare siffer) |
+| `"evening":false` (eller `weekend`, `year`) | variabelen mangler eller er ikke et tall (variant-ID-en er bare siffer) |
 | `Betalingen er ikke satt opp riktig (SITE_URL mangler)` | `SITE_URL` mangler eller er ikke en adresse |
 | `Denne siden har ikke lov til å bruke betalingen` | adressen som kaller er ikke `SITE_URL` (feil adresse, eller http i stedet for https) |
 | `Fikk ikke kontakt med betalingen` i appen | telefonen når ikke betalingsserveren: feil adresse i `DISPUTT_PAYMENTS_URL`, eller Workeren er ikke deployet |
@@ -386,7 +390,7 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 
 | Kall | Gjør | Svar |
 | --- | --- | --- |
-| `GET /shop` | siden spør hvor verten skal sendes | `{ shop, variants: { evening, year, lifetime } }` |
+| `GET /shop` | siden spør hvor verten skal sendes | `{ shop, variants: { evening, weekend?, year, lifetime? } }` |
 | `POST /restore` `{ code }` | er koden betalt? Siden spør mens verten betaler, og en kunde på ny telefon spør med koden fra e-posten | `{ token, code, plan, paidAt, expiresAt }`, eller `404 not_found` (ikke betalt ennå, eller ukjent kode), `410 refunded` / `cancelled` / `disputed` / `expired`, `400` (koden ser ikke riktig ut) |
 | `POST /shopify/webhook` | Shopify sier at en ordre er betalt, kansellert eller refundert. Signert (HMAC-SHA256, `X-Shopify-Hmac-Sha256`) | `{ ok: true }` (eventuelt `ignored: …`), `401` for feil signatur |
 | `GET /health` | status, uten hemmeligheter | `{ ok, provider, mode, site, shop, set }` |
@@ -401,7 +405,7 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 
 ### Tilgangen og koden
 
-- **Tilgang:** JWT med `{ iss: "disputt", aud: adressen til betalingsserveren, plan, pa: betalt (s), iat, exp? }`, signert med ES256. `exp` finnes ikke for «Livstid». «For ett år» slutter samme dag og klokkeslett (UTC) neste år; «En kveld» 12 timer etter betalingen. Siden godtar bare tilganger som er laget for betalingsserveren den er satt opp med.
+- **Tilgang:** JWT med `{ iss: "disputt", aud: adressen til betalingsserveren, plan, pa: betalt (s), iat, exp? }`, signert med ES256. `exp` finnes ikke for «Livstid». «For ett år» slutter samme dag og klokkeslett (UTC) neste år; «En kveld» 12 timer og «En helg» 72 timer etter betalingen. Siden godtar bare tilganger som er laget for betalingsserveren den er satt opp med.
 - **Kode:** tolv tegn fra `0123456789ABCDEFGHJKMNPQRSTVWXYZ`, skrevet `XXXX-XXXX-XXXX`, laget av siden. Én kode kan i teori ha mer enn én ordre (en handlekurvlenke som betales to ganger): den som varer lengst gjelder.
 - **Hva en ordre gir:** pakken følger av variant-ID-en på ordrelinjen (den beste, hvis en ordre har flere), aldri av noe siden har sagt. Antallet betyr ingenting. Prisen sjekkes ikke: den er det du har satt i Shopify. Ordren må ha koden (`kode`) **og** samtykket (`samtykke`, et tidspunkt) fra spillet; uten dem gir den ingen tilgang. En testbestilling teller bare mens `ACCEPT_TEST_ORDERS` er `true`.
 - **På telefonen:** `localStorage['disputt:pass:<adressen til betalingsserveren>']` = `{ token, code }`. `sessionStorage['disputt:shop']` = den pågående betalingen (kode, pakke, adresse, tidspunkt; glemmes etter to timer).

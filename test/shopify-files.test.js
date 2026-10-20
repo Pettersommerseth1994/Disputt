@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { PLANS } from '../public/js/pay/plans.js';
+import { PLANS, planById } from '../public/js/pay/plans.js';
 import { renderLiquid } from '../tools/qa/miniliquid.mjs';
 import { line, makeFilters, order, VARIANT } from '../tools/qa/shopify-order.mjs';
 
@@ -129,7 +129,7 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
     });
 
     it('lists what was bought, the total with VAT, how it was paid and the billing address', () => {
-      assert.match(t, /Bestillingen din Disputt – En kveld \(12 timer\) × 1 89,00 kr Totalt 89,00 kr NOK Herav mva \(25 %\) 17,80 kr/);
+      assert.match(t, /Bestillingen din Disputt – En kveld \(12 timer\) × 1 149,00 kr Totalt 149,00 kr NOK Herav mva \(25 %\) 29,80 kr/);
       assert.match(t, /Betalt med Visa •••• 5031 Fakturaadresse Kari Nordmann Eksempelveien 1 0123 Oslo Norge/);
     });
 
@@ -155,7 +155,7 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.match(t, /Tak for din bestilling! Ordre #1003/);
       assert.match(t, /Din kode K7M2-9QXD-4TRB Gælder i 12 timer fra betalingen Fornyes ikke automatisk\. Adgangen er allerede klar i spillet\./);
       assert.match(t, /Skal du bruge den på en anden telefon\? 1 Åbn Disputt 2 Tryk på «Allerede kunde\? Logg inn» 3 Indtast koden Gem denne e-mail\./);
-      assert.match(t, /Din ordre Disputt – En kveld \(12 timer\) × 1 89,00 kr I alt 89,00 kr NOK Heraf moms \(25 %\) 17,80 kr/);
+      assert.match(t, /Din ordre Disputt – En kveld \(12 timer\) × 1 149,00 kr I alt 149,00 kr NOK Heraf moms \(25 %\) 29,80 kr/);
       assert.match(t, /Betalt med Visa •••• 5031 Faktureringsadresse Mette Hansen Eksempelvej 12 2100 København Ø Danmark/);
       assert.match(t, /Fortrydelsesret: Du accepterede vilkårene og at adgangen leveres med det samme, før du betalte\. Dermed bortfalder fortrydelsesretten\./);
       assert.match(t, /Spørgsmål\? Svar på denne e-mail eller skriv til kontakt@disputt\.site Vilkår · Privatlivspolitik/);
@@ -169,7 +169,7 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.match(t, /Tack för din beställning! Order #1003/);
       assert.match(t, /Din kod K7M2-9QXD-4TRB Gäller i 12 timmar från betalningen Förnyas inte automatiskt\. Tillgången är redan klar i spelet\./);
       assert.match(t, /Ska du använda den på en annan telefon\? 1 Öppna Disputt 2 Tryck på «Allerede kunde\? Logg inn» 3 Skriv in koden Spara det här mejlet\./);
-      assert.match(t, /Din beställning Disputt – En kveld \(12 timer\) × 1 89,00 kr Totalt 89,00 kr NOK Varav moms \(25 %\) 17,80 kr/);
+      assert.match(t, /Din beställning Disputt – En kveld \(12 timer\) × 1 149,00 kr Totalt 149,00 kr NOK Varav moms \(25 %\) 29,80 kr/);
       assert.match(t, /Betalat med Visa •••• 5031 Faktureringsadress/);
       assert.match(t, /Ångerrätt: Du godkände villkoren och att tillgången levereras direkt innan du betalade\. Då förlorar du ångerrätten\./);
       assert.match(t, /Frågor\? Svara på det här mejlet eller skriv till kontakt@disputt\.site Villkor · Integritetspolicy/);
@@ -208,17 +208,19 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
 
   describe('how long it lasts', () => {
     it('says the length of each package, the same as the game says', () => {
-      for (const plan of PLANS.filter((p) => p.id !== 'lifetime')) {
+      for (const plan of PLANS) {
         assert.match(said(plan.id), new RegExp(`Gjelder i ${plan.length} fra betalingen Fornyes ikke av seg selv\\.`), plan.name);
       }
       assert.match(said('lifetime'), /Gjelder så lenge Disputt finnes Du betaler bare én gang\./);
       assert.doesNotMatch(said('lifetime'), /Fornyes/);
-      assert.ok(PLANS.find((p) => p.id === 'lifetime').detail.includes('Gjelder så lenge Disputt finnes'), 'the game says the same about Livstid');
+      assert.ok(planById('lifetime').detail.includes('Gjelder så lenge Disputt finnes'), 'the game says the same about Livstid');
     });
 
     it('knows the package by the variant id, then by the name, and says something true when it knows neither', () => {
-      assert.deepEqual(Object.keys(VARIANT), PLANS.map((p) => p.id), 'the same three packages, in the same order, as the game');
+      assert.deepEqual(Object.keys(VARIANT).filter((id) => id !== 'lifetime'), PLANS.map((p) => p.id), 'the same packages, in the same order, as the game (Livstid is not for sale, but the e-mail still knows it)');
       for (const id of Object.values(VARIANT)) assert.ok(MAIL.includes(`== '${id}' `), `the variant ${id} is in the file`);
+      assert.match(said('weekend'), /Gjelder i 72 timer fra betalingen Fornyes ikke av seg selv\./);
+      assert.match(said('evening', { subtotal_line_items: [line('weekend', { variant_id: undefined, variant: undefined, title: 'Disputt – En helg (72 timer)', presentment_title: undefined })] }), /Gjelder i 72 timer/, 'and by its name, when there is no id to be had');
       const pill = (over) => said('evening', { subtotal_line_items: [line('evening', over)] }).match(/Gjelder [^.]*?(?= Fornyes| Du betaler)/)?.[0];
       assert.equal(pill({}), 'Gjelder i 12 timer fra betalingen');
       assert.equal(pill({ title: 'Noe annet', presentment_title: undefined, product: { title: 'Noe annet' } }), 'Gjelder i 12 timer fra betalingen', 'the variant id alone is enough, with a name that says nothing');
@@ -269,22 +271,22 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
     });
 
     it('shows a discount as its own line, and the total after it', () => {
-      const t = said('evening', { total_discounts: 2000, total_price: 6900, tax_price: 1380, tax_lines: [{ rate_percentage: 25 }] });
-      assert.match(t, /× 1 89,00 kr Rabatt −20,00 kr Totalt 69,00 kr NOK Herav mva \(25 %\) 13,80 kr/);
+      const t = said('evening', { total_discounts: 2000, total_price: 12900, tax_price: 2580, tax_lines: [{ rate_percentage: 25 }] });
+      assert.match(t, /× 1 149,00 kr Rabatt −20,00 kr Totalt 129,00 kr NOK Herav mva \(25 %\) 25,80 kr/);
     });
 
     it('leaves out the parts that the order does not have, and the percentage when it is not certain', () => {
       const t = said('evening', { order_status_url: undefined, transactions: [], billing_address: undefined, tax_lines: [], total_discounts: undefined });
       assert.doesNotMatch(t, /Betalt med|Fakturaadresse|Se bestillingen din|Rabatt/);
-      assert.match(t, /Herav mva 17,80 kr/, 'the VAT line without a percentage when there is no tax line to take it from');
-      assert.match(said('evening', { tax_price: 0, tax_lines: [] }), /Totalt 89,00 kr NOK Skal du bruke|Totalt 89,00 kr NOK Betalt med/, 'and no VAT line for an order without VAT');
+      assert.match(t, /Herav mva 29,80 kr/, 'the VAT line without a percentage when there is no tax line to take it from');
+      assert.match(said('evening', { tax_price: 0, tax_lines: [] }), /Totalt 149,00 kr NOK Skal du bruke|Totalt 149,00 kr NOK Betalt med/, 'and no VAT line for an order without VAT');
       assert.doesNotMatch(said('evening', { tax_price: 0, tax_lines: [] }), /Herav mva/);
     });
 
     it('writes the VAT rate the way the order has it: 25 %, 25,5 %, and none when there are several tax lines', () => {
       assert.match(said('evening', { tax_lines: [{ rate_percentage: 25.0 }] }), /Herav mva \(25 %\)/);
       assert.match(said('evening', { tax_lines: [{ rate_percentage: 25.5 }] }), /Herav mva \(25,5 %\)/);
-      assert.match(said('evening', { tax_lines: [{ rate_percentage: 15 }, { rate_percentage: 10 }] }), /Herav mva 17,80 kr/, 'two tax lines: no percentage, because it would be only one of them');
+      assert.match(said('evening', { tax_lines: [{ rate_percentage: 15 }, { rate_percentage: 10 }] }), /Herav mva 29,80 kr/, 'two tax lines: no percentage, because it would be only one of them');
     });
 
     it('names the card or the other way of paying, and the first payment that went through', () => {

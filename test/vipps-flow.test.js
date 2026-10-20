@@ -129,7 +129,7 @@ beforeEach(async () => {
   away.setAwayAnnouncer(null);
   Object.assign(store, { payments: null, pass: null, passCode: null, paywall: true, payBusy: false, payWaiting: null, sheet: null, toast: null, view: null });
   await pay.initPayments(settings());
-  shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true });
+  shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', weekend: '44000000000004', year: '44000000000002' }, vipps: true });
 });
 afterEach(async () => {
   console.error = realError;
@@ -139,7 +139,7 @@ afterEach(async () => {
 
 describe('on a phone', () => {
   const asPhone = (ua) => Object.defineProperty(globalThis, 'navigator', { value: { userAgent: ua }, configurable: true, writable: true });
-  const app = () => shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true, vippsApp: true });
+  const app = () => shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', weekend: '44000000000004', year: '44000000000002' }, vipps: true, vippsApp: true });
   let realNavigator;
   before(() => (realNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')));
   afterEach(() => (realNavigator ? Object.defineProperty(globalThis, 'navigator', realNavigator) : delete globalThis.navigator));
@@ -170,7 +170,7 @@ describe('on a phone', () => {
     shop.cancelShopPayment();
     events.length = 0;
     asked.length = 0;
-    shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: true });
+    shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', weekend: '44000000000004', year: '44000000000002' }, vipps: true });
     asPhone('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)');
     await vippsPage.startVippsCheckout('year');
     assert.equal(opened().length, 1, 'a phone, but a server that does not offer the app: a tab, as before');
@@ -196,9 +196,10 @@ describe('the tap on «Betal med Vipps»', () => {
     const found = await discountPage.lookUpDiscount(' venn20 ');
     assert.equal(found.code, 'VENN20');
     assert.equal(found.summary, '20 % rabatt');
-    assert.deepEqual(found.plans.year, { price: 24900, now: 19920, vipps: true });
-    assert.equal(discountPage.kr(found.plans.year.now), '199,20 kr');
-    assert.equal(discountPage.kr(8900), '89 kr');
+    assert.deepEqual(found.plans.year, { price: 29900, now: 23920, vipps: true });
+    assert.equal(discountPage.kr(found.plans.year.now), '239,20 kr');
+    assert.equal(discountPage.kr(14900), '149 kr');
+    assert.deepEqual(Object.keys(found.plans), ['evening', 'weekend', 'year'], 'the packages that are for sale');
     assert.deepEqual(discountPage.dealFor(found, 'year'), found.plans.year);
     assert.equal(discountPage.dealFor(null, 'year'), null);
     assert.equal(discountPage.dealFor({ plans: { year: { price: 100, now: 100, vipps: true } } }, 'year'), null, 'a code that takes nothing off this package is no deal');
@@ -206,7 +207,7 @@ describe('the tap on «Betal med Vipps»', () => {
     await vippsPage.startVippsCheckout('year', 'VENN20');
     const call = asked.find((a) => a.url.endsWith('/vipps/start'));
     assert.equal(call.body.rabatt, 'VENN20');
-    assert.equal([...t.vipps.payments.values()][0].amount, 19920);
+    assert.equal([...t.vipps.payments.values()][0].amount, 23920);
   });
 
   it('asks the server for a payment with the code, the package and the time of the consent, and sends the tab to Vipps', async () => {
@@ -249,7 +250,7 @@ describe('the tap on «Betal med Vipps»', () => {
   });
 
   it('does not open anything when the payment server does not offer Vipps', async () => {
-    shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', year: '44000000000002', lifetime: '44000000000003' }, vipps: false });
+    shop.setKnownShop({ shop: 'https://shop.example.test', variants: { evening: '44000000000001', weekend: '44000000000004', year: '44000000000002' }, vipps: false });
     assert.throws(() => vippsPage.startVippsCheckout('year'), (err) => err.code === 'unavailable');
     assert.equal(opened().length, 0);
     assert.equal(store.payWaiting, null);
@@ -325,13 +326,13 @@ describe('after Vipps', () => {
 
   it('finds the pass without the webhook too, because the page asks and the server looks at Vipps', async () => {
     t.vipps.hold();
-    await vippsPage.startVippsCheckout('lifetime');
+    await vippsPage.startVippsCheckout('weekend');
     await firstQuestion();
     await t.vipps.approve([...t.vipps.payments.keys()][0]);
     await shop.check();
     assert.equal(store.payWaiting, null);
-    assert.equal(store.pass.plan, 'lifetime');
-    assert.equal(store.pass.expiresAt, null);
+    assert.equal(store.pass.plan, 'weekend');
+    assert.equal(Math.round((store.pass.expiresAt - store.pass.paidAt) / 3600_000), 72, 'a weekend is 72 hours from the payment');
   });
 
   it('is picked up again by a page that is opened while the host is paying (the phone put it to sleep, or it was reloaded)', async () => {

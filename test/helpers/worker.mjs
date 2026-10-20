@@ -32,6 +32,7 @@ export async function setup(overrides = {}) {
     JWT_PRIVATE_KEY: keys.privateKey,
     SITE_URL: SITE,
     PRICE_EVENING: 'price_evening',
+    PRICE_WEEKEND: 'price_weekend',
     PRICE_YEAR: 'price_year',
     PRICE_LIFETIME: 'price_lifetime',
     ...overrides,

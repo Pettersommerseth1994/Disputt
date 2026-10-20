@@ -24,7 +24,7 @@ afterEach(async () => {
 const quiet = () => (console.error = () => {});
 const json = async (res) => ({ status: res.status, body: await res.json() });
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const PRICE = { evening: 89, year: 249, lifetime: 299 };
+const PRICE = { evening: 149, weekend: 199, year: 299 };
 const secretOf = (t) => [...t.vipps.webhooks.values()][0].secret;
 
 describe('GET /shop: when the page is to show the button', () => {
@@ -63,14 +63,14 @@ describe('POST /vipps/start', () => {
     assert.equal(r.body.url, `${t.vipps.url}/landing/${r.body.reference}`);
     assert.deepEqual(Object.keys(r.body).sort(), ['flow', 'reference', 'url']);
     const payment = t.vipps.payments.get(r.body.reference);
-    assert.equal(payment.amount, 8900, 'the price of "En kveld" in øre, from the shop');
+    assert.equal(payment.amount, 14900, 'the price of "En kveld" in øre, from the shop');
     assert.equal(payment.returnUrl, `${SITE}takk.html?ref=${r.body.reference}`, 'back to the thank-you page of the site, which only knows the reference');
     assert.equal(payment.scope, 'email', 'the host shares the e-mail address (for the receipt) and nothing else: no name, no number');
     assert.equal(payment.idempotencyKey, r.body.reference, 'a call that is made twice makes one payment');
     assert.equal(payment.description, 'Disputt: En kveld');
     assert.equal(payment.state, 'CREATED');
     const saved = t.row(r.body.reference);
-    assert.deepEqual({ code: saved.code, plan: saved.plan, amount: saved.amount, state: saved.state, test: saved.test }, { code: CODE, plan: 'evening', amount: 8900, state: 'started', test: 0 });
+    assert.deepEqual({ code: saved.code, plan: saved.plan, amount: saved.amount, state: saved.state, test: saved.test }, { code: CODE, plan: 'evening', amount: 14900, state: 'started', test: 0 });
     assert.equal(saved.consented_at, Math.floor(consent.getTime() / 1000));
   });
 
@@ -87,6 +87,9 @@ describe('POST /vipps/start', () => {
     await t.call('/health'); // (the tables are made by the first call)
     const count = () => t.db.sqlite.prepare('SELECT COUNT(*) AS n FROM vipps').get().n;
     assert.equal((await t.start({ plan: 'gratis' })).status, 400);
+    assert.equal((await t.start({ plan: 'lifetime' })).status, 400, 'Livstid is not for sale any more');
+    delete t.env.VARIANT_WEEKEND;
+    assert.equal((await t.start({ plan: 'weekend' })).status, 400, 'and the weekend is not for sale until its product is set up');
     assert.equal((await t.start({ plan: null })).status, 400);
     assert.equal((await t.start({ code: 'nonsense' })).status, 400);
     assert.equal((await t.start({ code: null })).status, 400);
@@ -146,7 +149,7 @@ describe('POST /vipps/start', () => {
   it('is limited, so that nobody can start thousands of payments at Vipps through it', async () => {
     const t = await make();
     await t.call('/health'); // (the tables are made by the first call)
-    const insert = t.db.sqlite.prepare("INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at) VALUES (?, ?, 'year', 24900, 1, ?, ?)");
+    const insert = t.db.sqlite.prepare("INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at) VALUES (?, ?, 'year', 29900, 1, ?, ?)");
     const now = Math.floor(Date.now() / 1000);
     for (let i = 0; i < 200; i++) insert.run(`disputt-${String(i).padStart(24, '0')}`, CODE, now, now);
     assert.equal((await t.start()).status, 429);
@@ -259,7 +262,7 @@ describe('a payment from start to pass', () => {
     await t.settled();
 
     const payment = t.vipps.payments.get(body.reference);
-    assert.equal(payment.captured, 24900, 'the whole amount is taken, once');
+    assert.equal(payment.captured, 29900, 'the whole amount is taken, once');
     assert.equal(payment.captures.size, 1);
     assert.equal(t.admin.orders.length, 1, 'one order in the shop');
     const { input, options } = t.admin.orders[0];
@@ -277,11 +280,11 @@ describe('a payment from start to pass', () => {
     assert.equal(input.lineItems.length, 1);
     assert.equal(input.lineItems[0].variantId, 'gid://shopify/ProductVariant/44000000000002');
     assert.equal(input.lineItems[0].quantity, 1);
-    assert.deepEqual(input.lineItems[0].priceSet, { shopMoney: { amount: '249.00', currencyCode: 'NOK' } });
+    assert.deepEqual(input.lineItems[0].priceSet, { shopMoney: { amount: '299.00', currencyCode: 'NOK' } });
     assert.equal(input.lineItems[0].requiresShipping, false);
-    assert.deepEqual(input.lineItems[0].taxLines, [{ title: 'MVA', rate: 0.25, priceSet: { shopMoney: { amount: '49.80', currencyCode: 'NOK' } } }], '25 % VAT is in the price');
+    assert.deepEqual(input.lineItems[0].taxLines, [{ title: 'MVA', rate: 0.25, priceSet: { shopMoney: { amount: '59.80', currencyCode: 'NOK' } } }], '25 % VAT is in the price');
     assert.equal(input.transactions.length, 1);
-    assert.deepEqual({ kind: input.transactions[0].kind, status: input.transactions[0].status, gateway: input.transactions[0].gateway, amount: input.transactions[0].amountSet.shopMoney.amount }, { kind: 'SALE', status: 'SUCCESS', gateway: 'Vipps', amount: '249.00' });
+    assert.deepEqual({ kind: input.transactions[0].kind, status: input.transactions[0].status, gateway: input.transactions[0].gateway, amount: input.transactions[0].amountSet.shopMoney.amount }, { kind: 'SALE', status: 'SUCCESS', gateway: 'Vipps', amount: '299.00' });
     assert.equal(options.sendReceipt, true);
     assert.equal(t.admin.receipts.length, 1);
     assert.equal(t.admin.receipts[0].to, 'kari@example.com');
@@ -291,7 +294,7 @@ describe('a payment from start to pass', () => {
     assert.equal(saved.order_id, String(t.admin.orders[0].id));
     const orders = t.ordersRows();
     assert.equal(orders.length, 1, 'and "orders/paid", which Shopify says for it, finds the order written down already');
-    assert.deepEqual({ code: orders[0].code, plan: orders[0].plan, amount: orders[0].amount, currency: orders[0].currency, test: orders[0].test, state: orders[0].state }, { code: CODE, plan: 'year', amount: 24900, currency: 'NOK', test: 0, state: 'paid' });
+    assert.deepEqual({ code: orders[0].code, plan: orders[0].plan, amount: orders[0].amount, currency: orders[0].currency, test: orders[0].test, state: orders[0].state }, { code: CODE, plan: 'year', amount: 29900, currency: 'NOK', test: 0, state: 'paid' });
 
     const pass = await t.restore();
     assert.equal(pass.status, 200);
@@ -304,8 +307,8 @@ describe('a payment from start to pass', () => {
   it('puts the right VAT on each package', async () => {
     const t = await make();
     await t.register();
-    for (const [plan, tax] of Object.entries({ evening: '17.80', year: '49.80', lifetime: '59.80' })) {
-      await t.payVipps({ plan, code: `K7M2-9QXD-4T${plan === 'evening' ? 'AA' : plan === 'year' ? 'BB' : 'CC'}`.replace(/A/g, '8') });
+    for (const [plan, tax] of Object.entries({ evening: '29.80', weekend: '39.80', year: '59.80' })) {
+      await t.payVipps({ plan, code: `K7M2-9QXD-4T${plan === 'evening' ? '88' : plan === 'weekend' ? 'CC' : 'BB'}` });
       const last = t.admin.orders.at(-1).input.lineItems[0];
       assert.equal(last.taxLines[0].priceSet.shopMoney.amount, tax, plan);
       assert.equal(last.priceSet.shopMoney.amount, `${PRICE[plan]}.00`, plan);
@@ -321,7 +324,7 @@ describe('a payment from start to pass', () => {
     assert.equal(t.admin.orders.length, 0);
     const r = await t.restore(); // the host's game asks every few seconds
     assert.equal(r.status, 200);
-    assert.equal(t.vipps.payments.get(body.reference).captured, 24900);
+    assert.equal(t.vipps.payments.get(body.reference).captured, 29900);
     await t.vipps.release(); // and now the webhook comes, late
     await t.settled();
     assert.equal(t.admin.orders.length, 1, 'no second order');
@@ -464,7 +467,7 @@ describe('a payment that does not go through', () => {
     assert.equal(t.admin.orders.length, 0);
     assert.equal(t.row(body.reference).state, 'started', 'it is not "captured" until it is');
     assert.equal((await t.restore()).status, 200, 'the next try takes the money, and then the order is made');
-    assert.equal(t.vipps.payments.get(body.reference).captured, 24900);
+    assert.equal(t.vipps.payments.get(body.reference).captured, 29900);
   });
 
   it('asks Vipps to call again while somebody else is working on the payment, or the order has to wait', async () => {
@@ -493,7 +496,7 @@ describe('a payment that does not go through', () => {
     t.vipps.hold();
     await t.vipps.approve(body.reference);
     assert.equal((await t.restore()).status, 404, 'no pass before there is an order');
-    assert.equal(t.vipps.payments.get(body.reference).captured, 24900, 'the money is taken');
+    assert.equal(t.vipps.payments.get(body.reference).captured, 29900, 'the money is taken');
     assert.equal(t.row(body.reference).state, 'captured');
     assert.equal(t.row(body.reference).order_started_at, 0, 'and the next call may try the order again at once: the shop answered, with an error');
     assert.match(t.row(body.reference).note, /Butikken/);
@@ -555,7 +558,7 @@ describe('the order that Shopify now has', () => {
     const reference = await t.payVipps();
     assert.equal((await t.restore()).status, 200);
     const orderId = Number(t.row(reference).order_id);
-    await t.deliver('refunds/create', refund(orderId, '249.00'));
+    await t.deliver('refunds/create', refund(orderId, '299.00'));
     const r = await t.restore();
     assert.equal(r.status, 410);
     assert.equal(r.body.error, 'refunded');
@@ -608,7 +611,7 @@ describe('what the Worker keeps, and what it says', () => {
     health = (await json(await t.call('/health'))).body.vipps;
     assert.equal(health.webhook, true);
     assert.equal(health.waiting, 1);
-    t.db.sqlite.prepare("INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at, state) VALUES ('disputt-stuck', ?, 'year', 24900, 1, 1, 1, 'captured')").run(CODE);
+    t.db.sqlite.prepare("INSERT INTO vipps (reference, code, plan, amount, consented_at, created_at, updated_at, state) VALUES ('disputt-stuck', ?, 'year', 29900, 1, 1, 1, 'captured')").run(CODE);
     assert.equal((await json(await t.call('/health'))).body.vipps.stuck, 1, 'taken, with no order for more than five minutes: somebody has to look');
   });
 
@@ -663,7 +666,7 @@ describe('discount codes (the same codes as in Shopify\'s checkout)', () => {
     assert.equal(r.status, 200);
     assert.equal(r.body.code, 'VENN20');
     assert.equal(r.body.summary, '20 % rabatt');
-    assert.deepEqual(r.body.plans, { evening: { price: 8900, now: 7120, vipps: true }, year: { price: 24900, now: 19920, vipps: true }, lifetime: { price: 29900, now: 23920, vipps: true } });
+    assert.deepEqual(r.body.plans, { evening: { price: 14900, now: 11920, vipps: true }, weekend: { price: 19900, now: 15920, vipps: true }, year: { price: 29900, now: 23920, vipps: true } });
   });
 
   it('takes an amount off, never more than the price, and says that Vipps cannot take a price of nothing', async () => {
@@ -671,12 +674,20 @@ describe('discount codes (the same codes as in Shopify\'s checkout)', () => {
     t.admin.addDiscount('FEMTI', KRONER(50));
     const r = await t.discount('FEMTI');
     assert.equal(r.body.summary, '50 kr rabatt');
-    assert.deepEqual(Object.values(r.body.plans).map((p) => p.now), [3900, 19900, 24900]);
+    assert.deepEqual(Object.values(r.body.plans).map((p) => p.now), [9900, 14900, 24900]);
     t.admin.addDiscount('GRATIS', KRONER(500));
     const free = await t.discount('GRATIS');
     assert.deepEqual(Object.values(free.body.plans).map((p) => [p.now, p.vipps]), [[0, false], [0, false], [0, false]], 'for nothing: the shop\'s checkout does that');
     t.admin.addDiscount('HELT', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 1 }, items: { __typename: 'AllDiscountItems' } } });
     assert.equal((await t.discount('HELT')).body.plans.year.vipps, false);
+  });
+
+  it('offers the packages that are for sale, and not the retired Livstid, in the answer about a code', async () => {
+    const t = await make();
+    t.admin.addDiscount('VENN20', PERCENT);
+    assert.deepEqual(Object.keys((await t.discount('VENN20')).body.plans), ['evening', 'weekend', 'year']);
+    delete t.env.VARIANT_WEEKEND;
+    assert.deepEqual(Object.keys((await t.discount('VENN20')).body.plans), ['evening', 'year'], 'the weekend is left out until its product is set up');
   });
 
   it('turns away what is not a good code, in words for the host', async () => {
@@ -698,7 +709,7 @@ describe('discount codes (the same codes as in Shopify\'s checkout)', () => {
     t.admin.addDiscount('KUNAAR', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.5 }, items: { __typename: 'DiscountProducts', products: { nodes: [] }, productVariants: { nodes: [{ id: `gid://shopify/ProductVariant/${mod.VARIANT_IDS?.year ?? '44000000000002'}` }] } } } });
     const r = await t.discount('KUNAAR');
     const looks = Object.entries(r.body.plans).map(([plan, p]) => [plan, p.now === p.price]);
-    assert.deepEqual(looks, [['evening', true], ['year', false], ['lifetime', true]]);
+    assert.deepEqual(looks, [['evening', true], ['weekend', true], ['year', false]]);
     t.admin.addDiscount('INGEN', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.5 }, items: { __typename: 'DiscountProducts', products: { nodes: [] }, productVariants: { nodes: [] } } } });
     assert.equal((await t.discount('INGEN')).body.error, 'discount_none');
     t.admin.addDiscount('MINST', { ...PERCENT, minimumRequirement: { __typename: 'DiscountMinimumSubtotal', greaterThanOrEqualToSubtotal: { amount: '1000' } } });
@@ -738,26 +749,26 @@ describe('discount codes (the same codes as in Shopify\'s checkout)', () => {
     await t.register();
     t.admin.addDiscount('VENN20', PERCENT);
     const { body } = await t.start({ plan: 'year', rabatt: 'venn20' });
-    assert.equal(t.vipps.payments.get(body.reference).amount, 19920, 'Vipps is asked for the price with the code');
+    assert.equal(t.vipps.payments.get(body.reference).amount, 23920, 'Vipps is asked for the price with the code');
     assert.equal(t.row(body.reference).discount_code, 'VENN20');
-    assert.equal(t.row(body.reference).list_amount, 24900);
+    assert.equal(t.row(body.reference).list_amount, 29900);
     await t.vipps.approve(body.reference);
     await t.settled();
-    assert.equal(t.vipps.payments.get(body.reference).captured, 19920, 'and that is what is taken');
+    assert.equal(t.vipps.payments.get(body.reference).captured, 23920, 'and that is what is taken');
     const order = t.admin.orders[0].input;
-    assert.equal(order.lineItems[0].priceSet.shopMoney.amount, '199.20');
-    assert.equal(order.lineItems[0].taxLines[0].priceSet.shopMoney.amount, '39.84', 'the VAT is of the price that was paid');
-    assert.equal(order.transactions[0].amountSet.shopMoney.amount, '199.20');
-    assert.deepEqual(order.customAttributes.filter((a) => ['rabattkode', 'ordinaer_pris'].includes(a.key)), [{ key: 'rabattkode', value: 'VENN20' }, { key: 'ordinaer_pris', value: '249.00' }]);
+    assert.equal(order.lineItems[0].priceSet.shopMoney.amount, '239.20');
+    assert.equal(order.lineItems[0].taxLines[0].priceSet.shopMoney.amount, '47.84', 'the VAT is of the price that was paid');
+    assert.equal(order.transactions[0].amountSet.shopMoney.amount, '239.20');
+    assert.deepEqual(order.customAttributes.filter((a) => ['rabattkode', 'ordinaer_pris'].includes(a.key)), [{ key: 'rabattkode', value: 'VENN20' }, { key: 'ordinaer_pris', value: '299.00' }]);
     assert.ok(order.tags.includes('rabatt'));
-    assert.equal(t.ordersRows()[0].amount, 19920);
+    assert.equal(t.ordersRows()[0].amount, 23920);
     assert.equal((await t.restore()).status, 200, 'and the code gives the pass as before');
   });
 
   it('is paid at the ordinary price when there is no code, and a bad code stops a payment before it starts', async () => {
     const t = await make();
     const plain = await t.start({ plan: 'evening' });
-    assert.equal(t.vipps.payments.get(plain.body.reference).amount, 8900);
+    assert.equal(t.vipps.payments.get(plain.body.reference).amount, 14900);
     assert.equal(t.row(plain.body.reference).discount_code, '');
     const before = t.vipps.payments.size;
     const bad = await t.start({ plan: 'evening', rabatt: 'finnesikke' });

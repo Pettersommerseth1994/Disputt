@@ -13,12 +13,12 @@ import { payScreens } from './payfixtures.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
-const PRICES = { evening: 89, year: 249, lifetime: 299 };
+const PRICES = { evening: 149, weekend: 199, year: 299, lifetime: 299 };
 const base = process.argv.find((a) => a.startsWith('--url='))?.slice('--url='.length).replace(/\/+$/, '');
 const plan = process.argv.find((a) => a.startsWith('--plan='))?.slice('--plan='.length) ?? 'evening';
 const SHOT = process.argv.includes('--shot');
 assert.ok(base, 'usage: shopsmoke.mjs --url=https://… (the address of the deployed game)');
-assert.ok(PRICES[plan], 'plan: evening, year or lifetime');
+assert.ok(PRICES[plan], 'plan: evening, weekend, year or lifetime');
 const host = payScreens().find(([key]) => key === 'pay-gate-shop')[1].view; // (the points after round 2: where the host meets the packages)
 const log = (msg) => console.log(msg);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
