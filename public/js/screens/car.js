@@ -8,6 +8,7 @@
 import { AVATARS } from '../../shared/avatars.mjs';
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { impostorCount } from '../impostors.js';
+import { RulesHub } from '../regler/hub.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, CloseIcon, Sheet } from '../ui.js';
@@ -235,14 +236,14 @@ export function HowStep({ view }) {
     <${SetupHeader} />
     <${Steps} current=${4} onBack=${() => setStore({ step: 2 })} />
     <h1 class="setup__title rise-in">Klar? Slik funker det</h1>
-    <ol class="rules">
+    <${RulesHub} car how text=${html`<ol class="rules">
       ${steps.map(
         ([title, text], i) => html`<li key=${i}>
           <span class="rules__n">${i + 1}</span>
           <div><h3>${title}</h3><p class="muted">${text}</p></div>
         </li>`,
       )}
-    </ol>
+    </ol>`} />
     <p class="small muted center">Først til ${view.target} poeng · ${duration(view.target * MINUTES_PER_POINT)} · ${view.players.length} ${plural(view.players.length, 'spiller', 'spillere')}${twoImpostors ? ' · to imposterer' : ''}</p>
     <div class="dock">
       <${Button} block variant="lime" onClick=${() => actions.start()} disabled=${!canStart}>Start spillet</${Button}>

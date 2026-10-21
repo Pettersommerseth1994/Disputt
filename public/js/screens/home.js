@@ -27,7 +27,7 @@ export function Home() {
       <${Button} block variant="cream" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
       <div class="row row--center home__links">
         ${!s.payments?.enabled
-          ? html`<${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>`
+          ? html`<${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>`
           : isActive(s.pass)
             ? html`<span class="muted">Du har tilgang</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`
             : html`<span class="muted">Allerede kunde?</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>Logg inn</${Button}>`}

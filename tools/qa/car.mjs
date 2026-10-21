@@ -321,8 +321,10 @@ async function setUp() {
 
   // 4. how it works
   await waitText(/Steg 4 av 4/);
+  await waitText(/Send telefonen rundt/); // (the picture comes first: the story's first card says it)
+  assert.match(await bodyText(), /Klar\? Slik funker det/);
+  await clickButton('Les reglene'); // (and the written rules are one tap away)
   const how = await bodyText();
-  assert.match(how, /Klar\? Slik funker det/);
   assert.match(how, /Send telefonen rundt/);
   assert.match(how, new RegExp(`${HOST} leser spørsmålet`));
   assert.match(how, new RegExp(`Først til ${TARGET} poeng`));
@@ -331,7 +333,8 @@ async function setUp() {
   assert.doesNotMatch(how, /Slik går det/);
   await shot('03-how');
   // the rules from the help button are the rules of the car
-  await clickLabel('Slik spiller du');
+  await clickLabel('Slik spiller dere');
+  await clickButton('Les reglene');
   await waitText(/Send telefonen rundt[\s\S]*Verten stiller spørsmålet/);
   assert.match(await bodyText(), /Fra 2 til 5 spillere/);
   await clickLabel('Lukk');

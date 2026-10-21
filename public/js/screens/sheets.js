@@ -2,6 +2,7 @@
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
+import { RulesHub } from '../regler/hub.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, QR, Scoreboard, Sheet, ShareLink, joinSite, joinUrl } from '../ui.js';
 
@@ -63,7 +64,7 @@ export function ScoresSheet({ view }) {
         <${Scoreboard} view=${view} />
         <p class="small muted center">Først til ${view.target} poeng vinner.</p>
       </div>
-      ${!view.you.isHost && html`<${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>`}
+      ${!view.you.isHost && html`<${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>`}
     </div>
   </${Sheet}>`;
 }
@@ -75,7 +76,7 @@ export function HostSheet({ view }) {
     <div class="stack stack--loose">
       <${HostControls} view=${view} />
       ${s.payments?.enabled && html`<${Button} block variant="cream" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`}
-      <${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller du</${Button}>
+      <${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>
     </div>
   </${Sheet}>`;
 }
@@ -125,8 +126,9 @@ const CAR_STEPS = [
   ['Ny runde', 'Nye roller, og telefonen sendes rundt igjen. Først til målet vinner. Uavgjort? Da spiller dere videre.'],
 ];
 
-export function RulesSheet({ car = false }) {
-  return html`<${Sheet} title="Slik spiller du" onClose=${close}>
+/** The rules in writing, as they always were. */
+export function RulesText({ car = false }) {
+  return html`<div>
     <ol class="rules">
       ${(car ? CAR_STEPS : STEPS).map(
         ([title, text], i) => html`<li key=${i}>
@@ -136,5 +138,12 @@ export function RulesSheet({ car = false }) {
       )}
     </ol>
     <p class="small muted center" style="margin-top:var(--s-5)">Fra 2 til ${car ? 5 : 10} spillere. Ett poeng tar ca. 6 minutter.</p>
+  </div>`;
+}
+
+/** «Slik spiller dere»: the picture first, and the writing one tap away (regler/hub.js). */
+export function RulesSheet({ car = false }) {
+  return html`<${Sheet} title="Slik spiller dere" onClose=${close}>
+    <${RulesHub} car=${car} text=${html`<${RulesText} car=${car} />`} onDone=${close} />
   </${Sheet}>`;
 }

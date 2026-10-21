@@ -28,7 +28,7 @@ export const hostStep = (view, step) => (!view.you.ready ? 1 : (step ?? LAST));
 export function SetupHeader() {
   return html`<header class="row row--between">
     <${Logo} small onClick=${() => setStore({ sheet: 'home' })} />
-    <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller du"><${HelpIcon} /></${Button}>
+    <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller dere"><${HelpIcon} /></${Button}>
   </header>`;
 }
 

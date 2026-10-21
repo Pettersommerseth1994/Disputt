@@ -290,7 +290,7 @@ Appen slår betaling på når byggingen får to variabler: adressen til betaling
    (`DISPUTT_PAYMENTS_METHODS` hører til Stripe og brukes ikke her: kunden velger Vipps, Apple Pay eller kort i butikken.)
 
    Kjør så bygget: **Actions → Pages → Run workflow** i test-kopien.
-3. - [ ] Åpne test-kopien på telefonen. **Du skal se:** på forsiden står det **Allerede kunde? Logg inn** der «Slik spiller du» stod. Er det ikke slik, mangler en av variablene, eller byggingen er ikke kjørt etter at du la dem inn.
+3. - [ ] Åpne test-kopien på telefonen. **Du skal se:** på forsiden står det **Allerede kunde? Logg inn** der «Slik spiller dere» stod. Er det ikke slik, mangler en av variablene, eller byggingen er ikke kjørt etter at du la dem inn.
 
 ## 12. Test alt
 

@@ -92,6 +92,16 @@ Verten går gjennom fire steg, ett valg per skjerm: 1 «Hvordan vil dere spille?
 - Invitasjonen har en liten QR-kode (trykk for å forstørre, det eksisterende arket «Bli med»), koden og «Del lenke», og under dem poengmålet med «Endre». **Hvem som er med vises i bunnfeltet** som en rad med overlappende ansikter (`.facepile`) og en kort tekst over Start-knappen, siden spillerlisten ellers havner under bunnfeltet på en 664 px høy skjerm. Listen med navn og fjerning ligger lenger ned.
 - Ett poeng tar ca. 6 minutter (`MINUTES_PER_POINT` i `setup.js`). Tallet står også i spillereglene, vertsvalget, README og stilguiden.
 
+## Reglene som historie: «Slik spiller dere»
+
+Folk vil ikke lese spillregler, så **overalt der spillet forklarer seg** kommer bildet først: arket «Slik spiller dere» (fra forsiden, lobbyen, oppsettet, avslutningen og vertsvalg) og siste steg i Bilturmodus-oppsettet («Klar? Slik funker det», kortversjon på tre steg). Den skrevne teksten er ett trykk unna («Les reglene», og «Se animasjon» tilbake). Koden ligger i `public/js/regler/`, stilene i `public/css/regler.css` (lastes av skriptet selv, som mantraet).
+
+- **En historie som i Instagram.** Ett kort per steg, et felt per kort øverst som fylles opp, og kortet bytter av seg selv etter 6–8 sekunder. Trykk til høyre går videre, trykk til venstre tilbake. **Hold fingeren på historien, hvor som helst, så stopper klokka** (og alt som beveger seg på kortet; det står ingenting om det i hjørnet), og når fingeren løftes etter en hold bytter ikke kortet. Siste kort blir stående, med «La oss spille» i arket. (`story.js`; trykksonene ligger oppå kortet, så pausen lyttes til på hele historien, ikke på kortet.)
+- **Åtte steg:** 1. Alle får en rolle, 2. Imposteren får vite riktig svar (to imposterer fra seks spillere, som kjenner hverandre), 3. Én får spørsmålet, 4. Diskuter!, 5. Lås svaret, 6. Imposteren avslører seg, 7. Poengene deles ut, 8. Deretter ny runde. Nummer og navn kommer først på kortet, linjen under, begge til venstre og samtidig (ikke ord for ord). Teksten står i `content.js`; spørsmålet i eksemplet er «Hva er hovedstaden i England?» (B: London er riktig, imposteren bløffer med A).
+- **Bordet sett ovenfra** (`bord.js`): beige kort, rosa bord, fem spillere (seks i steg 2). Rollen står på kortet ved hver spiller hele tiden (blå «Lojal», rød «Imposter»), den blir ikke snudd eller skjult igjen. Svaralternativene står på to linjer, A og B over C og D.
+- I Bilturmodus går telefonen rundt bordet og teksten sier «verten» (`car`).
+- Den som ber om mindre bevegelse (`prefers-reduced-motion`) får kortene uten animasjon, og bytter steg for hånd. QA-hjelp: `?steg=4` åpner ved fjerde kort, `window.__regler = { beat: 2 }` fryser bordet ved et steg i scenen. Testene: `test/regler.test.js`.
+
 ## Bilturmodus: alle på én telefon
 
 Samme spill, samme skjermer, men verten har alle spillerne på sin telefon (`public/js/screens/car.js`, `carstrip.js`, motorens `MODE.CAR`). Det som er annerledes:
@@ -111,7 +121,7 @@ Betaling er av som standard ([SHOPIFY.md](SHOPIFY.md), [BETALING.md](BETALING.md
 - **Koden** (`.passcode`, `.input--passcode`) står i visningsfonten, i store bokstaver. Innskrivingen setter inn bindestreker mens man skriver, og små bokstaver og O/I/L godtas.
 - **«Velkommen!»** (`ThanksSheet`) viser tilgangen, koden og én knapp som starter runden verten ba om («Start runde 3»). Mens gjestene er på vei tilbake står det «Venter på at … kommer tilbake …».
 - **Gjestene** får bannerteksten «Verten betaler, spillet fortsetter straks» i stedet for «Mistet forbindelsen» mens verten er hos Stripe.
-- **Forsiden** sier «Allerede kunde? Logg inn» der «Slik spiller du» stod, og «Du har tilgang · Min tilgang» på en telefon som har tilgang.
+- **Forsiden** sier «Allerede kunde? Logg inn» der «Slik spiller dere» stod, og «Du har tilgang · Min tilgang» på en telefon som har tilgang.
 - Alle betalingsskjermene ligger i `tools/qa/payfixtures.mjs` og er med i `qa:overlap`, `qa:fit` og `shots`.
 
 ## Små skjermer
@@ -136,7 +146,7 @@ En nettleser sine verktøylinjer tar 150–300 px, så en telefon viser ofte bar
 To regler (måles av samme verktøy):
 
 1. **Det som er frosset til bunnen av skjermen (`.dock`, `position: sticky`) er skjermens hovedhandling, en knapp**, og har en *ugjennomsiktig* bakgrunn. Ingenting som ruller under skal skinne gjennom tekst eller knapp. (Bakgrunnen er sist i `background`-listen som en vanlig farge. Den gikk en gang tapt på alle vanlige skjermer fordi `--page-bg` pekte på `--theme-bg` uten reserveverdi, og en tom `data-theme` fikk hele deklarasjonen til å bli ugyldig. Derfor har variabelen nå en reserveverdi.) Kanten oppover er en egen fade (`.dock::before`) som ligger over bunnlinjen og ikke er en maske over innholdet. Den har bunnlinjens eget korn og kritt og tones ut med en maske (`--fade-mask`, 2 rem): en flat fargegradient så ut som en glatt stripe med en skjøt mot den teksturerte siden. `test/css.test.js` vokter dette.
-2. **Tekst og lenker som ikke trenger å være frosset (venter på verten, «Slik spiller du») er ikke frosset.** De ligger som `.foot` på slutten av siden, nederst på skjermen når innholdet er kort.
+2. **Tekst og lenker som ikke trenger å være frosset (venter på verten, «Slik spiller dere») er ikke frosset.** De ligger som `.foot` på slutten av siden, nederst på skjermen når innholdet er kort.
 
 Valg som gjelder deg selv (endre navn eller avatar, vis QR-koden, forlat spillet) ligger bak tannhjulet øverst til høyre i lobbyen (`SettingsSheet`), ikke som løse lenker under spillerlisten.
 

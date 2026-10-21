@@ -339,7 +339,7 @@ Test-kopien er laget: <https://github.com/Pettersommerseth1994/Disputt-test> (of
 3. - [ ] Sett `SITE_URL` i **test-Workeren** til `https://pettersommerseth1994.github.io/Disputt-test/` (med skråstrek på slutten) og trykk Deploy. Betalingsserveren svarer bare til den siden, og sender verten tilbake dit etter betalingen.
 4. - [ ] Åpne test-kopien på telefonen.
 
-   **Du skal se:** på forsiden står det **Allerede kunde? Logg inn** der «Slik spiller du» stod. Er det ikke slik, mangler en av variablene, eller byggingen er ikke kjørt etter at du la dem inn (Actions-fanen).
+   **Du skal se:** på forsiden står det **Allerede kunde? Logg inn** der «Slik spiller dere» stod. Er det ikke slik, mangler en av variablene, eller byggingen er ikke kjørt etter at du la dem inn (Actions-fanen).
 
 ### 9.2 Direkte på hovedsiden (bare hvis ingen andre spiller)
 
@@ -354,7 +354,7 @@ Testkort ([Stripes testkort](https://docs.stripe.com/testing)): `4242 4242 4242 
 | # | Test | Forventet |
 | --- | --- | --- |
 | 1 | Åpne `…/health` på Workeren | `ok: true`, `mode: "test"` |
-| 2 | Forsiden | «Allerede kunde? Logg inn» (ikke «Slik spiller du»); regler finnes fortsatt under Vertsvalg i spillet |
+| 2 | Forsiden | «Allerede kunde? Logg inn» (ikke «Slik spiller dere»); regler finnes fortsatt under Vertsvalg i spillet |
 | 3 | Spill to runder. Verten trykker «Neste runde» | Verten får **pakkene**. Gjestene ser «Venter på at verten starter neste runde» og får aldri pakkene |
 | 4 | Velg **En kveld**, trykk **Betal med Apple Pay**. Betal med `4242…` | Stripe-siden viser 89 kr. Tilbake i spillet: «Velkommen!» med koden og knappen **Start runde 3** |
 | 5 | Mens verten er hos Stripe: se på en gjest | «Verten betaler, spillet fortsetter straks». Gjesten blir i spillet, også etter flere minutter (opptil ti) |

@@ -132,7 +132,7 @@ function GuestLobby({ view }) {
       <${Logo} small onClick=${() => setStore({ sheet: 'home' })} />
       <div class="row">
         <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'settings' })} aria-label="Innstillinger"><${GearIcon} /></${Button}>
-        <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller du"><${HelpIcon} /></${Button}>
+        <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller dere"><${HelpIcon} /></${Button}>
       </div>
     </header>
 

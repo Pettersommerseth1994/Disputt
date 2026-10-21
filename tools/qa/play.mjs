@@ -431,12 +431,12 @@ try {
       await clickLabel(host, 'Vertsvalg');
       await waitText(host, /Poengmål/);
       const options = await bodyText(host);
-      for (const label of [/Hopp over denne runden/, /Avslutt spillet nå/, /Slik spiller du/]) assert.match(options, label);
+      for (const label of [/Hopp over denne runden/, /Avslutt spillet nå/, /Slik spiller dere/]) assert.match(options, label);
       await clickLabel(host, 'Lukk');
       await host.page.waitForFunction(() => !document.querySelector('.sheet'));
       await clickLabel(host, 'Se poengtavle');
       await waitText(host, /Poengtavle/);
-      assert.doesNotMatch(await bodyText(host), /Vertsvalg|Poengmål|Hopp over denne runden|Avslutt spillet nå|Slik spiller du/, 'under the scoreboard there is only the scoreboard');
+      assert.doesNotMatch(await bodyText(host), /Vertsvalg|Poengmål|Hopp over denne runden|Avslutt spillet nå|Slik spiller dere/, 'under the scoreboard there is only the scoreboard');
       await clickLabel(host, 'Lukk');
       await host.page.waitForFunction(() => !document.querySelector('.sheet'));
       log('the host options sit behind the gear next to "Poeng"');
