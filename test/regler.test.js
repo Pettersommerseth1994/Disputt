@@ -71,6 +71,16 @@ describe('the places where the rules are told', () => {
   });
 });
 
+describe('the start screen', () => {
+  it('has a link to the story of the rules, «Reglene, kort fortalt», whatever the payments say', () => {
+    const home = read('public/js/screens/home.js');
+    assert.match(home, /const RULES = 'Reglene, kort fortalt';/);
+    assert.match(home, /class="home-tag" onClick=\$\{\(\) => setStore\(\{ sheet: 'rules' \}\)\}/, 'it opens the rules');
+    assert.doesNotMatch(home, /forslag|useForslag/, 'and no preview chooser is left');
+    assert.match(read('public/css/screens.css'), /\.home-tag \{[^}]*background:[^}]*var\(--pink\)/, 'a pink sticker');
+  });
+});
+
 describe('the story', () => {
   const story = read('public/js/regler/story.js');
   const css = read('public/css/regler.css');

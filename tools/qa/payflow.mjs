@@ -17,12 +17,12 @@ const storedPass = (p) =>
   });
 const choosePlan = (p, id) => p.page.evaluate((plan) => document.querySelector(`input[name=plan][value=${plan}]`).click(), id);
 
-/** What the start screen says once payments are on: "Allerede kunde? Logg inn" where "Slik spiller dere" used to be. */
+/** What the start screen says once payments are on: "Allerede kunde? Logg inn" at the bottom, and the rules link ("Reglene, kort fortalt") that is always there. */
 export async function checkHome(t, phone) {
   await t.waitText(phone, /Allerede kunde\?/);
   const text = await t.bodyText(phone);
   assert.match(text, /Logg inn/);
-  assert.doesNotMatch(text, /Slik spiller dere/, 'the rules link has made room for "Allerede kunde?"');
+  assert.match(text, /Reglene, kort fortalt/, 'the link to the rules is there as well');
   const buttons = await phone.page.$$eval('button', (els) => els.map((b) => b.innerText.trim()));
   assert.ok(buttons.includes('Logg inn'), '"Logg inn" is a button (a link-button)');
 }

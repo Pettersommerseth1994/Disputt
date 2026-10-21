@@ -19,6 +19,15 @@
 }
 .home__tagline { font-size: clamp(2.1rem, 10vw, 2.9rem); text-shadow: 3px 4px 0 var(--edge); }
 .home__notice { color: var(--ink); font-weight: 700; }
+/* The link to the rules: a pink sticker with a play triangle, a little crooked, under the slogan (it opens the story of a round) */
+.home-tag { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1rem 0.5rem 0.5rem; border: 0; border-radius: 1.2rem 1.6rem 1.1rem 1.5rem; rotate: -3deg; font-family: var(--font-display); font-weight: 800; font-size: 0.98rem; line-height: 1.1; color: var(--ink); background: var(--tex-grain), var(--tex-light), var(--pink); box-shadow: 0 3px 0 var(--pink-deep), 0 3px 0 1px var(--edge); cursor: pointer; animation: home-tag-in 0.5s 0.25s var(--ease-out, ease) both; }
+.home-tag:active { transform: scale(0.97); }
+.home-tag__ic { flex: none; display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; color: var(--pink); background: var(--ink); }
+.home-tag__play { width: 0.95rem; height: 0.95rem; margin-left: 0.1rem; }
+/* the short phones: the room between the things on the start screen is smaller, so that the sticker fits too (qa:fit) */
+@media (max-height: 700px) { .home__hero { gap: var(--s-4); padding-block: var(--s-4) var(--s-3); } }
+@keyframes home-tag-in { from { opacity: 0; transform: scale(0.7) translateY(0.6rem); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .home-tag { animation: none; } }
 /* "Allerede kunde? Logg inn" and "Du har tilgang Min tilgang": a question or a sentence and its link, with an ordinary word space between them (the text button has padding of its own) */
 .home__links { gap: 0; }
 .home__links .btn--text { padding-inline-start: 0.28rem; }

@@ -7,6 +7,10 @@ import { setStore, useStore } from '../store.js';
 import { Avatar, Button, Logo } from '../ui.js';
 import { ModeStep } from './mode.js';
 
+/** The link to the rules on the start screen: the story of a round (regler/), under the slogan. */
+const RULES = 'Reglene, kort fortalt';
+const Play = () => html`<svg class="home-tag__play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor" /></svg>`;
+
 export function Home() {
   const s = useStore();
   const [mode, setMode] = useState('home');
@@ -20,18 +24,18 @@ export function Home() {
       <div class="pop-in"><${Logo} /></div>
       <h1 class="home__tagline rise-in">Diskuter,<br />manipuler<br />og <span class="scribble">vinn</span></h1>
       <p class="lead muted rise-in" style="animation-delay:.1s">Et quizspill med uenighetsgaranti</p>
+      <button type="button" class="home-tag" onClick=${() => setStore({ sheet: 'rules' })}><span class="home-tag__ic" aria-hidden="true"><${Play} /></span><span>${RULES}</span></button>
       ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${s.notice}</p>`}
     </div>
     <div class="dock">
       <${Button} block onClick=${() => setStore({ modeStep: true })} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
       <${Button} block variant="cream" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
-      <div class="row row--center home__links">
-        ${!s.payments?.enabled
-          ? html`<${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>`
-          : isActive(s.pass)
-            ? html`<span class="muted">Du har tilgang</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`
-            : html`<span class="muted">Allerede kunde?</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>Logg inn</${Button}>`}
-      </div>
+      ${s.payments?.enabled &&
+      html`<div class="row row--center home__links">
+        ${isActive(s.pass)
+          ? html`<span class="muted">Du har tilgang</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`
+          : html`<span class="muted">Allerede kunde?</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>Logg inn</${Button}>`}
+      </div>`}
     </div>
   </main>`;
 }
