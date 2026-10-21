@@ -42,7 +42,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   await waitText(host, /Fortsett quizen/);
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt to runder gratis/);
-  assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
+  assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /En kveld/, 'the evening is the package that is chosen from the start');
   for (const [name, price] of [['En kveld', 149], ['En helg', 199], ['For ett år', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Betal med kort/);
   assert.match(paywall, /Jeg godtar vilkårene og at tilgangen leveres med en gang\./);

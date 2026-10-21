@@ -79,7 +79,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   // 2) "En helg" with Vipps, paid
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
-  assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /For ett år/, 'the year is the package that is chosen from the start');
+  assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /En kveld/, 'the evening is the package that is chosen from the start');
   await choosePlan(host, 'weekend');
   await clickButton(host, 'Betal med Vipps');
   await onStripe(host);

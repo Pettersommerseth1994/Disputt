@@ -40,7 +40,7 @@ const RETIRED_PLANS = [
 ];
 
 /** The package that is chosen when the page opens. */
-export const DEFAULT_PLAN = 'year';
+export const DEFAULT_PLAN = 'evening';
 
 export const planById = (id) => PLANS.find((p) => p.id === id) ?? RETIRED_PLANS.find((p) => p.id === id) ?? null;
 
