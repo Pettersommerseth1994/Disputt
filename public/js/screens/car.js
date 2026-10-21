@@ -16,7 +16,8 @@ import { TableStrip } from './carstrip.js';
 import { Finished } from './finale.js';
 import { Connecting } from './home.js';
 import { Countdown, Question, RevealAsker, Summary } from './round.js';
-import { CAR_SEGMENTS, PointsStep, SetupHeader, Steps, hostStep } from './setup.js';
+import { PointsStep, SetupHeader, Steps, hostStep } from './setup.js';
+import { CAR_SEGMENTS } from './steps-count.js';
 import { TwoPlayersNote } from './twonote.js';
 
 const NAME_MAX = 14;

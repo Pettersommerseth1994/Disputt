@@ -9,10 +9,10 @@ import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
 import { Button, HelpIcon, Logo } from '../ui.js';
 import { cx } from '../util.js';
+import { CAR_SEGMENTS } from './steps-count.js';
 
 export const MINUTES_PER_POINT = 6;
-const SEGMENTS = 4; // the bar at the top of every step (three in the car)
-export const CAR_SEGMENTS = 3;
+const SEGMENTS = 4; // the bar at the top of every step (three in the car: steps-count.js)
 const LAST = 3; // what `store.step` counts, after the way to play has been chosen: 1 who you are, 2 how long, 3 the invitation
 
 export function duration(minutes) {

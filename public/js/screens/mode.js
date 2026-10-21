@@ -10,7 +10,8 @@ import { asset } from '../paths.js';
 import { setStore } from '../store.js';
 import { Button, Logo } from '../ui.js';
 import { cx } from '../util.js';
-import { CAR_SEGMENTS, Steps } from './setup.js';
+import { Steps } from './setup.js';
+import { CAR_SEGMENTS } from './steps-count.js';
 
 // (`players`: a car holds five, a phone each is ten: LIMITS.maxPlayersCar and LIMITS.maxPlayers in shared/game.js)
 export const MODES = [
