@@ -83,7 +83,7 @@ const order = [
   'summary-right-host', 'summary-right-guest', 'summary-wrong-host', 'summary-wrong-guest', 'summary-duo-wrong-host', 'lobby-host-6',
   'finished-host', 'finished-guest',
   // bilturmodus: everybody on the host's phone
-  'car-players-new', 'car-players-1', 'car-players-2', 'car-players-3', 'car-players-5', 'car-points', 'car-how', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-roles-5',
+  'car-players-new', 'car-players-1', 'car-players-2', 'car-players-3', 'car-players-5', 'car-points', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-roles-5',
   'car-question', 'car-question-selected', 'car-countdown', 'car-reveal', 'car-summary', 'car-summary-none-right', 'car-summary-none-wrong', 'car-summary-two', 'car-finished',
 ];
 const LONG = new Set(['lobby-host-new', 'lobby-host-1', 'lobby-host-3', 'lobby-host-5', 'summary-right-host', 'summary-wrong-host', 'finished-host', 'car-players-5', 'car-roles-5']);
@@ -128,9 +128,9 @@ await show(f['car-summary'], { sheet: 'scores' });
 await shot('94e-car-sheet-scores', { full: false });
 await show(f['car-summary-none-right'], { sheet: 'fasit' });
 await shot('94f-car-sheet-fasit-none', { full: false });
-await show(f['car-how'], { sheet: 'rules' });
+await show(f['car-points'], { sheet: 'rules' });
 await shot('94g-car-sheet-rules', { full: false });
-await show(f['car-how'], { sheet: 'home' });
+await show(f['car-points'], { sheet: 'home' });
 await shot('94h-car-sheet-home', { full: false });
 await show(f['car-players-3'], { step: 1 });
 await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Legg til spiller'))?.click());

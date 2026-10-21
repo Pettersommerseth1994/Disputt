@@ -10,7 +10,7 @@ Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden. I 
 
 ### Test med venner (fra hvilket som helst nett)
 
-1. **Verten** åpner lenken over, trykker *Opprett spill* og går gjennom fire steg: hvordan dere vil spille (*Bilturmodus* eller *Hytteturmodus*), navn og avatar (i Bilturmodus: alle navnene), hvor mange poeng man spiller til, og så invitasjonen (i Bilturmodus: «Klar? Slik funker det»). I Hytteturmodus trykker de andre *Bli med i spill* og skriver koden (eller skanner QR-koden).
+1. **Verten** åpner lenken over, trykker *Opprett spill* og går gjennom fire steg: hvordan dere vil spille (*Bilturmodus* eller *Hytteturmodus*), navn og avatar, hvor mange poeng man spiller til, og så invitasjonen. I Bilturmodus er det tre steg (modus, alle navnene, poeng), og det siste starter spillet. I Hytteturmodus trykker de andre *Bli med i spill* og skriver koden (eller skanner QR-koden).
 2. De andre **skanner QR-koden** på vertens skjerm, eller verten trykker *Del lenke* og sender den i en chat. Man kan også gå til siden og skrive den firebokstavers koden.
 3. Verten trykker *Start Disputt* når alle er med (minst to). I Bilturmodus heter knappen *Start spillet*.
 

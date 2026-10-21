@@ -209,11 +209,12 @@ async function setUp() {
   assert.match(await bodyText(), /Hvordan vil dere spille\?/);
   assert.equal((await buttons()).find((b) => b.text === 'Neste').disabled, true, 'Neste waits for a way to play');
   await clickButton('Bilturmodus');
+  await waitText(/Steg 1 av 3/); // (the bar follows the way to play: three steps in the car)
   await shot('01-mode');
   await clickButton('Neste');
 
   // 2. who plays: the host's own name first
-  await waitText(/Steg 2 av 4/);
+  await waitText(/Steg 2 av 3/);
   assert.match(await bodyText(), /Hvem spiller\?/);
   await page.waitForSelector('#player-name', { timeout: 5000 });
   assert.match(await bodyText(), /Hvem er du\?/, 'the host is asked for their own name first');
@@ -302,7 +303,7 @@ async function setUp() {
 
   // 3. how long: the normal step, and a point is six minutes
   await clickButton('Neste');
-  await waitText(/Steg 3 av 4/);
+  await waitText(/Steg 3 av 3/);
   assert.match(await bodyText(), /Hvor lenge skal dere spille\?/);
   await page.focus('#target');
   await page.keyboard.type(String(TARGET));
@@ -312,33 +313,23 @@ async function setUp() {
   assert.match(bodyNow, /Ett poeng tar ca\. 6 minutter/);
   // "back" and on again keep the players
   await clickButton('Tilbake');
-  await waitText(/Steg 2 av 4/);
+  await waitText(/Steg 2 av 3/);
   assert.deepEqual(await rosterNames(), names, 'the players are still there after going back');
   await clickButton('Neste');
-  await waitText(/Steg 3 av 4/);
+  await waitText(/Steg 3 av 3/);
   assert.equal(await page.$eval('#target', (i) => i.value), String(TARGET), 'and so are the points');
-  await clickButton('Neste');
+  assert.doesNotMatch(await bodyText(), /Klar\? Slik funker det/, 'there is no fourth step: this one starts the game');
+  assert.equal((await buttons()).find((b) => b.text === 'Neste'), undefined, 'and no Neste, only Start spillet');
 
-  // 4. how it works
-  await waitText(/Steg 4 av 4/);
-  await waitText(/Send telefonen rundt/); // (the picture comes first: the story's first card says it)
-  assert.match(await bodyText(), /Klar\? Slik funker det/);
-  await clickButton('Les reglene'); // (and the written rules are one tap away)
-  const how = await bodyText();
-  assert.match(how, /Send telefonen rundt/);
-  assert.match(how, new RegExp(`${HOST} leser spørsmålet`));
-  assert.match(how, new RegExp(`Først til ${TARGET} poeng`));
-  assert.match(how, new RegExp(`${PLAYERS} spillere`));
-  assert.doesNotMatch(how, /to imposterer/, 'a car holds five at most: never two impostors');
-  assert.doesNotMatch(how, /Slik går det/);
-  await shot('03-how');
-  // the rules from the help button are the rules of the car
+  // the rules from the help button are the rules of the car: the story, first card in the words of the car (nothing written beside it)
   await clickLabel('Slik spiller dere');
-  await clickButton('Les reglene');
-  await waitText(/Send telefonen rundt[\s\S]*Verten stiller spørsmålet/);
-  assert.match(await bodyText(), /Fra 2 til 5 spillere/);
+  await waitText(/1\. Alle får en rolle[\s\S]*Send telefonen rundt/);
+  assert.equal(await page.$('.rg__text'), null, 'no written rules beside the story');
+  assert.doesNotMatch(await bodyText(), /Les reglene/);
+  await shot('03-rules');
   await clickLabel('Lukk');
   await page.waitForFunction(() => !document.querySelector('.sheet'));
+  // 3. is the last step: it starts the game
   await clickButton('Start spillet');
 }
 
@@ -610,18 +601,14 @@ try {
   await shot('10-finished');
   log(`game finished after ${round} rounds: ${finalText.match(/(\S+ vant!|Delt seier!)/)?.[1]}`);
 
-  // play again: the same players, and the last step of the set-up (how it works), which goes back to the points and the players
+  // play again: the same players, and the last step of the set-up (how long), which goes back to the players
   await clickButton('Spill igjen');
-  await waitText(/Klar\? Slik funker det/);
-  assert.match(await bodyText(), new RegExp(`${PLAYERS} spillere`));
-  await clickButton('Tilbake');
-  await waitText(/Steg 3 av 4/);
+  await waitText(/Steg 3 av 3/);
   await clickButton('Tilbake');
   await waitText(/Hvem spiller\?/);
   assert.deepEqual(await rosterNames(), names, 'the same players after "Spill igjen"');
   await clickButton('Neste');
-  await clickButton('Neste');
-  await waitText(/Steg 4 av 4/);
+  await waitText(/Steg 3 av 3/);
   log('play again: the same players, back through the steps and on');
 
   // a second game, to the start of a round: the roles are new, and then the logo asks before it ends the game

@@ -231,7 +231,6 @@ export function buildFixtures({ stress = false } = {}) {
   {
     const { room, ids } = makeCarRoom({ players: 3, stress });
     out['car-players-3'] = room.viewFor(ids[0]);
-    out['car-how'] = room.viewFor(ids[0]); // the last step: how it works
     out['car-points'] = room.viewFor(ids[0]);
   }
   {

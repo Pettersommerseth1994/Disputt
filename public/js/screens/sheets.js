@@ -105,45 +105,9 @@ export function QrSheet({ view }) {
   </${Sheet}>`;
 }
 
-const STEPS = [
-  ['Alle får en rolle', 'De fleste er lojale. Én er imposter, og er dere seks eller flere, er det to imposterer. Er dere bare to, er det tilfeldig ingen imposter i omtrent hver tredje runde. Bare imposterne får vite riktig svar, og de to vet hvem den andre er. Hold en finger på knappen for å se rollen din. Slipp, så skjules den igjen.'],
-  ['Én spiller får spørsmålet', 'Hen leser spørsmålet og alternativene høyt for de andre.'],
-  ['Diskuter!', 'Imposterne prøver å lure dere til å svare feil. Alle andre må finne ut hva som er riktig.'],
-  ['Bli enige og lås svaret', 'Spilleren med spørsmålet krysser av. Så telles det ned fra 5.'],
-  ['Imposteren avslører seg', 'Imposteren sier riktig svar høyt, og er det to, sier de det sammen. Da ser dere om dere hadde rett. Spilleren med spørsmålet trykker videre.'],
-  ['Poeng', 'Riktig svar: alle lojale får 1 poeng. Feil svar: imposteren får 1 poeng, og er det to, får begge 1 poeng. Er dere uenige, har poengskjermen en fasit.'],
-  ['Ny runde', 'Nye roller, ny spiller og nytt spørsmål. Først til målet vinner. Uavgjort? Da spiller dere videre.'],
-];
-
-// Bilturmodus: the same game on one phone
-const CAR_STEPS = [
-  ['Send telefonen rundt', 'Alle får en rolle. Telefonen sendes rundt, og én og én holder inne knappen ved navnet sitt for å se rollen sin. Slipp, så skjules den igjen. De fleste er lojale. Én er imposter. Er dere bare to, er det tilfeldig ingen imposter i omtrent hver tredje runde. Bare imposteren får vite riktig svar.'],
-  ['Verten stiller spørsmålet', 'Når alle har sett rollen sin, får verten telefonen tilbake og leser spørsmålet og alternativene høyt. Glemt rollen din? Trykk «Se rolle» øverst, velg navnet ditt og hold inne knappen.'],
-  STEPS[2],
-  ['Bli enige og lås svaret', 'Verten krysser av for svaret dere ble enige om. Så telles det ned fra 5.'],
-  ['Imposteren avslører seg', 'Imposteren sier riktig svar høyt. Da ser dere om dere hadde rett. Verten trykker videre.'],
-  ['Poeng', 'Riktig svar: alle lojale får 1 poeng. Feil svar: imposteren får 1 poeng. Er dere uenige, har poengskjermen en fasit.'],
-  ['Ny runde', 'Nye roller, og telefonen sendes rundt igjen. Først til målet vinner. Uavgjort? Da spiller dere videre.'],
-];
-
-/** The rules in writing, as they always were. */
-export function RulesText({ car = false }) {
-  return html`<div>
-    <ol class="rules">
-      ${(car ? CAR_STEPS : STEPS).map(
-        ([title, text], i) => html`<li key=${i}>
-          <span class="rules__n">${i + 1}</span>
-          <div><h3>${title}</h3><p class="muted">${text}</p></div>
-        </li>`,
-      )}
-    </ol>
-    <p class="small muted center" style="margin-top:var(--s-5)">Fra 2 til ${car ? 5 : 10} spillere. Ett poeng tar ca. 6 minutter.</p>
-  </div>`;
-}
-
-/** «Slik spiller dere»: the picture first, and the writing one tap away (regler/hub.js). */
+/** «Slik spiller dere»: the story of a round (regler/hub.js), nothing written beside it. */
 export function RulesSheet({ car = false }) {
   return html`<${Sheet} title="Slik spiller dere" onClose=${close}>
-    <${RulesHub} car=${car} text=${html`<${RulesText} car=${car} />`} onDone=${close} />
+    <${RulesHub} car=${car} onDone=${close} />
   </${Sheet}>`;
 }

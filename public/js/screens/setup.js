@@ -1,17 +1,18 @@
 // The host's set-up, one step at a time: 1 how to play (a phone each, or everybody on one: screens/mode.js, before any game exists),
 // 2 who you are (in the car: who is playing), 3 how long to play, 4 the invitation (the lobby, where the game then waits for its
-// players; in the car: how it works). Guests only ever see "who you are".
+// players). In the car there are three steps: the last one, how long to play, starts the game. Guests only ever see "who you are".
 // (A file of its own: pages are cached for ten minutes, and a module that imports something an older cached copy of another
 // module does not have would not load.)
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
-import { setStore } from '../store.js';
+import { setStore, useStore } from '../store.js';
 import { Button, HelpIcon, Logo } from '../ui.js';
 import { cx } from '../util.js';
 
 export const MINUTES_PER_POINT = 6;
-const SEGMENTS = 4; // the bar at the top of every step
+const SEGMENTS = 4; // the bar at the top of every step (three in the car)
+export const CAR_SEGMENTS = 3;
 const LAST = 3; // what `store.step` counts, after the way to play has been chosen: 1 who you are, 2 how long, 3 the invitation
 
 export function duration(minutes) {
@@ -32,15 +33,15 @@ export function SetupHeader() {
   </header>`;
 }
 
-/** Four segments, then a way back on the left and "Steg 2 av 4" on the right. */
-export function Steps({ current, onBack }) {
+/** Four segments (three in the car), then a way back on the left and "Steg 2 av 4" on the right. */
+export function Steps({ current, onBack, total = SEGMENTS }) {
   return html`<div class="steps">
     <ol class="steps__bar" aria-hidden="true">
-      ${Array.from({ length: SEGMENTS }, (_, i) => html`<li key=${i} class=${cx('steps__seg', i + 1 <= current && 'steps__seg--done')}></li>`)}
+      ${Array.from({ length: total }, (_, i) => html`<li key=${i} class=${cx('steps__seg', i + 1 <= current && 'steps__seg--done')}></li>`)}
     </ol>
     <div class="steps__row">
       ${onBack && html`<${Button} variant="text" onClick=${onBack}>‹ Tilbake</${Button}>`}
-      <p class="eyebrow">Steg ${current} av ${SEGMENTS}</p>
+      <p class="eyebrow">Steg ${current} av ${total}</p>
     </div>
   </div>`;
 }
@@ -93,16 +94,19 @@ function useTarget(view) {
   return { text, n, valid, emptied, onInput, onFocus: () => setText(''), onBlur, bump, flush };
 }
 
-/** Step 3: how many points the game is played to. */
+/** Step 3: how many points the game is played to. In the car it is the last step, and the game starts from here. */
 export function PointsStep({ view }) {
   const t = useTarget(view);
+  const s = useStore();
+  const car = view.mode === 'car';
+  const canStart = view.players.length >= view.limits.min && view.you.ready && s.conn === 'open';
   const goTo = (step) => () => {
     t.flush();
     setStore({ step });
   };
   return html`<main class="screen setup">
     <${SetupHeader} />
-    <${Steps} current=${3} onBack=${goTo(1)} />
+    <${Steps} current=${3} total=${car ? CAR_SEGMENTS : SEGMENTS} onBack=${goTo(1)} />
     <h1 class="setup__title rise-in">Hvor lenge skal dere spille?</h1>
     <section class="card card--paper card--tilt-r setup__points center stack">
       <label class="sr-only" for="target">Antall poeng å spille til</label>
@@ -116,7 +120,9 @@ export function PointsStep({ view }) {
     </section>
     <p class="small muted center" id="target-hint">Ett poeng tar ca. ${MINUTES_PER_POINT} minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</p>
     <div class="dock">
-      <${Button} block onClick=${goTo(3)} disabled=${!(t.valid || t.emptied)}>Neste</${Button}>
+      ${car
+        ? html`<${Button} block variant="lime" onClick=${() => (t.flush(), actions.start())} disabled=${!(t.valid || t.emptied) || !canStart}>Start spillet</${Button}>`
+        : html`<${Button} block onClick=${goTo(3)} disabled=${!(t.valid || t.emptied)}>Neste</${Button}>`}
     </div>
   </main>`;
 }

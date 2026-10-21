@@ -32,7 +32,7 @@ const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker
   // the host's second step: the number, what it comes to, and Neste
   'setup-points',
   // bilturmodus: the way to play, the list of players, how it works, and the phone going round
-  'mode-step', 'car-players-3', 'car-how', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-question', 'car-question-selected', 'car-summary', 'car-summary-none-right'];
+  'mode-step', 'car-players-3', 'car-points', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-question', 'car-question-selected', 'car-summary', 'car-summary-none-right'];
 
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();

@@ -51,10 +51,23 @@ describe('the steps of the animated rules', () => {
     assert.match(car.find((s) => s.id === 'again').line, /Telefonen sendes rundt igjen/);
     assert.doesNotMatch(car.find((s) => s.id === 'secret').line, /to imposterer/);
   });
+});
 
-  it('are three, numbered from 1, in the short version for the set-up', () => {
-    const how = slidesFor({ car: true, how: true });
-    assert.deepEqual(how.map((s) => [s.n, s.id]), [[1, 'roles'], [2, 'talk'], [3, 'reveal']]);
+describe('the places where the rules are told', () => {
+  it('have only the story: no written rules beside it and nothing to switch to', () => {
+    const hub = read('public/js/regler/hub.js');
+    const sheets = read('public/js/screens/sheets.js');
+    assert.doesNotMatch(hub + sheets, /Les reglene|Se animasjon|RulesText|CAR_STEPS/);
+    assert.doesNotMatch(read('public/css/regler.css'), /rg__switch|rg__text|rgS--how/);
+  });
+
+  it('end the set-up of Bilturmodus at the points, which starts the game (three steps, no «Klar? Slik funker det»)', () => {
+    const car = read('public/js/screens/car.js');
+    const setup = read('public/js/screens/setup.js');
+    assert.doesNotMatch(car, /HowStep|Klar\? Slik funker det/);
+    assert.match(setup, /export const CAR_SEGMENTS = 3;/);
+    assert.match(setup, /Start spillet/, 'the last step of the car has that button');
+    assert.match(car, /<\$\{Steps\} current=\$\{2\} total=\$\{CAR_SEGMENTS\}/, 'and the bar before it counts three');
   });
 });
 

@@ -18,12 +18,12 @@ function Card({ s, held, car }) {
 /** The seconds of a card: the ones with most going on stay longest. */
 const seconds = (car) => (s) => (s.id === 'lock' || s.id === 'talk' || s.id === 'secret' || (car && s.id === 'roles') ? 8 : 6.5);
 
-export const RulesStory = ({ start, slides, car, how, onDone }) => html`<${Story}
+export const RulesStory = ({ start, slides, car, onDone }) => html`<${Story}
   start=${start}
   slides=${slides}
   onDone=${onDone}
   seconds=${seconds(car)}
   Card=${Card}
   cardProps=${{ car }}
-  class=${`rgS--bord ${how ? 'rgS--how' : ''}`}
+  class="rgS--bord"
 />`;

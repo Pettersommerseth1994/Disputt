@@ -10,7 +10,7 @@ import { asset } from '../paths.js';
 import { setStore } from '../store.js';
 import { Button, Logo } from '../ui.js';
 import { cx } from '../util.js';
-import { Steps } from './setup.js';
+import { CAR_SEGMENTS, Steps } from './setup.js';
 
 // (`players`: a car holds five, a phone each is ten: LIMITS.maxPlayersCar and LIMITS.maxPlayers in shared/game.js)
 export const MODES = [
@@ -55,7 +55,7 @@ export function ModeStep() {
     <header class="row row--between">
       <${Logo} small onClick=${back} />
     </header>
-    <${Steps} current=${1} onBack=${back} />
+    <${Steps} current=${1} total=${mode === 'car' ? CAR_SEGMENTS : undefined} onBack=${back} />
     <h1 class="setup__title rise-in">Hvordan vil dere spille?</h1>
     <div class="modes" role="radiogroup" aria-label="Spillmodus">
       ${MODES.map(

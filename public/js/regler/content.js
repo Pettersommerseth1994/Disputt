@@ -1,6 +1,5 @@
 // What the animated rules say: the eight steps of a round, in short, with the people and the question the pictures use.
 // The written rules (screens/sheets.js) have the same steps. `car` is Bilturmodus (one phone), where a few steps differ.
-// «Hvordan» (`how`) is the short version for the last step of the set-up: three of the steps.
 
 /** The little cast that plays the game in every picture: five players, one of them (Jonas) is the imposter, Sofie has the question. */
 export const CAST = [
@@ -73,10 +72,7 @@ const SLIDES = [
   },
 ];
 
-/** The steps of the short version: the roles, the talk, and the end of the round. */
-const HOW = ['roles', 'talk', 'reveal'];
-
-/** The slides for a mode: every one has `n` (its number in the list that is shown) and `line`, the one that is said in the mode that is played. */
-export function slidesFor({ car = false, how = false } = {}) {
-  return SLIDES.filter((s) => !how || HOW.includes(s.id)).map((s, i) => ({ ...s, n: i + 1, line: car && s.carLine ? s.carLine : s.line }));
+/** The slides for a mode: every one has `n` (its number) and `line`, the one that is said in the mode that is played. */
+export function slidesFor({ car = false } = {}) {
+  return SLIDES.map((s, i) => ({ ...s, n: i + 1, line: car && s.carLine ? s.carLine : s.line }));
 }

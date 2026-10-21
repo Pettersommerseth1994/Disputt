@@ -8,7 +8,6 @@
 import { AVATARS } from '../../shared/avatars.mjs';
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { impostorCount } from '../impostors.js';
-import { RulesHub } from '../regler/hub.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, CloseIcon, Sheet } from '../ui.js';
@@ -17,7 +16,7 @@ import { TableStrip } from './carstrip.js';
 import { Finished } from './finale.js';
 import { Connecting } from './home.js';
 import { Countdown, Question, RevealAsker, Summary } from './round.js';
-import { MINUTES_PER_POINT, PointsStep, SetupHeader, Steps, duration, hostStep } from './setup.js';
+import { CAR_SEGMENTS, PointsStep, SetupHeader, Steps, hostStep } from './setup.js';
 import { TwoPlayersNote } from './twonote.js';
 
 const NAME_MAX = 14;
@@ -33,9 +32,8 @@ export function carScreen(view, s) {
     case 'lobby': {
       // (too few players for a game: the list of players, whatever step it was on. After a reload with only the host in it, the last step could not start anything)
       const step = view.players.length < view.limits.min ? 1 : hostStep(view, s.step);
-      if (step === 1) return html`<${PlayersStep} view=${view} />`;
-      if (step === 2) return html`<${PointsStep} view=${view} />`;
-      return html`<${HowStep} view=${view} />`;
+      if (step === 1) return html`<${PlayersStep} view=${view} />`; // (the last step, how long to play, starts the game: nothing comes after it)
+      return html`<${PointsStep} view=${view} />`;
     }
     case 'role':
       return view.table ? html`<${CarRoles} view=${view} />` : html`<${Connecting} />`;
@@ -90,7 +88,7 @@ export function PlayersStep({ view }) {
   };
   return html`<main class="screen lobby players-step">
     <${SetupHeader} />
-    <${Steps} current=${2} onBack=${players.length <= 1 ? backToMode : undefined} />
+    <${Steps} current=${2} total=${CAR_SEGMENTS} onBack=${players.length <= 1 ? backToMode : undefined} />
     <div class="stack">
       <header class="stack stack--tight">
         <h1 class="setup__title rise-in">Hvem spiller?</h1>
@@ -217,38 +215,6 @@ function PlayerForm({ view, id, onClose }) {
       <${Button} block type="submit" disabled=${!ready}>${adding ? 'Legg til' : 'Lagre'}</${Button}>
     </form>
   </${Sheet}>`;
-}
-
-// ------------------------------------------------------------------ step 4: how it works
-
-export function HowStep({ view }) {
-  const s = useStore();
-  const host = view.players.find((p) => p.isHost);
-  const enough = view.players.length >= view.limits.min;
-  const twoImpostors = view.players.length >= (view.limits.twoImpostorsFrom ?? Infinity);
-  const canStart = enough && view.you.ready && s.conn === 'open';
-  const steps = [
-    ['Send telefonen rundt', 'Alle holder inne knappen ved navnet sitt og ser rollen sin, én og én. Skjul skjermen for de andre.'],
-    [`${host?.name ?? 'Verten'} leser spørsmålet`, 'Verten leser spørsmålet og alternativene høyt. Diskuter, og bli enige om ett svar.'],
-    ['Imposteren avslører seg', 'Imposteren sier riktig svar høyt. Så vises poengene, og neste runde starter med nye roller.'],
-  ];
-  return html`<main class="screen setup">
-    <${SetupHeader} />
-    <${Steps} current=${4} onBack=${() => setStore({ step: 2 })} />
-    <h1 class="setup__title rise-in">Klar? Slik funker det</h1>
-    <${RulesHub} car how text=${html`<ol class="rules">
-      ${steps.map(
-        ([title, text], i) => html`<li key=${i}>
-          <span class="rules__n">${i + 1}</span>
-          <div><h3>${title}</h3><p class="muted">${text}</p></div>
-        </li>`,
-      )}
-    </ol>`} />
-    <p class="small muted center">Først til ${view.target} poeng · ${duration(view.target * MINUTES_PER_POINT)} · ${view.players.length} ${plural(view.players.length, 'spiller', 'spillere')}${twoImpostors ? ' · to imposterer' : ''}</p>
-    <div class="dock">
-      <${Button} block variant="lime" onClick=${() => actions.start()} disabled=${!canStart}>Start spillet</${Button}>
-    </div>
-  </main>`;
 }
 
 // ------------------------------------------------------------------ the phone goes round
