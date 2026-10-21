@@ -10,6 +10,7 @@ export const PLANS = [
     price: 149,
     length: '12 timer',
     detail: 'Til én spillkveld eller biltur. Gjelder i 12 timer fra du betaler, og fornyes ikke av seg selv.',
+    badge: 'Mest populær',
   },
   {
     id: 'weekend',
@@ -24,7 +25,6 @@ export const PLANS = [
     price: 299,
     length: '12 måneder',
     detail: 'For faste spillekvelder. Gjelder i 12 måneder fra du betaler, og fornyes ikke av seg selv.',
-    badge: 'Mest populær',
   },
 ];
 

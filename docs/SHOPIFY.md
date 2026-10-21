@@ -14,9 +14,9 @@ Innhold: [Kort fortalt](#kort-fortalt) · [1. Slik virker det](#1-slik-virker-de
 
 | Pakke | Pris | Varighet |
 | --- | --- | --- |
-| **En kveld** | 149 kr | 12 timer fra betalingen |
+| **En kveld** (mest populær) | 149 kr | 12 timer fra betalingen |
 | **En helg** | 199 kr | 72 timer fra betalingen |
-| **For ett år** (mest populær) | 299 kr | 12 måneder fra betalingen |
+| **For ett år** | 299 kr | 12 måneder fra betalingen |
 
 *Livstid (299 kr) ble solgt til 20. oktober 2026. Produktet er arkivert i Shopify, men betalingsserveren og spillet kjenner det fortsatt, så en som har kjøpt den beholder den.*
 
