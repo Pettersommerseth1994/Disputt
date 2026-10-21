@@ -108,6 +108,6 @@ export function QrSheet({ view }) {
 /** «Slik spiller dere»: the story of a round (regler/hub.js), nothing written beside it. */
 export function RulesSheet({ car = false }) {
   return html`<${Sheet} title="Slik spiller dere" onClose=${close}>
-    <${RulesHub} car=${car} onDone=${close} />
+    <${RulesHub} car=${car} />
   </${Sheet}>`;
 }

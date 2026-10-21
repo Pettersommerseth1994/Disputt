@@ -61,6 +61,12 @@ describe('the strip', () => {
     assert.match(base, /\.screen \{[^}]*padding: var\(--page-top\)/, 'the top margin it takes the place of');
   });
 
+  it('hangs from the edge: the button has no line along the top', () => {
+    const pill = rule(css, '.mantra__pill');
+    assert.match(pill, /border-top:\s*0/);
+    assert.doesNotMatch(pill, /inset 0 0 0/, 'and no ring drawn all the way round it');
+  });
+
   it('is as tall as it says: a button that is a part of it never makes it taller', () => {
     assert.match(rule(css, '.mantra__pill'), /white-space:\s*nowrap/);
     const pill = Number(rule(css, '.mantra__pill').match(/height:\s*([\d.]+)rem/)?.[1]);

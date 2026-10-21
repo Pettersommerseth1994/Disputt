@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { describe, it } from 'node:test';
-import { QUESTION, RIGHT, RIGHT_TEXT, slidesFor } from '../public/js/regler/content.js';
+import { IMPOSTOR, NEW_IMPOSTOR, QUESTION, RIGHT, RIGHT_TEXT, slidesFor } from '../public/js/regler/content.js';
 
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -25,6 +25,12 @@ describe('the steps of the animated rules', () => {
     assert.equal(QUESTION.text, 'Hva er hovedstaden i England?');
     assert.equal(RIGHT, 'B');
     assert.equal(RIGHT_TEXT, 'B: London');
+  });
+
+  it('say in the last step that a new imposter is picked at random, and the table gives the red card to somebody else than Jonas', () => {
+    for (const car of [false, true]) assert.match(slidesFor({ car }).find((s) => s.id === 'again').line, /Ny imposter velges tilfeldig/);
+    assert.notEqual(NEW_IMPOSTOR, IMPOSTOR);
+    assert.match(read('public/js/regler/bord.js'), /id === 'again' \? NEW_IMPOSTOR : IMPOSTOR/);
   });
 
   it('say what to do, without the exclamation marks that were taken away, and that the group has to agree for itself', () => {
@@ -77,7 +83,10 @@ describe('the start screen', () => {
     assert.match(home, /const RULES = 'Reglene, kort fortalt';/);
     assert.match(home, /class="home-tag" onClick=\$\{\(\) => setStore\(\{ sheet: 'rules' \}\)\}/, 'it opens the rules');
     assert.doesNotMatch(home, /forslag|useForslag/, 'and no preview chooser is left');
-    assert.match(read('public/css/screens.css'), /\.home-tag \{[^}]*background:[^}]*var\(--pink\)/, 'a pink sticker');
+    const screens = read('public/css/screens.css');
+    assert.match(screens, /\.home-tag \{[^}]*background:[^}]*var\(--pink\)/, 'a pink sticker');
+    assert.match(screens, /\.home-tag__ic \{[^}]*width: 1\.5rem/, 'a low one, with a small play symbol');
+    assert.match(screens, /\.home__hero \.lead \{[^}]*white-space: nowrap/, 'and the slogan under the logo stays on one line');
   });
 });
 
@@ -101,6 +110,11 @@ describe('the story', () => {
     const table = read('public/js/regler/bord.js');
     assert.doesNotMatch(table, /glance/);
     assert.doesNotMatch(css, /\.rgE__card img \{[^}]*opacity:\s*0/);
+  });
+
+  it('has no button on the last card: it just stays', () => {
+    assert.doesNotMatch(read('public/js/regler/story.js') + read('public/js/regler/hub.js') + read('public/js/regler/story-bord.js') + read('public/js/screens/sheets.js'), /La oss spille|onDone/);
+    assert.doesNotMatch(css, /rgS__done/);
   });
 
   it('lets the name of the step and its line come at once, to the left, not one word at a time', () => {

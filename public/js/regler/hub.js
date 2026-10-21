@@ -15,8 +15,8 @@ const startAt = () => {
   }
 };
 
-export function RulesHub({ car = false, onDone = null }) {
+export function RulesHub({ car = false }) {
   const ready = useReglerStyles();
   if (!ready) return null;
-  return html`<${RulesStory} key=${car} start=${startAt()} slides=${slidesFor({ car })} car=${car} onDone=${onDone} />`;
+  return html`<${RulesStory} key=${car} start=${startAt()} slides=${slidesFor({ car })} car=${car} />`;
 }

@@ -2,7 +2,7 @@
 // The roles are on the cards the whole time: they are shown from the moment they are dealt. The players talk in their own bubbles.
 
 import { html } from '../vendor/htm-preact.js';
-import { ASKER, BLUFF, CAST, IMPOSTOR, QUESTION, RIGHT, RIGHT_TEXT, SIXTH } from './content.js';
+import { ASKER, BLUFF, CAST, IMPOSTOR, NEW_IMPOSTOR, QUESTION, RIGHT, RIGHT_TEXT, SIXTH } from './content.js';
 import { Bubble, Person, Pic } from './kit.js';
 
 const BEATS = { roles: 3, secret: 5, ask: 3, talk: 5, lock: 7, reveal: 4, points: 5, again: 4 };
@@ -44,7 +44,7 @@ export function Table({ id, b, car }) {
   const right = id === 'points' && b >= 1 && b <= 2;
   const wrong = id === 'points' && b >= 3;
   const cards = id === 'secret' || id === 'again' || (id === 'roles' && b >= 1); // the roles are shown from the moment they are dealt
-  const imp = (i) => i === IMPOSTOR || i === 5;
+  const imp = (i) => i === (id === 'again' ? NEW_IMPOSTOR : IMPOSTOR) || (id !== 'again' && i === 5); // (a new round has a new imposter)
   return html`<div class=${`rgE__table rgE--${id}`}>
     <div class="rgE__top" aria-hidden="true"></div>
     ${six && b >= 4 && html`<div class="rgE__linkline" aria-hidden="true"></div>`}

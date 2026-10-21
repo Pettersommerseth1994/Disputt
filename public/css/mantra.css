@@ -7,7 +7,7 @@
    ========================================================================== */
 
 :root {
-  --mantra-h: 1.5rem; /* the strip, under whatever the phone keeps for its status bar */
+  --mantra-h: 1.625rem; /* the strip, under whatever the phone keeps for its status bar */
   --mantra-total: calc(var(--mantra-h) + env(safe-area-inset-top, 0px));
 }
 
@@ -37,9 +37,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  height: 1.4rem;
-  padding: 0 0.8rem 0 0.6rem;
-  border: 0;
+  height: 1.525rem; /* 2 px of room under the star and the word */
+  padding: 0 0.8rem 0.125rem 0.6rem;
+  border: 1.5px solid rgb(var(--cream-rgb) / 0.2);
+  border-top: 0; /* no line along the top: it hangs from the edge */
   border-radius: 0 0 0.75rem 0.75rem; /* square at the top, where it meets the edge */
   font-family: var(--font-display);
   font-weight: 800;
@@ -48,7 +49,7 @@
   white-space: nowrap; /* (the strip stays one line tall) */
   color: var(--cream);
   background: var(--tex-grain), var(--burgundy-900);
-  box-shadow: inset 0 0 0 1.5px rgb(var(--cream-rgb) / 0.2), 0 2px 0 var(--edge);
+  box-shadow: 0 2px 0 var(--edge);
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;

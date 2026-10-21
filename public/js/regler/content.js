@@ -12,6 +12,8 @@ export const CAST = [
 /** The sixth player, who only comes to the table in the step about two imposters (six or more play: two are imposters). */
 export const SIXTH = { id: 'sky', name: 'Lise' };
 export const IMPOSTOR = 3;
+/** In the next round the imposter is picked at random again: not the same player (so nobody thinks Jonas is always the imposter). */
+export const NEW_IMPOSTOR = 1;
 export const ASKER = 2;
 
 /** The question every picture uses. B is right; the imposter bluffs for A. */
@@ -67,8 +69,8 @@ const SLIDES = [
   {
     id: 'again',
     title: 'Deretter ny runde',
-    line: 'Nye roller, nytt spørsmål. Først til målet vinner!',
-    carLine: 'Telefonen sendes rundt igjen. Først til målet vinner!',
+    line: 'Nye roller, nytt spørsmål. Ny imposter velges tilfeldig. Først til målet vinner!',
+    carLine: 'Telefonen sendes rundt igjen. Ny imposter velges tilfeldig. Først til målet vinner!',
   },
 ];
 

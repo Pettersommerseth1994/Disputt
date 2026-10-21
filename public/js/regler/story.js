@@ -1,18 +1,17 @@
 // The shell of the story: a bar at the top that fills up (one segment per card), the card that is on, and two big places to tap: on the right
 // goes on, on the left goes back. The next card comes by itself when the bar is full. As in Instagram, a finger held anywhere on the story stops
 // the clock (the card, which is told `held`, stops its own movement too) and lets go of it again when the finger lifts: a hold is not a tap, so
-// the card does not change when the finger is lifted after one. The last card stays, and has a button when the one who draws the story hands in `onDone`.
+// the card does not change when the finger is lifted after one. The last card just stays.
 // What is on the card is `Card`, a component that is drawn for one slide.
 
 import { html, useRef, useState } from '../vendor/htm-preact.js';
-import { Button } from '../ui.js';
 
 /** How long a card stays, in seconds, when nothing else is said. */
 export const SECONDS = 6;
 /** A finger that stays down longer than this (in milliseconds) is holding, not tapping. */
 const HOLD_MS = 280;
 
-export function Story({ slides, start = 0, onDone, seconds = () => SECONDS, Card, cardProps = {}, class: cls = '' }) {
+export function Story({ slides, start = 0, seconds = () => SECONDS, Card, cardProps = {}, class: cls = '' }) {
   const [at, setAt] = useState(Math.min(start, slides.length - 1));
   const [held, setHeld] = useState(false);
   const downAt = useRef(0); // when the finger came down (0: no finger has been down since the last tap was handled)
@@ -52,7 +51,6 @@ export function Story({ slides, start = 0, onDone, seconds = () => SECONDS, Card
     </div>
     <div class=${`rgS__card ${held ? 'is-held' : ''}`} key=${s.id}>
       <${Card} s=${s} held=${held} last=${last} ...${cardProps} />
-      ${last && onDone && html`<${Button} variant="lime" class="rgS__done" onClick=${onDone}>La oss spille</${Button}>`}
     </div>
     <button type="button" class="rgS__zone rgS__zone--back" aria-label="Forrige" onClick=${tap(at - 1)}></button>
     <button type="button" class="rgS__zone rgS__zone--next" aria-label=${last ? 'Fra begynnelsen' : 'Neste'} onClick=${tap(last ? 0 : at + 1)}></button>

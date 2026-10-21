@@ -38,7 +38,6 @@
 .rgS.is-held .rgS__bars .is-on i { animation-play-state: paused; }
 .rgS__card { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 2.1rem 1.1rem 1rem; animation: rgFade 0.3s both; }
 .rgS__card.is-held *, .rgS__card.is-held *::before, .rgS__card.is-held *::after { animation-play-state: paused !important; }
-.rgS__done { position: relative; z-index: 4; align-self: center; margin-top: 0.4rem; animation: rgPop 0.5s 1.6s both; }
 .rgS__zone { position: absolute; z-index: 2; top: 2rem; bottom: 0; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .rgS__zone--back { left: 0; width: 30%; }
 .rgS__zone--next { right: 0; width: 70%; }
@@ -109,6 +108,6 @@
 /* ---- Less movement --------------------------------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .rg *, .rg *::before, .rg *::after { animation: none !important; transition: none !important; }
-  .rgS__top, .rgS__done { opacity: 1 !important; }
+  .rgS__top { opacity: 1 !important; }
   .rgS__bars .is-on i { width: 100%; }
 }
