@@ -20,6 +20,9 @@
 .home__hero .lead { font-size: min(var(--fs-lead), 4.3vw); white-space: nowrap; } /* the slogan under the logo stays on one line, on every phone */
 .home__tagline { font-size: clamp(2.1rem, 10vw, 2.9rem); text-shadow: 3px 4px 0 var(--edge); }
 .home__notice { color: var(--ink); font-weight: 700; }
+.rejoin { position: relative; z-index: 2; display: grid; gap: var(--s-2); max-width: 22rem; padding: var(--s-3) var(--s-4); color: var(--ink); text-align: center; }
+.rejoin p { margin: 0; }
+.rejoin .btn--text { color: var(--ink); } /* (a text button is cream: not on a yellow card) */
 /* The link to the rules: a pink sticker with a play triangle, a little crooked, under the slogan (it opens the story of a round) */
 .home-tag { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.28rem 0.9rem 0.32rem 0.3rem; border: 0; border-radius: 1.1rem 1.5rem 1rem 1.4rem; rotate: -3deg; font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; line-height: 1.1; color: var(--ink); background: var(--tex-grain), var(--tex-light), var(--pink); box-shadow: 0 3px 0 var(--pink-deep), 0 3px 0 1px var(--edge); cursor: pointer; animation: home-tag-in 0.5s 0.25s var(--ease-out, ease) both; }
 .home-tag:active { transform: scale(0.97); }

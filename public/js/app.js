@@ -5,6 +5,7 @@ import { Finished } from './screens/finale.js';
 import { Connecting, Home, SeatPicker } from './screens/home.js';
 import { Lobby } from './screens/lobby.js';
 import { HomeSheet } from './screens/leave.js';
+import { useRememberGame } from './lastgame.js';
 import { Mantra } from './mantra/mantra.js';
 import { ModeStep } from './screens/mode.js';
 import { Profile } from './screens/profile.js';
@@ -63,6 +64,7 @@ export function App() {
   const s = useStore();
   const { view } = s;
   useWakeLock(Boolean(view));
+  useRememberGame(s.session, view); // (a guest's seat is remembered, so that closing the page is not the end of it: screens/rejoin.js)
 
   // every new screen starts at the top
   useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep]);

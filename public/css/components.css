@@ -655,3 +655,10 @@
 .input--small { min-height: 2.9rem; padding: 0.4rem 0.9rem; font-size: 1.1rem; letter-spacing: 0.04em; box-shadow: 3px 4px 0 var(--edge); }
 .plan__price--deal { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; }
 .plan__was { font-size: 0.85rem; font-weight: 700; opacity: 0.6; text-decoration-thickness: 2px; }
+
+/* The screen that stays awake: a line with a switch (screens/awake.js) */
+.awake { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
+.awake__text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+/* The code of the game, in the poeng sheet and the host's options (screens/sheets.js) */
+.gamecode { padding: var(--s-3) var(--s-4); }
+.gamecode__code { font-size: 2.4rem; letter-spacing: 0.18em; line-height: 1; color: var(--yellow); }

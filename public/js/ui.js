@@ -3,12 +3,13 @@
 import { AVATARS } from '../shared/avatars.mjs';
 import { useHold } from './hold.js';
 import { joinNames, matesOf } from './impostors.js';
-import { html, useEffect, useMemo, useRef } from './vendor/htm-preact.js';
+import { html, useEffect, useMemo } from './vendor/htm-preact.js';
 import { qrSvg } from './qr.js';
 import { ROOT, asset } from './paths.js';
 import { config, isP2P } from './settings.js';
 import { setStore, toast } from './store.js';
 import { clock, cx, ranking, useRemaining } from './util.js';
+import { startAwake, useAwakeWanted } from './wake.js';
 
 export const avatarOf = (id) => AVATARS.find((a) => a.id === id);
 
@@ -203,34 +204,14 @@ export function joinUrl(info, code) {
 /** True where the browser can keep the screen awake (needs HTTPS or localhost). Elsewhere we tell players to turn off auto-lock. */
 export const keepsAwake = typeof navigator !== 'undefined' && 'wakeLock' in navigator && window.isSecureContext;
 
-/** Keeps the screen awake while a game is on (where the browser allows it). */
+/** Keeps the screen awake while a game is on: the wake lock where the browser has it, otherwise a silent video (wake.js). */
 export function useWakeLock(active) {
-  const lock = useRef(null);
+  const wanted = useAwakeWanted();
   useEffect(() => {
-    if (!active || !('wakeLock' in navigator)) return undefined;
-    let cancelled = false;
-    const acquire = async () => {
-      try {
-        const l = await navigator.wakeLock.request('screen');
-        if (cancelled) l.release();
-        else lock.current = l;
-        setStore({ wakeLockDenied: false });
-      } catch {
-        // Refused (low-power mode, a home-screen app …). The game still works, but the screen will lock by itself, so
-        // the lobby asks players to turn auto-lock off by hand.
-        setStore({ wakeLockDenied: true });
-      }
-    };
-    const onVisible = () => document.visibilityState === 'visible' && acquire();
-    acquire();
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      cancelled = true;
-      document.removeEventListener('visibilitychange', onVisible);
-      lock.current?.release().catch(() => {});
-      lock.current = null;
-    };
-  }, [active]);
+    if (!active) return undefined;
+    const awake = startAwake({ wanted });
+    return () => awake.stop();
+  }, [active, wanted]);
 }
 
 export function Confetti({ count = 36 }) {

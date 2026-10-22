@@ -92,6 +92,13 @@ Verten går gjennom fire steg (tre i Bilturmodus), ett valg per skjerm: 1 «Hvor
 - Invitasjonen har en liten QR-kode (trykk for å forstørre, det eksisterende arket «Bli med»), koden og «Del lenke», og under dem poengmålet med «Endre». **Hvem som er med vises i bunnfeltet** som en rad med overlappende ansikter (`.facepile`) og en kort tekst over Start-knappen, siden spillerlisten ellers havner under bunnfeltet på en 664 px høy skjerm. Listen med navn og fjerning ligger lenger ned.
 - Ett poeng tar ca. 6 minutter (`MINUTES_PER_POINT` i `setup.js`). Tallet står også i spillereglene, vertsvalget, README og stilguiden.
 
+## Å komme tilbake til et spill, og skjermen som ikke skal låse seg
+
+- **Spillkoden står i spillet.** Poengtavla («Poeng») og vertsvalgene viser koden (`GameCode` i `screens/sheets.js`), med en forklaring: åpne disputt.site, «Bli med i spill», skriv koden og velg deg selv. Før måtte man huske den.
+- **«Hopp inn igjen».** En gjest sin plass huskes på telefonen i tre timer (`public/js/lastgame.js`, localStorage `disputt:last`; fanens egen kopi i sessionStorage forsvinner når fanen lukkes). Lukker gjesten fanen, står det på forsiden «Du var med i spillet ABCD som Lone» med «Hopp inn igjen» (`screens/rejoin.js`): samme spiller, samme poeng. Bare i spill med flere telefoner og bare for gjester (vertens spill er vertens egen side). Minnet slettes når plassen forlates, fjernes eller spillet er over. Å fjerne en frakoblet spiller midt i et spill sletter poengene hans; vertsvalgene sier det.
+- **Skjermen holdes våken** (`public/js/wake.js`, bryteren «Hold skjermen våken» i innstillingene og vertsvalgene, `screens/awake.js`). Vertens telefon er spillserveren: låser skjermen seg, mister alle forbindelsen. Først prøves Screen Wake Lock; mangler den eller blir den nektet (for eksempel Chrome på iPhone), spilles en liten, lydløs video i løkke ute av syne (`public/assets/awake/blank.mp4`, 1,4 kB; nettleseren starter den først etter et trykk). Slår man det av, huskes det, og lobbyen gir tipset om å sette skjermlåsen til «Aldri» hvis ingenting virker. `test/wake.test.js`.
+- Siden har `translate="no"`: en nettleser som oversetter siden dobler navn og poeng (Preact og oversettere slåss om tekstnodene).
+
 ## Reglene som historie: «Slik spiller dere»
 
 Folk vil ikke lese spillregler, så **overalt der spillet forklarer seg** kommer bildet først: arket «Slik spiller dere» (fra forsiden, lobbyen, oppsettet, avslutningen og vertsvalg) (det finnes ingen skrevet versjon ved siden av og ingenting å rulle i: bare historien). Koden ligger i `public/js/regler/`, stilene i `public/css/regler.css` (lastes av skriptet selv, som mantraet).

@@ -68,8 +68,8 @@ if (SHOTS) fs.mkdirSync('tmp/play', { recursive: true });
 // ---------------------------------------------------------------- helpers
 const phones = [];
 const problems = [];
-async function newPhone(name, { wakeLock = 'granted' } = {}) {
-  const ctx = await browser.createBrowserContext();
+async function newPhone(name, { wakeLock = 'granted', ctx: given = null } = {}) {
+  const ctx = given ?? (await browser.createBrowserContext());
   const page = await ctx.newPage();
   // (what only reads from the page is asked again if the page happened to be in the middle of a navigation: see `steady`)
   for (const method of ['$eval', '$$eval', '$', '$$', 'waitForFunction', 'waitForSelector']) {
@@ -78,13 +78,19 @@ async function newPhone(name, { wakeLock = 'granted' } = {}) {
   }
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   // Screen wake lock: most phones grant it, some refuse (low-power mode, home-screen apps). Headless Chrome decides by
-  // itself, so every phone gets a stand-in with a known answer.
+  // itself, so every phone gets a stand-in with a known answer. 'denied': the wake lock refuses, and the silent video that takes over
+  // (wake.js) plays. 'none': nothing keeps the screen awake, not even the video (a phone that refuses to play it).
+  if (wakeLock === 'none') {
+    await page.evaluateOnNewDocument(() => {
+      HTMLMediaElement.prototype.play = () => Promise.reject(new DOMException('Not allowed', 'NotAllowedError'));
+    });
+  }
   await page.evaluateOnNewDocument((mode) => {
     Object.defineProperty(navigator, 'wakeLock', {
       configurable: true,
       value: {
         request: async () => {
-          if (mode === 'denied') throw new DOMException('Denied', 'NotAllowedError');
+          if (mode === 'denied' || mode === 'none') throw new DOMException('Denied', 'NotAllowedError');
           return { release: async () => {}, addEventListener() {} };
         },
       },
@@ -168,7 +174,7 @@ async function register(p, name, avatarIndex, button = 'Klar!') {
 
 try {
   // ------------------------------------------------------------ lobby
-  const host = await newPhone(NAMES[0], { wakeLock: 'denied' }); // the host's phone refuses to stay awake
+  const host = await newPhone(NAMES[0], { wakeLock: 'none' }); // the host's phone refuses to stay awake, and to play the video that would keep it so
   await host.page.goto(`${base}/`);
   await waitText(host, /Diskuter,?\s+manipuler\s+og\s+vinn/);
   if (PAY || PAY_SHOP) await checkHome({ waitText, bodyText }, host);
@@ -251,11 +257,19 @@ try {
 
   const others = [];
   for (let i = 1; i < PLAYERS; i++) {
-    const p = await newPhone(NAMES[i]);
+    // (the first guest's phone refuses the wake lock too, but plays the silent video instead: that keeps it awake, so it needs no tip either)
+    const p = await newPhone(NAMES[i], { wakeLock: i === 1 ? 'denied' : 'granted' });
     await p.page.goto(`${base}/?j=${code.toLowerCase()}`); // like scanning the QR code
     await register(p, NAMES[i], 0); // taken avatars are disabled, so the first enabled one is always free
     await waitText(p, /Du er med/);
+    await sleep(300);
     assert.doesNotMatch(await bodyText(p), /sett skjermlåsen/i, 'a phone that does keep the screen awake needs no tip');
+    if (i === 1) {
+      // the wake lock was refused: the silent video has taken over, and it plays after the first touch
+      await p.page.waitForFunction(() => document.querySelector('video')?.paused === false, { timeout: 8000 });
+      assert.equal(await p.page.$eval('video', (v) => v.muted && v.loop), true, 'a silent video in a loop');
+      log('the wake lock was refused, and the silent video keeps the screen awake');
+    }
     others.push(p);
   }
   await waitText(host, new RegExp(`Spillere\\s+${PLAYERS}/10`));
@@ -575,6 +589,31 @@ try {
         // everybody else is told that the seat changed phones (claiming a seat needs no secret, so it has to be visible)
         await waitText(host, new RegExp(`Plassen til ${lost.name} ble tatt over av en ny telefon`), 5000);
         log('a fresh phone took over the lost seat, and the host was told');
+      }
+      // a guest closes the page (the tab), and comes back from the start screen: «Hopp inn igjen» is the same player, with the same points,
+      // and nobody had to remember the code
+      if (P2P && round === 1 && others.length >= 3) {
+        const pointsOf = (name) => host.page.$$eval('.scoreboard .score', (els, n) => { const el = els.find((e) => e.querySelector('.score__name').innerText.replace(/\s*\(deg\)\s*/, '').trim() === n); return el ? Number(el.querySelector('.score__points').firstChild.textContent) : null; }, name);
+        const gone = others[0];
+        const before = await pointsOf(gone.name);
+        assert.notEqual(before, null, 'the host sees the score of the guest');
+        await gone.page.close();
+        const back = await newPhone(gone.name, { ctx: gone.ctx }); // (the same browser: the page is new, what the browser remembers is not)
+        await back.page.goto(`${base}/`);
+        await waitText(back, new RegExp(`Du var med i spillet ${code} som ${gone.name}`));
+        await shot(back, '13-rejoin-card');
+        await clickButton(back, 'Hopp inn igjen');
+        await waitText(back, /Venter på at verten starter neste runde/, 20000);
+        all[all.indexOf(gone)] = back;
+        others[others.indexOf(gone)] = back;
+        assert.equal(await pointsOf(gone.name), before, 'the same points after coming back');
+        // the code is on the score sheet, for whoever needs it
+        await back.page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('Poeng')).click());
+        await waitText(back, new RegExp(`Spillkode\\s+${code}`));
+        await shot(back, '14-score-sheet-with-code');
+        await clickLabel(back, 'Lukk');
+        await back.page.waitForFunction(() => !document.querySelector('.sheet'));
+        log('a guest closed the page and came back with «Hopp inn igjen»: the same player, the same points');
       }
       // a guest has the scoreboard open when the host starts the next round: the role reveal must not be hidden behind it
       const guest = others[0];

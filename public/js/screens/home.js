@@ -6,6 +6,7 @@ import { isActive } from '../pay/pass.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, Logo } from '../ui.js';
 import { ModeStep } from './mode.js';
+import { RejoinCard } from './rejoin.js';
 
 /** The link to the rules on the start screen: the story of a round (regler/), under the slogan. */
 const RULES = 'Reglene, kort fortalt';
@@ -26,6 +27,7 @@ export function Home() {
       <p class="lead muted rise-in" style="animation-delay:.1s">Et quizspill med uenighetsgaranti</p>
       <button type="button" class="home-tag" onClick=${() => setStore({ sheet: 'rules' })}><span class="home-tag__ic" aria-hidden="true"><${Play} /></span><span>${RULES}</span></button>
       ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${s.notice}</p>`}
+      <${RejoinCard} />
     </div>
     <div class="dock">
       <${Button} block onClick=${() => setStore({ modeStep: true })} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>

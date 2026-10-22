@@ -4,9 +4,10 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
-import { Avatar, Button, CloseIcon, GearIcon, HelpIcon, Logo, QR, ShareLink, joinUrl, keepsAwake } from '../ui.js';
+import { Avatar, Button, CloseIcon, GearIcon, HelpIcon, Logo, QR, ShareLink, joinUrl } from '../ui.js';
 import { isP2P } from '../settings.js';
 import { cx, plural } from '../util.js';
+import { AwakeTip } from './awake.js';
 import { MINUTES_PER_POINT, SetupHeader, Steps, duration } from './setup.js';
 import { TwoPlayersNote } from './twonote.js';
 
@@ -28,9 +29,6 @@ function KickButton({ player }) {
     ${armed ? 'Fjern?' : html`<${CloseIcon} />`}
   </button>`;
 }
-
-const AwakeTip = ({ denied = false }) =>
-  keepsAwake && !denied ? null : html`<p class="small muted center" style="max-width:22rem;margin-inline:auto">Tips: sett skjermlåsen på telefonen til «Aldri» mens dere spiller, så mister du ikke forbindelsen.</p>`;
 
 function Players({ view, kickable = false, compact = false }) {
   const missing = Math.max(0, view.limits.min - view.players.length);
@@ -103,7 +101,7 @@ function HostLobby({ view }) {
           <${Button} variant="text" onClick=${() => setStore({ editing: true })}>Endre navn eller avatar</${Button}>
         </div>`}
         ${view.players.length === 2 && html`<${TwoPlayersNote} />`}
-        <${AwakeTip} denied=${s.wakeLockDenied} />
+        <${AwakeTip} />
       </section>
 
       ${isP2P && html`<p class="small muted center" role="note" style="max-width:24rem;margin-inline:auto">Du er spillets «server». Hold denne siden åpen mens dere spiller. Laster du den på nytt, fortsetter spillet der det var.</p>`}
@@ -146,7 +144,7 @@ function GuestLobby({ view }) {
       <section class="stack">
         <h2 class="center">Spillere <span class="muted">${view.players.length}</span></h2>
         <${Players} view=${view} />
-        <${AwakeTip} denied=${s.wakeLockDenied} />
+        <${AwakeTip} />
       </section>
     </div>
   </main>`;

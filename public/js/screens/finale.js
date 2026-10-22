@@ -1,6 +1,5 @@
 import { html } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
-import { setStore } from '../store.js';
 import { Avatar, Button, Confetti, Scoreboard } from '../ui.js';
 import { playerById } from '../util.js';
 
@@ -37,15 +36,9 @@ export function Finished({ view }) {
     ${view.you.isHost
       ? html`<div class="dock">
           <${Button} block variant="lime" onClick=${() => actions.again()}>Spill igjen</${Button}>
-          <div class="row row--center">
-            <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>
-          </div>
         </div>`
       : html`<div class="foot">
           <p class="center muted" role="status">Venter på at verten starter et nytt spill …</p>
-          <div class="row row--center">
-            <${Button} variant="text" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>
-          </div>
         </div>`}
   </main>`;
 }

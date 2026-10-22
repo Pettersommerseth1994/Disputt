@@ -3,6 +3,7 @@
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { RulesHub } from '../regler/hub.js';
+import { AwakeToggle } from './awake.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, QR, Scoreboard, Sheet, ShareLink, joinSite, joinUrl } from '../ui.js';
 
@@ -46,15 +47,26 @@ function HostControls({ view }) {
     ${offline.length > 0 &&
     html`<div class="stack stack--tight">
       <span class="field__label">Frakoblet akkurat nå</span>
+      ${view.phase !== 'lobby' && view.mode !== 'car' && html`<span class="field__hint">De kan hoppe inn igjen med spillkoden ${view.code} og beholde poengene sine. Fjerner du dem, mister de poengene og kommer ikke inn igjen.</span>`}
       ${offline.map(
         (p) => html`<div class="offline-row" key=${p.id}>
           <span class="offline-row__who"><${Avatar} id=${p.avatar} size="xs" offline /><span>${p.name}</span></span>
-          <${ConfirmButton} size="small" variant="ghost" label="Sikker?" onConfirm=${() => actions.kick(p.id)}>Fjern</${ConfirmButton}>
+          <${ConfirmButton} size="small" variant="ghost" label=${view.phase === 'lobby' ? 'Sikker?' : 'Mister poengene. Sikker?'} onConfirm=${() => actions.kick(p.id)}>Fjern</${ConfirmButton}>
         </div>`,
       )}
     </div>`}
     ${view.phase !== 'lobby' && view.phase !== 'finished' && html`<${ConfirmButton} block variant="pink" onConfirm=${() => { actions.end(); close(); }}>Avslutt spillet nå</${ConfirmButton}>`}
   </section>`;
+}
+
+/** The code of the game, for somebody who has lost the connection or closed the page: with it they can step back in and keep their points. */
+function GameCode({ view }) {
+  if (view.mode === 'car' || !view.code) return null;
+  return html`<div class="card card--deep stack stack--tight center gamecode">
+    <span class="small muted">Spillkode</span>
+    <strong class="display gamecode__code">${view.code}</strong>
+    <span class="small muted">Mistet du forbindelsen? Åpne disputt.site, trykk «Bli med i spill» og skriv koden. Velg deg selv, så er du tilbake med poengene dine.</span>
+  </div>`;
 }
 
 export function ScoresSheet({ view }) {
@@ -64,6 +76,7 @@ export function ScoresSheet({ view }) {
         <${Scoreboard} view=${view} />
         <p class="small muted center">Først til ${view.target} poeng vinner.</p>
       </div>
+      <${GameCode} view=${view} />
       ${!view.you.isHost && html`<${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>`}
     </div>
   </${Sheet}>`;
@@ -75,6 +88,8 @@ export function HostSheet({ view }) {
   return html`<${Sheet} title="Vertsvalg" onClose=${close}>
     <div class="stack stack--loose">
       <${HostControls} view=${view} />
+      <${GameCode} view=${view} />
+      <${AwakeToggle} />
       ${s.payments?.enabled && html`<${Button} block variant="cream" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`}
       <${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>
     </div>
@@ -85,6 +100,7 @@ export function HostSheet({ view }) {
 export function SettingsSheet() {
   return html`<${Sheet} title="Innstillinger" onClose=${close}>
     <div class="stack">
+      <${AwakeToggle} />
       <${Button} block variant="cream" onClick=${() => setStore({ sheet: null, editing: true })}>Endre navn eller avatar</${Button}>
       <${Button} block variant="cream" onClick=${() => setStore({ sheet: 'qr' })}>Vis QR-koden</${Button}>
       <${ConfirmButton} block variant="pink" label="Trykk igjen for å forlate spillet" onConfirm=${() => { close(); actions.leave(); }}>Forlat spillet</${ConfirmButton}>
