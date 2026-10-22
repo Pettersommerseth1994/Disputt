@@ -45,7 +45,7 @@
 /* The number and name of the step, and the line under it: both come at once, to the left. */
 .rgS__top { animation: rgFade 0.7s 0.1s both; }
 .rgS__head { margin: 0 0 0.3rem; font-family: var(--font-display); font-weight: 900; font-size: clamp(1.7rem, 8.2vw, 2.15rem); line-height: 1.05; text-align: left; color: inherit; }
-.rgS__intro { margin: 0; font-weight: 600; font-size: 1rem; line-height: 1.35; text-align: left; }
+.rgS__intro { margin: 0; font-weight: 600; font-size: 1rem; line-height: 1.35; text-align: left; white-space: pre-line; } /* (a line break in a text is a line break) */
 
 /* ---- The table ------------------------------------------------------------------------------------------------------------- */
 .rgS__table { flex: 1; display: flex; align-items: center; margin: 0.2rem -1rem 0; min-height: 0; }
@@ -75,6 +75,8 @@
 .rgE__note img { width: 1.9rem; }
 .rgE__note b { font-family: var(--font-display); font-weight: 800; font-size: 0.7rem; }
 .rgE__note span { font-family: var(--font-display); font-weight: 900; font-size: 0.9rem; line-height: 1.1; }
+.rgE__noteans { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.1rem; padding: 0.05rem 0.5rem 0.05rem 0.2rem; border-radius: var(--r-pill); font-style: normal; font-family: var(--font-display); font-weight: 900; font-size: 0.9rem; background: rgb(var(--ink-rgb) / 0.1); }
+.rgE__noteans u { display: grid; place-items: center; width: 1.2rem; height: 1.2rem; border-radius: 50%; text-decoration: none; font-size: 0.74rem; background: var(--opt-b); }
 .rgE__linkline { position: absolute; z-index: 1; left: 30%; right: 30%; top: 83%; border-top: 3px dashed var(--red); animation: rgFade 0.5s both; }
 .rgE__link { position: absolute; z-index: 3; left: 50%; top: 83%; translate: -50% -50%; width: 4.6rem; padding: 0.12rem 0.3rem; border: 2px dashed var(--red); border-radius: 0.8rem; text-align: center; line-height: 1.05; font-family: var(--font-display); font-weight: 800; font-size: 0.62rem; color: var(--red); background: var(--cream); animation: rgPop 0.5s var(--ease-out, ease) both; }
 

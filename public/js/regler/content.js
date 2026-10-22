@@ -36,8 +36,9 @@ const SLIDES = [
   {
     id: 'secret',
     title: 'Imposteren får vite riktig svar',
-    line: `Bare imposteren får vite riktig svar: ${RIGHT_TEXT}. Er dere seks eller flere, er det to imposterer, og de vet hvem den andre er.`,
-    carLine: `Bare imposteren får vite riktig svar: ${RIGHT_TEXT}. De andre får ikke vite det.`,
+    // (the answer itself is on the note on the table: the line only says who gets to know it)
+    line: 'Bare imposteren får vite riktig svar. Er dere seks eller flere, er det to imposterer, og de vet hvem den andre er.',
+    carLine: 'Bare imposteren får vite riktig svar. De andre får ikke vite det.',
   },
   {
     id: 'ask',
@@ -64,7 +65,7 @@ const SLIDES = [
   {
     id: 'points',
     title: 'Poengene deles ut',
-    line: 'Rett svar: de lojale får 1 poeng. Feil svar: imposteren får 1 poeng.',
+    line: 'Rett svar: de lojale får 1 poeng.\nFeil svar: imposteren får 1 poeng.', // (always on two lines)
   },
   {
     id: 'again',

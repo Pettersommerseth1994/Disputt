@@ -43,10 +43,17 @@ describe('the steps of the animated rules', () => {
 
   it('say that the imposter gets to know the right answer, and that six or more are two imposters who know each other', () => {
     const secret = slidesFor().find((s) => s.id === 'secret');
-    assert.match(secret.line, /B: London/);
+    assert.match(secret.line, /^Bare imposteren får vite riktig svar\. Er dere/, 'a full stop after «riktig svar»: the answer itself is on the note on the table');
+    assert.doesNotMatch(secret.line, /London|\{svar\}/);
     assert.match(secret.line, /seks eller flere/);
     assert.match(secret.line, /to imposterer/);
     assert.match(secret.line, /vet hvem den andre er/);
+  });
+
+  it('put the two sentences of the points on two lines', () => {
+    const line = slidesFor().find((s) => s.id === 'points').line;
+    assert.match(line, /1 poeng\.\nFeil svar:/);
+    assert.match(read('public/css/regler.css'), /\.rgS__intro \{[^}]*white-space: pre-line/);
   });
 
   it('are told in the words of Bilturmodus when one phone goes round (and a car holds five: never two imposters)', () => {

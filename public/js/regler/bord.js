@@ -59,7 +59,7 @@ export function Table({ id, b, car }) {
       </div>`;
     })}
     ${id === 'roles' && car && html`<span class="rgE__phone" style=${`--x:${seat(Math.min(b, 4))[0]}%;--y:${seat(Math.min(b, 4))[1]}%`} aria-hidden="true"><i></i></span>`}
-    ${id === 'secret' && b >= 1 && html`<div class="rgE__note"><${Pic} name="eye-impostor" /><b>Bare imposteren ser</b><span>Riktig svar: ${RIGHT_TEXT}</span></div>`}
+    ${id === 'secret' && b >= 1 && html`<div class="rgE__note"><${Pic} name="eye-impostor" /><b>Bare imposteren ser</b><span>Riktig svar</span><i class="rgE__noteans"><u>${RIGHT}</u>${QUESTION.options[QUESTION.right]}</i></div>`}
     ${six && b >= 4 && html`<span class="rgE__link">De vet om hverandre</span>`}
     ${id === 'ask' && html`<div class=${`rgE__q ${b >= 0 ? 'is-in' : ''}`}><b>${QUESTION.text}</b><span class=${`rgE__opts ${b >= 1 ? 'is-in' : ''}`}>${[0, 2].map((r) => html`<span key=${r}>${QUESTION.options.slice(r, r + 2).map((o, k) => html`<i key=${k}><u>${'ABCD'[r + k]}</u>${o}</i>`)}</span>`)}</span></div>`}
     ${id === 'talk' && b >= 1 && html`<${Bubble} key=${b} tail="down" tone=${sayWho === IMPOSTOR ? 'red' : 'cream'} class="rgE__say" style=${`--bx:${seat(sayWho)[0]}%;--by:${seat(sayWho)[1]}%`}>${sayText}</${Bubble}>`}
