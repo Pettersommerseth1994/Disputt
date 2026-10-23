@@ -236,7 +236,7 @@ export class Hub {
         this.welcomeNewcomer(entry, room, pid);
         break;
       case 'player.add':
-        room.addLocalPlayer(pid, { name: msg.name, avatar: msg.avatar });
+        room.addLocalPlayer(pid, { name: msg.name, avatar: msg.avatar, points: msg.points });
         break;
       case 'seen':
         room.roleSeen(pid, msg.id);

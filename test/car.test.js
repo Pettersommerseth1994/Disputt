@@ -249,16 +249,14 @@ describe('the car: a room', () => {
     assert.equal(ctx.room.players.size, 2);
   });
 
-  it('can only be put in by the host, in the lobby, and in the car', () => {
+  it('can only be put in by the host, and in the car', () => {
     const ctx = car(2);
     throwsCode(() => ctx.room.addLocalPlayer(ctx.players[1].id, { name: 'Ny', avatar: AVATAR_IDS[3] }), 'not_host');
-    ctx.room.start(ctx.host.id);
-    throwsCode(() => ctx.room.addLocalPlayer(ctx.host.id, { name: 'Ny', avatar: AVATAR_IDS[3] }), 'bad_phase');
     const other = cabin(2);
     throwsCode(() => other.room.addLocalPlayer(other.host.id, { name: 'Ny', avatar: AVATAR_IDS[3] }), 'bad_mode');
   });
 
-  it('can be changed and removed by the host in the lobby, and not mid-game', () => {
+  it('can be changed by the host in the lobby only, and removed by the host at any time (as long as two are left)', () => {
     const ctx = car(4);
     const [, a, b] = ctx.players;
     ctx.room.setProfile(ctx.host.id, { name: 'Kari', avatar: AVATAR_IDS[6] }, a.id);
@@ -270,8 +268,85 @@ describe('the car: a room', () => {
     throwsCode(() => ctx.room.setProfile(ctx.host.id, { name: 'Sen', avatar: AVATAR_IDS[8] }, b.id), 'bad_value');
     throwsCode(() => ctx.room.setProfile(ctx.host.id, { name: 'Sen', avatar: AVATAR_IDS[8] }, 'ukjent'), 'bad_value');
     ctx.room.start(ctx.host.id);
-    throwsCode(() => ctx.room.kick(ctx.host.id, a.id), 'bad_phase');
-    assert.equal(ctx.room.players.has(a.id), true, 'and nobody was removed');
+    const last = ctx.players[3];
+    throwsCode(() => ctx.room.setProfile(ctx.host.id, { name: 'Nytt', avatar: AVATAR_IDS[7] }, last.id), 'bad_phase'); // (a name is changed in the lobby)
+    ctx.room.kick(ctx.host.id, a.id); // (three become two: allowed)
+    assert.equal(ctx.room.players.has(a.id), false);
+    throwsCode(() => ctx.room.kick(ctx.host.id, last.id), 'need_players'); // (but not two become one)
+    assert.equal(ctx.room.players.has(last.id), true, 'and nobody more was removed');
+  });
+
+  describe('in the middle of a game, from the host\'s options', () => {
+    const add = (ctx, name, points) => ctx.room.addLocalPlayer(ctx.host.id, { name, avatar: AVATAR_IDS.find((id) => ![...ctx.room.players.values()].some((p) => p.avatar === id)), ...(points === undefined ? {} : { points }) });
+
+    it('puts in a player who comes in with 0 points (or the points that are chosen) and plays from the next round', () => {
+      const ctx = car(3);
+      ctx.room.start(ctx.host.id);
+      const cur = ctx.room.current;
+      const none = add(ctx, 'Null');
+      const some = add(ctx, 'To', 2);
+      assert.equal(ctx.room.players.get(none.id).score, 0);
+      assert.equal(ctx.room.players.get(some.id).score, 2);
+      assert.ok(!cur.participants.includes(some.id), 'not in the round that is on');
+      assert.equal(ctx.room.players.get(some.id).local, true);
+      throwsCode(() => add(ctx, 'For mange'), 'too_many'); // (five in a car)
+      ctx.room.finishRoundWithoutPoints();
+      ctx.room.nextRound(ctx.host.id);
+      assert.ok(ctx.room.current.participants.includes(some.id), 'in the next one');
+      assert.equal(ctx.room.viewFor(ctx.host.id).table.length, 5, 'and the phone goes round to all five');
+    });
+
+    it('refuses points that are as many as the target or more', () => {
+      const ctx = car(3);
+      ctx.room.start(ctx.host.id);
+      for (const points of [ctx.room.target, -1, 1.5]) throwsCode(() => add(ctx, 'Feil', points), 'bad_value');
+      assert.equal(ctx.room.players.size, 3, 'and nobody was put in');
+    });
+
+    it('takes a player out, with the points, also in the middle of a round', () => {
+      const ctx = car(4);
+      ctx.room.start(ctx.host.id);
+      const gone = ctx.players.find((p) => p.id !== ctx.host.id && !ctx.room.current.impostorIds.includes(p.id));
+      ctx.room.players.get(gone.id).score = 2;
+      ctx.room.kick(ctx.host.id, gone.id);
+      assert.equal(ctx.room.players.has(gone.id), false);
+      assert.equal(ctx.room.viewFor(ctx.host.id).table.some((r) => r.id === gone.id), false, 'not on the phone that goes round');
+      // the round goes on without them: everybody else sees the role, and the question comes
+      for (const row of ctx.room.viewFor(ctx.host.id).table) ctx.room.roleSeen(ctx.host.id, row.id);
+      ctx.room.startQuestion(ctx.host.id);
+      assert.equal(ctx.room.phase, PHASE.QUESTION);
+    });
+
+    it('ends the round without points when the only impostor is taken out', () => {
+      const ctx = car(4);
+      ctx.room.start(ctx.host.id);
+      const impostor = ctx.room.current.impostorIds[0];
+      if (impostor === ctx.host.id) return; // (the host cannot be taken out: nothing to check with this draw)
+      ctx.room.kick(ctx.host.id, impostor);
+      assert.equal(ctx.room.phase, PHASE.SUMMARY);
+      assert.equal(ctx.room.current.summary.skipped, true);
+    });
+
+    it('will not take the table below two players, and never takes out the host', () => {
+      const ctx = car(3);
+      ctx.room.start(ctx.host.id);
+      ctx.room.kick(ctx.host.id, ctx.players[1].id);
+      throwsCode(() => ctx.room.kick(ctx.host.id, ctx.players[2].id), 'need_players');
+      throwsCode(() => ctx.room.kick(ctx.host.id, ctx.host.id), 'bad_value');
+      assert.equal(ctx.room.readyPlayers().length, 2);
+    });
+
+    it('goes from two to three players with the ordinary rule (an impostor in every round)', () => {
+      const ctx = car(2);
+      ctx.room.start(ctx.host.id);
+      add(ctx, 'Tredje');
+      ctx.room.finishRoundWithoutPoints();
+      for (let i = 0; i < 12; i++) {
+        ctx.room.nextRound(ctx.host.id);
+        assert.equal(ctx.room.current.impostorIds.length, 1, 'with three there is always an impostor');
+        ctx.room.finishRoundWithoutPoints();
+      }
+    });
   });
 
   it('stays the host\'s for as long as it takes: nobody else has a phone to take over with', () => {

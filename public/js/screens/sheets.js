@@ -4,6 +4,7 @@ import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
 import { RulesHub } from '../regler/hub.js';
 import { AwakeToggle } from './awake.js';
+import { AddPlayerSheet, CarPlayers } from './carplayers.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, QR, Scoreboard, Sheet, ShareLink, joinSite, joinUrl } from '../ui.js';
 
@@ -85,15 +86,19 @@ export function ScoresSheet({ view }) {
 /** What used to hang under the scoreboard for the host: the gear in the header of the round screens opens it. */
 export function HostSheet({ view }) {
   const s = useStore();
+  const [adding, setAdding] = useState(false);
+  // (the form is a sheet of its own, beside this one: a sheet inside a sheet would move with the first one's slide-up)
   return html`<${Sheet} title="Vertsvalg" onClose=${close}>
     <div class="stack stack--loose">
       <${HostControls} view=${view} />
+      ${view.mode === 'car' && html`<${CarPlayers} view=${view} onAdd=${() => setAdding(true)} />`}
       <${GameCode} view=${view} />
       <${AwakeToggle} />
       ${s.payments?.enabled && html`<${Button} block variant="cream" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`}
       <${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>Slik spiller dere</${Button}>
     </div>
-  </${Sheet}>`;
+  </${Sheet}>
+  ${adding && html`<${AddPlayerSheet} view=${view} onClose=${() => setAdding(false)} />`}`;
 }
 
 /** What used to be three loose links under the player list: change name or avatar, show the QR code, leave. */

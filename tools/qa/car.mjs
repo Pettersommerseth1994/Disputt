@@ -23,7 +23,7 @@ const OUTCOMES_ARG = args.includes('--outcomes');
 const flags = args.filter((a) => a.startsWith('--'));
 const nums = args.filter((a) => !a.startsWith('--')).map(Number);
 const MAX = 5; // (what a car holds: LIMITS.maxPlayersCar)
-const PLAYERS = nums[0] ?? 3;
+let PLAYERS = nums[0] ?? 3; // (changes when the host puts a player in or takes one out in the middle of the game)
 const TARGET = OUTCOMES_ARG ? 99 : (nums[1] ?? 2);
 assert.ok(Number.isInteger(PLAYERS) && PLAYERS >= 2 && PLAYERS <= MAX && Number.isInteger(TARGET) && TARGET >= 1, `usage: car.mjs [players 2-${MAX}] [target]`);
 const SHOTS = flags.includes('--shots');
@@ -38,7 +38,7 @@ const FREE_ROUNDS = 2; // (the page's default)
 if (PAY) assert.ok(!LIVE && P2P && TARGET >= 3, '--pay needs --p2p, a local site and a target of 3 or more, so that there is a third round to pay for');
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 'Nina', 'Lars'];
-const names = NAMES.slice(0, PLAYERS);
+let names = NAMES.slice(0, PLAYERS);
 const HOST = names[0];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(...a);
@@ -536,6 +536,52 @@ async function playRound(round) {
   return { finished, groupRight };
 }
 
+// ---------------------------------------------------------------- changing who plays, from the host's options
+// After the first round: a player is put in (name, avatar, one point to come in with) and another is taken out, both from «Vertsvalg»,
+// and from the next round the phone goes round to the ones who are there now.
+async function changePlayers() {
+  if (PLAYERS < MAX) {
+    const name = NAMES.find((n) => !names.includes(n));
+    await clickLabel('Vertsvalg');
+    await waitText(/Hvem spiller/);
+    await clickButton('+ Legg til spiller');
+    await page.waitForSelector('#new-player-name', { timeout: 5000 });
+    await page.type('#new-player-name', name);
+    await shot('11-add-player');
+    // (the host's options have a stepper of their own, for the points of the game: the buttons of the form are the ones in the form)
+    await page.evaluate(() => document.querySelector('form [aria-label="Ett poeng mer"]').click());
+    await page.evaluate(() => document.querySelector('form button[type=submit]').click());
+    await waitText(new RegExp(`${name}\\s*·\\s*1 poeng`)); // (the sheet is back, with the player in the list and the point they came in with)
+    names = [...names, name];
+    PLAYERS++;
+    log(`${name} was put in from the host's options, with one point`);
+    await shot('12-host-options-players');
+    await clickLabel('Lukk');
+    await page.waitForFunction(() => !document.querySelector('.sheet'));
+  }
+  if (PLAYERS > 2) {
+    const gone = names[1];
+    await clickLabel('Vertsvalg');
+    await waitText(/Hvem spiller/);
+    await clickLabel(`Fjern ${gone}`);
+    await waitText(/Sikker\?/); // (two taps: the first says what it costs)
+    await clickLabel(`Trykk igjen for å fjerne ${gone}`);
+    await page.waitForFunction((n) => ![...document.querySelectorAll('.carplayers .offline-row__who')].some((el) => el.innerText.includes(n)), { timeout: 5000 }, gone);
+    names = names.filter((n) => n !== gone);
+    PLAYERS--;
+    log(`${gone} was taken out from the host's options`);
+    await clickLabel('Lukk');
+    await page.waitForFunction(() => !document.querySelector('.sheet'));
+  }
+  // the scoreboard has the ones who are in now
+  await clickButton('Poeng');
+  await waitText(/Poengtavle/);
+  const shown = await page.$$eval('.sheet .score__name', (els) => els.map((el) => el.innerText.trim()).sort());
+  assert.deepEqual(shown, [...names].sort(), 'the scoreboard has the players who are in now');
+  await clickLabel('Lukk');
+  await page.waitForFunction(() => !document.querySelector('.sheet'));
+}
+
 // ---------------------------------------------------------------- the paid part
 // After the free rounds the packages come, the same as in the normal game (screens/pay.js): Stripe's page, and back to the game.
 async function payAfterFreeRounds() {
@@ -577,6 +623,7 @@ try {
     ({ finished } = await playRound(round));
     if (finished) break;
     if (OUTCOMES && seenAll()) break;
+    if (round === 1 && !OUTCOMES) await changePlayers();
     if (PAY && round === FREE_ROUNDS) {
       await payAfterFreeRounds(); // (the third round is on when it is done: the next turn of this loop plays it)
       paid = true;

@@ -273,7 +273,7 @@ export class Room {
    */
   setProfile(playerId, { name, avatar, points = 0 }, targetId = playerId) {
     const joining = this.phase !== PHASE.LOBBY;
-    if (joining && (targetId !== playerId || isReady(this.players.get(playerId)))) this.needPhase(PHASE.LOBBY); // (the lobby is where a profile is changed)
+    if (joining && isReady(this.players.get(targetId))) this.needPhase(PHASE.LOBBY); // (the lobby is where a profile is changed: after the start only somebody who has none yet may pick one)
     this.player(playerId);
     if (targetId !== playerId) {
       this.needHost(playerId);
@@ -313,17 +313,17 @@ export class Room {
    * The car: the host puts a player in on this phone. They have no phone of their own, so they never connect or leave: they are
    * here as long as the room is.
    */
-  addLocalPlayer(hostId, { name, avatar }) {
+  addLocalPlayer(hostId, { name, avatar, points = 0 }) {
+    // (also after the start, from the host's options: the new player comes in with `points` (0 by default) and plays from the next round, as in setProfile)
     this.needHost(hostId);
     this.needCar();
-    this.needPhase(PHASE.LOBBY);
     // ('too_many', not the 'full' of a room that cannot take another phone: the page leaves the game when it hears that one)
     if (this.players.size >= this.maxPlayers) throw new GameError('too_many', `Dere kan være ${this.maxPlayers} spillere.`);
     const now = this.clock();
     const player = { id: makeId(), token: makeToken(), name: '', avatar: null, score: 0, connected: true, local: true, joinedAt: now, lastSeen: now };
     this.players.set(player.id, player);
     try {
-      this.setProfile(hostId, { name, avatar }, player.id);
+      this.setProfile(hostId, { name, avatar, points }, player.id);
     } catch (err) {
       this.players.delete(player.id);
       throw err;
@@ -351,8 +351,12 @@ export class Room {
     if (targetId === hostId) throw new GameError('bad_value', 'Du kan ikke fjerne deg selv.');
     const p = this.players.get(targetId);
     if (!p) return;
-    if (this.phase !== PHASE.LOBBY && p.connected) {
+    if (this.phase !== PHASE.LOBBY && p.connected && !p.local) {
       throw new GameError('bad_phase', 'Du kan bare fjerne spillere som er frakoblet.');
+    }
+    // (in the car the host may remove a player in the middle of a game, but it takes two to play)
+    if (this.phase !== PHASE.LOBBY && p.local && this.readyPlayers().length <= LIMITS.minPlayers) {
+      throw new GameError('need_players', `Dere må være minst ${LIMITS.minPlayers} spillere. Legg til en ny først.`);
     }
     const cur = this.current;
     // (with two impostors the round carries on when only one of them is gone)

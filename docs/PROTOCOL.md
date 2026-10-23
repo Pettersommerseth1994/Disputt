@@ -12,7 +12,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `resume` | `code, playerId, token` | tilbakevendende | `welcome`, eller feil `bad_token` / `room_not_found` |
 | `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser). Krever ingen hemmelighet, for en telefon som har mistet nettleserdataene har ingen, så alle andre i rommet får `notice` om at plassen er overtatt. Tilkoblingen slipper plassen den hadde fra før |
 | `profile` | `name, avatar`, evt. `id`, evt. `points` | lobby; for en nykommer også etter at spillet har startet | setter/endrer navn og avatar (unike). Etter at spillet har startet kan bare en spiller uten profil velge en, og `points` (0 er standard, opptil én under poengmålet; ingenting når spillet er ferdig) er poengene hen kommer inn med. Hen er ikke med i runden som pågår (`you.inRound` er `false`), men spiller fra neste runde, og antall imposterer følger antall spillere (to fra seks). De andre får et varsel («X ble med i spillet med N poeng»). I bilturmodus kan verten sette profilen til en spiller på vertens telefon med `id` (andre gir `not_host`, og en `id` som ikke er en spiller på vertens telefon gir `bad_value`) |
-| `player.add` | `name, avatar` | vert, lobby, bare bilturmodus | legger inn en spiller på vertens telefon (høyst 5, `limits.max`, ellers `too_many`; `bad_mode` i hytteturmodus). Spilleren har ingen telefon, så er alltid «tilkoblet» |
+| `player.add` | `name, avatar`, evt. `points` | vert, bare bilturmodus | legger inn en spiller på vertens telefon (høyst 5, `limits.max`, ellers `too_many`; `bad_mode` i hytteturmodus). Spilleren har ingen telefon, så er alltid «tilkoblet». Også etter at spillet har startet (fra vertsvalgene): `points` er poengene hen kommer inn med (0 er standard, opptil én under poengmålet), og hen spiller fra neste runde |
 | `seen` | `id` | vert, fase `role`, bare bilturmodus | spilleren har sett rollen sin (telefonen sendes rundt) |
 | `begin` | | vert, fase `role`, bare bilturmodus | alle har sett rollen sin: videre til spørsmålet (`not_all` hvis noen ikke har det) |
 | `target` | `value` (1–99) | vert, når som helst før spillet er ferdig | poengmål (sjekkes for vinner når runden er ferdig) |
@@ -26,7 +26,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `skip` | | vert, under en runde | hopper over runden uten poeng |
 | `end` | | vert | avslutter spillet; de som leder vinner |
 | `again` | | vert, ferdig | tilbake til lobbyen med nullstilte poeng |
-| `kick` | `id` | vert | fjerner spiller (i spill: bare frakoblede) |
+| `kick` | `id` | vert | fjerner spiller (i spill: bare frakoblede; i bilturmodus kan verten fjerne en spiller på telefonen når som helst, men det må bli minst to igjen, ellers `need_players`). Poengene følger spilleren ut |
 | `leave` | | spiller, lobby (verten i bilturmodus: når som helst) | forlater rommet. Verten i bilturmodus avslutter dermed spillet, og rommet slettes |
 
 ## Server → klient
