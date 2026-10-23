@@ -161,17 +161,104 @@ describe('lobby', () => {
     assert.deepEqual(ctx.room.drainRemoved().map((r) => r.id), [ghost.id]);
   });
 
-  it('refuses late joiners and offers disconnected seats instead', () => {
+  it('takes newcomers into a game that has started, and lists the disconnected seats too', () => {
     const ctx = lobby(4);
     ctx.room.disconnect(ctx.players[3].id);
     ctx.room.start(ctx.host.id);
-    try {
-      ctx.room.addPlayer();
-      assert.fail('should have thrown');
-    } catch (e) {
-      assert.equal(e.code, 'started');
-      assert.deepEqual(e.extra.seats.map((s) => s.id), [ctx.players[3].id]);
-    }
+    const late = ctx.room.addPlayer();
+    assert.ok(ctx.room.players.has(late.id), 'a placeholder, like in the lobby');
+    assert.deepEqual(ctx.room.claimableSeats().map((s) => s.id), [ctx.players[3].id], 'an old seat can still be taken over');
+  });
+
+  describe('a player who comes in after the game has started', () => {
+    const joinLate = (ctx, { name = 'Sen', points } = {}) => {
+      const late = ctx.room.addPlayer();
+      ctx.room.connect(late.id);
+      const free = AVATAR_IDS.find((id) => ![...ctx.room.players.values()].some((p) => p.avatar === id));
+      ctx.room.setProfile(late.id, { name, avatar: free, ...(points === undefined ? {} : { points }) });
+      return late;
+    };
+
+    it('starts on 0 points by default, or on the points they pick (up to one under the target)', () => {
+      const ctx = lobby(4);
+      ctx.room.start(ctx.host.id);
+      assert.equal(byId(ctx.room, joinLate(ctx, { name: 'Null' }).id).score, 0);
+      assert.equal(byId(ctx.room, joinLate(ctx, { name: 'To', points: 2 }).id).score, 2);
+      const target = ctx.room.target;
+      assert.equal(byId(ctx.room, joinLate(ctx, { name: 'Maks', points: target - 1 }).id).score, target - 1);
+      const over = ctx.room.addPlayer();
+      const free = AVATAR_IDS.find((id) => ![...ctx.room.players.values()].some((p) => p.avatar === id));
+      for (const points of [target, -1, 1.5]) throwsCode(() => ctx.room.setProfile(over.id, { name: 'For mange', avatar: free, points }), 'bad_value');
+    });
+
+    it('is not in the round that is on, scores nothing from it, and is in the next one', () => {
+      const ctx = lobby(4);
+      ctx.room.start(ctx.host.id);
+      const late = joinLate(ctx, { points: 1 });
+      const cur = ctx.room.current;
+      assert.ok(!cur.participants.includes(late.id));
+      assert.equal(ctx.room.viewFor(late.id).you.inRound, false);
+      assert.equal(ctx.room.viewFor(ctx.host.id).you.inRound, true);
+      assert.equal(ctx.room.viewFor(late.id).you.secret, undefined);
+      // play the round to the end: the group is right, and the newcomer gets nothing for it
+      ctx.room.phase = PHASE.REVEAL;
+      cur.correct = true;
+      cur.locked = { index: cur.question.correct, endsAt: 0 };
+      ctx.room.continueRound(ctx.host.id);
+      assert.equal(byId(ctx.room, late.id).score, 1, 'only the points they came in with');
+      ctx.room.nextRound(ctx.host.id);
+      assert.ok(ctx.room.current.participants.includes(late.id), 'in the next round');
+    });
+
+    it('makes two impostors when the game grows from five to six players, as usual', () => {
+      const ctx = lobby(5);
+      ctx.room.start(ctx.host.id);
+      assert.equal(ctx.room.current.impostorIds.length, 1);
+      joinLate(ctx, { name: 'Sjette' });
+      ctx.room.finishRoundWithoutPoints();
+      ctx.room.nextRound(ctx.host.id);
+      assert.equal(ctx.room.current.participants.length, 6);
+      assert.equal(ctx.room.current.impostorIds.length, 2, 'two impostors with six');
+    });
+
+    it('can come into a game that is over (the scores start again) and in the summary between two rounds', () => {
+      const ctx = lobby(3);
+      ctx.room.start(ctx.host.id);
+      ctx.room.finishRoundWithoutPoints();
+      const between = joinLate(ctx, { name: 'Mellom', points: 1 });
+      assert.equal(byId(ctx.room, between.id).score, 1);
+      ctx.room.endGame(ctx.host.id);
+      const after = joinLate(ctx, { name: 'Etter', points: 3 });
+      assert.equal(byId(ctx.room, after.id).score, 0, 'points mean nothing when the game is over');
+    });
+
+    it('may not change their profile in the middle of the game afterwards, and a host cannot give somebody else points', () => {
+      const ctx = lobby(4);
+      ctx.room.start(ctx.host.id);
+      const late = joinLate(ctx);
+      throwsCode(() => ctx.room.setProfile(late.id, { name: 'Nytt navn', avatar: AVATAR_IDS[8] }), 'bad_phase');
+      throwsCode(() => ctx.room.setProfile(ctx.host.id, { name: 'Vert', avatar: AVATAR_IDS[0], points: 3 }), 'bad_phase');
+    });
+
+    it('is refused in the car, where everybody is on one phone, and when the room is full', () => {
+      const car = new Room({ code: 'CARR', mode: 'car' });
+      car.addPlayer({ asHost: true });
+      throwsCode(() => car.addPlayer(), 'single_phone');
+      const full = lobby(LIMITS.maxPlayers);
+      full.room.start(full.host.id);
+      throwsCode(() => full.room.addPlayer(), 'full');
+    });
+
+    it('drops a placeholder that never got a profile, also in the middle of a game', () => {
+      const ctx = lobby(3);
+      ctx.room.start(ctx.host.id);
+      const ghost = ctx.room.addPlayer();
+      ctx.room.connect(ghost.id);
+      ctx.room.disconnect(ghost.id);
+      ctx.clock.advance(ctx.room.timings.placeholderMs + 1000);
+      ctx.room.tick();
+      assert.ok(!ctx.room.players.has(ghost.id));
+    });
   });
 
   it('allows seat takeover only for offline players, and rotates their token', () => {

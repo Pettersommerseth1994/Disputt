@@ -232,7 +232,8 @@ export class Hub {
     const pid = conn.playerId;
     switch (msg.t) {
       case 'profile':
-        room.setProfile(pid, { name: msg.name, avatar: msg.avatar }, msg.id ?? pid); // (`id`: in the car the host sets the profile of a player on the host's phone)
+        room.setProfile(pid, { name: msg.name, avatar: msg.avatar, points: msg.points }, msg.id ?? pid); // (`id`: in the car the host sets the profile of a player on the host's phone)
+        this.welcomeNewcomer(entry, room, pid);
         break;
       case 'player.add':
         room.addLocalPlayer(pid, { name: msg.name, avatar: msg.avatar });
@@ -286,6 +287,15 @@ export class Hub {
         throw new GameError('bad_message', 'Ukjent melding.');
     }
     this.afterChange(entry);
+  }
+
+  /** Somebody has come into a game that was already going: everybody is told, with the points they come in with. */
+  welcomeNewcomer(entry, room, pid) {
+    const p = room.players.get(pid);
+    if (!p?.joinedMidGame) return;
+    delete p.joinedMidGame;
+    const text = `${p.name} ble med i spillet${p.score > 0 ? ` med ${p.score} poeng` : ''}. ${p.name} spiller fra neste runde.`;
+    for (const [id, ws] of entry.sockets) if (id !== pid) send(ws, { t: 'notice', text });
   }
 
   // ---------------------------------------------------------------- broadcasting

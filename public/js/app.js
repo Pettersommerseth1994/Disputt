@@ -3,6 +3,7 @@ import { anonymous, carScreen } from './screens/car.js';
 import { RolesSheet } from './screens/carstrip.js';
 import { Finished } from './screens/finale.js';
 import { Connecting, Home, SeatPicker } from './screens/home.js';
+import { LateWait } from './screens/latewait.js';
 import { Lobby } from './screens/lobby.js';
 import { HomeSheet } from './screens/leave.js';
 import { useRememberGame } from './lastgame.js';
@@ -23,6 +24,10 @@ const STUCK_HINT = 'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent 
 
 function gameScreen(view, s) {
   if (view.mode === 'car') return carScreen(view, s); // everybody on one phone (screens/car.js)
+  // Somebody who comes into a game that has started: a profile first (with the points to come in with), then a wait until the next round
+  // (`inRound` is false for a newcomer in the round that is on; a server that does not say, is not told it is false)
+  if (view.phase !== 'lobby' && !view.you.ready) return html`<${Profile} view=${view} late />`;
+  if (['role', 'question', 'locked', 'reveal'].includes(view.phase) && view.you.inRound === false) return html`<${LateWait} view=${view} />`;
   switch (view.phase) {
     case 'lobby':
       // Everybody picks a profile first. The host then goes on to the points, and last to the invitation, where the game waits.

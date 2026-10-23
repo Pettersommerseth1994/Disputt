@@ -160,7 +160,7 @@ export function Question({ view }) {
 
     <div class="dock dock--compact">
       <${Button} block variant="lime" disabled=${sel === null || sel === undefined} onClick=${() => actions.lock(sel)}>
-        ${sel === null || sel === undefined ? 'Velg svaret dere ble enige om' : 'Lås svaret'}
+        ${sel === null || sel === undefined ? 'Velg svar' : 'Lås svaret'}
       </${Button}>
     </div>
   </main>`;

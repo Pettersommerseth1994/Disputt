@@ -8,10 +8,10 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | --- | --- | --- | --- |
 | `ping` | `c` (klokke) | alle | `pong {c, s}`; brukes til å synkronisere klokka |
 | `create` | `mode` (`"cabin"` eller `"car"`, ellers `"cabin"`) | ny vert | `welcome`. `cabin` er en telefon hver (hytteturmodus), `car` er alle på vertens telefon (bilturmodus) |
-| `join` | `code` | ny spiller | `welcome`, eller feil `room_not_found`, `started` (med `seats`), `full`. Et nytt `join` på en tilkobling som allerede er med i rommet gir samme plass igjen, ikke en ny. Forlatte plassholdere (ingen navn, frakoblet) blir liggende en stund, så den som lot skjermen låse seg på profilsiden kan komme tilbake. Ligger det mer enn to igjen (eller er rommet fullt av dem), overtar neste som kommer den som har vært borte lengst, så gjentatte forsøk ikke fyller lobbyen med spøkelser |
+| `join` | `code` | ny spiller | `welcome`, eller feil `room_not_found`, `full`, `single_phone`. Et spill som har startet tar også imot nye spillere (de får en plassholder som i lobbyen og velger profil, se `profile`). Et nytt `join` på en tilkobling som allerede er med i rommet gir samme plass igjen, ikke en ny. Forlatte plassholdere (ingen navn, frakoblet) blir liggende en stund, så den som lot skjermen låse seg på profilsiden kan komme tilbake. Ligger det mer enn to igjen (eller er rommet fullt av dem), overtar neste som kommer den som har vært borte lengst, så gjentatte forsøk ikke fyller lobbyen med spøkelser |
 | `resume` | `code, playerId, token` | tilbakevendende | `welcome`, eller feil `bad_token` / `room_not_found` |
 | `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser). Krever ingen hemmelighet, for en telefon som har mistet nettleserdataene har ingen, så alle andre i rommet får `notice` om at plassen er overtatt. Tilkoblingen slipper plassen den hadde fra før |
-| `profile` | `name, avatar`, evt. `id` | lobby | setter/endrer navn og avatar (unike). I bilturmodus kan verten sette profilen til en spiller på vertens telefon med `id` (andre gir `not_host`, og en `id` som ikke er en spiller på vertens telefon gir `bad_value`) |
+| `profile` | `name, avatar`, evt. `id`, evt. `points` | lobby; for en nykommer også etter at spillet har startet | setter/endrer navn og avatar (unike). Etter at spillet har startet kan bare en spiller uten profil velge en, og `points` (0 er standard, opptil én under poengmålet; ingenting når spillet er ferdig) er poengene hen kommer inn med. Hen er ikke med i runden som pågår (`you.inRound` er `false`), men spiller fra neste runde, og antall imposterer følger antall spillere (to fra seks). De andre får et varsel («X ble med i spillet med N poeng»). I bilturmodus kan verten sette profilen til en spiller på vertens telefon med `id` (andre gir `not_host`, og en `id` som ikke er en spiller på vertens telefon gir `bad_value`) |
 | `player.add` | `name, avatar` | vert, lobby, bare bilturmodus | legger inn en spiller på vertens telefon (høyst 5, `limits.max`, ellers `too_many`; `bad_mode` i hytteturmodus). Spilleren har ingen telefon, så er alltid «tilkoblet» |
 | `seen` | `id` | vert, fase `role`, bare bilturmodus | spilleren har sett rollen sin (telefonen sendes rundt) |
 | `begin` | | vert, fase `role`, bare bilturmodus | alle har sett rollen sin: videre til spørsmålet (`not_all` hvis noen ikke har det) |
@@ -44,7 +44,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 
 **Utdaterte trykk:** kommer en melding i en fase den ikke hører hjemme i (dobbelttrykk, treg linje), svarer serveren *ikke* med en feil, men sender bare spilleren en fersk `state`, så skjermen rettes opp uten at det dukker opp en feilmelding.
 
-Feilkoder: `room_not_found`, `bad_token`, `started`, `full`, `busy`, `bad_name`, `name_taken`, `bad_avatar`, `avatar_taken`, `not_host`, `not_asker`, `bad_phase`, `need_players`, `need_connected`, `not_ready`, `bad_value`, `no_session`, `bad_message`, `seat_gone`, `seat_taken`, `server`, og for bilturmodus `single_phone` (ingen kan bli med fra en annen telefon), `bad_mode` (meldingen finnes bare i bilturmodus), `not_all` og `too_many`.
+Feilkoder: `room_not_found`, `bad_token`, `full`, `busy`, `bad_name`, `name_taken`, `bad_avatar`, `avatar_taken`, `not_host`, `not_asker`, `bad_phase`, `need_players`, `need_connected`, `not_ready`, `bad_value`, `no_session`, `bad_message`, `seat_gone`, `seat_taken`, `server`, og for bilturmodus `single_phone` (ingen kan bli med fra en annen telefon), `bad_mode` (meldingen finnes bare i bilturmodus), `not_all` og `too_many`.
 
 ## Faser
 
@@ -99,4 +99,4 @@ Alle tidspunkter er serverens epoch-millisekunder. Klienten regner ut `serverNow
 1. Klienten lagrer `{code, playerId, token}` i `sessionStorage` ved `welcome`.
 2. Ved hver (re)tilkobling sender den `resume`. Serveren svarer med `welcome` og full `view`: spilleren er tilbake i samme fase, med samme rolle og hemmelighet.
 3. Åpnes samme identitet i en annen fane, får den første `closed {reason:"replaced"}`.
-4. Er nettleserdata borte, gir `join` på et spill som har startet feilen `started` med `seats` (frakoblede spillere). `claim` overtar en plass og gir ny token.
+4. Er nettleserdata borte, kan spilleren åpne lenken eller skrive koden igjen: `join` gir en ny plassholder, og siden viser «Var du med før?» med de frakoblede spillerne i `view.players`. `claim` overtar en plass og gir ny token (poengene følger plassen).

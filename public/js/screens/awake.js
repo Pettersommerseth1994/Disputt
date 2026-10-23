@@ -6,12 +6,12 @@ import { Button } from '../ui.js';
 import { keepingAwake, setAwakeWanted, useAwakeState, useAwakeWanted } from '../wake.js';
 
 const SAYS = {
-  api: 'På. Skjermen låser seg ikke mens spillet er i gang.',
-  video: 'På. Skjermen låser seg ikke mens spillet er i gang.',
-  waiting: 'På. Det starter ved første trykk på skjermen.',
-  off: 'Av. Låser skjermen seg, mister vennene dine forbindelsen til spillet.',
-  failed: 'Virker ikke på denne telefonen. Sett skjermlåsen til «Aldri» i innstillingene til telefonen i stedet.',
-  idle: 'På så snart spillet er i gang.',
+  api: 'På. Skjermen låser seg ikke\nmens spillet er i gang.',
+  video: 'På. Skjermen låser seg ikke\nmens spillet er i gang.',
+  waiting: 'På. Det starter ved\nførste trykk på skjermen.',
+  off: 'Av. Låser skjermen seg, mister\nvennene dine forbindelsen.',
+  failed: 'Virker ikke på denne telefonen.\nSett skjermlåsen til «Aldri» i\ninnstillingene til telefonen.',
+  idle: 'På så snart spillet\ner i gang.',
 };
 
 /** «Hold skjermen våken» with what it is doing now, and a button to switch it off or on. */

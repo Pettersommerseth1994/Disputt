@@ -61,13 +61,6 @@ describe('a full game over WebSockets', () => {
     host.send({ t: 'start' });
     await Promise.all(all.map((c) => c.phase('role')));
 
-    // a sixth phone arriving now is told the game has started and is offered no (online) seats
-    const late = await TestClient.connect(port);
-    late.send({ t: 'join', code });
-    await late.error('started');
-    assert.deepEqual(late.errors.at(-1).seats, []);
-    late.close();
-
     let rounds = 0;
     let sawNonAskerNeverGetsQuestion = true;
     while (all[0].view.phase !== 'finished' && rounds < 40) {
@@ -192,12 +185,10 @@ describe('a full game over WebSockets', () => {
     kari.close();
     await host.until((c) => c.view.players.find((p) => p.id === kariId)?.connected === false, 'Kari offline');
     const fresh = await TestClient.connect(port);
-    fresh.send({ t: 'join', code });
-    await fresh.error('started');
-    const seats = fresh.errors.at(-1).seats;
-    assert.deepEqual(seats.map((s) => s.name), ['Kari']);
-    fresh.send({ t: 'claim', code, playerId: seats[0].id });
-    await fresh.until((c) => c.identity, 'claimed');
+    fresh.send({ t: 'join', code }); // (a game that has started takes newcomers too, but Kari wants her own seat back)
+    await fresh.until((c) => c.identity, 'let in as a newcomer');
+    fresh.send({ t: 'claim', code, playerId: kariId });
+    await fresh.until((c) => c.view?.you?.name === 'Kari', 'claimed');
     assert.equal(fresh.view.you.name, 'Kari');
     assert.notEqual(fresh.identity.token, kari.identity.token, 'token rotated');
 
@@ -230,5 +221,41 @@ describe('a full game over WebSockets', () => {
     assert.equal(pong.c, 42);
     assert.ok(pong.s >= before && pong.s <= Date.now() + 5);
     c.close();
+  });
+});
+
+describe('a newcomer in a game that has started', () => {
+  it('is let in, picks a profile and the points to come in with, plays from the next round, and the others hear of it', async () => {
+    const { host, all, code } = await openLobby(['Anne', 'Bjørn', 'Cathrine', 'Dag', 'Eva']);
+    host.send({ t: 'target', value: 4 });
+    host.send({ t: 'start' });
+    await Promise.all(all.map((c) => c.phase('role')));
+
+    const late = await TestClient.connect(port);
+    late.send({ t: 'join', code });
+    await late.until((c) => c.identity, 'let in, although the game has started');
+    assert.equal(late.view.you.ready, false);
+    assert.equal(late.view.phase, 'role');
+    late.send({ t: 'profile', name: 'Sen', avatar: AVATAR_IDS[9], points: 3 });
+    await late.until((c) => c.view.you.ready, 'profile accepted');
+    assert.equal(late.view.you.inRound, false, 'not in the round that is on');
+    assert.equal(late.view.you.secret, undefined);
+    assert.equal(late.view.players.find((p) => p.name === 'Sen').score, 3, 'the points they came in with');
+    await host.until((c) => c.view.players.some((p) => p.name === 'Sen' && p.score === 3), 'the host sees the newcomer');
+    await all[1].until((c) => c.messages.some((m) => m.t === 'notice' && /Sen ble med i spillet med 3 poeng\. Sen spiller fra neste runde/.test(m.text)), 'the others are told');
+
+    // too many points are refused, and the profile cannot be changed in the middle of a game afterwards
+    const other = await TestClient.connect(port);
+    other.send({ t: 'join', code });
+    await other.until((c) => c.identity, 'second newcomer');
+    other.send({ t: 'profile', name: 'For høy', avatar: AVATAR_IDS[8], points: 4 });
+    await other.error('bad_value');
+    late.send({ t: 'profile', name: 'Sen igjen', avatar: AVATAR_IDS[8] }); // (a 'bad_phase' is answered with a quiet update of the screen, not an error)
+    await sleep(300);
+    assert.equal(late.view.you.name, 'Sen', 'the profile stays as it was');
+    assert.equal(late.errors.length, 0);
+    other.close();
+    late.close();
+    for (const c of all) c.close();
   });
 });

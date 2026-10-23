@@ -189,9 +189,7 @@ export class Room {
     const leftover = crowded ? ghosts.sort((a, b) => a.lastSeen - b.lastSeen)[0] ?? null : null;
     if (!asHost) {
       if (this.mode === MODE.CAR) throw new GameError('single_phone', 'Dette spillet spilles på én telefon, så ingen kan bli med fra en annen.');
-      if (this.phase !== PHASE.LOBBY) {
-        throw new GameError('started', 'Spillet har allerede startet.', { seats: this.claimableSeats() });
-      }
+      // (A game that has started takes newcomers too: they pick a profile, and the points they start with, and play from the next round. See setProfile.)
       if (!leftover && this.players.size >= this.maxPlayers) {
         throw new GameError('full', `Rommet er fullt (maks ${this.maxPlayers} spillere).`);
       }
@@ -267,9 +265,15 @@ export class Room {
     return this.readyPlayers().filter((p) => p.connected);
   }
 
-  /** Sets a profile. In the car the host also sets the profile of the players who are on the host's phone (`targetId`). */
-  setProfile(playerId, { name, avatar }, targetId = playerId) {
-    this.needPhase(PHASE.LOBBY);
+  /**
+   * Sets a profile. In the car the host also sets the profile of the players who are on the host's phone (`targetId`).
+   * Once a game has started only a newcomer, who has no profile yet, may pick one; with `points` they choose the score they come in with
+   * (0 up to one under the target; nothing in a finished game, where the scores start again anyway). They play from the next round: the
+   * round that is on has its players already, and the number of impostors follows from how many play (two from six).
+   */
+  setProfile(playerId, { name, avatar, points = 0 }, targetId = playerId) {
+    const joining = this.phase !== PHASE.LOBBY;
+    if (joining && (targetId !== playerId || isReady(this.players.get(playerId)))) this.needPhase(PHASE.LOBBY); // (the lobby is where a profile is changed)
     this.player(playerId);
     if (targetId !== playerId) {
       this.needHost(playerId);
@@ -289,8 +293,19 @@ export class Room {
     if (others.some((o) => o.avatar === avatar)) {
       throw new GameError('avatar_taken', 'Den avataren er tatt, velg en annen.');
     }
+    let start = 0;
+    if (joining) {
+      start = this.phase === PHASE.FINISHED ? 0 : Number(points ?? 0);
+      if (!Number.isInteger(start) || start < 0 || start >= Math.max(1, this.target)) {
+        throw new GameError('bad_value', `Du kan komme inn med fra 0 til ${Math.max(0, this.target - 1)} poeng.`);
+      }
+    }
     p.name = clean;
     p.avatar = avatar;
+    if (joining) {
+      p.score = start;
+      p.joinedMidGame = true; // (for the notice to the others: see Hub)
+    }
     this.touch();
   }
 
@@ -544,13 +559,11 @@ export class Room {
       this.hostAwaySince = null;
     }
 
-    // Lobby placeholders that never finished their profile and left are cleaned up.
-    if (this.phase === PHASE.LOBBY) {
-      for (const p of [...this.players.values()]) {
-        if (!isReady(p) && !p.connected && p.id !== this.hostId && p.id !== this.creatorId && now - p.lastSeen > this.timings.placeholderMs) {
-          this.removePlayer(p.id, 'timeout');
-          changed = true;
-        }
+    // Placeholders that never finished their profile and left are cleaned up (in the lobby, and in a game that takes newcomers).
+    for (const p of [...this.players.values()]) {
+      if (!isReady(p) && !p.connected && p.id !== this.hostId && p.id !== this.creatorId && now - p.lastSeen > this.timings.placeholderMs) {
+        this.removePlayer(p.id, 'timeout');
+        changed = true;
       }
     }
 
@@ -777,6 +790,8 @@ export class Room {
       const q = cur.question;
       const isImpostor = cur.impostorIds.includes(playerId);
       const isAsker = cur.askerId === playerId;
+      // (somebody who came in after the round began is not in it: they play from the next one)
+      view.you.inRound = cur.participants.includes(playerId) || playerId === this.hostId;
       view.you.role = isImpostor ? 'impostor' : 'loyal';
       view.you.isAsker = isAsker;
       if (isImpostor) {

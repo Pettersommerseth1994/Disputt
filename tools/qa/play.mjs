@@ -534,9 +534,9 @@ try {
     });
     await waitText(asker, /Poengene|vant!|Delt seier/i, 8000 * SLOW);
     await sleep(300);
-    // (the notice that a seat was taken over by a new phone is a toast too, and is meant to be there)
+    // (the notices that a seat was taken over by a new phone, and that somebody came into the game, are toasts too, and are meant to be there)
     const toasts = await asker.page.$$eval('.toast', (els) => els.map((e) => e.innerText));
-    assert.deepEqual(toasts.filter((t) => !/^Plassen til .* ble tatt over av en ny telefon\.$/.test(t)), [], 'no error toast after a double tap');
+    assert.deepEqual(toasts.filter((t) => !/^(Plassen til .* ble tatt over av en ny telefon\.|.* ble med i spillet( med \d+ poeng)?\. .* spiller fra neste runde\.)$/.test(t)), [], 'no error toast after a double tap');
 
     // the points (or the winner)
     await Promise.all(all.map((p) => waitText(p, /Poengene|vant!|Delt seier/i, 8000 * SLOW)));
@@ -571,16 +571,13 @@ try {
         await lost.ctx.close();
         const fresh = await newPhone(lost.name);
         await fresh.page.goto(`${base}/?j=${code}`);
-        await waitText(fresh, /Spillet har startet/i);
+        await waitText(fresh, /har startet/i); // (a game that has started takes newcomers: the screen asks who you are, and «Var du med før?» lists the seats that are offline)
         await shot(fresh, '12-seat-picker');
         const seatShown = (n) => fresh.page.evaluate((n) => [...document.querySelectorAll('.player')].some((el) => el.innerText.includes(n)), n);
-        // over WebRTC the host needs a little while to notice that a phone has vanished; "Sjekk på nytt" asks again
+        // over WebRTC the host needs a little while to notice that a phone has vanished: the seat appears on its own
         for (let tries = 0; !(await seatShown(lost.name)); tries++) {
-          assert.ok(tries < (P2P ? 14 : 4), `the seat of ${lost.name} became available`);
-          await sleep(P2P ? 5000 : 400);
-          if (await seatShown(lost.name)) break;
-          await clickButton(fresh, 'Sjekk på nytt');
-          await waitText(fresh, /Spillet har startet/i);
+          assert.ok(tries < (P2P ? 30 : 8), `the seat of ${lost.name} became available`);
+          await sleep(P2P ? 2000 : 400);
         }
         await fresh.page.evaluate((n) => [...document.querySelectorAll('.player')].find((el) => el.innerText.includes(n)).click(), lost.name);
         await waitText(fresh, /Venter på at verten starter neste runde/);
@@ -614,6 +611,28 @@ try {
         await clickLabel(back, 'Lukk');
         await back.page.waitForFunction(() => !document.querySelector('.sheet'));
         log('a guest closed the page and came back with «Hopp inn igjen»: the same player, the same points');
+      }
+      // a newcomer comes into the game that is going: a profile with the points to come in with (0 is the default), and from the next round
+      // they play like the others (with six, two of the players are impostors, as usual)
+      if (round === 1 && PLAYERS < 9) {
+        const name = NAMES[PLAYERS + 1];
+        const sen = await newPhone(name);
+        await sen.page.goto(`${base}/?j=${code}`);
+        await waitText(sen, /Hopp inn i spillet/);
+        assert.match(await bodyText(sen), /Poeng du hopper inn med[\s\S]*\n0\n/);
+        await sen.page.waitForSelector('#name', { timeout: 10000 });
+        await sen.page.type('#name', name);
+        await sen.page.evaluate(() => document.querySelectorAll('.picker__item:not([disabled])')[0].click());
+        await sen.page.evaluate(() => document.querySelector('[aria-label="Ett poeng mer"]').click());
+        await shot(sen, '15-late-profile');
+        await clickButton(sen, 'Hopp inn');
+        await waitText(sen, /Venter på at verten starter neste runde/, 20000);
+        await waitText(host, new RegExp(`${name} ble med i spillet med 1 poeng`), 8000);
+        const pointsOfName = () => host.page.$$eval('.scoreboard .score', (els, n) => { const el = els.find((e) => e.querySelector('.score__name').innerText.replace(/\s*\(deg\)\s*/, '').trim() === n); return el ? Number(el.querySelector('.score__points').firstChild.textContent) : null; }, name);
+        assert.equal(await pointsOfName(), 1, 'the points they came in with');
+        all.push(sen);
+        others.push(sen);
+        log(`${name} came into the game that was going, with 1 point, and plays from the next round`);
       }
       // a guest has the scoreboard open when the host starts the next round: the role reveal must not be hidden behind it
       const guest = others[0];

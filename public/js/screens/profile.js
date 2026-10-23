@@ -10,8 +10,12 @@ import { SetupHeader, Steps } from './setup.js';
 
 const NAME_MAX = 14;
 
-export function Profile({ view, editing, wizard = false }) {
+export function Profile({ view, editing, wizard = false, late = false }) {
   const you = view.you;
+  const [points, setPoints] = useState(0); // (somebody who comes into a game that has started chooses what to begin with)
+  const highest = Math.max(0, view.target - 1);
+  // (players who were in this game and are offline now: somebody who lost their browser takes their own seat back, and the points with it)
+  const gone = late ? view.players.filter((p) => !p.connected) : [];
   const takenBy = new Map(view.players.filter((p) => p.id !== you.id).map((p) => [p.avatar, p.name]));
   const [name, setName] = useState(you.name ?? '');
   const [avatar, setAvatar] = useState(you.avatar ?? null);
@@ -54,7 +58,7 @@ export function Profile({ view, editing, wizard = false }) {
     if (wizard && !you.ready) setStore({ step: 2 });
     setBusy(true);
     setTimeout(() => setBusy(false), 2500); // a rejection does not change the view, so never stay locked
-    actions.profile(trimmed, avatar);
+    actions.profile(trimmed, avatar, undefined, late ? points : 0);
   };
   const edit = (fn) => (value) => {
     setBusy(false);
@@ -65,9 +69,23 @@ export function Profile({ view, editing, wizard = false }) {
     ${wizard && html`<${SetupHeader} /><${Steps} current=${2} onBack=${alone ? backToMode : undefined} />`}
     <form class="stack stack--loose grow" onSubmit=${submit}>
       <header class="stack stack--tight">
-        ${!wizard && html`<p class="eyebrow">Spill ${view.code}</p>`}
-        <h1 class="rise-in">Hvem er du?</h1>
+        ${!wizard && html`<p class="eyebrow">${late ? `Spill ${view.code} har startet` : `Spill ${view.code}`}</p>`}
+        <h1 class="rise-in">${late ? 'Hopp inn i spillet' : 'Hvem er du?'}</h1>
       </header>
+
+      ${gone.length > 0 &&
+      html`<div class="field">
+        <span class="field__label" id="seat-label">Var du med før?</span>
+        <div class="player-grid" role="group" aria-labelledby="seat-label">
+          ${gone.map(
+            (p) => html`<button type="button" class="player picker__item" style="width:5.6rem;aspect-ratio:auto;border-radius:0" key=${p.id} onClick=${() => actions.claim(view.code, p.id)}>
+              <${Avatar} id=${p.avatar} size="md" offline />
+              <span class="player__name">${p.name}</span>
+            </button>`,
+          )}
+        </div>
+        <span class="field__hint">Trykk på deg selv for å få plassen og poengene dine tilbake.</span>
+      </div>`}
 
       <div class="field">
         <label class="field__label" for="name">Navn</label>
@@ -108,8 +126,19 @@ export function Profile({ view, editing, wizard = false }) {
         </div>
       </div>
 
+      ${late &&
+      html`<div class="field">
+        <span class="field__label" id="points-label">Poeng du hopper inn med</span>
+        <div class="stepper" role="group" aria-labelledby="points-label">
+          <${Button} type="button" variant="cream" size="icon" onClick=${() => setPoints(Math.max(0, points - 1))} aria-label="Ett poeng mindre" disabled=${points <= 0}>−</${Button}>
+          <output class="input input--number" aria-live="polite">${points}</output>
+          <${Button} type="button" variant="cream" size="icon" onClick=${() => setPoints(Math.min(highest, points + 1))} aria-label="Ett poeng mer" disabled=${points >= highest}>+</${Button}>
+        </div>
+        <span class="field__hint">0 er vanlig. Spillet er til ${view.target} poeng, så du kan hoppe inn med fra 0 til ${highest}. Du spiller fra neste runde.</span>
+      </div>`}
+
       <div class="dock">
-        <${Button} block type="submit" disabled=${!ready}>${wizard ? 'Neste' : you.ready ? 'Lagre' : 'Klar!'}</${Button}>
+        <${Button} block type="submit" disabled=${!ready}>${wizard ? 'Neste' : late ? 'Hopp inn' : you.ready ? 'Lagre' : 'Klar!'}</${Button}>
         ${editing && html`<${Button} block variant="ghost" onClick=${() => setStore({ editing: false })}>Avbryt</${Button}>`}
       </div>
     </form>

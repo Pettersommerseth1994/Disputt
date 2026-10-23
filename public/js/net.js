@@ -383,7 +383,7 @@ export const actions = {
     }
   },
   claim: (code, playerId) => send({ t: 'claim', code, playerId }),
-  profile: (name, avatar, id) => send({ t: 'profile', name, avatar, ...(id ? { id } : {}) }), // (`id`: in the car, a player on the host's phone)
+  profile: (name, avatar, id, points) => send({ t: 'profile', name, avatar, ...(id ? { id } : {}), ...(points ? { points } : {}) }), // (`id`: in the car, a player on the host's phone; `points`: what somebody who comes into a game that has started begins with)
   addPlayer: (name, avatar) => send({ t: 'player.add', name, avatar }),
   seen: (id) => send({ t: 'seen', id }), // the car: a player has seen their role
   begin: () => send({ t: 'begin' }), // the car: everybody has, on to the question
