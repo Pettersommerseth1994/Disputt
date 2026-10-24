@@ -6,6 +6,7 @@
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
+import { t } from '../i18n/lang.js';
 import { setStore, useStore } from '../store.js';
 import { Button, HelpIcon, Logo } from '../ui.js';
 import { cx } from '../util.js';
@@ -16,10 +17,10 @@ const SEGMENTS = 4; // the bar at the top of every step (three in the car: steps
 const LAST = 3; // what `store.step` counts, after the way to play has been chosen: 1 who you are, 2 how long, 3 the invitation
 
 export function duration(minutes) {
-  if (minutes < 90) return `ca. ${minutes} min`;
+  if (minutes < 90) return t('ca. {n} min', { n: minutes });
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return `ca. ${h} t${m ? ` ${m} min` : ''}`;
+  return m ? t('ca. {h} t {m} min', { h, m }) : t('ca. {h} t', { h });
 }
 
 /** Which step the host is on. Somebody who has not picked a profile is on the first; after a reload the game waits at the last. */
@@ -29,7 +30,7 @@ export const hostStep = (view, step) => (!view.you.ready ? 1 : (step ?? LAST));
 export function SetupHeader() {
   return html`<header class="row row--between">
     <${Logo} small onClick=${() => setStore({ sheet: 'home' })} />
-    <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label="Slik spiller dere"><${HelpIcon} /></${Button}>
+    <${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'rules' })} aria-label=${t('Slik spiller dere')}><${HelpIcon} /></${Button}>
   </header>`;
 }
 
@@ -40,8 +41,8 @@ export function Steps({ current, onBack, total = SEGMENTS }) {
       ${Array.from({ length: total }, (_, i) => html`<li key=${i} class=${cx('steps__seg', i + 1 <= current && 'steps__seg--done')}></li>`)}
     </ol>
     <div class="steps__row">
-      ${onBack && html`<${Button} variant="text" onClick=${onBack}>‹ Tilbake</${Button}>`}
-      <p class="eyebrow">Steg ${current} av ${total}</p>
+      ${onBack && html`<${Button} variant="text" onClick=${onBack}>${t('‹ Tilbake')}</${Button}>`}
+      <p class="eyebrow">${t('Steg {current} av {total}', { current, total })}</p>
     </div>
   </div>`;
 }
@@ -96,33 +97,33 @@ function useTarget(view) {
 
 /** Step 3: how many points the game is played to. In the car it is the last step, and the game starts from here. */
 export function PointsStep({ view }) {
-  const t = useTarget(view);
+  const goal = useTarget(view);
   const s = useStore();
   const car = view.mode === 'car';
   const canStart = view.players.length >= view.limits.min && view.you.ready && s.conn === 'open';
   const goTo = (step) => () => {
-    t.flush();
+    goal.flush();
     setStore({ step });
   };
   return html`<main class="screen setup">
     <${SetupHeader} />
     <${Steps} current=${3} total=${car ? CAR_SEGMENTS : SEGMENTS} onBack=${goTo(1)} />
-    <h1 class="setup__title rise-in">Hvor lenge skal dere spille?</h1>
+    <h1 class="setup__title rise-in">${t('Hvor lenge skal dere spille?')}</h1>
     <section class="card card--paper card--tilt-r setup__points center stack">
-      <label class="sr-only" for="target">Antall poeng å spille til</label>
+      <label class="sr-only" for="target">${t('Antall poeng å spille til')}</label>
       <div class="stepper">
-        <${Button} size="icon" onClick=${() => t.bump(-1)} aria-label="Ett poeng mindre" disabled=${t.valid && t.n <= 1}>−</${Button}>
-        <input id="target" class="input" value=${t.text} placeholder=${String(view.target)} onInput=${t.onInput} onFocus=${t.onFocus} onBlur=${t.onBlur} inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-describedby="target-hint" />
-        <${Button} size="icon" onClick=${() => t.bump(1)} aria-label="Ett poeng mer" disabled=${t.valid && t.n >= 99}>+</${Button}>
+        <${Button} size="icon" onClick=${() => goal.bump(-1)} aria-label=${t('Ett poeng mindre')} disabled=${goal.valid && goal.n <= 1}>−</${Button}>
+        <input id="target" class="input" value=${goal.text} placeholder=${String(view.target)} onInput=${goal.onInput} onFocus=${goal.onFocus} onBlur=${goal.onBlur} inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-describedby="target-hint" />
+        <${Button} size="icon" onClick=${() => goal.bump(1)} aria-label=${t('Ett poeng mer')} disabled=${goal.valid && goal.n >= 99}>+</${Button}>
       </div>
-      <p class="setup__unit">poeng</p>
-      ${t.valid ? html`<p class="setup__time">Det blir ${duration(t.n * MINUTES_PER_POINT)}</p>` : !t.emptied && html`<p class="field__error">Skriv et tall mellom 1 og 99.</p>`}
+      <p class="setup__unit">${t('poeng')}</p>
+      ${goal.valid ? html`<p class="setup__time">${t('Det blir {time}', { time: duration(goal.n * MINUTES_PER_POINT) })}</p>` : !goal.emptied && html`<p class="field__error">${t('Skriv et tall mellom 1 og 99.')}</p>`}
     </section>
-    <p class="small muted center" id="target-hint">Ett poeng tar ca. ${MINUTES_PER_POINT} minutter. Vi anbefaler minst 5 poeng for å krone en vinner.</p>
+    <p class="small muted center" id="target-hint">${t('Ett poeng tar ca. {n} minutter. Vi anbefaler minst 5 poeng for å krone en vinner.', { n: MINUTES_PER_POINT })}</p>
     <div class="dock">
       ${car
-        ? html`<${Button} block variant="lime" onClick=${() => (t.flush(), actions.start())} disabled=${!(t.valid || t.emptied) || !canStart}>Start spillet</${Button}>`
-        : html`<${Button} block onClick=${goTo(3)} disabled=${!(t.valid || t.emptied)}>Neste</${Button}>`}
+        ? html`<${Button} block variant="lime" onClick=${() => (goal.flush(), actions.start())} disabled=${!(goal.valid || goal.emptied) || !canStart}>${t('Start spillet')}</${Button}>`
+        : html`<${Button} block onClick=${goTo(3)} disabled=${!(goal.valid || goal.emptied)}>${t('Neste')}</${Button}>`}
     </div>
   </main>`;
 }

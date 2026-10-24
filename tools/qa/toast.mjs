@@ -10,6 +10,7 @@
 import puppeteer from 'puppeteer-core';
 import { CODE, PAY, passOf } from './payfixtures.mjs';
 import { startP2PSite } from './sites.mjs';
+import { quiet } from './quiet.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const SIZES = ['390x664', '375x553', '320x568', '430x740', '360x640'];
@@ -57,6 +58,7 @@ function problem(box) {
 async function measure(browser, base, size, test, { css = '' } = {}) {
   const [width, height] = size.split('x').map(Number);
   const page = await (await browser.createBrowserContext()).newPage();
+  await quiet(page);
   try {
     await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await page.goto(`${base}/?debug`);

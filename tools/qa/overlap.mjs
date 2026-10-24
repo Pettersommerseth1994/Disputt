@@ -25,6 +25,7 @@ import { createApp } from '../../server/index.js';
 import { STEP_OF, buildFixtures } from './fixtures.mjs';
 import { PAY_BASE, SHOP_INFO, payScreens } from './payfixtures.mjs';
 import { underTheFinger } from './underfinger.mjs';
+import { quiet } from './quiet.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -49,6 +50,7 @@ const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars'] });
 const page = await browser.newPage();
+await quiet(page);
 page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 

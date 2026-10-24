@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
 import { QUESTIONS } from '../../shared/questions.js';
 import { startNodeSite, startP2PSite } from './sites.mjs';
+import { quiet } from './quiet.mjs';
 
 const flags = process.argv.slice(2).filter((a) => a.startsWith('--'));
 const SUBPATH = flags.includes('--subpath');
@@ -26,6 +27,7 @@ const problems = [];
 async function newPhone(name) {
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();
+  await quiet(page);
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: async () => ({ release: async () => {}, addEventListener() {} }) } });

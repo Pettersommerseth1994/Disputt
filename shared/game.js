@@ -13,7 +13,8 @@
 // goes on when everybody has (`roleSeen`, `startQuestion`). Everything else is the same code.
 
 import { isAvatarId } from './avatars.mjs';
-import { LETTERS, QUESTIONS } from './questions.js';
+import { bankFor, normalizeLanguage } from './banks.js';
+import { LETTERS } from './questions.js';
 import { nameKey } from './names.js';
 import { cleanName, defaultRandom, makeId, makeToken, shuffle } from './util.js';
 
@@ -75,13 +76,14 @@ export class GameError extends Error {
 const isReady = (p) => Boolean(p && p.name && p.avatar);
 
 export class Room {
-  constructor({ code, rand = defaultRandom, now = Date.now, timings = {}, questions = QUESTIONS, mode = MODE.CABIN } = {}) {
+  constructor({ code, rand = defaultRandom, now = Date.now, timings = {}, questions = null, mode = MODE.CABIN, lang } = {}) {
     this.code = code;
+    this.lang = normalizeLanguage(lang); // the language of the game: it decides the question bank (a game saved before there were languages is Norwegian)
     this.mode = mode === MODE.CAR ? MODE.CAR : MODE.CABIN; // (anything else, and a game saved before there were two ways to play, is the cabin)
     this.rand = rand;
     this.clock = now;
     this.timings = { ...DEFAULT_TIMINGS, ...timings };
-    this.questions = questions;
+    this.questions = questions ?? bankFor(this.lang);
 
     this.players = new Map();
     this.hostId = null;
@@ -116,6 +118,7 @@ export class Room {
       v: 1,
       code: this.code,
       mode: this.mode,
+      lang: this.lang,
       createdAt: this.createdAt,
       lastActivity: this.lastActivity,
       hostId: this.hostId,
@@ -149,7 +152,7 @@ export class Room {
       throw new Error('Unknown room snapshot');
     }
     const copy = JSON.parse(JSON.stringify(data)); // never share state with the caller
-    const room = new Room({ ...options, code: copy.code, mode: copy.mode });
+    const room = new Room({ ...options, code: copy.code, mode: copy.mode, lang: copy.lang });
     room.createdAt = copy.createdAt;
     room.lastActivity = room.clock();
     room.hostId = copy.hostId;

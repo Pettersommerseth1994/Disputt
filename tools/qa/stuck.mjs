@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import WebSocket from 'ws';
 import { startP2PSite } from './sites.mjs';
+import { quiet } from './quiet.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -24,6 +25,7 @@ try {
   heartbeat = setInterval(() => dead.send(JSON.stringify({ type: 'HEARTBEAT' })), 5000);
 
   const page = await browser.newPage();
+  await quiet(page);
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
   const text = () => page.evaluate(() => document.body.innerText);
   await page.goto(`${site.base}/?j=ZZZZ`);

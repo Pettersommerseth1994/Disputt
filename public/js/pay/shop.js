@@ -4,6 +4,7 @@
 // The shop's address and the variants come from the payment server, so they are set in one place only (its settings).
 // (A file of its own: pages are cached for ten minutes ...)
 
+import { t, tServer } from '../i18n/lang.js';
 import { setStore, store, toast } from '../store.js';
 import { announceAway } from './away.js';
 import { CODE_ALPHABET } from './pass.js';
@@ -30,10 +31,10 @@ export function loadShop() {
     try {
       res = await fetch(`${store.payments.apiUrl}/shop`, { credentials: 'omit' });
     } catch {
-      throw new PayError('network', 'Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.');
+      throw new PayError('network', t('Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.'));
     }
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new PayError(data.error ?? 'server', data.message ?? 'Noe gikk galt. Prøv igjen om litt.');
+    if (!res.ok) throw new PayError(data.error ?? 'server', data.message ? tServer(data.message) : t('Noe gikk galt. Prøv igjen om litt.'));
     let target = null;
     try {
       target = new URL(data.shop);
@@ -43,7 +44,7 @@ export function loadShop() {
     const variants = Object.fromEntries(PLAN_IDS.map((plan) => [plan, String(data.variants?.[plan] ?? '')]).map(([plan, id]) => [plan, /^\d{5,20}$/.test(id) || REQUIRED.includes(plan) ? id : '']));
     // (a page that does not get a proper address is not sent anywhere)
     if (!target || (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) || REQUIRED.some((plan) => !/^\d{5,20}$/.test(variants[plan]))) {
-      throw new PayError('server', 'Fikk en betalingsside vi ikke stoler på.');
+      throw new PayError('server', t('Fikk en betalingsside vi ikke stoler på.'));
     }
     return (shopInfo = { shop: target.origin, variants, vipps: data.vipps === true, vippsApp: data.vippsApp === true, discounts: data.discounts === true });
   })().finally(() => (shopAsk = null));
@@ -143,7 +144,7 @@ export function startShopCheckout(plan, discount = '') {
   }
   const info = shopInfo;
   const variant = info?.variants[plan];
-  if (!variant) throw new PayError('unavailable', 'Betalingen er ikke klar ennå. Prøv igjen om et øyeblikk.');
+  if (!variant) throw new PayError('unavailable', t('Betalingen er ikke klar ennå. Prøv igjen om et øyeblikk.'));
   const waiting = { code: newPayCode(), plan, at: Date.now() };
   waiting.url = cartLink(info.shop, variant, waiting.code, new Date(waiting.at), discount);
   const told = announceAway('pay'); // (the guests are told before anything else: this tab may sleep once the shop is on top of it)
@@ -151,7 +152,7 @@ export function startShopCheckout(plan, discount = '') {
   // A browser that does not open a new tab sends this one to the shop, like the Stripe edition does: the room is kept in the tab,
   // and the page finds the payment when the host comes back. A browser that keeps nothing would lose the room.
   if (!tab && store.view && !tabCanRemember()) {
-    throw new PayError('storage', 'Nettleseren din åpner ikke en ny fane og lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.');
+    throw new PayError('storage', t('Nettleseren din åpner ikke en ny fane og lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.'));
   }
   writeWaiting(waiting);
   setStore({ payWaiting: waiting });
@@ -183,7 +184,7 @@ const mayStillCome = (err) => ['not_found', 'network', 'server', 'unavailable'].
 
 function trouble(err) {
   if (['refunded', 'expired', 'disputed', 'cancelled'].includes(err.code)) return err.message;
-  return `${err.message} Har du betalt, står kontaktinformasjonen i bestillingsbekreftelsen på e-post.`;
+  return t('{message} Har du betalt, står kontaktinformasjonen i bestillingsbekreftelsen på e-post.', { message: err.message });
 }
 
 function schedule() {

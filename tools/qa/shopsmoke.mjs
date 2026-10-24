@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { payScreens } from './payfixtures.mjs';
+import { quiet } from './quiet.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
@@ -30,6 +31,7 @@ let ok = false;
 try {
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();
+  await quiet(page);
   await page.setUserAgent(PHONE_UA);
   await page.setViewport({ width: 390, height: 664, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.goto(`${base}/?debug`, { waitUntil: 'load' });

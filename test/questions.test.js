@@ -1,8 +1,14 @@
 // The question bank is data, but data that can quietly go wrong: a missing option, two questions with the same text,
 // or a right answer that is always "C". These checks run on every change to shared/questions.js.
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import { LETTERS, QUESTIONS } from '../shared/questions.js';
+import { test as nodeTest } from 'node:test';
+import { bankFor } from '../shared/banks.js';
+import { LETTERS } from '../shared/questions.js';
+
+// One bank for each language of the game (shared/banks.js): the same rules for all of them.
+for (const lang of ['no', 'da', 'sv']) {
+const QUESTIONS = bankFor(lang);
+const test = (name, fn) => nodeTest(`${lang}: ${name}`, fn);
 
 test('every question is complete', () => {
   assert.ok(QUESTIONS.length >= 50, `at least 50 questions (has ${QUESTIONS.length})`);
@@ -41,4 +47,14 @@ test('the question does not hand over the answer', () => {
     if (right.length < 4) continue; // "Ett", "2" … would match anywhere
     assert.ok(!q.text.toLowerCase().includes(right.toLowerCase()), `${q.id}: the question contains its own answer "${right}"`);
   }
+});
+
+test('the first question is the same in every language (the QA fixtures and the tests start from it)', () => {
+  assert.equal(QUESTIONS[0].id, 'turister');
+});
+}
+
+nodeTest('the three banks are about as big as each other', () => {
+  const sizes = ['no', 'da', 'sv'].map((l) => bankFor(l).length);
+  assert.ok(Math.max(...sizes) - Math.min(...sizes) <= 5, `sizes ${sizes.join('/')}`);
 });

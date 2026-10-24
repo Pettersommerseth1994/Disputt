@@ -5,6 +5,7 @@
 // What is on the card is `Card`, a component that is drawn for one slide.
 
 import { html, useRef, useState } from '../vendor/htm-preact.js';
+import { t } from '../i18n/lang.js';
 
 /** How long a card stays, in seconds, when nothing else is said. */
 export const SECONDS = 6;
@@ -34,7 +35,7 @@ export function Story({ slides, start = 0, seconds = () => SECONDS, Card, cardPr
   const release = () => setHeld(false);
   return html`<section
     class=${`rgS ${held ? 'is-held' : ''} ${cls}`}
-    aria-label="Slik spiller dere"
+    aria-label=${t('Slik spiller dere')}
     onPointerDown=${press}
     onPointerUp=${release}
     onPointerLeave=${release}
@@ -52,7 +53,7 @@ export function Story({ slides, start = 0, seconds = () => SECONDS, Card, cardPr
     <div class=${`rgS__card ${held ? 'is-held' : ''}`} key=${s.id}>
       <${Card} s=${s} held=${held} last=${last} ...${cardProps} />
     </div>
-    <button type="button" class="rgS__zone rgS__zone--back" aria-label="Forrige" onClick=${tap(at - 1)}></button>
-    <button type="button" class="rgS__zone rgS__zone--next" aria-label=${last ? 'Fra begynnelsen' : 'Neste'} onClick=${tap(last ? 0 : at + 1)}></button>
+    <button type="button" class="rgS__zone rgS__zone--back" aria-label=${t('Forrige')} onClick=${tap(at - 1)}></button>
+    <button type="button" class="rgS__zone rgS__zone--next" aria-label=${last ? t('Fra begynnelsen') : t('Neste')} onClick=${tap(last ? 0 : at + 1)}></button>
   </section>`;
 }

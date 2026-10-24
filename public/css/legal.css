@@ -27,3 +27,8 @@
 .legal__plans li { display: grid; gap: var(--s-1); padding: var(--s-3) var(--s-4); border-radius: var(--r-card); background: rgb(var(--cream-rgb) / 0.12); box-shadow: var(--shadow-1); }
 .legal__plans strong { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; }
 .legal__foot { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); padding-top: var(--s-4); border-top: 3px solid rgb(var(--cream-rgb) / 0.2); font-size: var(--fs-small); }
+
+/* The three language blocks of a page (nb, da, sv; js/legal-lang.js shows the one that fits the phone): they take no box of their own, so the
+   page is laid out as before. `display: contents` would otherwise beat the `hidden` attribute. */
+.legal > [data-lang] { display: contents; }
+.legal > [data-lang][hidden] { display: none; }

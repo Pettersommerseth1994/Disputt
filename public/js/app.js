@@ -1,4 +1,6 @@
 import { html, useEffect } from './vendor/htm-preact.js';
+import { LangChip, LangChooser } from './i18n/chooser.js';
+import { t, tx, useLang } from './i18n/lang.js';
 import { anonymous, carScreen } from './screens/car.js';
 import { RolesSheet } from './screens/carstrip.js';
 import { Finished } from './screens/finale.js';
@@ -20,7 +22,7 @@ import { useStore } from './store.js';
 import { Button, useWakeLock } from './ui.js';
 
 // Two failed attempts in a row (about 30 s): most likely a network that does not let phones talk to each other directly.
-const STUCK_HINT = 'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.';
+const STUCK_HINT = tx('Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.');
 
 function gameScreen(view, s) {
   if (view.mode === 'car') return carScreen(view, s); // everybody on one phone (screens/car.js)
@@ -58,15 +60,16 @@ function gameScreen(view, s) {
 function Replaced() {
   return html`<main class="screen">
     <div class="grow center stack stack--loose" style="justify-content:center">
-      <h1>Spillet er åpnet et annet sted</h1>
-      <p class="lead muted">Du har Disputt åpent i en annen fane eller på en annen enhet. Last inn siden på nytt for å bruke denne i stedet.</p>
-      <${Button} onClick=${() => location.reload()}>Last inn på nytt</${Button}>
+      <h1>${t('Spillet er åpnet et annet sted')}</h1>
+      <p class="lead muted">${t('Du har Disputt åpent i en annen fane eller på en annen enhet. Last inn siden på nytt for å bruke denne i stedet.')}</p>
+      <${Button} onClick=${() => location.reload()}>${t('Last inn på nytt')}</${Button}>
     </div>
   </main>`;
 }
 
 export function App() {
   const s = useStore();
+  useLang(); // (the whole page is drawn again when the language is changed)
   const { view } = s;
   useWakeLock(Boolean(view));
   useRememberGame(s.session, view); // (a guest's seat is remembered, so that closing the page is not the end of it: screens/rejoin.js)
@@ -76,17 +79,21 @@ export function App() {
   // ... and what the mantra's bubble goes away for: a new screen under it (the same things, and the packages)
   const screenKey = [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep, s.paywall].join('|');
 
-  const hint = isP2P && s.stuck >= 2 ? STUCK_HINT : null;
+  const hint = isP2P && s.stuck >= 2 ? t(STUCK_HINT) : null;
   let screen;
+  let onHome = false; // the start screen: the little flag of the language is on it
   if (s.replaced) screen = html`<${Replaced} />`;
   else if (s.paywall && s.payments?.enabled) screen = html`<${Paywall} view=${view} />`;
   else if (view) screen = gameScreen(view, s);
   else if (s.seats) screen = html`<${SeatPicker} />`;
-  else if (s.creating) screen = html`<${Connecting} text="Starter spillet …" />`;
-  else if (s.session) screen = html`<${Connecting} text="Kobler til spillet ditt …" hint=${hint} />`;
-  else if (s.joining || s.route.page === 'join') screen = html`<${Connecting} text=${`Blir med i ${s.joining ?? s.route.code} …`} hint=${hint} />`;
+  else if (s.creating) screen = html`<${Connecting} text=${t('Starter spillet …')} />`;
+  else if (s.session) screen = html`<${Connecting} text=${t('Kobler til spillet ditt …')} hint=${hint} />`;
+  else if (s.joining || s.route.page === 'join') screen = html`<${Connecting} text=${t('Blir med i {code} …', { code: s.joining ?? s.route.code })} hint=${hint} />`;
   else if (s.modeStep) screen = html`<${ModeStep} />`;
-  else screen = html`<${Home} />`;
+  else {
+    screen = html`<${Home} />`;
+    onHome = true;
+  }
 
   const offline = s.conn !== 'open' && !s.replaced && (s.everOpened || s.conn === 'closed');
   const hostAway = s.hostAwayUntil > Date.now(); // p2p guest: the host said it was going away to pay
@@ -105,11 +112,13 @@ export function App() {
   else if (view && s.sheet === 'home') sheet = html`<${HomeSheet} view=${view} />`;
 
   return html`
-    ${s.payBusy && html`<div class="banner" role="status">Sjekker betalingen</div>`}
-    ${offline && html`<div class="banner" role="status">${hostAway ? 'Verten betaler, spillet fortsetter straks' : s.everOpened ? 'Mistet forbindelsen, kobler til igjen' : isP2P ? 'Får ikke kontakt med verten' : 'Får ikke kontakt med serveren'}</div>`}
+    ${s.payBusy && html`<div class="banner" role="status">${t('Sjekker betalingen')}</div>`}
+    ${offline && html`<div class="banner" role="status">${hostAway ? t('Verten betaler, spillet fortsetter straks') : s.everOpened ? t('Mistet forbindelsen, kobler til igjen') : isP2P ? t('Får ikke kontakt med verten') : t('Får ikke kontakt med serveren')}</div>`}
     <${Mantra} screen=${screenKey} />
     ${screen}
+    ${onHome && !s.modeStep && html`<${LangChip} />`}
     ${sheet}
+    <${LangChooser} />
     ${s.toast && html`<div class="toast" role="alert" key=${s.toast}>${s.toast}</div>`}
   `;
 }

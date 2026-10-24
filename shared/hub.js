@@ -106,18 +106,18 @@ export class Hub {
 
   // ---------------------------------------------------------------- identity
 
-  /** `msg.mode` is the way to play: 'car' (one phone), or anything else for the cabin (a phone each, as it always was). */
+  /** `msg.mode` is the way to play: 'car' (one phone), or anything else for the cabin (a phone each, as it always was). `msg.lang` is the language of the game ('no', 'da' or 'sv'). */
   create(conn, msg = {}) {
-    this.openRoom(conn, null, msg.mode);
+    this.openRoom(conn, null, msg.mode, msg.lang);
   }
 
   /** Like `create`, but the caller chooses the code (the peer-to-peer host reserves it with the signalling server first). */
-  createWithCode(conn, code, mode) {
+  createWithCode(conn, code, mode, lang) {
     if (!/^[A-Z]{4}$/.test(code) || this.rooms.has(code)) throw new GameError('busy', 'Den koden er opptatt.');
-    this.openRoom(conn, code, mode);
+    this.openRoom(conn, code, mode, lang);
   }
 
-  openRoom(conn, wantedCode, mode) {
+  openRoom(conn, wantedCode, mode, lang) {
     if ((conn.created ?? 0) >= MAX_ROOMS_PER_SOCKET) {
       throw new GameError('busy', 'Du har startet for mange spill på rad. Last inn siden på nytt.');
     }
@@ -125,7 +125,7 @@ export class Hub {
     this.leaveCurrent(conn);
     conn.created = (conn.created ?? 0) + 1;
     const code = wantedCode ?? makeRoomCode(this.rand, (c) => this.rooms.has(c));
-    const room = new Room({ code, rand: this.rand, now: this.clock, timings: this.timings, questions: this.questions, mode });
+    const room = new Room({ code, rand: this.rand, now: this.clock, timings: this.timings, questions: this.questions, mode, lang });
     const entry = { room, sockets: new Map() };
     this.rooms.set(code, entry);
     const player = room.addPlayer({ asHost: true });

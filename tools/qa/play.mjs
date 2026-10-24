@@ -25,6 +25,7 @@ import { buyAndComeBackShop, payAfterFreeRoundsShop } from './shopflow.mjs';
 import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
 import { buyAndComeBackVipps, payAfterFreeRoundsVipps, payAfterFreeRoundsVippsApp } from './vippsflow.mjs';
+import { quiet } from './quiet.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -71,6 +72,7 @@ const problems = [];
 async function newPhone(name, { wakeLock = 'granted', ctx: given = null } = {}) {
   const ctx = given ?? (await browser.createBrowserContext());
   const page = await ctx.newPage();
+  await quiet(page);
   // (what only reads from the page is asked again if the page happened to be in the middle of a navigation: see `steady`)
   for (const method of ['$eval', '$$eval', '$', '$$', 'waitForFunction', 'waitForSelector']) {
     const original = page[method].bind(page);

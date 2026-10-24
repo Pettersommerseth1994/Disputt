@@ -2,6 +2,7 @@
 // and under that the table seen from above, with the players around it and what happens at it in this step.
 
 import { html } from '../vendor/htm-preact.js';
+import { t } from '../i18n/lang.js';
 import { Table, beats } from './bord.js';
 import { useBeats } from './kit.js';
 import { Story } from './story.js';
@@ -9,8 +10,8 @@ import { Story } from './story.js';
 function Card({ s, held, car }) {
   const b = useBeats(beats(s.id, car), { ms: s.id === 'lock' ? 750 : 1000, hold: 600000, paused: held, key: s.id });
   return html`<header class="rgS__top">
-      <h3 class="rgS__head">${s.n}. ${s.title}</h3>
-      <p class="rgS__intro">${s.line}</p>
+      <h3 class="rgS__head">${s.n}. ${t(s.title)}</h3>
+      <p class="rgS__intro">${t(s.line)}</p>
     </header>
     <div class="rgS__table"><${Table} id=${s.id} b=${b} car=${car} /></div>`;
 }

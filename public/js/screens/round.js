@@ -3,6 +3,7 @@
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { useHold } from '../hold.js';
+import { t, tx } from '../i18n/lang.js';
 import { actions } from '../net.js';
 import { serverNow } from '../net.js';
 import { impostorCount, joinNames, matesOf, summaryImpostors } from '../impostors.js';
@@ -10,6 +11,7 @@ import { asset } from '../paths.js';
 import { requestNextRound } from '../pay/gate.js';
 import { setStore } from '../store.js';
 import { Avatar, Button, GearIcon, RoleStrip, Scoreboard, Timer, TrophyIcon } from '../ui.js';
+import { rich } from '../i18n/rich.js';
 import { cx, letter, playerById, useRemaining, vibrate } from '../util.js';
 import { CarStrip } from './carstrip.js';
 
@@ -20,10 +22,10 @@ const Strip = ({ view }) => (view.mode === 'car' ? html`<${CarStrip} />` : html`
 export function GameBar({ view }) {
   const round = view.turn?.number ?? view.summary?.round ?? view.round;
   return html`<header class="gamebar row row--between">
-    <span class="chip">Runde ${round} · først til ${view.target}</span>
+    <span class="chip">${t('Runde {round} · først til {target}', { round, target: view.target })}</span>
     <div class="row gamebar__actions">
-      <${Button} variant="ghost" size="small" onClick=${() => setStore({ sheet: 'scores' })} aria-label="Se poengtavle"><${TrophyIcon} /> Poeng</${Button}>
-      ${view.you.isHost && html`<${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'host' })} aria-label="Vertsvalg"><${GearIcon} /></${Button}>`}
+      <${Button} variant="ghost" size="small" onClick=${() => setStore({ sheet: 'scores' })} aria-label=${t('Se poengtavle')}><${TrophyIcon} /> ${t('Poeng')}</${Button}>
+      ${view.you.isHost && html`<${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'host' })} aria-label=${t('Vertsvalg')}><${GearIcon} /></${Button}>`}
     </div>
   </header>`;
 }
@@ -35,10 +37,10 @@ export function GameBar({ view }) {
 
 const EYES = { impostor: 'assets/art/eye-impostor.svg', loyal: 'assets/art/eye-loyal.svg' };
 const TIPS = {
-  impostor: 'Få de andre til å svare feil, uten å bli avslørt.',
-  impostorDuo: 'Hjelp hverandre med å få de andre til å svare feil, uten å bli avslørt.',
-  loyal: 'Finn ut hva som er riktig svar sammen, og ikke la imposteren lure dere.',
-  loyalDuo: 'Finn ut hva som er riktig svar sammen, og ikke la imposterne lure dere.',
+  impostor: tx('Få de andre til å svare feil, uten å bli avslørt.'),
+  impostorDuo: tx('Hjelp hverandre med å få de andre til å svare feil, uten å bli avslørt.'),
+  loyal: tx('Finn ut hva som er riktig svar sammen, og ikke la imposteren lure dere.'),
+  loyalDuo: tx('Finn ut hva som er riktig svar sammen, og ikke la imposterne lure dere.'),
 };
 
 /**
@@ -51,20 +53,20 @@ function RoleCard({ you, count }) {
   return html`<article class=${cx('rolecard pop-in', impostor && count > 1 && 'rolecard--duo', !impostor && 'rolecard--loyal')}>
     <div class="rolecard__head">
       <img class="rolecard__eye" src=${asset(EYES[you.role])} alt="" width="400" height="300" />
-      <h1 class=${cx('rolecard__word', impostor ? 'rolecard__word--impostor' : 'rolecard__word--loyal')}>${impostor ? 'Imposter' : 'Lojal'}</h1>
+      <h1 class=${cx('rolecard__word', impostor ? 'rolecard__word--impostor' : 'rolecard__word--loyal')}>${impostor ? t('Imposter') : t('Lojal')}</h1>
     </div>
     ${impostor &&
     html`<div class="rolecard__answer">
-      <span class="rolecard__label">Riktig svar</span>
+      <span class="rolecard__label">${t('Riktig svar')}</span>
       <p class="rolecard__pill"><span class="rolecard__dot">${you.secret.letter}</span>${you.secret.text}</p>
     </div>`}
     ${impostor &&
     count > 1 &&
     html`<div class="rolecard__answer">
-      <span class="rolecard__label">Imposterne</span>
+      <span class="rolecard__label">${t('Imposterne')}</span>
       <p class="rolecard__pill">
         ${mates.length > 0 && html`<${Avatar} id=${mates[0].avatar} size="xs" class="rolecard__mate" label=${mates[0].name} />`}
-        ${joinNames(['Du', ...mates.map((m) => m.name)])}
+        ${joinNames([t('Du'), ...mates.map((m) => m.name)])}
       </p>
     </div>`}
   </article>`;
@@ -85,23 +87,23 @@ export function RoleReveal({ view }) {
   }, [you.role]);
 
   return html`<main class="screen role">
-    <p class="eyebrow role__eyebrow">Din rolle</p>
+    <p class="eyebrow role__eyebrow">${t('Din rolle')}</p>
     <div class="role__mid">
       <div class="slot" role="status">
         ${held
           ? html`<${RoleCard} you=${you} count=${count} />`
           : html`<div class="slot__closed">
               <img class="slot__eye" src=${asset('assets/art/eye-wait.svg')} alt="" width="300" height="200" />
-              <p>Rollen din er skjult</p>
+              <p>${t('Rollen din er skjult')}</p>
             </div>`}
       </div>
     </div>
     <div class="role__hold">
-      <p class="role__hint">${held ? TIPS[you.role + (count > 1 ? 'Duo' : '')] : 'Skjul rollen din godt!'}</p>
-      <button type="button" class=${cx('btn btn--block hold-btn', held && 'is-held')} ...${bind} aria-label="Hold inne for å se rollen din">
-        ${held ? 'Slipp for å skjule' : 'Hold for å se rollen din'}
+      <p class="role__hint">${held ? t(TIPS[you.role + (count > 1 ? 'Duo' : '')]) : t('Skjul rollen din godt!')}</p>
+      <button type="button" class=${cx('btn btn--block hold-btn', held && 'is-held')} ...${bind} aria-label=${t('Hold inne for å se rollen din')}>
+        ${held ? t('Slipp for å skjule') : t('Hold for å se rollen din')}
       </button>
-      <p class="role__next">${asker ? html`<strong>${asker.name}</strong> får spørsmålet …` : ''}</p>
+      <p class="role__next">${asker ? rich(t('{name} får spørsmålet …'), { name: html`<strong>${asker.name}</strong>` }) : ''}</p>
     </div>
     <div class="role__bar" aria-hidden="true">
       <div class="bar bar--countdown" style=${`--dur:${total}ms;--delay:-${total - left.current}ms;--fill:var(--cream)`}><div class="bar__fill"></div></div>
@@ -134,20 +136,20 @@ export function Question({ view }) {
 
     <div class="timebar">
       <${Timer} endsAt=${view.discussion.endsAt} small />
-      <div class="segmented segmented--compact" role="group" aria-label="Sett klokka til">
-        ${PRESETS.map((m) => html`<button type="button" class="segmented__item" key=${m} aria-pressed=${preset === m} onClick=${() => setTime(m)}>${m}<small>min</small></button>`)}
+      <div class="segmented segmented--compact" role="group" aria-label=${t('Sett klokka til')}>
+        ${PRESETS.map((m) => html`<button type="button" class="segmented__item" key=${m} aria-pressed=${preset === m} onClick=${() => setTime(m)}>${m}<small>${t('min')}</small></button>`)}
       </div>
-      <${Button} variant="cream" size="small" onClick=${() => actions.addTime(60)} aria-label="Legg til ett minutt">+1</${Button}>
+      <${Button} variant="cream" size="small" onClick=${() => actions.addTime(60)} aria-label=${t('Legg til ett minutt')}>+1</${Button}>
     </div>
-    ${ms <= 0 && html`<p class="timeup">Tiden er ute, bli enige og lås svaret!</p>`}
+    ${ms <= 0 && html`<p class="timeup">${t('Tiden er ute, bli enige og lås svaret!')}</p>`}
 
     <section class="card card--paper stack stack--tight question__card">
-      <p class="eyebrow" style="color:var(--ink);opacity:.78">Les høyt for de andre</p>
+      <p class="eyebrow" style="color:var(--ink);opacity:.78">${t('Les høyt for de andre')}</p>
       <h2 class="question__text">${question.text}</h2>
     </section>
 
-    <fieldset class="options" aria-label="Svaralternativer">
-      <legend class="sr-only">Svaralternativer</legend>
+    <fieldset class="options" aria-label=${t('Svaralternativer')}>
+      <legend class="sr-only">${t('Svaralternativer')}</legend>
       ${question.options.map(
         (text, i) => html`<label class=${cx('option', sel === i && 'is-selected')} key=${i}>
           <input type="radio" name="answer" value=${i} checked=${sel === i} onChange=${() => pick(i)} />
@@ -160,7 +162,7 @@ export function Question({ view }) {
 
     <div class="dock dock--compact">
       <${Button} block variant="lime" disabled=${sel === null || sel === undefined} onClick=${() => actions.lock(sel)}>
-        ${sel === null || sel === undefined ? 'Velg svar' : 'Lås svaret'}
+        ${sel === null || sel === undefined ? t('Velg svar') : t('Lås svaret')}
       </${Button}>
     </div>
   </main>`;
@@ -175,17 +177,17 @@ export function Discussion({ view }) {
 
     <section class="center stack" style="align-items:center;margin-top:var(--s-4)">
       <${Avatar} id=${asker?.avatar} size="lg" alive offline=${asker && !asker.connected} />
-      <h2>${asker?.name} har spørsmålet</h2>
-      <p class="muted discussion__hint">Lytt når ${asker?.name} leser det opp, og diskuter dere frem til riktig svar.</p>
+      <h2>${t('{name} har spørsmålet', { name: asker?.name ?? '' })}</h2>
+      <p class="muted discussion__hint">${t('Lytt når {name} leser det opp, og diskuter dere frem til riktig svar.', { name: asker?.name ?? '' })}</p>
     </section>
 
     <section class="timer-block center stack stack--tight">
-      <p class="eyebrow">Tid til å diskutere</p>
+      <p class="eyebrow">${t('Tid til å diskutere')}</p>
       <${Timer} endsAt=${view.discussion.endsAt} />
-      ${ms <= 0 && html`<p class="timeup">Tiden er ute, bli enige! ${asker?.name} låser svaret.</p>`}
+      ${ms <= 0 && html`<p class="timeup">${t('Tiden er ute, bli enige! {name} låser svaret.', { name: asker?.name ?? '' })}</p>`}
     </section>
 
-    <p class="card card--deep center discussion__tip">Diskuter, og bli enige før tiden går ut.</p>
+    <p class="card card--deep center discussion__tip">${t('Diskuter, og bli enige før tiden går ut.')}</p>
   </main>`;
 }
 
@@ -200,9 +202,9 @@ export function Countdown({ view }) {
 
   return html`<main class="screen countdown">
     <div class="countdown__body grow">
-      <p class="eyebrow">Svaret er låst</p>
+      <p class="eyebrow">${t('Svaret er låst')}</p>
       <div class="countdown__n" key=${n} aria-live="polite">${n}</div>
-      <p class="lead">${locked && html`Dere låste <strong>${locked.letter}: ${locked.text}</strong>.<br />`}Se på hverandre!</p>
+      <p class="lead">${locked && html`${rich(t('Dere låste {svar}.'), { svar: html`<strong>${locked.letter}: ${locked.text}</strong>` })}<br />`}${t('Se på hverandre!')}</p>
     </div>
   </main>`;
 }
@@ -224,14 +226,14 @@ function RevealStage({ view, asker = false }) {
     <${Strip} view=${view} />
     <div class="stage__body grow">
       <img class="stage__art" src=${asset('assets/art/lips.svg')} alt="" width="300" height="200" />
-      <h1 class="stage__title">${count > 1 ? 'Imposterne avslører seg!' : 'Imposteren avslører seg!'}</h1>
-      <p class="lead">${count > 1 ? 'Imposterne sier riktig svar sammen.' : 'Imposteren sier riktig svar høyt.'}</p>
+      <h1 class="stage__title">${count > 1 ? t('Imposterne avslører seg!') : t('Imposteren avslører seg!')}</h1>
+      <p class="lead">${count > 1 ? t('Imposterne sier riktig svar sammen.') : t('Imposteren sier riktig svar høyt.')}</p>
     </div>
     ${asker
-      ? html`<div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>Det er sagt, vis poengene</${Button}></div>`
+      ? html`<div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>${t('Det er sagt, vis poengene')}</${Button}></div>`
       : html`<div class="foot center">
-          <p class="muted" role="status">${holder?.name ?? 'Spilleren med spørsmålet'} trykker videre når det er sagt.</p>
-          ${stuck && html`<${Button} variant="cream" onClick=${() => actions.proceed()}>${holder.name} er borte, gå videre</${Button}>`}
+          <p class="muted" role="status">${holder ? t('{name} trykker videre når det er sagt.', { name: holder.name }) : t('Spilleren med spørsmålet trykker videre når det er sagt.')}</p>
+          ${stuck && html`<${Button} variant="cream" onClick=${() => actions.proceed()}>${t('{name} er borte, gå videre', { name: holder.name })}</${Button}>`}
         </div>`}
   </main>`;
 }
@@ -251,35 +253,35 @@ export function Summary({ view }) {
   const many = summaryImpostors(view).length > 1; // (an impostor may have been removed since)
   const none = Boolean(s.noImpostor) && !s.skipped; // (a round of two players may have no impostor: the points say so)
   const recap = s.skipped
-    ? 'Runden ble hoppet over. Ingen fikk poeng.'
+    ? t('Runden ble hoppet over. Ingen fikk poeng.')
     : none
-      ? 'Ingen var imposter denne runden.'
+      ? t('Ingen var imposter denne runden.')
       : s.correct
-        ? 'Gruppa hadde rett!'
+        ? t('Gruppa hadde rett!')
         : many
-          ? 'Imposterne lurte dere!'
-          : 'Imposteren lurte dere!';
+          ? t('Imposterne lurte dere!')
+          : t('Imposteren lurte dere!');
 
   return html`<main class="screen summary">
     <${GameBar} view=${view} />
     <header class="center stack stack--tight summary__head">
-      <h1 class="rise-in">Poengene</h1>
+      <h1 class="rise-in">${t('Poengene')}</h1>
       <p class="lead muted">${recap}</p>
     </header>
 
-    ${none && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${s.correct ? 'Dere svarte riktig sammen!' : 'Dere svarte feil. Ingen fikk poeng.'}</p>`}
-    ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">Uavgjort i teten, én runde til!</p>`}
+    ${none && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${s.correct ? t('Dere svarte riktig sammen!') : t('Dere svarte feil. Ingen fikk poeng.')}</p>`}
+    ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${t('Uavgjort i teten, én runde til!')}</p>`}
 
     <section class="card stack">
       <${Scoreboard} view=${view} gains=${s.gained} />
-      ${!s.skipped && html`<div class="row row--center"><${Button} variant="text" onClick=${() => setStore({ sheet: 'fasit' })}>Uenige? Se fasit</${Button}></div>`}
+      ${!s.skipped && html`<div class="row row--center"><${Button} variant="text" onClick=${() => setStore({ sheet: 'fasit' })}>${t('Uenige? Se fasit')}</${Button}></div>`}
     </section>
 
-    ${view.mode === 'car' && html`<p class="small muted center">Neste runde får dere nye roller: send telefonen rundt igjen.</p>`}
+    ${view.mode === 'car' && html`<p class="small muted center">${t('Neste runde får dere nye roller: send telefonen rundt igjen.')}</p>`}
     ${view.you.isHost
       ? html`<div class="dock">
-          <${Button} block variant="lime" onClick=${() => requestNextRound(view)}>Neste runde</${Button}>
+          <${Button} block variant="lime" onClick=${() => requestNextRound(view)}>${t('Neste runde')}</${Button}>
         </div>`
-      : html`<p class="foot center muted" role="status">Venter på at verten starter neste runde …</p>`}
+      : html`<p class="foot center muted" role="status">${t('Venter på at verten starter neste runde …')}</p>`}
   </main>`;
 }

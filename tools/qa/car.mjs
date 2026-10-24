@@ -17,6 +17,7 @@ import { QUESTIONS } from '../../shared/questions.js';
 import { startPaymentsStack } from './payments-stack.mjs';
 import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
+import { quiet } from './quiet.mjs';
 
 const args = process.argv.slice(2);
 const OUTCOMES_ARG = args.includes('--outcomes');
@@ -59,6 +60,7 @@ if (SHOTS) fs.mkdirSync('tmp/car', { recursive: true });
 // ---------------------------------------------------------------- the one phone
 const problems = [];
 const page = await browser.newPage();
+await quiet(page);
 await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
 // What the page asks the network for: a game on one phone must not make a WebSocket or a WebRTC line in the peer-to-peer build.
 await page.evaluateOnNewDocument(() => {

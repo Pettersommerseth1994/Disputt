@@ -6,6 +6,7 @@ import { html } from '../vendor/htm-preact.js';
 import { actions, forget } from '../net.js';
 import { isP2P } from '../settings.js';
 import { setStore } from '../store.js';
+import { t } from '../i18n/lang.js';
 import { Button, Sheet } from '../ui.js';
 
 const close = () => setStore({ sheet: null });
@@ -15,22 +16,22 @@ export function HomeSheet({ view }) {
   const car = view.mode === 'car'; // everybody is on this phone: leaving ends the game (there is nobody to hand it to)
   const endsForAll = isHost && (isP2P || car);
   const text = car
-    ? 'Spillet avsluttes, og stillingen går tapt.'
+    ? t('Spillet avsluttes, og stillingen går tapt.')
     : endsForAll
-      ? 'Du er verten, så spillet avsluttes for alle som er med.'
+      ? t('Du er verten, så spillet avsluttes for alle som er med.')
       : isHost
-        ? 'Du forlater spillet, og en annen spiller blir vert.'
-        : 'Du forlater spillet. Du kan bli med igjen med koden så lenge spillet ikke har startet.';
+        ? t('Du forlater spillet, og en annen spiller blir vert.')
+        : t('Du forlater spillet. Du kan bli med igjen med koden så lenge spillet ikke har startet.');
   const leave = () => {
     close();
     if (endsForAll && isP2P) forget(); // stops the page that runs the game, which tells everybody that it is over
     else actions.leave();
   };
-  return html`<${Sheet} title="Tilbake til hjemskjermen?" onClose=${close}>
+  return html`<${Sheet} title=${t('Tilbake til hjemskjermen?')} onClose=${close}>
     <div class="stack">
       <p class="lead">${text}</p>
-      <${Button} block variant="cream" onClick=${close}>Bli i spillet</${Button}>
-      <${Button} block variant="pink" onClick=${leave}>${endsForAll ? 'Avslutt spillet' : 'Forlat spillet'}</${Button}>
+      <${Button} block variant="cream" onClick=${close}>${t('Bli i spillet')}</${Button}>
+      <${Button} block variant="pink" onClick=${leave}>${endsForAll ? t('Avslutt spillet') : t('Forlat spillet')}</${Button}>
     </div>
   </${Sheet}>`;
 }

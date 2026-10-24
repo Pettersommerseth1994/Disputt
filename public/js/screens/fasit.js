@@ -4,6 +4,7 @@
 
 import { html } from '../vendor/htm-preact.js';
 import { joinNames, summaryImpostors } from '../impostors.js';
+import { t } from '../i18n/lang.js';
 import { setStore } from '../store.js';
 import { Avatar, Sheet } from '../ui.js';
 
@@ -15,30 +16,30 @@ export function FasitSheet({ view }) {
   const many = impostors.length > 1;
   const none = Boolean(s.noImpostor); // (a round of two players may have no impostor)
   const a = s.answer; // (a host that has not been updated does not send it)
-  return html`<${Sheet} title="Fasit" onClose=${close}>
+  return html`<${Sheet} title=${t('Fasit')} onClose=${close}>
     <div class="card card--paper stack fasit">
       ${a &&
       html`<div class="fasit__row">
-          <p class="eyebrow">Riktig svar</p>
+          <p class="eyebrow">${t('Riktig svar')}</p>
           <p class="role__answer"><span>${a.correctLetter}</span>${a.correctText}</p>
         </div>
         <div class="fasit__row">
-          <p class="eyebrow">Dere låste</p>
+          <p class="eyebrow">${t('Dere låste')}</p>
           <p class="fasit__locked">${a.chosenLetter}: ${a.chosenText}</p>
         </div>`}
       <div class="fasit__row fasit__row--who">
         ${none
           ? html`<div>
-              <p class="eyebrow">Imposteren var</p>
-              <p class="display impostor-card__name">Ingen i denne runden</p>
+              <p class="eyebrow">${t('Imposteren var')}</p>
+              <p class="display impostor-card__name">${t('Ingen i denne runden')}</p>
             </div>`
           : html`<span class="impostor-card__faces">${impostors.map((i) => html`<${Avatar} id=${i.avatar} size="md" key=${i.id} />`)}</span>
               <div>
-                <p class="eyebrow">${many ? 'Imposterne var' : 'Imposteren var'}</p>
+                <p class="eyebrow">${many ? t('Imposterne var') : t('Imposteren var')}</p>
                 <p class=${many ? 'display impostor-card__name impostor-card__name--duo' : 'display impostor-card__name'}>${joinNames(impostors.map((i) => i.name))}</p>
               </div>`}
       </div>
     </div>
-    <p class="small muted center" style="margin-top:var(--s-4)">Imposteren skal si det høyt først. Fasiten er bare her hvis dere blir uenige.</p>
+    <p class="small muted center" style="margin-top:var(--s-4)">${t('Imposteren skal si det høyt først. Fasiten er bare her hvis dere blir uenige.')}</p>
   </${Sheet}>`;
 }

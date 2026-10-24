@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { startP2PSite } from './sites.mjs';
+import { quiet } from './quiet.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -27,6 +28,7 @@ const clickButton = async (page, label) => {
 async function newPage(ctxOptions = {}) {
   const ctx = await browser.createBrowserContext(ctxOptions);
   const page = await ctx.newPage();
+  await quiet(page);
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
   return page;
@@ -35,6 +37,7 @@ async function newPage(ctxOptions = {}) {
 try {
   // ---- the host
   const host = await newPage();
+  await quiet(host);
   await host.goto(`${base}/`);
   await clickButton(host, 'Opprett spill');
   await clickButton(host, 'Hytteturmodus'); // (the way to play: the first of the host's four steps)
@@ -53,6 +56,7 @@ try {
   // ---- the attacker: a bare page with PeerJS and the room code, nothing else. (A text file from the same site: no CSP,
   //      and a secure context, which a blank page is not; Chrome keeps those away from loopback addresses.)
   const attacker = await newPage();
+  await quiet(attacker);
   await attacker.goto(`${base}/robots.txt`);
   await attacker.addScriptTag({ content: fs.readFileSync('public/js/vendor/peerjs.min.js', 'utf8') });
   await attacker.evaluate(
@@ -100,6 +104,7 @@ try {
 
   // 3. a real player still gets in (the oldest silent connection gives way), straight away
   const guest = await newPage();
+  await quiet(guest);
   await guest.goto(`${base}/?j=${code}`);
   await guest.waitForSelector('#name', { timeout: 30000 });
   await guest.type('#name', 'Mari');

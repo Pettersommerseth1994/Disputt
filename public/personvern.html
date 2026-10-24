@@ -19,74 +19,219 @@
 </head>
 <body>
 <main class="legal">
-  <header class="legal__top">
-    <a class="legal__logo" href="./" aria-label="Til spillet"><img src="assets/logo/disputt-logo-cream.svg" alt="Disputt" width="300" height="130"></a>
-    <a class="legal__back" href="./">‹ Til spillet</a>
-  </header>
+  <div lang="nb" data-lang="no" data-title="Personvern i Disputt" data-description="Personvernerklæring for Disputt: hva som behandles hvor, hvorfor, hvor lenge, og dine rettigheter.">
+    <header class="legal__top">
+      <a class="legal__logo" href="./" aria-label="Til spillet"><img src="assets/logo/disputt-logo-cream.svg" alt="Disputt" width="300" height="130"></a>
+      <a class="legal__back" href="./">‹ Til spillet</a>
+    </header>
 
-  <div class="stack stack--tight">
-    <h1>Personvern</h1>
-    <p class="legal__updated">Personvernerklæring for Disputt · sist oppdatert 5. oktober 2026</p>
+    <div class="stack stack--tight">
+      <h1>Personvern</h1>
+      <p class="legal__updated">Personvernerklæring for Disputt · sist oppdatert 5. oktober 2026</p>
+    </div>
+
+    <div class="card card--paper legal__seller">
+      <strong>Behandlingsansvarlig</strong>
+      <span>Pesom Holding AS</span>
+      <span>Org.nr. 923 729 674 MVA</span>
+      <span>Agathe Grøndahls gate 46, 0478 Oslo</span>
+      <span>E-post: <a href="mailto:kontakt@disputt.site">kontakt@disputt.site</a></span>
+    </div>
+
+    <section>
+      <h2>Kort fortalt</h2>
+      <p>Disputt har ingen brukerkontoer og ingen sporing. Spillet kjører i vertens nettleser, og vi lagrer ingenting om spillerne. Det eneste vi får vite om deg, er det som hører til et kjøp, og det behandler nettbutikken vår (Shopify) og betalingsleverandørene (Shopify Payments og Vipps MobilePay).</p>
+    </section>
+
+    <section>
+      <h2>Hva vi behandler, og hvor</h2>
+      <ul>
+        <li><strong>Spillet.</strong> Navn, avatar, svar og poeng behandles i vertens nettleser og sendes direkte mellom telefonene, kryptert. Vi lagrer ingenting av det og har ingen spillserver. Det er borte når spillet er over.</li>
+        <li><strong>Å finne hverandre.</strong> En gratis meglertjeneste (PeerJS, drevet av PeerJS-prosjektet) kobler telefonene sammen. Den ser romkoden og tilkoblingsopplysninger, blant annet IP-adresser, mens telefonene finner hverandre, men ikke selve spillet. Slik WebRTC fungerer, kan spillerne teknisk se hverandres IP-adresser.</li>
+        <li><strong>Kjøp.</strong> Betalingen skjer enten i nettbutikken vår, som drives av <a href="https://www.shopify.com/legal/privacy" rel="noopener">Shopify</a>, og hos betalingsleverandørene der (Shopify Payments, og Vipps MobilePay hvis du betaler med Vipps der), eller direkte hos Vipps MobilePay hvis du bruker knappen «Betal med Vipps» i spillet. De behandler betalingsopplysningene (for eksempel navn, e-post, betalingsmåte og IP-adresse). Bruker du knappen i spillet, ber vi Vipps om e-postadressen din, og du godkjenner delingen i Vipps-appen. Betalingstjenesten vår legger adressen på bestillingen i Shopify, så kvitteringen kommer dit. Vi får se bestillingen (beløp, tidspunkt og pakke), e-postadressen du oppga og koden din i Shopify. Betalingstjenesten vår lagrer i tillegg bestillingsnummeret, referansen hos Vipps, koden, pakken, tidspunktet, beløpet og rabattkoden hvis du brukte en, men ikke navn eller e-postadresse. Vi ser aldri kortnummeret ditt.</li>
+        <li><strong>Tilgangen på telefonen.</strong> En signert tilgang og koden din lagres i nettleserens lokale lagring på telefonen din, og en betaling som pågår huskes i fanen. Det trengs for å levere tjenesten, så vi spør ikke om samtykke. Du kan fjerne tilgangen under Vertsvalg › Min tilgang, eller ved å tømme nettleserdata.</li>
+        <li><strong>Tekniske logger.</strong> Betalingstjenesten kjører hos <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare</a>, og siden ligger hos <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a>. De kan en kort tid logge IP-adresser og tekniske opplysninger for drift og sikkerhet.</li>
+        <li><strong>E-post til oss.</strong> Skriver du til oss, bruker vi e-postadressen og det du skriver til å svare deg.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Hvorfor, og på hvilket grunnlag</h2>
+      <ul>
+        <li>Å levere det du har kjøpt og hjelpe deg med det: avtalen med deg (personvernforordningen artikkel 6 nr. 1 bokstav b).</li>
+        <li>Regnskap og bokføring: plikt etter loven (artikkel 6 nr. 1 bokstav c).</li>
+        <li>Drift, sikkerhet og å hindre svindel: vår berettigede interesse (artikkel 6 nr. 1 bokstav f).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Hvor lenge</h2>
+      <p>Opplysninger om kjøp oppbevares i regnskapet så lenge bokføringsloven krever det, i dag fem år. Hos Shopify og betalingsleverandørene gjelder deres egne regler. E-post du sender oss, slettes når saken er løst, med mindre loven krever at vi beholder den. Det som ligger på telefonen din, bestemmer du selv over.</p>
+    </section>
+
+    <section>
+      <h2>Hvem vi deler med</h2>
+      <p>Bare dem som trengs for å levere tjenesten: Shopify (nettbutikken og betalingen i den), Vipps MobilePay (for dem som betaler med Vipps), Cloudflare (betalingstjenesten og databasen den bruker), GitHub (nettsiden) og PeerJS (meglertjenesten). Vi selger ikke opplysninger. Noen av dem behandler opplysninger i USA. Det skjer på de vilkårene selskapene selv beskriver i sine personvernerklæringer, for eksempel EU-USAs Data Privacy Framework eller EUs standardavtaler.</p>
+    </section>
+
+    <section>
+      <h2>Informasjonskapsler</h2>
+      <p>Vi bruker ingen sporings- eller reklameinformasjonskapsler på spillsiden. Nettbutikken, shop.disputt.site, drives av Shopify, som bruker informasjonskapsler for kassen og sikkerheten; de har egne regler.</p>
+    </section>
+
+    <section>
+      <h2>Dine rettigheter</h2>
+      <p>Du kan be om innsyn i opplysningene vi har om deg, få dem rettet eller slettet, be oss begrense behandlingen, protestere mot den og be om å få opplysningene utlevert. Skriv til oss. Mener du at vi behandler opplysninger i strid med loven, kan du klage til <a href="https://www.datatilsynet.no" rel="noopener">Datatilsynet</a>.</p>
+    </section>
+
+    <nav class="legal__foot" aria-label="Flere sider">
+      <a href="vilkar.html">Vilkår</a>
+      <a href="./">Til spillet</a>
+    </nav>
   </div>
 
-  <div class="card card--paper legal__seller">
-    <strong>Behandlingsansvarlig</strong>
-    <span>Pesom Holding AS</span>
-    <span>Org.nr. 923 729 674 MVA</span>
-    <span>Agathe Grøndahls gate 46, 0478 Oslo</span>
-    <span>E-post: <a href="mailto:kontakt@disputt.site">kontakt@disputt.site</a></span>
+  <div lang="da" data-lang="da" data-title="Privatliv i Disputt" data-description="Privatlivspolitik for Disputt: hvad der behandles hvor, hvorfor, hvor længe, og dine rettigheder." hidden>
+    <header class="legal__top">
+      <a class="legal__logo" href="./" aria-label="Til spillet"><img src="assets/logo/disputt-logo-cream.svg" alt="Disputt" width="300" height="130" loading="lazy"></a>
+      <a class="legal__back" href="./">‹ Til spillet</a>
+    </header>
+
+    <div class="stack stack--tight">
+      <h1>Privatliv</h1>
+      <p class="legal__updated">Privatlivspolitik for Disputt · senest opdateret 5. oktober 2026</p>
+    </div>
+
+    <div class="card card--paper legal__seller">
+      <strong>Dataansvarlig</strong>
+      <span>Pesom Holding AS</span>
+      <span>Org.nr. 923 729 674 MVA</span>
+      <span>Agathe Grøndahls gate 46, 0478 Oslo, Norge</span>
+      <span>E-mail: <a href="mailto:kontakt@disputt.site">kontakt@disputt.site</a></span>
+    </div>
+
+    <section>
+      <h2>Kort fortalt</h2>
+      <p>Disputt har ingen brugerkonti og ingen sporing. Spillet kører i værtens browser, og vi gemmer ikke noget om spillerne. Det eneste, vi får at vide om dig, er det, der hører til et køb, og det behandler vores webshop (Shopify) og betalingsleverandørerne (Shopify Payments og Vipps MobilePay).</p>
+    </section>
+
+    <section>
+      <h2>Hvad vi behandler, og hvor</h2>
+      <ul>
+        <li><strong>Spillet.</strong> Navn, avatar, svar og point behandles i værtens browser og sendes direkte mellem telefonerne, krypteret. Vi gemmer intet af det og har ingen spilserver. Det er væk, når spillet er slut.</li>
+        <li><strong>At finde hinanden.</strong> En gratis formidlingstjeneste (PeerJS, drevet af PeerJS-projektet) kobler telefonerne sammen. Den ser rumkoden og forbindelsesoplysninger, blandt andet IP-adresser, mens telefonerne finder hinanden, men ikke selve spillet. Sådan som WebRTC fungerer, kan spillerne teknisk set se hinandens IP-adresser.</li>
+        <li><strong>Køb.</strong> Betalingen sker enten i vores webshop, som drives af <a href="https://www.shopify.com/legal/privacy" rel="noopener">Shopify</a>, og hos betalingsleverandørerne dér (Shopify Payments, og Vipps MobilePay, hvis du betaler med Vipps dér), eller direkte hos Vipps MobilePay, hvis du bruger knappen «Betal med Vipps» i spillet. De behandler betalingsoplysningerne (for eksempel navn, e-mail, betalingsmåde og IP-adresse). Bruger du knappen i spillet, beder vi Vipps om din e-mailadresse, og du godkender delingen i Vipps-appen. Vores betalingstjeneste lægger adressen på bestillingen i Shopify, så kvitteringen kommer dertil. Vi kan se bestillingen (beløb, tidspunkt og pakke), den e-mailadresse, du oplyste, og din kode i Shopify. Vores betalingstjeneste gemmer desuden bestillingsnummeret, referencen hos Vipps, koden, pakken, tidspunktet, beløbet og rabatkoden, hvis du brugte en, men ikke navn eller e-mailadresse. Vi ser aldrig dit kortnummer.</li>
+        <li><strong>Adgangen på telefonen.</strong> En signeret adgang og din kode gemmes i browserens lokale lager på din telefon, og en betaling, der er i gang, huskes i fanen. Det er nødvendigt for at levere tjenesten, så vi spørger ikke om samtykke. Du kan fjerne adgangen under Værtens valg › Min adgang eller ved at rydde browserdata.</li>
+        <li><strong>Tekniske logs.</strong> Betalingstjenesten kører hos <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare</a>, og siden ligger hos <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a>. De kan i en kort periode logge IP-adresser og tekniske oplysninger til drift og sikkerhed.</li>
+        <li><strong>E-mail til os.</strong> Skriver du til os, bruger vi e-mailadressen og det, du skriver, til at svare dig.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Hvorfor, og på hvilket grundlag</h2>
+      <ul>
+        <li>At levere det, du har købt, og hjælpe dig med det: aftalen med dig (databeskyttelsesforordningen artikel 6, stk. 1, litra b).</li>
+        <li>Regnskab og bogføring: pligt ifølge loven (artikel 6, stk. 1, litra c).</li>
+        <li>Drift, sikkerhed og forebyggelse af svindel: vores legitime interesse (artikel 6, stk. 1, litra f).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Hvor længe</h2>
+      <p>Oplysninger om køb opbevares i regnskabet, så længe den norske bogføringslov (bokføringsloven) kræver det, i dag fem år. Hos Shopify og betalingsleverandørerne gælder deres egne regler. E-mails, du sender os, slettes, når sagen er løst, medmindre loven kræver, at vi beholder dem. Det, der ligger på din telefon, bestemmer du selv over.</p>
+    </section>
+
+    <section>
+      <h2>Hvem vi deler med</h2>
+      <p>Kun dem, der er nødvendige for at levere tjenesten: Shopify (webshoppen og betalingen i den), Vipps MobilePay (til dem, der betaler med Vipps), Cloudflare (betalingstjenesten og den database, den bruger), GitHub (hjemmesiden) og PeerJS (formidlingstjenesten). Vi sælger ikke oplysninger. Nogle af dem behandler oplysninger i USA. Det sker på de vilkår, som selskaberne selv beskriver i deres privatlivspolitikker, for eksempel EU-USA's Data Privacy Framework eller EU's standardkontrakter.</p>
+    </section>
+
+    <section>
+      <h2>Cookies</h2>
+      <p>Vi bruger ingen sporings- eller reklamecookies på spilsiden. Webshoppen, shop.disputt.site, drives af Shopify, som bruger cookies til kassen og sikkerheden; de har egne regler.</p>
+    </section>
+
+    <section>
+      <h2>Dine rettigheder</h2>
+      <p>Du kan bede om indsigt i de oplysninger, vi har om dig, få dem rettet eller slettet, bede os begrænse behandlingen, gøre indsigelse mod den og bede om at få oplysningerne udleveret. Skriv til os. Mener du, at vi behandler oplysninger i strid med loven, kan du klage til <a href="https://www.datatilsynet.no" rel="noopener">Datatilsynet</a> (den norske datatilsynsmyndighed).</p>
+    </section>
+
+    <nav class="legal__foot" aria-label="Flere sider">
+      <a href="vilkar.html">Vilkår</a>
+      <a href="./">Til spillet</a>
+    </nav>
   </div>
 
-  <section>
-    <h2>Kort fortalt</h2>
-    <p>Disputt har ingen brukerkontoer og ingen sporing. Spillet kjører i vertens nettleser, og vi lagrer ingenting om spillerne. Det eneste vi får vite om deg, er det som hører til et kjøp, og det behandler nettbutikken vår (Shopify) og betalingsleverandørene (Shopify Payments og Vipps MobilePay).</p>
-  </section>
+  <div lang="sv" data-lang="sv" data-title="Integritet i Disputt" data-description="Integritetspolicy för Disputt: vad som behandlas var, varför, hur länge, och dina rättigheter." hidden>
+    <header class="legal__top">
+      <a class="legal__logo" href="./" aria-label="Till spelet"><img src="assets/logo/disputt-logo-cream.svg" alt="Disputt" width="300" height="130" loading="lazy"></a>
+      <a class="legal__back" href="./">‹ Till spelet</a>
+    </header>
 
-  <section>
-    <h2>Hva vi behandler, og hvor</h2>
-    <ul>
-      <li><strong>Spillet.</strong> Navn, avatar, svar og poeng behandles i vertens nettleser og sendes direkte mellom telefonene, kryptert. Vi lagrer ingenting av det og har ingen spillserver. Det er borte når spillet er over.</li>
-      <li><strong>Å finne hverandre.</strong> En gratis meglertjeneste (PeerJS, drevet av PeerJS-prosjektet) kobler telefonene sammen. Den ser romkoden og tilkoblingsopplysninger, blant annet IP-adresser, mens telefonene finner hverandre, men ikke selve spillet. Slik WebRTC fungerer, kan spillerne teknisk se hverandres IP-adresser.</li>
-      <li><strong>Kjøp.</strong> Betalingen skjer enten i nettbutikken vår, som drives av <a href="https://www.shopify.com/legal/privacy" rel="noopener">Shopify</a>, og hos betalingsleverandørene der (Shopify Payments, og Vipps MobilePay hvis du betaler med Vipps der), eller direkte hos Vipps MobilePay hvis du bruker knappen «Betal med Vipps» i spillet. De behandler betalingsopplysningene (for eksempel navn, e-post, betalingsmåte og IP-adresse). Bruker du knappen i spillet, ber vi Vipps om e-postadressen din, og du godkjenner delingen i Vipps-appen. Betalingstjenesten vår legger adressen på bestillingen i Shopify, så kvitteringen kommer dit. Vi får se bestillingen (beløp, tidspunkt og pakke), e-postadressen du oppga og koden din i Shopify. Betalingstjenesten vår lagrer i tillegg bestillingsnummeret, referansen hos Vipps, koden, pakken, tidspunktet, beløpet og rabattkoden hvis du brukte en, men ikke navn eller e-postadresse. Vi ser aldri kortnummeret ditt.</li>
-      <li><strong>Tilgangen på telefonen.</strong> En signert tilgang og koden din lagres i nettleserens lokale lagring på telefonen din, og en betaling som pågår huskes i fanen. Det trengs for å levere tjenesten, så vi spør ikke om samtykke. Du kan fjerne tilgangen under Vertsvalg › Min tilgang, eller ved å tømme nettleserdata.</li>
-      <li><strong>Tekniske logger.</strong> Betalingstjenesten kjører hos <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare</a>, og siden ligger hos <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a>. De kan en kort tid logge IP-adresser og tekniske opplysninger for drift og sikkerhet.</li>
-      <li><strong>E-post til oss.</strong> Skriver du til oss, bruker vi e-postadressen og det du skriver til å svare deg.</li>
-    </ul>
-  </section>
+    <div class="stack stack--tight">
+      <h1>Integritet</h1>
+      <p class="legal__updated">Integritetspolicy för Disputt · senast uppdaterad 5 oktober 2026</p>
+    </div>
 
-  <section>
-    <h2>Hvorfor, og på hvilket grunnlag</h2>
-    <ul>
-      <li>Å levere det du har kjøpt og hjelpe deg med det: avtalen med deg (personvernforordningen artikkel 6 nr. 1 bokstav b).</li>
-      <li>Regnskap og bokføring: plikt etter loven (artikkel 6 nr. 1 bokstav c).</li>
-      <li>Drift, sikkerhet og å hindre svindel: vår berettigede interesse (artikkel 6 nr. 1 bokstav f).</li>
-    </ul>
-  </section>
+    <div class="card card--paper legal__seller">
+      <strong>Personuppgiftsansvarig</strong>
+      <span>Pesom Holding AS</span>
+      <span>Org.nr. 923 729 674 MVA</span>
+      <span>Agathe Grøndahls gate 46, 0478 Oslo, Norge</span>
+      <span>E-post: <a href="mailto:kontakt@disputt.site">kontakt@disputt.site</a></span>
+    </div>
 
-  <section>
-    <h2>Hvor lenge</h2>
-    <p>Opplysninger om kjøp oppbevares i regnskapet så lenge bokføringsloven krever det, i dag fem år. Hos Shopify og betalingsleverandørene gjelder deres egne regler. E-post du sender oss, slettes når saken er løst, med mindre loven krever at vi beholder den. Det som ligger på telefonen din, bestemmer du selv over.</p>
-  </section>
+    <section>
+      <h2>Kort sagt</h2>
+      <p>Disputt har inga användarkonton och ingen spårning. Spelet körs i värdens webbläsare, och vi sparar ingenting om spelarna. Det enda vi får veta om dig är det som hör till ett köp, och det behandlas av vår webbutik (Shopify) och betalningsleverantörerna (Shopify Payments och Vipps MobilePay).</p>
+    </section>
 
-  <section>
-    <h2>Hvem vi deler med</h2>
-    <p>Bare dem som trengs for å levere tjenesten: Shopify (nettbutikken og betalingen i den), Vipps MobilePay (for dem som betaler med Vipps), Cloudflare (betalingstjenesten og databasen den bruker), GitHub (nettsiden) og PeerJS (meglertjenesten). Vi selger ikke opplysninger. Noen av dem behandler opplysninger i USA. Det skjer på de vilkårene selskapene selv beskriver i sine personvernerklæringer, for eksempel EU-USAs Data Privacy Framework eller EUs standardavtaler.</p>
-  </section>
+    <section>
+      <h2>Vad vi behandlar, och var</h2>
+      <ul>
+        <li><strong>Spelet.</strong> Namn, avatar, svar och poäng behandlas i värdens webbläsare och skickas direkt mellan telefonerna, krypterat. Vi sparar inget av det och har ingen spelserver. Det är borta när spelet är slut.</li>
+        <li><strong>Att hitta varandra.</strong> En gratis förmedlingstjänst (PeerJS, driven av PeerJS-projektet) kopplar ihop telefonerna. Den ser rumskoden och anslutningsuppgifter, bland annat IP-adresser, medan telefonerna hittar varandra, men inte själva spelet. Så som WebRTC fungerar kan spelarna tekniskt sett se varandras IP-adresser.</li>
+        <li><strong>Köp.</strong> Betalningen sker antingen i vår webbutik, som drivs av <a href="https://www.shopify.com/legal/privacy" rel="noopener">Shopify</a>, och hos betalningsleverantörerna där (Shopify Payments, och Vipps MobilePay om du betalar med Vipps där), eller direkt hos Vipps MobilePay om du använder knappen «Betala med Vipps» i spelet. De behandlar betalningsuppgifterna (till exempel namn, e-post, betalningssätt och IP-adress). Använder du knappen i spelet ber vi Vipps om din e-postadress, och du godkänner delningen i Vipps-appen. Vår betaltjänst lägger adressen på beställningen i Shopify, så att kvittot kommer dit. Vi kan se beställningen (belopp, tidpunkt och paket), den e-postadress du angav och din kod i Shopify. Vår betaltjänst sparar dessutom beställningsnumret, referensen hos Vipps, koden, paketet, tidpunkten, beloppet och rabattkoden om du använde en, men inte namn eller e-postadress. Vi ser aldrig ditt kortnummer.</li>
+        <li><strong>Tillgången på telefonen.</strong> En signerad tillgång och din kod sparas i webbläsarens lokala lagring på din telefon, och en betalning som pågår sparas i fliken. Det behövs för att leverera tjänsten, så vi frågar inte om samtycke. Du kan ta bort tillgången under Värdens val › Min tillgång eller genom att rensa webbläsardata.</li>
+        <li><strong>Tekniska loggar.</strong> Betaltjänsten körs hos <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare</a>, och sidan ligger hos <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a>. De kan under en kort tid logga IP-adresser och tekniska uppgifter för drift och säkerhet.</li>
+        <li><strong>E-post till oss.</strong> Skriver du till oss använder vi e-postadressen och det du skriver för att svara dig.</li>
+      </ul>
+    </section>
 
-  <section>
-    <h2>Informasjonskapsler</h2>
-    <p>Vi bruker ingen sporings- eller reklameinformasjonskapsler på spillsiden. Nettbutikken, shop.disputt.site, drives av Shopify, som bruker informasjonskapsler for kassen og sikkerheten; de har egne regler.</p>
-  </section>
+    <section>
+      <h2>Varför, och på vilken grund</h2>
+      <ul>
+        <li>Att leverera det du har köpt och hjälpa dig med det: avtalet med dig (dataskyddsförordningen artikel 6.1 b).</li>
+        <li>Redovisning och bokföring: skyldighet enligt lag (artikel 6.1 c).</li>
+        <li>Drift, säkerhet och att förhindra bedrägerier: vårt berättigade intresse (artikel 6.1 f).</li>
+      </ul>
+    </section>
 
-  <section>
-    <h2>Dine rettigheter</h2>
-    <p>Du kan be om innsyn i opplysningene vi har om deg, få dem rettet eller slettet, be oss begrense behandlingen, protestere mot den og be om å få opplysningene utlevert. Skriv til oss. Mener du at vi behandler opplysninger i strid med loven, kan du klage til <a href="https://www.datatilsynet.no" rel="noopener">Datatilsynet</a>.</p>
-  </section>
+    <section>
+      <h2>Hur länge</h2>
+      <p>Uppgifter om köp bevaras i bokföringen så länge den norska bokföringslagen (bokføringsloven) kräver det, i dag fem år. Hos Shopify och betalningsleverantörerna gäller deras egna regler. E-post du skickar till oss raderas när ärendet är löst, om inte lagen kräver att vi behåller den. Det som ligger på din telefon bestämmer du själv över.</p>
+    </section>
 
-  <nav class="legal__foot" aria-label="Flere sider">
-    <a href="vilkar.html">Vilkår</a>
-    <a href="./">Til spillet</a>
-  </nav>
+    <section>
+      <h2>Vem vi delar med</h2>
+      <p>Bara dem som behövs för att leverera tjänsten: Shopify (webbutiken och betalningen i den), Vipps MobilePay (för dem som betalar med Vipps), Cloudflare (betaltjänsten och databasen den använder), GitHub (webbplatsen) och PeerJS (förmedlingstjänsten). Vi säljer inte uppgifter. Några av dem behandlar uppgifter i USA. Det sker på de villkor som företagen själva beskriver i sina integritetspolicyer, till exempel EU–USA Data Privacy Framework eller EU:s standardavtal.</p>
+    </section>
+
+    <section>
+      <h2>Cookies</h2>
+      <p>Vi använder inga spårnings- eller reklamcookies på spelsidan. Webbutiken, shop.disputt.site, drivs av Shopify, som använder cookies för kassan och säkerheten; de har egna regler.</p>
+    </section>
+
+    <section>
+      <h2>Dina rättigheter</h2>
+      <p>Du kan begära tillgång till de uppgifter vi har om dig, få dem rättade eller raderade, be oss begränsa behandlingen, invända mot den och be att få uppgifterna utlämnade. Skriv till oss. Anser du att vi behandlar uppgifter i strid med lagen kan du klaga hos <a href="https://www.datatilsynet.no" rel="noopener">Datatilsynet</a> (den norska dataskyddsmyndigheten).</p>
+    </section>
+
+    <nav class="legal__foot" aria-label="Fler sidor">
+      <a href="vilkar.html">Villkor</a>
+      <a href="./">Till spelet</a>
+    </nav>
+  </div>
 </main>
+<script src="js/legal-lang.js"></script>
 </body>
 </html>

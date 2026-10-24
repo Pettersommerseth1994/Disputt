@@ -7,17 +7,18 @@
 // not have would not load. The style sheet is loaded by the script itself for the same reason: styles.js.)
 
 import { html, useEffect, useState } from '../vendor/htm-preact.js';
+import { t, tx } from '../i18n/lang.js';
 import { useMantraStyles } from './styles.js';
 
 /** What the strip says and what the bubble says. The signature is Team Disputt: the people who made the game. */
 export const MANTRA = {
-  label: 'Mantra',
+  label: tx('Mantra'),
   lines: [
-    'Disputt er et sosialt selskapsspill, laget for å spilles mellom mennesker.',
-    'Telefonen er bare et støtteverktøy for quizen. Vi vil at du bruker den så lite som mulig.',
-    'Se på hverandre, ikke på skjermen.',
+    tx('Disputt er et sosialt selskapsspill, laget for å spilles mellom mennesker.'),
+    tx('Telefonen er bare et støtteverktøy for quizen. Vi vil at du bruker den så lite som mulig.'),
+    tx('Se på hverandre, ikke på skjermen.'),
   ],
-  signature: 'Team Disputt',
+  signature: tx('Team Disputt'),
 };
 
 /** The star (like the other icons of the app: round line ends, the colour of the text around it). */
@@ -41,14 +42,14 @@ export function Mantra({ screen }) {
   return html`<div class="mantra">
     <div class="mantra__bar">
       <button type="button" class="mantra__pill" aria-expanded=${open} aria-controls=${open ? 'mantra-bubble' : undefined} onClick=${() => setOpen(!open)}>
-        <${Star} /><span>${MANTRA.label}</span>
+        <${Star} /><span>${t(MANTRA.label)}</span>
       </button>
     </div>
     ${open &&
     html`<div class="mantra__catcher" onClick=${close}></div>
       <div class="mantra__bubble" id="mantra-bubble" role="note">
-        ${MANTRA.lines.map((line, i) => html`<p class="mantra__line" key=${i}>${line}</p>`)}
-        <p class="mantra__sign">${MANTRA.signature}</p>
+        ${MANTRA.lines.map((line, i) => html`<p class="mantra__line" key=${i}>${t(line)}</p>`)}
+        <p class="mantra__sign">${t(MANTRA.signature)}</p>
       </div>`}
   </div>`;
 }

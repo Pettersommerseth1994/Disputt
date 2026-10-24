@@ -2,6 +2,7 @@
 
 import { AVATARS } from '../shared/avatars.mjs';
 import { useHold } from './hold.js';
+import { t } from './i18n/lang.js';
 import { joinNames, matesOf } from './impostors.js';
 import { html, useEffect, useMemo } from './vendor/htm-preact.js';
 import { qrSvg } from './qr.js';
@@ -19,7 +20,7 @@ export function Avatar({ id, size = 'md', alive = false, offline = false, crown 
     class=${cx('avatar', `avatar--${size}`, alive && 'avatar--alive', offline && 'avatar--offline', cls)}
     style=${style}
     role="img"
-    aria-label=${label ?? a?.name ?? 'Avatar'}
+    aria-label=${label ?? (a ? t(a.name) : t('Avatar'))}
   >
     ${crown && html`<img class="avatar__crown" src=${asset('assets/art/crown.svg')} alt="" />`}
     ${a && html`<img src=${asset(`assets/avatars/${a.id}.svg`)} alt="" width="400" height="400" decoding="async" />`}
@@ -45,7 +46,7 @@ export function Button({ variant, size, block, class: cls, children, ...rest }) 
 export function Logo({ small = false, onClick }) {
   const cls = cx('logo-sticker', small && 'logo-sticker--sm', onClick && 'logo-sticker--button');
   const img = html`<img src=${asset('assets/logo/disputt-logo.svg')} alt="Disputt" width="300" height="130" />`;
-  return onClick ? html`<button type="button" class=${cls} onClick=${onClick} aria-label="Til hjemskjermen">${img}</button>` : html`<span class=${cls}>${img}</span>`;
+  return onClick ? html`<button type="button" class=${cls} onClick=${onClick} aria-label=${t('Til hjemskjermen')}>${img}</button>` : html`<span class=${cls}>${img}</span>`;
 }
 
 export const CloseIcon = () => html`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>`;
@@ -58,7 +59,7 @@ export function Timer({ endsAt, small = false, label }) {
   const ms = useRemaining(endsAt);
   const text = clock(ms);
   const state = ms <= 0 ? 'out' : ms <= 30_000 ? 'low' : '';
-  return html`<div class=${cx('timer', small && 'timer--sm', state && `timer--${state}`)} role="timer" aria-label=${label ?? `Tid igjen ${text}`}>
+  return html`<div class=${cx('timer', small && 'timer--sm', state && `timer--${state}`)} role="timer" aria-label=${label ?? t('Tid igjen {tid}', { tid: text })}>
     ${[...text].map((ch, i) => (ch === ':' ? html`<span class="timer__c" key=${i}>:</span>` : html`<span class="timer__d" key=${i}>${ch}</span>`))}
   </div>`;
 }
@@ -78,7 +79,7 @@ export function Sheet({ title, onClose, children }) {
     <div class="sheet" role="dialog" aria-modal="true" aria-label=${title}>
       <div class="sheet__head">
         <h2>${title}</h2>
-        <${Button} variant="ghost" size="small icon" class="sheet__close" onClick=${onClose} aria-label="Lukk"><${CloseIcon} /></${Button}>
+        <${Button} variant="ghost" size="small icon" class="sheet__close" onClick=${onClose} aria-label=${t('Lukk')}><${CloseIcon} /></${Button}>
       </div>
       ${children}
     </div>
@@ -96,15 +97,15 @@ export function RoleStrip({ you, impostors = 1 }) {
   return html`<div class=${cx('role-strip', held ? 'role-strip--open' : 'role-strip--hidden')}>
     <div class="role-strip__info">
       ${held
-        ? html`<span class="role-strip__who">Du er <strong class=${impostor ? 'role-strip__impostor' : 'role-strip__loyal'}>${impostor ? 'Imposter' : 'Lojal'}</strong></span>
+        ? html`<span class="role-strip__who">${t('Du er')} <strong class=${impostor ? 'role-strip__impostor' : 'role-strip__loyal'}>${impostor ? t('Imposter') : t('Lojal')}</strong></span>
             ${impostor
-              ? html`<span class="role-strip__line role-strip__line--answer"><span>Riktig svar:</span><span class="role-strip__answer">${you.secret.letter}:\u00a0${you.secret.text}</span></span>`
-              : html`<span class="role-strip__line">Ikke bli lurt!</span>`}
+              ? html`<span class="role-strip__line role-strip__line--answer"><span>${t('Riktig svar:')}</span><span class="role-strip__answer">${you.secret.letter}:\u00a0${you.secret.text}</span></span>`
+              : html`<span class="role-strip__line">${t('Ikke bli lurt!')}</span>`}
             ${impostors > 1 &&
-            html`<span class="role-strip__line">${impostor ? `Sammen med ${joinNames(matesOf(you).map((m) => m.name))}` : 'To av dere er imposterer'}</span>`}`
-        : html`<span>Din rolle</span>`}
+            html`<span class="role-strip__line">${impostor ? t('Sammen med {names}', { names: joinNames(matesOf(you).map((m) => m.name)) }) : t('To av dere er imposterer')}</span>`}`
+        : html`<span>${t('Din rolle')}</span>`}
     </div>
-    <button type="button" class=${cx('secret', held && 'secret--held')} ...${bind} aria-label="Hold inne for å se rollen din">Hold for å se</button>
+    <button type="button" class=${cx('secret', held && 'secret--held')} ...${bind} aria-label=${t('Hold inne for å se rollen din')}>${t('Hold for å se')}</button>
   </div>`;
 }
 
@@ -118,7 +119,7 @@ export function Scoreboard({ view, gains = {} }) {
         <span class="score__rank">${p.rank}</span>
         <${Avatar} id=${p.avatar} size="sm" crown=${p.rank === 1 && p.score > 0} offline=${!p.connected} />
         <div>
-          <div class="score__name">${p.name}${p.id === view.you.id ? html`<small>(deg)</small>` : ''}</div>
+          <div class="score__name">${p.name}${p.id === view.you.id ? html`<small>${t('(deg)')}</small>` : ''}</div>
           <div class=${cx('bar', p.score === 0 && 'bar--zero')} style=${`--p:${pct};--fill:${accent}`}><div class="bar__fill"></div></div>
         </div>
         <span class="score__points">${p.score}${gains[p.id] ? html`<span class="score__gain">+${gains[p.id]}</span>` : ''}</span>
@@ -129,7 +130,7 @@ export function Scoreboard({ view, gains = {} }) {
 
 // ------------------------------------------------------------------ QR code
 
-export function QR({ text, label = 'QR-kode for å bli med i spillet' }) {
+export function QR({ text, label = t('QR-kode for å bli med i spillet') }) {
   const svg = useMemo(() => qrSvg(text), [text]);
   return html`<div class="qr" role="img" aria-label=${label} dangerouslySetInnerHTML=${{ __html: svg }}></div>`;
 }
@@ -163,17 +164,17 @@ export function ShareLink({ url, code, variant = 'orange' }) {
   const share = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Disputt', text: `Bli med på Disputt! Spillkode: ${code}`, url });
+        await navigator.share({ title: 'Disputt', text: t('Bli med på Disputt! Spillkode: {code}', { code }), url });
         return;
       }
     } catch (err) {
       if (err?.name === 'AbortError') return; // the player closed the share sheet
       // anything else: sharing is not available here, so copy instead
     }
-    if (await copyText(url)) toast('Lenken er kopiert. Send den til de andre.');
-    else toast(`Kopier lenken: ${url}`, 12000);
+    if (await copyText(url)) toast(t('Lenken er kopiert. Send den til de andre.'));
+    else toast(t('Kopier lenken: {url}', { url }), 12000);
   };
-  return html`<${Button} variant=${variant} size="small" onClick=${share}>Del lenke</${Button}>`;
+  return html`<${Button} variant=${variant} size="small" onClick=${share}>${t('Del lenke')}</${Button}>`;
 }
 
 /** Address phones should open: the public URL if configured, else the LAN address when the host page is on localhost. */

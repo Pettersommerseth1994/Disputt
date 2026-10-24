@@ -9,6 +9,7 @@
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { useHold } from '../hold.js';
+import { t } from '../i18n/lang.js';
 import { impostorCount, joinNames, matesOf } from '../impostors.js';
 import { setStore, store } from '../store.js';
 import { Avatar, Sheet } from '../ui.js';
@@ -49,23 +50,23 @@ export function TableStrip({ row, impostors = 1, onRelease, lockMs = 0 }) {
   return html`<div class=${cx('role-strip', held ? 'role-strip--open' : 'role-strip--hidden')}>
     <div class="role-strip__info">
       ${held
-        ? html`<span class="role-strip__who">Du er <strong class=${impostor ? 'role-strip__impostor' : 'role-strip__loyal'}>${impostor ? 'Imposter' : 'Lojal'}</strong></span>
+        ? html`<span class="role-strip__who">${t('Du er')} <strong class=${impostor ? 'role-strip__impostor' : 'role-strip__loyal'}>${impostor ? t('Imposter') : t('Lojal')}</strong></span>
             ${impostor
-              ? html`<span class="role-strip__line role-strip__line--answer"><span>Riktig svar:</span><span class="role-strip__answer">${row.secret.letter}: ${row.secret.text}</span></span>`
-              : html`<span class="role-strip__line">Ikke bli lurt!</span>`}
+              ? html`<span class="role-strip__line role-strip__line--answer"><span>${t('Riktig svar:')}</span><span class="role-strip__answer">${row.secret.letter}: ${row.secret.text}</span></span>`
+              : html`<span class="role-strip__line">${t('Ikke bli lurt!')}</span>`}
             ${impostors > 1 &&
-            html`<span class="role-strip__line">${impostor ? `Sammen med ${joinNames(matesOf(row).map((m) => m.name))}` : 'To av dere er imposterer'}</span>`}`
-        : html`<span>Din rolle</span>`}
+            html`<span class="role-strip__line">${impostor ? t('Sammen med {names}', { names: joinNames(matesOf(row).map((m) => m.name)) }) : t('To av dere er imposterer')}</span>`}`
+        : html`<span>${t('Din rolle')}</span>`}
     </div>
-    <button type="button" class=${cx('secret', held && 'secret--held', locked && 'secret--wait')} disabled=${locked} ...${locked ? {} : bind} aria-label="Hold inne for å se rollen din">Hold for å se</button>
+    <button type="button" class=${cx('secret', held && 'secret--held', locked && 'secret--wait')} disabled=${locked} ...${locked ? {} : bind} aria-label=${t('Hold inne for å se rollen din')}>${t('Hold for å se')}</button>
   </div>`;
 }
 
 /** On the game screens, where the normal game has the strip: it only asks, and "Se rolle" opens the list of names. */
 export function CarStrip() {
   return html`<div class="role-strip role-strip--hidden">
-    <div class="role-strip__info"><span>Glemt rollen din?</span></div>
-    <button type="button" class="secret" onClick=${() => setStore({ sheet: 'roles' })}>Se rolle</button>
+    <div class="role-strip__info"><span>${t('Glemt rollen din?')}</span></div>
+    <button type="button" class="secret" onClick=${() => setStore({ sheet: 'roles' })}>${t('Se rolle')}</button>
   </div>`;
 }
 
@@ -83,9 +84,9 @@ export function RolesSheet({ view }) {
   useEffect(() => {
     if (who) rowRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
   }, [who]);
-  return html`<${Sheet} title="Se rolle igjen" onClose=${close}>
+  return html`<${Sheet} title=${t('Se rolle igjen')} onClose=${close}>
     <div class="stack">
-      <p class="lead">Hvem er du? Trykk på navnet ditt, og hold inne knappen for å se rollen din.</p>
+      <p class="lead">${t('Hvem er du? Trykk på navnet ditt, og hold inne knappen for å se rollen din.')}</p>
       <ul class="rolelist__list rolelist__list--plain" style=${`--rows:${table.length}`}>
         ${table.map((r) =>
           r.id === who
@@ -102,7 +103,7 @@ export function RolesSheet({ view }) {
               </li>`,
         )}
       </ul>
-      <p class="small muted">Skjul skjermen for de andre.</p>
+      <p class="small muted">${t('Skjul skjermen for de andre.')}</p>
     </div>
   </${Sheet}>`;
 }

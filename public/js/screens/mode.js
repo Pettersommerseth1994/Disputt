@@ -6,6 +6,7 @@
 
 import { html, useEffect, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
+import { t, tx } from '../i18n/lang.js';
 import { asset } from '../paths.js';
 import { setStore } from '../store.js';
 import { Button, Logo } from '../ui.js';
@@ -15,8 +16,8 @@ import { CAR_SEGMENTS } from './steps-count.js';
 
 // (`players`: a car holds five, a phone each is ten: LIMITS.maxPlayersCar and LIMITS.maxPlayers in shared/game.js)
 export const MODES = [
-  { id: 'car', title: 'Bilturmodus', text: 'Alle spiller på 1 telefon, som sendes rundt.', art: 'bil', blob: 'blob-6', players: '2-5 deltakere' },
-  { id: 'cabin', title: 'Hytteturmodus', text: 'Alle spiller på sin egen telefon.', art: 'hytte', blob: 'blob-4', players: '2-10 deltakere' },
+  { id: 'car', title: tx('Bilturmodus'), text: tx('Alle spiller på 1 telefon, som sendes rundt.'), art: 'bil', blob: 'blob-6', players: tx('2-5 deltakere') },
+  { id: 'cabin', title: tx('Hytteturmodus'), text: tx('Alle spiller på sin egen telefon.'), art: 'hytte', blob: 'blob-4', players: tx('2-10 deltakere') },
 ];
 
 /**
@@ -57,29 +58,29 @@ export function ModeStep() {
       <${Logo} small onClick=${back} />
     </header>
     <${Steps} current=${1} total=${mode === 'car' ? CAR_SEGMENTS : undefined} onBack=${back} />
-    <h1 class="setup__title rise-in">Hvordan vil dere spille?</h1>
-    <div class="modes" role="radiogroup" aria-label="Spillmodus">
+    <h1 class="setup__title rise-in">${t('Hvordan vil dere spille?')}</h1>
+    <div class="modes" role="radiogroup" aria-label=${t('Spillmodus')}>
       ${MODES.map(
         (m) => html`<button type="button" role="radio" class=${cx('mode', `mode--${m.art}`, mode === m.id && 'mode--chosen', blinking === m.id && 'mode--blink')} key=${m.id} aria-checked=${mode === m.id} onClick=${() => setMode(m.id)}>
           <span class="mode__pic">
             <img class="mode__blob" src=${asset(`assets/art/${m.blob}.svg`)} alt="" decoding="async" />
             <img class="mode__art" src=${asset(`assets/art/${m.art}.svg`)} alt="" width="400" height="300" decoding="async" />
-            <span class="mode__chip">${m.players}</span>
+            <span class="mode__chip">${t(m.players)}</span>
             <span class="mode__check" aria-hidden="true"></span>
           </span>
           <span class="mode__body">
-            <span class="mode__title display">${m.title}</span>
-            <span class="mode__text">${m.text}</span>
+            <span class="mode__title display">${t(m.title)}</span>
+            <span class="mode__text">${t(m.text)}</span>
           </span>
         </button>`,
       )}
     </div>
-    <section class="pillars-note" aria-label="Likt i begge">
-      <p><b></b>Det er alltid en eller flere impostere.</p>
-      <p><b></b>Dere må bli enige om riktig svar.</p>
+    <section class="pillars-note" aria-label=${t('Likt i begge')}>
+      <p><b></b>${t('Det er alltid en eller flere impostere.')}</p>
+      <p><b></b>${t('Dere må bli enige om riktig svar.')}</p>
     </section>
     <div class="dock">
-      <${Button} block disabled=${!mode} onClick=${() => actions.create(mode)}>Neste</${Button}>
+      <${Button} block disabled=${!mode} onClick=${() => actions.create(mode)}>${t('Neste')}</${Button}>
     </div>
   </main>`;
 }

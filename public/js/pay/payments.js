@@ -4,6 +4,7 @@
 // none of this shows.
 // (A file of its own: pages are cached for ten minutes ...)
 
+import { t, tServer } from '../i18n/lang.js';
 import { config } from '../settings.js';
 import { setStore, store, toast } from '../store.js';
 import { announceAway } from './away.js';
@@ -129,7 +130,7 @@ export function initPayments(cfg) {
  */
 async function acceptPass({ token, code }) {
   const checked = await verifyPass(token, store.payments.publicKey, Date.now(), store.payments.apiUrl);
-  if (!checked.ok) throw new PayError('bad_pass', 'Tilgangen kunne ikke kontrolleres. Prøv igjen om litt.');
+  if (!checked.ok) throw new PayError('bad_pass', t('Tilgangen kunne ikke kontrolleres. Prøv igjen om litt.'));
   writePaying(null); // (whatever this tab was waiting for does not matter any more: a code typed in must not be followed by a late "Takk!")
   if (!outlasts(checked.pass, store.pass)) return store.pass;
   writeStored({ token, code: code ?? null });
@@ -157,10 +158,10 @@ async function api(path, { method = 'GET', body } = {}) {
       credentials: 'omit',
     });
   } catch {
-    throw new PayError('network', 'Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.');
+    throw new PayError('network', t('Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.'));
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new PayError(data.error ?? 'server', data.message ?? 'Noe gikk galt. Prøv igjen om litt.');
+  if (!res.ok) throw new PayError(data.error ?? 'server', data.message ? tServer(data.message) : t('Noe gikk galt. Prøv igjen om litt.'));
   return data;
 }
 
@@ -173,11 +174,11 @@ const isLocal = (h) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
 export async function startCheckout(plan, method) {
   // (a browser that keeps nothing would lose the room, and the guests would wait for a game that cannot come back)
   if (store.view && !tabCanRemember()) {
-    throw new PayError('storage', 'Nettleseren din lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.');
+    throw new PayError('storage', t('Nettleseren din lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.'));
   }
   const { url, session } = await api('/checkout', { method: 'POST', body: { plan, method } });
   const target = new URL(url);
-  if (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) throw new PayError('server', 'Fikk en betalingsside vi ikke stoler på.');
+  if (target.protocol !== 'https:' && !(target.protocol === 'http:' && isLocal(target.hostname))) throw new PayError('server', t('Fikk en betalingsside vi ikke stoler på.'));
   if (typeof session === 'string') writePaying({ id: session, plan, at: Date.now() });
   await announceAway('pay'); // the guests are told that the host is away for a while, so they wait instead of giving up
   location.assign(target.href);
@@ -191,7 +192,7 @@ export async function claimPurchase(sessionId) {
 /** A customer on a new phone types the code they were given. */
 export async function restoreWithCode(typed) {
   const code = normalizeCode(typed);
-  if (!code) throw new PayError('bad_request', 'Koden ser ikke riktig ut. Den har tolv tegn, som K7M2-9QXD-4TRB.');
+  if (!code) throw new PayError('bad_request', t('Koden ser ikke riktig ut. Den har tolv tegn, som K7M2-9QXD-4TRB.'));
   return acceptPass(await api('/restore', { method: 'POST', body: { code } }));
 }
 
@@ -227,10 +228,10 @@ async function claimWhenPaid(sessionId, tries = 1, everyMs = 2000) {
 
 /** What to say to a host who is back from paying and did not get the pass. */
 function trouble(err) {
-  if (err.code === 'unpaid') return 'Vi har ikke fått bekreftet betalingen ennå. Den dukker opp av seg selv når den er gjennomført.';
-  if (isTransient(err)) return 'Betalingen er gjort, men vi fikk ikke hentet tilgangen din akkurat nå. Åpne siden på nytt om litt, så prøver vi igjen. Koden fra betalingssiden virker også under «Logg inn».';
+  if (err.code === 'unpaid') return t('Vi har ikke fått bekreftet betalingen ennå. Den dukker opp av seg selv når den er gjennomført.');
+  if (isTransient(err)) return t('Betalingen er gjort, men vi fikk ikke hentet tilgangen din akkurat nå. Åpne siden på nytt om litt, så prøver vi igjen. Koden fra betalingssiden virker også under «Logg inn».');
   if (['refunded', 'expired', 'disputed'].includes(err.code)) return err.message;
-  return `${err.message} Har du betalt, står kontaktinformasjonen i kvitteringen fra Stripe.`;
+  return t('{message} Har du betalt, står kontaktinformasjonen i kvitteringen fra Stripe.', { message: err.message });
 }
 
 /** Stripe sent the host back to the game (…/?pay=success&session_id=…, or ?pay=cancel). `retryMs`: the wait between two questions. */
@@ -243,7 +244,7 @@ export async function handlePaymentReturn({ retryMs = 2000 } = {}) {
   await whenReady();
   if (status === 'cancel') {
     writePaying(null);
-    toast('Betalingen ble avbrutt. Du er ikke belastet.', 5000);
+    toast(t('Betalingen ble avbrutt. Du er ikke belastet.'), 5000);
     return;
   }
   if (status === 'success' && sessionId && !claiming) {

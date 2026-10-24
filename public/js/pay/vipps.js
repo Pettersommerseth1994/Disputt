@@ -7,6 +7,7 @@
 // (A file of its own: pages are cached for ten minutes, and a module that imports something an older cached copy of another module does not
 // have would not load. Everything here is made of what shop.js already had, and of the browser.)
 
+import { LANGUAGES, getLang, t, tServer } from '../i18n/lang.js';
 import { setStore, store } from '../store.js';
 import { announceAway } from './away.js';
 import { PayError } from './payments.js';
@@ -67,7 +68,7 @@ export function openingPage() {
     }
   };
   const sheets = ['tokens', 'base', 'components', 'screens'].map((name) => `<link rel="stylesheet" href="${at(`css/${name}.css`)}">`).join('');
-  return `<!doctype html><html lang="nb"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Åpner Vipps</title><meta name="theme-color" content="#6a1428"><meta name="color-scheme" content="dark">${sheets}<body><main class="screen screen--padded takk"><div class="grow center stack stack--loose" style="align-items:center;justify-content:center"><span class="logo-sticker"><img src="${at('assets/logo/disputt-logo.svg')}" alt="Disputt" width="300" height="130"></span><h1>Åpner Vipps …</h1><p class="lead muted">Et øyeblikk. Vipps åpner seg her, og spillet venter i fanen bak.</p></div></main>`;
+  return `<!doctype html><html lang="${LANGUAGES[getLang()].html}"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${t('Åpner Vipps')}</title><meta name="theme-color" content="#6a1428"><meta name="color-scheme" content="dark">${sheets}<body><main class="screen screen--padded takk"><div class="grow center stack stack--loose" style="align-items:center;justify-content:center"><span class="logo-sticker"><img src="${at('assets/logo/disputt-logo.svg')}" alt="Disputt" width="300" height="130"></span><h1>${t('Åpner Vipps …')}</h1><p class="lead muted">${t('Et øyeblikk. Vipps åpner seg her, og spillet venter i fanen bak.')}</p></div></main>`;
 }
 
 function remember(waiting) {
@@ -106,7 +107,7 @@ export function startVippsCheckout(plan, discount = '') {
   if (starting || store.payWaiting) return Promise.resolve(); // (a double tap)
   const info = knownShop();
   const apiUrl = store.payments?.apiUrl;
-  if (!info?.vipps || !apiUrl) throw new PayError('unavailable', 'Vipps er ikke klart ennå. Prøv igjen om et øyeblikk.');
+  if (!info?.vipps || !apiUrl) throw new PayError('unavailable', t('Vipps er ikke klart ennå. Prøv igjen om et øyeblikk.'));
   // On a phone the Vipps app is opened from this very tab: no tab of our own, so the only new tab is the one that Vipps opens when it sends the host back.
   const app = Boolean(info.vippsApp) && isPhone();
   const waiting = { code: newPayCode(), plan, at: Date.now(), url: '' };
@@ -118,7 +119,7 @@ export function startVippsCheckout(plan, discount = '') {
   // payment when the host comes back. A browser that keeps nothing would lose the room.
   if (!app && !tab && store.view && !tabCanRemember()) {
     starting = false;
-    throw new PayError('storage', 'Nettleseren din åpner ikke en ny fane og lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.');
+    throw new PayError('storage', t('Nettleseren din åpner ikke en ny fane og lar ikke siden huske spillet mens du betaler (står «Blokker alle informasjonskapsler» på?). Slå det av eller bruk en annen nettleser, ellers mister dere spillet.'));
   }
   try {
     tab?.document.write(openingPage());
@@ -142,11 +143,11 @@ export function startVippsCheckout(plan, discount = '') {
     credentials: 'omit',
     body: JSON.stringify({ plan, code: waiting.code, samtykke: consent, ...(app ? { flow: 'app' } : {}), ...(discount ? { rabatt: discount } : {}) }),
   })
-    .catch(() => fail(new PayError('network', 'Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.')))
+    .catch(() => fail(new PayError('network', t('Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.'))))
     .then(async (res) => {
       const data = await res.json().catch(() => ({}));
       const to = res.ok ? vippsAddress(data.url, data.flow === 'app') : null;
-      if (!to) return fail(new PayError(data.error ?? 'server', data.message ?? 'Noe gikk galt hos Vipps. Prøv igjen om litt.'));
+      if (!to) return fail(new PayError(data.error ?? 'server', data.message ? tServer(data.message) : t('Noe gikk galt hos Vipps. Prøv igjen om litt.')));
       waiting.url = to;
       if (data.flow === 'app') waiting.app = true; // (the bar says «Vipps-appen», and «Åpne Vipps igjen» opens the app again)
       remember(waiting);

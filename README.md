@@ -81,15 +81,19 @@ Utseendet er surrealistisk og lekent: fargestift/oljepastell på dyp burgunder, 
 - **Illustrasjoner:** de ti avatarene, rolleskjerm-øyne, teksturer og dekor genereres av `tools/art` (`npm run art`). De kan byttes ut 1:1 med håndtegnede SVG-er (samme filnavn, `viewBox 0 0 400 400`).
 - **Logo:** `public/assets/logo/` (mørk brun, krem og «øye i i-prikken»), generert fra fonten med `npm run logo`.
 
+## Språk (norsk, dansk, svensk)
+
+Spillet kan spilles på norsk (standard), dansk og svensk. Første gang noen åpner siden kommer det et kort etter tre sekunder («Velg språk · Vælg sprog · Välj språk»); valget huskes på telefonen, og et lite flagg på forsiden åpner kortet igjen. Skjermteksten følger hver telefon for seg, mens **spørsmålene følger spillet**: språket verten hadde da spillet ble laget, velger spørsmålsbanken (`shared/banks.js`). Den danske og den svenske banken er ikke bare oversatte: spørsmål om Norge er byttet ut med spørsmål om Danmark og Sverige. Slik skrives og oversettes en tekst: [docs/I18N.md](docs/I18N.md).
+
 ## Spørsmål
 
-Spørsmålene ligger i [`shared/questions.js`](shared/questions.js): tekst, fire alternativer og indeksen til riktig svar. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Banken har **171 spørsmål**: de fire første testspørsmålene, 11 fra et sett trykte spørsmålskort, 48 sammenligninger (hvem som er høyest, hva som veier mest, hvem som ble født først og slikt, der to av de fire svarene ligger tett), 40 om sport, film, TV og serier, musikk og litteratur og kunst, og resten om norsk og internasjonal allmennkunnskap, helst ting man egentlig vet men har glemt, så gruppa må diskutere seg frem (og imposteren har noe å spille på). Sjekk fakta mot en kilde, og la riktig svar stå på ulike plasser; `test/questions.test.js` passer på formen. Vær ekstra nøye med svar som kan bli utdatert (salgstall, rekorder): formuler dem så de holder, slik som «Hvilket *av disse* selger Vinmonopolet mest av i liter?».
+Spørsmålene ligger i [`shared/questions.js`](shared/questions.js) (norsk), [`questions-da.js`](shared/questions-da.js) og [`questions-sv.js`](shared/questions-sv.js): tekst, fire alternativer og indeksen til riktig svar. De tre bankene har like mange spørsmål (171) og de samme id-ene for det som bare er oversatt; spørsmål om Norge er i den danske og den svenske banken byttet ut med nye om Danmark og Sverige (egne id-er), og `test/questions.test.js` passer på alle tre. Spillet blander kortstokken og viser alle spørsmål før noe gjentas, og aldri samme spørsmål to ganger på rad. Banken har **171 spørsmål**: de fire første testspørsmålene, 11 fra et sett trykte spørsmålskort, 48 sammenligninger (hvem som er høyest, hva som veier mest, hvem som ble født først og slikt, der to av de fire svarene ligger tett), 40 om sport, film, TV og serier, musikk og litteratur og kunst, og resten om norsk og internasjonal allmennkunnskap, helst ting man egentlig vet men har glemt, så gruppa må diskutere seg frem (og imposteren har noe å spille på). Sjekk fakta mot en kilde, og la riktig svar stå på ulike plasser; `test/questions.test.js` passer på formen. Vær ekstra nøye med svar som kan bli utdatert (salgstall, rekorder): formuler dem så de holder, slik som «Hvilket *av disse* selger Vinmonopolet mest av i liter?».
 
 ## Struktur
 
 ```
 server/    Node-serveren (HTTP + WebSocket): index.js og static.js.
-shared/    Spillmotoren (game.js = ren tilstandsmaskin, hub.js, questions.js, util.js) og avatar-rosteret.
+shared/    Spillmotoren (game.js = ren tilstandsmaskin, hub.js, questions.js + questions-da.js + questions-sv.js + banks.js, util.js) og avatar-rosteret.
            Kjører både i Node-serveren og, i peer-to-peer-modus, i vertens nettleser.
 public/    Klienten: Preact + htm uten byggesteg (css/, js/, js/p2p/, assets/, design-system/).
 payments/  Betalingsserveren (én Cloudflare Worker, for Shopify eller for Stripe). Av som standard, se docs/SHOPIFY.md og docs/BETALING.md.

@@ -3,6 +3,7 @@
 
 import { html } from '../vendor/htm-preact.js';
 import { setStore } from '../store.js';
+import { t } from '../i18n/lang.js';
 import { Avatar, Button } from '../ui.js';
 
 export function LateWait({ view }) {
@@ -12,11 +13,11 @@ export function LateWait({ view }) {
     <div class="grow center stack stack--loose" style="justify-content:center;align-items:center">
       <${Avatar} id=${view.you.avatar} size="xl" alive />
       <div class="stack stack--tight">
-        <h1 class="rise-in">Du er med, ${view.you.name}!</h1>
-        <p class="lead muted">Runde ${view.round} pågår. Du spiller fra neste runde${me && me.score > 0 ? `, og du starter med ${me.score} poeng` : ''}.</p>
+        <h1 class="rise-in">${t('Du er med, {name}!', { name: view.you.name })}</h1>
+        <p class="lead muted">${me && me.score > 0 ? t('Runde {round} pågår. Du spiller fra neste runde, og du starter med {score} poeng.', { round: view.round, score: me.score }) : t('Runde {round} pågår. Du spiller fra neste runde.', { round: view.round })}</p>
       </div>
-      <${Button} variant="ghost" onClick=${() => setStore({ sheet: 'scores' })}>Se poengtavla</${Button}>
+      <${Button} variant="ghost" onClick=${() => setStore({ sheet: 'scores' })}>${t('Se poengtavla')}</${Button}>
     </div>
-    <p class="foot center muted" role="status">${host ? `Venter på at ${host.name} går videre …` : 'Venter på neste runde …'}</p>
+    <p class="foot center muted" role="status">${host ? t('Venter på at {name} går videre …', { name: host.name }) : t('Venter på neste runde …')}</p>
   </main>`;
 }

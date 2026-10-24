@@ -6,6 +6,7 @@
 // nobody here opened (the Vipps app opened it), next to the tab that the game opened and the tab the game stands in.
 
 import { config } from './settings.js';
+import { t, tx } from './i18n/lang.js';
 
 const REFERENCE = /^disputt-[0-9a-z]{24}$/;
 const WAITING_KEY = 'disputt:shop'; // the same as pay/shop.js: a tab that holds a payment it is waiting for is the game's own
@@ -14,15 +15,23 @@ const TRIES = 15; // about half a minute: after that, the host is told that it c
 const $ = (id) => document.getElementById(id);
 
 const TEXTS = {
-  checking: ['Et øyeblikk …', 'Vi sjekker betalingen hos Vipps.'],
-  done: ['Velkommen!', 'Betalingen er gjennomført, og tilgangen dukker opp i spillet av seg selv. Kvitteringen kommer på e-post.'],
-  failed: ['Betalingen ble ikke gjennomført', 'Ingen penger er trukket. Gå tilbake til spillet og prøv igjen.'],
-  slow: ['Vi venter fortsatt på Vipps', 'Har du godkjent betalingen i Vipps, dukker tilgangen opp i spillet av seg selv så snart Vipps har meldt fra. Kvitteringen kommer på e-post.'],
-  lost: ['Vi fikk ikke svar', 'Gå tilbake til spillet. Har du betalt, dukker tilgangen opp av seg selv, og koden kommer på e-post.'],
+  checking: [tx('Et øyeblikk …'), tx('Vi sjekker betalingen hos Vipps.')],
+  done: [tx('Velkommen!'), tx('Betalingen er gjennomført, og tilgangen dukker opp i spillet av seg selv. Kvitteringen kommer på e-post.')],
+  failed: [tx('Betalingen ble ikke gjennomført'), tx('Ingen penger er trukket. Gå tilbake til spillet og prøv igjen.')],
+  slow: [tx('Vi venter fortsatt på Vipps'), tx('Har du godkjent betalingen i Vipps, dukker tilgangen opp i spillet av seg selv så snart Vipps har meldt fra. Kvitteringen kommer på e-post.')],
+  lost: [tx('Vi fikk ikke svar'), tx('Gå tilbake til spillet. Har du betalt, dukker tilgangen opp av seg selv, og koden kommer på e-post.')],
 };
 
+/** The texts that stand in takk.html (Norwegian) in the language of the phone. */
+function translatePage() {
+  $('takk-close').textContent = t('Lukk fanen og gå tilbake til spillet');
+  $('takk-stay').textContent = t('Fanen lot seg ikke lukke her. Bytt tilbake til fanen med spillet, så er du der.');
+  $('takk-switch').textContent = t('Spillet står i en annen fane. Bytt tilbake til den, så er du der.');
+  $('takk-open').textContent = t('Tilbake til spillet');
+}
+
 function show(state) {
-  const [title, text] = TEXTS[state];
+  const [title, text] = TEXTS[state].map((key) => t(key));
   $('takk-title').textContent = title;
   $('takk-text').textContent = text;
   document.title = `${title} · Disputt`;
@@ -50,7 +59,7 @@ function ways() {
   $('takk-open').hidden = fromGame;
   if (!fromGame && !own) {
     $('takk-switch').hidden = false;
-    $('takk-open').textContent = 'Åpne spillet her i stedet';
+    $('takk-open').textContent = t('Åpne spillet her i stedet');
     $('takk-open').className = 'btn btn--text';
   }
   $('takk-close').addEventListener('click', () => {
@@ -66,6 +75,7 @@ async function ask(reference) {
 }
 
 async function main() {
+  translatePage();
   ways();
   const reference = new URLSearchParams(location.search).get('ref') ?? '';
   if (!REFERENCE.test(reference) || !config.payments?.apiUrl) return show('lost');

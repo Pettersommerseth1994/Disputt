@@ -7,7 +7,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `t` | Felt | Hvem | Svar / virkning |
 | --- | --- | --- | --- |
 | `ping` | `c` (klokke) | alle | `pong {c, s}`; brukes til å synkronisere klokka |
-| `create` | `mode` (`"cabin"` eller `"car"`, ellers `"cabin"`) | ny vert | `welcome`. `cabin` er en telefon hver (hytteturmodus), `car` er alle på vertens telefon (bilturmodus) |
+| `create` | `mode` (`"cabin"` eller `"car"`, ellers `"cabin"`), `lang` (`"no"`, `"da"` eller `"sv"`, ellers `"no"`: spillets språk, som velger spørsmålsbanken) | ny vert | `welcome`. `cabin` er en telefon hver (hytteturmodus), `car` er alle på vertens telefon (bilturmodus) |
 | `join` | `code` | ny spiller | `welcome`, eller feil `room_not_found`, `full`, `single_phone`. Et spill som har startet tar også imot nye spillere (de får en plassholder som i lobbyen og velger profil, se `profile`). Et nytt `join` på en tilkobling som allerede er med i rommet gir samme plass igjen, ikke en ny. Forlatte plassholdere (ingen navn, frakoblet) blir liggende en stund, så den som lot skjermen låse seg på profilsiden kan komme tilbake. Ligger det mer enn to igjen (eller er rommet fullt av dem), overtar neste som kommer den som har vært borte lengst, så gjentatte forsøk ikke fyller lobbyen med spøkelser |
 | `resume` | `code, playerId, token` | tilbakevendende | `welcome`, eller feil `bad_token` / `room_not_found` |
 | `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser). Krever ingen hemmelighet, for en telefon som har mistet nettleserdataene har ingen, så alle andre i rommet får `notice` om at plassen er overtatt. Tilkoblingen slipper plassen den hadde fra før |
@@ -62,7 +62,7 @@ I `reveal` vises ingenting om utfallet: imposterne sier riktig svar høyt, og sk
 
 ```jsonc
 {
-  "code": "KRAP", "mode": "cabin",           // "cabin" (en telefon hver) eller "car" (alle på vertens telefon)
+  "code": "KRAP", "mode": "cabin", "lang": "no",           // "cabin" (en telefon hver) eller "car" (alle på vertens telefon)
   "phase": "question", "round": 3, "target": 5, "hostId": "…", "now": 1790000000000,
   "limits": { "min": 2, "max": 10, "twoImpostorsFrom": 6 },   // max er 5 i bilturmodus   // fra så mange spillere i runden er det to imposterer
   "timings": { "roleMs": 8000, "countdownMs": 5000 },

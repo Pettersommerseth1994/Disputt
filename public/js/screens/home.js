@@ -2,6 +2,7 @@
 
 import { html, useState } from '../vendor/htm-preact.js';
 import { actions, forget } from '../net.js';
+import { t, tServer, tx } from '../i18n/lang.js';
 import { isActive } from '../pay/pass.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, Logo } from '../ui.js';
@@ -9,7 +10,7 @@ import { ModeStep } from './mode.js';
 import { RejoinCard } from './rejoin.js';
 
 /** The link to the rules on the start screen: the story of a round (regler/), under the slogan. */
-const RULES = 'Reglene, kort fortalt';
+const RULES = tx('Reglene, kort fortalt');
 const Play = () => html`<svg class="home-tag__play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor" /></svg>`;
 
 export function Home() {
@@ -23,20 +24,20 @@ export function Home() {
     <${Decor} />
     <div class="home__hero grow">
       <div class="pop-in"><${Logo} /></div>
-      <h1 class="home__tagline rise-in">Diskuter,<br />manipuler<br />og <span class="scribble">vinn</span></h1>
-      <p class="lead muted rise-in" style="animation-delay:.1s">Et quizspill med uenighetsgaranti</p>
-      <button type="button" class="home-tag" onClick=${() => setStore({ sheet: 'rules' })}><span class="home-tag__ic" aria-hidden="true"><${Play} /></span><span>${RULES}</span></button>
-      ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${s.notice}</p>`}
+      <h1 class="home__tagline rise-in">${t('Diskuter,')}<br />${t('manipuler')}<br />${t('og')} <span class="scribble">${t('vinn')}</span></h1>
+      <p class="lead muted rise-in" style="animation-delay:.1s">${t('Et quizspill med uenighetsgaranti')}</p>
+      <button type="button" class="home-tag" onClick=${() => setStore({ sheet: 'rules' })}><span class="home-tag__ic" aria-hidden="true"><${Play} /></span><span>${t(RULES)}</span></button>
+      ${s.notice && html`<p class="card card--yellow home__notice rise-in" role="status">${tServer(s.notice)}</p>`}
       <${RejoinCard} />
     </div>
     <div class="dock">
-      <${Button} block onClick=${() => setStore({ modeStep: true })} disabled=${s.conn !== 'open'}>Opprett spill</${Button}>
-      <${Button} block variant="cream" onClick=${() => setMode('code')}>Bli med i spill</${Button}>
+      <${Button} block onClick=${() => setStore({ modeStep: true })} disabled=${s.conn !== 'open'}>${t('Opprett spill')}</${Button}>
+      <${Button} block variant="cream" onClick=${() => setMode('code')}>${t('Bli med i spill')}</${Button}>
       ${s.payments?.enabled &&
       html`<div class="row row--center home__links">
         ${isActive(s.pass)
-          ? html`<span class="muted">Du har tilgang</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>Min tilgang</${Button}>`
-          : html`<span class="muted">Allerede kunde?</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>Logg inn</${Button}>`}
+          ? html`<span class="muted">${t('Du har tilgang')}</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>${t('Min tilgang')}</${Button}>`
+          : html`<span class="muted">${t('Allerede kunde?')}</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}>`}
       </div>`}
     </div>
   </main>`;
@@ -62,11 +63,11 @@ function JoinByCode({ onBack }) {
   return html`<main class="screen">
     <form class="stack stack--loose grow" onSubmit=${submit} style="justify-content:center">
       <div class="stack stack--tight center">
-        <h1>Skriv inn koden</h1>
-        <p class="muted">Du finner den på skjermen til verten, eller skann QR-koden med kameraet.</p>
+        <h1>${t('Skriv inn koden')}</h1>
+        <p class="muted">${t('Du finner den på skjermen til verten, eller skann QR-koden med kameraet.')}</p>
       </div>
       <div class="field">
-        <label class="sr-only" for="code">Spillkode</label>
+        <label class="sr-only" for="code">${t('Spillkode')}</label>
         <input
           id="code"
           class="input input--code"
@@ -87,21 +88,21 @@ function JoinByCode({ onBack }) {
         />
       </div>
       <div class="stack">
-        <${Button} block type="submit" disabled=${!ok || s.conn !== 'open' || s.joining}>Bli med</${Button}>
-        <${Button} block variant="ghost" onClick=${onBack}>Tilbake</${Button}>
+        <${Button} block type="submit" disabled=${!ok || s.conn !== 'open' || s.joining}>${t('Bli med')}</${Button}>
+        <${Button} block variant="ghost" onClick=${onBack}>${t('Tilbake')}</${Button}>
       </div>
     </form>
   </main>`;
 }
 
 /** Shown while a stored session is being resumed or a QR link is being joined. */
-export function Connecting({ text = 'Kobler til …', hint = null }) {
+export function Connecting({ text = t('Kobler til …'), hint = null }) {
   return html`<main class="screen">
     <div class="grow center stack stack--loose" style="justify-content:center;align-items:center">
       <${Avatar} id="sky" size="xl" alive />
       <h2>${text}</h2>
       ${hint && html`<p class="muted center" role="status" style="max-width:30ch">${hint}</p>`}
-      <${Button} variant="text" onClick=${() => forget()}>Avbryt</${Button}>
+      <${Button} variant="text" onClick=${() => forget()}>${t('Avbryt')}</${Button}>
     </div>
   </main>`;
 }
@@ -113,10 +114,10 @@ export function SeatPicker() {
   return html`<main class="screen">
     <div class="stack stack--loose grow" style="justify-content:center">
       <div class="stack stack--tight center">
-        <h1>Spillet har startet</h1>
-        <p class="muted">${list.length ? 'Var du allerede med? Velg deg selv for å hoppe inn igjen.' : 'Du kan ikke bli med midt i en runde. Var du med før? Da kan det ta et halvt minutt før spillet ser at telefonen din er borte. Prøv igjen straks, eller be verten starte et nytt spill.'}</p>
+        <h1>${t('Spillet har startet')}</h1>
+        <p class="muted">${list.length ? t('Var du allerede med? Velg deg selv for å hoppe inn igjen.') : t('Du kan ikke bli med midt i en runde. Var du med før? Da kan det ta et halvt minutt før spillet ser at telefonen din er borte. Prøv igjen straks, eller be verten starte et nytt spill.')}</p>
       </div>
-      ${list.length === 0 && html`<${Button} block variant="cream" onClick=${() => actions.join(seats.code)}>Sjekk på nytt</${Button}>`}
+      ${list.length === 0 && html`<${Button} block variant="cream" onClick=${() => actions.join(seats.code)}>${t('Sjekk på nytt')}</${Button}>`}
       ${list.length > 0 &&
       html`<div class="player-grid">
         ${list.map(
@@ -126,7 +127,7 @@ export function SeatPicker() {
           </button>`,
         )}
       </div>`}
-      <${Button} block variant="ghost" onClick=${() => forget()}>Til forsiden</${Button}>
+      <${Button} block variant="ghost" onClick=${() => forget()}>${t('Til forsiden')}</${Button}>
     </div>
   </main>`;
 }

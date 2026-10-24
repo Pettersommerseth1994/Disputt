@@ -4,11 +4,20 @@
 // (A file of its own: pages are cached for ten minutes ...)
 
 import { html, useEffect, useState } from '../vendor/htm-preact.js';
+import { t } from '../i18n/lang.js';
 import { useStore } from '../store.js';
 import { Button } from '../ui.js';
 import { cancelShopPayment, knownShop, loadShop, reopenShop, startShopCheckout } from '../pay/shop.js';
 import { dealFor } from '../pay/discount.js';
 import { startVippsCheckout } from '../pay/vipps.js';
+import { vippsIsOfferedIn } from '../pay/vippslang.js';
+
+// A text with a link or a tag in the middle: the sentence is translated whole, with {} where the element goes. The consent box below says, in Norwegian
+// (test/shopify-files.test.js reads this line, and the terms quote it): Jeg godtar <a href=${pay.termsUrl} target="_blank" rel="noopener">vilkårene</a> og at tilgangen leveres med en gang.
+const around = (text, node) => {
+  const [before, after = ''] = text.split('{}');
+  return html`${before}${node}${after}`;
+};
 
 export function ShopDock({ plan }) {
   const s = useStore();
@@ -54,20 +63,20 @@ export function ShopDock({ plan }) {
   if (s.payWaiting) {
     return html`
       <div class="paywait" role="status">
-        <p class="paywait__title">Venter på betalingen …</p>
-        <p class="small">${s.payWaiting.app ? 'Fullfør betalingen i Vipps-appen.' : 'Fullfør betalingen i den andre fanen.'} Siden her henter tilgangen selv når den er gjennomført. Har du allerede betalt, kommer den om et øyeblikk.</p>
+        <p class="paywait__title">${t('Venter på betalingen …')}</p>
+        <p class="small">${s.payWaiting.app ? t('Fullfør betalingen i Vipps-appen.') : t('Fullfør betalingen i den andre fanen.')} ${t('Siden her henter tilgangen selv når den er gjennomført. Har du allerede betalt, kommer den om et øyeblikk.')}</p>
       </div>
-      <${Button} block variant="cream" onClick=${reopenShop}>${s.payWaiting.app ? 'Åpne Vipps igjen' : 'Åpne betalingen igjen'}</${Button}>
-      <${Button} block variant="text" onClick=${cancelShopPayment}>Avbryt</${Button}>`;
+      <${Button} block variant="cream" onClick=${reopenShop}>${s.payWaiting.app ? t('Åpne Vipps igjen') : t('Åpne betalingen igjen')}</${Button}>
+      <${Button} block variant="text" onClick=${cancelShopPayment}>${t('Avbryt')}</${Button}>`;
   }
   return html`
     ${error && html`<p class="field__error center" role="alert">${error}</p>`}
-    ${error && !shop && html`<${Button} block variant="cream" onClick=${() => setTries(tries + 1)}>Prøv igjen</${Button}>`}
+    ${error && !shop && html`<${Button} block variant="cream" onClick=${() => setTries(tries + 1)}>${t('Prøv igjen')}</${Button}>`}
     <label class="consent">
       <input type="checkbox" checked=${agreed} onChange=${(e) => setAgreed(e.currentTarget.checked)} />
       <span class="consent__box" aria-hidden="true"></span>
-      <span>Jeg godtar <a href=${pay.termsUrl} target="_blank" rel="noopener">vilkårene</a> og at tilgangen leveres med en gang.</span>
+      <span>${around(t('Jeg godtar {terms} og at tilgangen leveres med en gang.', { terms: '{}' }), html`<a href=${pay.termsUrl} target="_blank" rel="noopener">${t('vilkårene')}</a>`)}</span>
     </label>
-    ${shop?.vipps && html`<${Button} block variant="vipps" disabled=${!agreed || (deal && !deal.vipps)} onClick=${goVipps}>Betal med Vipps</${Button}>`}
-    <${Button} block disabled=${!agreed || !shop} onClick=${go}>Betal med kort</${Button}>`;
+    ${shop?.vipps && vippsIsOfferedIn() && html`<${Button} block variant="vipps" disabled=${!agreed || (deal && !deal.vipps)} onClick=${goVipps}>${t('Betal med Vipps')}</${Button}>`}
+    <${Button} block disabled=${!agreed || !shop} onClick=${go}>${t('Betal med kort')}</${Button}>`;
 }

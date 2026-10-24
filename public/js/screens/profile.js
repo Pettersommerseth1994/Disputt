@@ -4,6 +4,7 @@
 import { AVATARS } from '../../shared/avatars.mjs';
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
+import { t } from '../i18n/lang.js';
 import { setStore } from '../store.js';
 import { Avatar, Button } from '../ui.js';
 import { SetupHeader, Steps } from './setup.js';
@@ -69,13 +70,13 @@ export function Profile({ view, editing, wizard = false, late = false }) {
     ${wizard && html`<${SetupHeader} /><${Steps} current=${2} onBack=${alone ? backToMode : undefined} />`}
     <form class="stack stack--loose grow" onSubmit=${submit}>
       <header class="stack stack--tight">
-        ${!wizard && html`<p class="eyebrow">${late ? `Spill ${view.code} har startet` : `Spill ${view.code}`}</p>`}
-        <h1 class="rise-in">${late ? 'Hopp inn i spillet' : 'Hvem er du?'}</h1>
+        ${!wizard && html`<p class="eyebrow">${late ? t('Spill {code} har startet', { code: view.code }) : t('Spill {code}', { code: view.code })}</p>`}
+        <h1 class="rise-in">${late ? t('Hopp inn i spillet') : t('Hvem er du?')}</h1>
       </header>
 
       ${gone.length > 0 &&
       html`<div class="field">
-        <span class="field__label" id="seat-label">Var du med før?</span>
+        <span class="field__label" id="seat-label">${t('Var du med før?')}</span>
         <div class="player-grid" role="group" aria-labelledby="seat-label">
           ${gone.map(
             (p) => html`<button type="button" class="player picker__item" style="width:5.6rem;aspect-ratio:auto;border-radius:0" key=${p.id} onClick=${() => actions.claim(view.code, p.id)}>
@@ -84,11 +85,11 @@ export function Profile({ view, editing, wizard = false, late = false }) {
             </button>`,
           )}
         </div>
-        <span class="field__hint">Trykk på deg selv for å få plassen og poengene dine tilbake.</span>
+        <span class="field__hint">${t('Trykk på deg selv for å få plassen og poengene dine tilbake.')}</span>
       </div>`}
 
       <div class="field">
-        <label class="field__label" for="name">Navn</label>
+        <label class="field__label" for="name">${t('Navn')}</label>
         <input
           id="name"
           class="input"
@@ -100,13 +101,13 @@ export function Profile({ view, editing, wizard = false, late = false }) {
           autocorrect="off"
           spellcheck="false"
           enterkeyhint="done"
-          placeholder="Skriv navnet ditt"
+          placeholder=${t('Skriv navnet ditt')}
         />
-        <span class="field__hint">Det er dette de andre ser.</span>
+        <span class="field__hint">${t('Det er dette de andre ser.')}</span>
       </div>
 
       <div class="field">
-        <span class="field__label" id="avatar-label">Velg avatar</span>
+        <span class="field__label" id="avatar-label">${t('Velg avatar')}</span>
         <div class="picker" role="radiogroup" aria-labelledby="avatar-label">
           ${AVATARS.map((a) => {
             const taken = takenBy.has(a.id);
@@ -116,7 +117,7 @@ export function Profile({ view, editing, wizard = false, late = false }) {
               class="picker__item"
               key=${a.id}
               aria-checked=${avatar === a.id}
-              aria-label=${taken ? `${a.name} (tatt av ${takenBy.get(a.id)})` : a.name}
+              aria-label=${taken ? t('{name} (tatt av {taker})', { name: t(a.name), taker: takenBy.get(a.id) }) : t(a.name)}
               disabled=${taken}
               onClick=${edit(() => setAvatar(a.id))}
             >
@@ -128,18 +129,18 @@ export function Profile({ view, editing, wizard = false, late = false }) {
 
       ${late &&
       html`<div class="field">
-        <span class="field__label" id="points-label">Poeng du hopper inn med</span>
+        <span class="field__label" id="points-label">${t('Poeng du hopper inn med')}</span>
         <div class="stepper" role="group" aria-labelledby="points-label">
-          <${Button} type="button" variant="cream" size="icon" onClick=${() => setPoints(Math.max(0, points - 1))} aria-label="Ett poeng mindre" disabled=${points <= 0}>−</${Button}>
+          <${Button} type="button" variant="cream" size="icon" onClick=${() => setPoints(Math.max(0, points - 1))} aria-label=${t('Ett poeng mindre')} disabled=${points <= 0}>−</${Button}>
           <output class="input input--number" aria-live="polite">${points}</output>
-          <${Button} type="button" variant="cream" size="icon" onClick=${() => setPoints(Math.min(highest, points + 1))} aria-label="Ett poeng mer" disabled=${points >= highest}>+</${Button}>
+          <${Button} type="button" variant="cream" size="icon" onClick=${() => setPoints(Math.min(highest, points + 1))} aria-label=${t('Ett poeng mer')} disabled=${points >= highest}>+</${Button}>
         </div>
-        <span class="field__hint">0 er vanlig. Spillet er til ${view.target} poeng, så du kan hoppe inn med fra 0 til ${highest}. Du spiller fra neste runde.</span>
+        <span class="field__hint">${t('0 er vanlig. Spillet er til {target} poeng, så du kan hoppe inn med fra 0 til {highest}. Du spiller fra neste runde.', { target: view.target, highest })}</span>
       </div>`}
 
       <div class="dock">
-        <${Button} block type="submit" disabled=${!ready}>${wizard ? 'Neste' : late ? 'Hopp inn' : you.ready ? 'Lagre' : 'Klar!'}</${Button}>
-        ${editing && html`<${Button} block variant="ghost" onClick=${() => setStore({ editing: false })}>Avbryt</${Button}>`}
+        <${Button} block type="submit" disabled=${!ready}>${wizard ? t('Neste') : late ? t('Hopp inn') : you.ready ? t('Lagre') : t('Klar!')}</${Button}>
+        ${editing && html`<${Button} block variant="ghost" onClick=${() => setStore({ editing: false })}>${t('Avbryt')}</${Button}>`}
       </div>
     </form>
   </main>`;

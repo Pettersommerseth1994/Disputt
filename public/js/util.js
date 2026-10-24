@@ -1,5 +1,6 @@
 import { useEffect, useState } from './vendor/htm-preact.js';
 import { serverNow } from './net.js';
+import { localeOf } from './i18n/lang.js';
 
 export const cx = (...parts) => parts.filter(Boolean).join(' ');
 export const LETTERS = ['A', 'B', 'C', 'D'];
@@ -40,7 +41,7 @@ export function playerById(view, id) {
 
 /** Players sorted by score (desc), then name. Ties share a rank. */
 export function ranking(players) {
-  const sorted = [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'nb'));
+  const sorted = [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, localeOf()));
   let rank = 0;
   let prev = null;
   return sorted.map((p, i) => {

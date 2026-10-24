@@ -3,10 +3,11 @@
 // module does not have would not load.)
 
 import { html } from '../vendor/htm-preact.js';
+import { t } from '../i18n/lang.js';
 
 export function TwoPlayersNote() {
   return html`<section class="note card card--yellow" role="note">
-    <strong>Dere er bare to</strong>
-    <p>Da er det ikke alltid en imposter, for ellers ville den ene alltid visst hvem det var. På 1/3 av spørsmålene er ingen impostere. Dette er tilfeldig.</p>
+    <strong>${t('Dere er bare to')}</strong>
+    <p>${t('Da er det ikke alltid en imposter, for ellers ville den ene alltid visst hvem det var. På 1/3 av spørsmålene er ingen impostere. Dette er tilfeldig.')}</p>
   </section>`;
 }

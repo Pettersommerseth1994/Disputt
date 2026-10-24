@@ -3,6 +3,7 @@
 // (A file of its own: pages are cached for ten minutes ...)
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
+import { t, tx } from '../i18n/lang.js';
 import { setStore, toast, useStore } from '../store.js';
 import { Button, Sheet } from '../ui.js';
 import { joinNames } from '../impostors.js';
@@ -17,15 +18,23 @@ import { ShopDock } from './shoppay.js';
 import { useOffered } from './offer.js';
 
 const close = () => setStore({ sheet: null });
-const COUNT = ['ingen', 'én', 'to', 'tre', 'fire', 'fem'];
-const rounds = (n) => `${COUNT[n] ?? n} ${n === 1 ? 'runde' : 'runder'}`;
+// (a number written out gets one text for each number, so that every language can put the words in its own order)
+const ROUNDS = [tx('ingen runder'), tx('én runde'), tx('to runder'), tx('tre runder'), tx('fire runder'), tx('fem runder')];
+const rounds = (n) => (ROUNDS[n] ? t(ROUNDS[n]) : t('{n} runder', { n }));
+const FREE = [null, tx('Den første runden i hvert spill er gratis.'), tx('De to første rundene i hvert spill er gratis.'), tx('De tre første rundene i hvert spill er gratis.'), tx('De fire første rundene i hvert spill er gratis.'), tx('De fem første rundene i hvert spill er gratis.')];
 /** "De to første rundene i hvert spill er gratis." */
-const freeLine = (n) => (n === 1 ? 'Den første runden i hvert spill er gratis.' : `De ${COUNT[n] ?? n} første rundene i hvert spill er gratis.`);
+const freeLine = (n) => (FREE[n] ? t(FREE[n]) : t('De {n} første rundene i hvert spill er gratis.', { n }));
+
+// A text with a tag in the middle: the sentence is translated whole, with {} where the element goes.
+const around = (text, node) => {
+  const [before, after = ''] = text.split('{}');
+  return html`${before}${node}${after}`;
+};
 
 async function copyCode(code) {
   try {
     await navigator.clipboard.writeText(code);
-    return toast('Koden er kopiert.');
+    return toast(t('Koden er kopiert.'));
   } catch {
     /* fall through to the old way */
   }
@@ -42,8 +51,14 @@ async function copyCode(code) {
     /* not allowed either */
   }
   area.remove();
-  toast(ok ? 'Koden er kopiert.' : `Skriv ned koden: ${code}`, ok ? 3500 : 12000);
+  toast(ok ? t('Koden er kopiert.') : t('Skriv ned koden: {code}', { code }), ok ? 3500 : 12000);
 }
+
+/** The name of a package, in the language of the phone (a pass of a package that is gone has no name). */
+const planName = (id) => {
+  const plan = planById(id);
+  return plan ? t(plan.name) : '';
+};
 
 const Check = () => html`<svg class="perk__check" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>`;
 
@@ -54,13 +69,13 @@ function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
     <input type="radio" name="plan" value=${plan.id} checked=${selected} disabled=${locked} onChange=${() => onSelect(plan.id)} />
     <span class="plan__radio" aria-hidden="true"></span>
     <span class="plan__main">
-      <span class="plan__name">${plan.name}</span>
-      <span class="plan__sub">${plan.length}</span>
+      <span class="plan__name">${t(plan.name)}</span>
+      <span class="plan__sub">${t(plan.length)}</span>
     </span>
     ${deal
       ? html`<span class="plan__price plan__price--deal"><s class="plan__was">${formatPrice(plan.price)}</s><span>${kr(deal.now)}</span></span>`
       : html`<span class="plan__price">${formatPrice(plan.price)}</span>`}
-    ${plan.badge && html`<span class="plan__badge">${plan.badge}</span>`}
+    ${plan.badge && html`<span class="plan__badge">${t(plan.badge)}</span>`}
   </label>`;
 }
 
@@ -96,36 +111,36 @@ export function Paywall({ view = null }) {
     }
   };
   const label = { vipps: 'Vipps', applepay: 'Apple Pay' };
-  const terms = [pay.termsUrl && ['Vilkår', pay.termsUrl], pay.privacyUrl && ['Personvern', pay.privacyUrl]].filter(Boolean);
+  const terms = [pay.termsUrl && [tx('Vilkår'), pay.termsUrl], pay.privacyUrl && [tx('Personvern'), pay.privacyUrl]].filter(Boolean);
 
   return html`<main class="screen paywall">
-    <div class="paywall__top"><${Button} variant="text" onClick=${() => setStore({ paywall: false })}>‹ Tilbake</${Button}></div>
+    <div class="paywall__top"><${Button} variant="text" onClick=${() => setStore({ paywall: false })}>${t('‹ Tilbake')}</${Button}></div>
     <header class="stack stack--tight">
-      <p class="eyebrow">${gate ? `Dere har spilt ${rounds(view.round)}${view.round <= pay.freeRounds ? ' gratis' : ''}` : 'For verter'}</p>
-      <h1 class="setup__title rise-in">${gate ? 'Fortsett quizen' : 'Pakker'}</h1>
-      <p class="lead muted">${gate ? 'Verten betaler én gang, så kan alle spille videre.' : `Bare verten betaler. ${freeLine(pay.freeRounds)}`}</p>
+      <p class="eyebrow">${gate ? (view.round <= pay.freeRounds ? t('Dere har spilt {rounds} gratis', { rounds: rounds(view.round) }) : t('Dere har spilt {rounds}', { rounds: rounds(view.round) })) : t('For verter')}</p>
+      <h1 class="setup__title rise-in">${gate ? t('Fortsett quizen') : t('Pakker')}</h1>
+      <p class="lead muted">${gate ? t('Verten betaler én gang, så kan alle spille videre.') : t('Bare verten betaler. {free}', { free: freeLine(pay.freeRounds) })}</p>
     </header>
 
-    ${have && html`<p class="chip chip--yellow paywall__have" role="status">Du har tilgang: ${planById(s.pass.plan)?.name} · ${describeValidity(s.pass)}</p>`}
+    ${have && html`<p class="chip chip--yellow paywall__have" role="status">${t('Du har tilgang: {plan} · {validity}', { plan: planName(s.pass.plan), validity: describeValidity(s.pass) })}</p>`}
 
-    <div class="plans" role="radiogroup" aria-label="Velg pakke">
+    <div class="plans" role="radiogroup" aria-label=${t('Velg pakke')}>
       ${offered.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} deal=${dealFor(s.discount, p.id)} onSelect=${setPlan} />`)}
     </div>
-    <p class="small muted center plans__detail" aria-live="polite">${chosen.detail}</p>
+    <p class="small muted center plans__detail" aria-live="polite">${t(chosen.detail)}</p>
     ${pay.provider === 'shopify' && html`<${DiscountField} plan=${plan} />`}
 
     <section class="card stack stack--tight perks">
-      <h3>Dette får du</h3>
+      <h3>${t('Dette får du')}</h3>
       <ul class="perks__list">
-        ${PERKS.map(([title, text]) => html`<li key=${title}><${Check} /><span><strong>${title}</strong><small>${text}</small></span></li>`)}
+        ${PERKS.map(([title, text]) => html`<li key=${title}><${Check} /><span><strong>${t(title)}</strong><small>${t(text)}</small></span></li>`)}
       </ul>
     </section>
 
     <p class="small muted center paywall__fine">
-      Engangsbetaling inkl. mva, ingen abonnement.${terms.length > 0 && ' '}
-      ${terms.map(([name, href], i) => html`${i > 0 && ' · '}<a href=${href} target="_blank" rel="noopener">${name}</a>`)}
+      ${t('Engangsbetaling inkl. mva, ingen abonnement.')}${terms.length > 0 && ' '}
+      ${terms.map(([name, href], i) => html`${i > 0 && ' · '}<a href=${href} target="_blank" rel="noopener">${t(name)}</a>`)}
     </p>
-    <p class="center"><span class="muted">Allerede kunde?</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>Logg inn</${Button}></p>
+    <p class="center"><span class="muted">${t('Allerede kunde?')}</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}></p>
 
     <div class="dock">
       ${pay.provider === 'shopify'
@@ -133,7 +148,7 @@ export function Paywall({ view = null }) {
         : html`${error && html`<p class="field__error center" role="alert">${error}</p>`}
           ${pay.methods.map(
             (m, i) => html`<${Button} key=${m} block variant=${i === 0 ? undefined : 'cream'} disabled=${busy !== null} onClick=${() => go(m)}>
-              ${busy === m ? 'Åpner betalingen …' : `Betal med ${label[m]}`}
+              ${busy === m ? t('Åpner betalingen …') : t('Betal med {method}', { method: label[m] })}
             </${Button}>`,
           )}`}
     </div>
@@ -159,17 +174,17 @@ export function LoginSheet() {
     try {
       const pass = await restoreWithCode(typed);
       setStore({ sheet: null, paywall: false }); // (opened from the packages: back to the game, where the next round can start now)
-      toast(`Velkommen tilbake! ${planById(pass.plan)?.name}: ${describeValidity(pass).toLowerCase()}.`, 6000);
+      toast(t('Velkommen tilbake! {plan}: {validity}.', { plan: planName(pass.plan), validity: describeValidity(pass).toLowerCase() }), 6000);
     } catch (err) {
       setError(err.message);
     }
     setBusy(false);
   };
-  return html`<${Sheet} title="Logg inn" onClose=${close}>
+  return html`<${Sheet} title=${t('Logg inn')} onClose=${close}>
     <form class="stack" onSubmit=${submit}>
-      <p class="muted">Skriv inn koden du fikk da du betalte, så får du tilgangen din tilbake på denne telefonen.</p>
+      <p class="muted">${t('Skriv inn koden du fikk da du betalte, så får du tilgangen din tilbake på denne telefonen.')}</p>
       <div class="field">
-        <label class="sr-only" for="pass-code">Koden fra kvitteringen</label>
+        <label class="sr-only" for="pass-code">${t('Koden fra kvitteringen')}</label>
         <input
           id="pass-code"
           ref=${field}
@@ -192,9 +207,9 @@ export function LoginSheet() {
         />
         ${error && html`<span class="field__error" id="pass-code-error" role="alert">${error}</span>`}
       </div>
-      <${Button} block type="submit" disabled=${!valid || busy}>${busy ? 'Sjekker …' : 'Hent tilgangen'}</${Button}>
-      <p class="small muted">${shopify ? 'Koden står i bestillingsbekreftelsen på e-post, og under Vertsvalg › Min tilgang på telefonen du betalte med.' : 'Koden gjelder uansett om du betalte med Vipps eller Apple Pay. Du fikk den da du betalte («Takk!»-siden), og den står under Vertsvalg › Min tilgang på telefonen du betalte med.'}</p>
-      <p class="center"><${Button} variant="text" onClick=${() => setStore({ sheet: null, paywall: true })}>Har du ikke kjøpt ennå? Se pakkene</${Button}></p>
+      <${Button} block type="submit" disabled=${!valid || busy}>${busy ? t('Sjekker …') : t('Hent tilgangen')}</${Button}>
+      <p class="small muted">${shopify ? t('Koden står i bestillingsbekreftelsen på e-post, og under Vertsvalg › Min tilgang på telefonen du betalte med.') : t('Koden gjelder uansett om du betalte med Vipps eller Apple Pay. Du fikk den da du betalte («Takk!»-siden), og den står under Vertsvalg › Min tilgang på telefonen du betalte med.')}</p>
+      <p class="center"><${Button} variant="text" onClick=${() => setStore({ sheet: null, paywall: true })}>${t('Har du ikke kjøpt ennå? Se pakkene')}</${Button}></p>
     </form>
   </${Sheet}>`;
 }
@@ -203,9 +218,9 @@ export function LoginSheet() {
 
 function CodeCard({ code }) {
   return html`<article class="card card--paper center stack stack--tight accesscode">
-    <p class="eyebrow">Koden din</p>
-    <p class="passcode display" aria-label=${`Koden din er ${code.split('').join(' ')}`}>${code}</p>
-    <${Button} variant="cream" size="small" onClick=${() => copyCode(code)}>Kopier koden</${Button}>
+    <p class="eyebrow">${t('Koden din')}</p>
+    <p class="passcode display" aria-label=${t('Koden din er {code}', { code: code.split('').join(' ') })}>${code}</p>
+    <${Button} variant="cream" size="small" onClick=${() => copyCode(code)}>${t('Kopier koden')}</${Button}>
   </article>`;
 }
 
@@ -221,13 +236,13 @@ export function ThanksSheet() {
     close();
     if (next) requestNextRound(view);
   };
-  return html`<${Sheet} title="Velkommen!" onClose=${close}>
+  return html`<${Sheet} title=${t('Velkommen!')} onClose=${close}>
     <div class="stack">
-      <p class="lead">Du har tilgang${plan && html`: <strong>${plan.name}</strong>`}. ${s.pass && describeValidity(s.pass)}.</p>
+      <p class="lead">${plan ? around(t('Du har tilgang: {plan}.', { plan: '{}' }), html`<strong>${t(plan.name)}</strong>`) : t('Du har tilgang.')} ${s.pass && describeValidity(s.pass)}.</p>
       ${s.passCode && html`<${CodeCard} code=${s.passCode} />`}
-      <p class="small muted">Ta vare på koden, for eksempel med et skjermbilde. Med den får du tilgangen tilbake på en ny telefon, uten konto.${s.payments?.provider === 'shopify' ? ' Den står også i bestillingsbekreftelsen på e-post.' : ''}</p>
-      ${away.length > 0 && html`<p class="small center" role="status">Venter på at ${joinNames(away)} kommer tilbake …</p>`}
-      <${Button} block variant="lime" onClick=${go}>${next ? `Start runde ${view.round + 1}` : 'Fortsett spillet'}</${Button}>
+      <p class="small muted">${t('Ta vare på koden, for eksempel med et skjermbilde. Med den får du tilgangen tilbake på en ny telefon, uten konto.')}${s.payments?.provider === 'shopify' ? ` ${t('Den står også i bestillingsbekreftelsen på e-post.')}` : ''}</p>
+      ${away.length > 0 && html`<p class="small center" role="status">${t('Venter på at {names} kommer tilbake …', { names: joinNames(away) })}</p>`}
+      <${Button} block variant="lime" onClick=${go}>${next ? t('Start runde {n}', { n: view.round + 1 }) : t('Fortsett spillet')}</${Button}>
     </div>
   </${Sheet}>`;
 }
@@ -245,18 +260,18 @@ export function AccessSheet() {
     setArmed(true);
     timer.current = setTimeout(() => setArmed(false), 3500);
   };
-  return html`<${Sheet} title="Min tilgang" onClose=${close}>
+  return html`<${Sheet} title=${t('Min tilgang')} onClose=${close}>
     <div class="stack">
       ${have
-        ? html`<p class="lead">Du har tilgang: <strong>${plan?.name}</strong>. ${describeValidity(s.pass)}.</p>
+        ? html`<p class="lead">${around(t('Du har tilgang: {plan}.', { plan: '{}' }), html`<strong>${plan ? t(plan.name) : ''}</strong>`)} ${describeValidity(s.pass)}.</p>
             ${s.passCode && html`<${CodeCard} code=${s.passCode} />`}
-            <p class="small muted">Bare verten trenger tilgang. Koden gir deg den tilbake på en annen telefon. Fjerner du tilgangen her, fjernes koden fra denne telefonen også, så skriv den ned først.</p>
-            ${s.pass.expiresAt !== null && html`<${Button} block variant="cream" onClick=${() => setStore({ sheet: null, paywall: true })}>Se pakkene</${Button}>`}
-            <${Button} block variant="ghost" onClick=${forget}>${armed ? 'Trykk igjen for å fjerne' : 'Fjern tilgangen fra denne telefonen'}</${Button}>`
-        : html`<p class="lead">Du har ikke tilgang ennå.</p>
-            <p class="muted">${freeLine(s.payments.freeRounds)} Vil dere spille lenger, betaler verten én gang.</p>
-            <${Button} block onClick=${() => setStore({ sheet: null, paywall: true })}>Se pakkene</${Button}>
-            <p class="center"><span class="muted">Allerede kunde?</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>Logg inn</${Button}></p>`}
+            <p class="small muted">${t('Bare verten trenger tilgang. Koden gir deg den tilbake på en annen telefon. Fjerner du tilgangen her, fjernes koden fra denne telefonen også, så skriv den ned først.')}</p>
+            ${s.pass.expiresAt !== null && html`<${Button} block variant="cream" onClick=${() => setStore({ sheet: null, paywall: true })}>${t('Se pakkene')}</${Button}>`}
+            <${Button} block variant="ghost" onClick=${forget}>${armed ? t('Trykk igjen for å fjerne') : t('Fjern tilgangen fra denne telefonen')}</${Button}>`
+        : html`<p class="lead">${t('Du har ikke tilgang ennå.')}</p>
+            <p class="muted">${t('{free} Vil dere spille lenger, betaler verten én gang.', { free: freeLine(s.payments.freeRounds) })}</p>
+            <${Button} block onClick=${() => setStore({ sheet: null, paywall: true })}>${t('Se pakkene')}</${Button}>
+            <p class="center"><span class="muted">${t('Allerede kunde?')}</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}></p>`}
     </div>
   </${Sheet}>`;
 }

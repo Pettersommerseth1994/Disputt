@@ -3,11 +3,14 @@
 // For the screens that are meant to be seen at a glance, nothing may sit under the sticky button bar or need scrolling.
 //   node tools/qa/fit.mjs [WxH …]        default: 390x664 375x553 360x640 430x740
 //   exits non-zero when a screen that should fit does not
+//   FIT_ONLY=pay-gate  only the screens whose name matches; FIT_SHOTS=dir  also saves a picture of each of them
+//   DISPUTT_LANG=da|sv  in another language (see quiet.mjs)
 import puppeteer from 'puppeteer-core';
 import { createApp } from '../../server/index.js';
 import { QUESTIONS } from '../../shared/questions.js';
 import { STEP_OF, buildFixtures } from './fixtures.mjs';
 import { PAY_BASE, SHOP_INFO, payScreens } from './payfixtures.mjs';
+import { quiet } from './quiet.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -38,6 +41,7 @@ const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars'] });
 const page = await browser.newPage();
+await quiet(page);
 page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
@@ -156,6 +160,7 @@ for (const [w, h] of viewports) {
   await page.evaluate((info) => window.__disputt.setShop(info), SHOP_INFO); // (the packages of a Shopify shop have nobody to ask where the shop is; and the browser reloads the page when the viewport first becomes a phone's, which forgets it)
   const rows = [];
   for (const key of [...MUST_FIT, ...NICE_TO_FIT]) {
+    if (process.env.FIT_ONLY && !new RegExp(process.env.FIT_ONLY).test(key)) continue;
     const held = key.endsWith('-held');
     if (key === 'home') await showHome();
     else if (key === 'mode-step') await showMode();
@@ -163,6 +168,7 @@ for (const [w, h] of viewports) {
     else await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held, STEP_OF[held ? key.slice(0, -'-held'.length) : key] ?? null);
     await sleep(key.startsWith('role') ? 1300 : 900); // let the entrance animations settle
     const m = key.startsWith('pay-') ? await measurePay() : await measure();
+    if (process.env.FIT_SHOTS) await page.screenshot({ path: `${process.env.FIT_SHOTS}/${key}-${w}x${h}.png` });
     const must = MUST_FIT.includes(key);
     const ok = m.hidden <= 0 && (m.hasDock || m.overflow <= 1);
     if (!ok && must) failures++;

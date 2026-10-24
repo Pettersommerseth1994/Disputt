@@ -7,6 +7,7 @@
 //   - p2p, as the host: an in-page loopback to the engine running in this page
 //   - bilturmodus (everybody on ONE phone), in p2p mode: the same loopback, with an engine that needs no network at all
 
+import { getLang, t, tServer } from './i18n/lang.js';
 import { goHome } from './paths.js';
 import { loadHostSnapshot } from './p2p/snapshot.js';
 import { setAwayAnnouncer } from './pay/away.js';
@@ -101,8 +102,8 @@ function handleClose(info) {
   if (info.unavailable) {
     // p2p: nobody is hosting that room right now
     unreachable++;
-    if (!store.session) return forget('Fant ikke dette spillet. Sjekk koden, og at verten har siden åpen.');
-    if (unreachable > UNREACHABLE_LIMIT && !hostIsAway()) return forget('Verten er ikke å nå lenger, så spillet er trolig avsluttet.');
+    if (!store.session) return forget(t('Fant ikke dette spillet. Sjekk koden, og at verten har siden åpen.'));
+    if (unreachable > UNREACHABLE_LIMIT && !hostIsAway()) return forget(t('Verten er ikke å nå lenger, så spillet er trolig avsluttet.'));
   }
   // p2p: the host was found but no line could be set up (timeout), or the introduction service did not answer (offline)
   setStore({ conn: 'closed', stuck: info.timeout || info.offline ? store.stuck + 1 : store.stuck });
@@ -204,17 +205,17 @@ async function createP2PRoom(mode) {
     }
     if (gen !== generation) return started.stop();
     host = started;
-    link = host.openLink(handlersFor(gen), { create: true, mode }); // creates the room and answers with `welcome`
+    link = host.openLink(handlersFor(gen), { create: true, mode, lang: getLang() }); // creates the room and answers with `welcome`
   } catch (err) {
     if (gen !== generation) return;
     linkState = 'idle';
     setStore({ creating: false, conn: 'open', modeStep: true }); // (back to where the way to play is chosen: another try is two taps)
     toast(
       mode === 'car'
-        ? 'Kunne ikke starte spillet. Prøv igjen.' // (a game on one phone asks the network for nothing but the page's own files)
+        ? t('Kunne ikke starte spillet. Prøv igjen.') // (a game on one phone asks the network for nothing but the page's own files)
         : err?.kind === 'busy'
-          ? 'Fant ingen ledig spillkode akkurat nå. Prøv igjen.'
-          : 'Får ikke kontakt med tjenesten som kobler telefonene sammen. Sjekk nettet og prøv igjen.',
+          ? t('Fant ingen ledig spillkode akkurat nå. Prøv igjen.')
+          : t('Får ikke kontakt med tjenesten som kobler telefonene sammen. Sjekk nettet og prøv igjen.'),
     );
   }
 }
@@ -279,7 +280,7 @@ function onMessage(msg) {
       const wanted = wantedMode;
       wantedMode = null;
       // (a page whose game engine is an older copy from the browser's cache makes a game on one phone as an ordinary one that nobody can join: better to say so)
-      if (wanted === 'car' && msg.view.mode !== 'car') return forget('Siden er ikke ferdig oppdatert. Last inn siden på nytt og prøv igjen.');
+      if (wanted === 'car' && msg.view.mode !== 'car') return forget(t('Siden er ikke ferdig oppdatert. Last inn siden på nytt og prøv igjen.'));
       const session = { code: msg.code, playerId: msg.playerId, token: msg.token };
       saveSession(session);
       syncClock(msg.view.now);
@@ -301,10 +302,10 @@ function onMessage(msg) {
         msg.reason === 'left'
           ? null // you chose to leave: no explanation needed
           : msg.reason === 'kicked'
-            ? 'Verten fjernet deg fra spillet.'
+            ? t('Verten fjernet deg fra spillet.')
             : msg.reason === 'not_ready'
-              ? 'Spillet startet før du var klar.'
-              : 'Du er ikke lenger med i spillet.';
+              ? t('Spillet startet før du var klar.')
+              : t('Du er ikke lenger med i spillet.');
       setStore({ session: null, view: null, notice: why, route: { page: 'home' }, conn: isP2P ? 'open' : store.conn });
       break;
     }
@@ -315,11 +316,11 @@ function onMessage(msg) {
       } else {
         saveSession(null);
         if (isP2P) teardown();
-        setStore({ session: null, view: null, notice: 'Spillet er avsluttet.', route: { page: 'home' }, conn: isP2P ? 'open' : store.conn });
+        setStore({ session: null, view: null, notice: t('Spillet er avsluttet.'), route: { page: 'home' }, conn: isP2P ? 'open' : store.conn });
       }
       break;
     case 'notice':
-      if (typeof msg.text === 'string') toast(msg.text.slice(0, 120), 7000);
+      if (typeof msg.text === 'string') toast(tServer(msg.text.slice(0, 120)), 7000);
       break;
     case 'away': {
       // p2p: the host is leaving the page for a while (to pay) and will be back: wait for them instead of giving up
@@ -342,7 +343,7 @@ function onError(msg) {
   switch (msg.code) {
     case 'bad_token':
     case 'room_not_found':
-      forget(store.session ? 'Fant ikke spillet ditt igjen. Start et nytt eller skann koden på nytt.' : msg.message);
+      forget(store.session ? t('Fant ikke spillet ditt igjen. Start et nytt eller skann koden på nytt.') : tServer(msg.message));
       break;
     case 'full':
     case 'busy':
@@ -356,7 +357,7 @@ function onError(msg) {
       break;
     default:
       if (!isP2P && store.creating && !store.view) setStore({ creating: false, modeStep: true }); // a game that could not be made: back to where the way to play is chosen
-      toast(msg.message || 'Noe gikk galt.');
+      toast(tServer(msg.message) || t('Noe gikk galt.'));
   }
 }
 
@@ -371,7 +372,7 @@ export const actions = {
       return void createP2PRoom(mode);
     }
     setStore({ modeStep: false, step: null, creating: true }); // (so that the start screen does not show for a moment while the server answers)
-    return send({ t: 'create', mode });
+    return send({ t: 'create', mode, lang: getLang() });
   },
   join: (code) => {
     setStore({ joining: code, stuck: 0 });

@@ -3,10 +3,12 @@
 // (A file of its own: pages are cached for ten minutes ...)
 
 import { html, useEffect, useState } from '../vendor/htm-preact.js';
+import { t, tServer } from '../i18n/lang.js';
 import { setStore, useStore } from '../store.js';
 import { Button } from '../ui.js';
 import { dealFor, lookUpDiscount } from '../pay/discount.js';
 import { knownShop, loadShop } from '../pay/shop.js';
+import { vippsIsOfferedIn } from '../pay/vippslang.js';
 
 export function DiscountField({ plan }) {
   const s = useStore();
@@ -46,20 +48,21 @@ export function DiscountField({ plan }) {
 
   if (s.discount) {
     const here = dealFor(s.discount, plan);
+    const summary = tServer(s.discount.summary); // (the server's words: «10 % rabatt», «50 kr rabatt»)
     return html`<div class="discount discount--on" role="status">
-      <p class="discount__line"><span class="chip chip--yellow">${s.discount.code}</span> <span>${s.discount.summary}${here ? '' : '. Gjelder ikke denne pakken.'}</span></p>
-      <${Button} variant="text" size="small" onClick=${() => setStore({ discount: null })}>Fjern</${Button}>
-      ${here && !here.vipps && html`<p class="small muted discount__note">Denne koden gjelder i butikkens kasse (Betal med kort), ikke med Vipps.</p>`}
+      <p class="discount__line"><span class="chip chip--yellow">${s.discount.code}</span> <span>${here ? summary : t('{summary}. Gjelder ikke denne pakken.', { summary })}</span></p>
+      <${Button} variant="text" size="small" onClick=${() => setStore({ discount: null })}>${t('Fjern')}</${Button}>
+      ${here && !here.vipps && vippsIsOfferedIn() && html`<p class="small muted discount__note">${t('Denne koden gjelder i butikkens kasse (Betal med kort), ikke med Vipps.')}</p>`}
     </div>`;
   }
   if (!open) {
-    return html`<div class="discount"><${Button} variant="text" onClick=${() => setOpen(true)}>Har du rabattkode?</${Button}></div>`;
+    return html`<div class="discount"><${Button} variant="text" onClick=${() => setOpen(true)}>${t('Har du rabattkode?')}</${Button}></div>`;
   }
   return html`<form class="discount discount--form" onSubmit=${apply}>
-    <label class="field__label" for="discount-code">Rabattkode</label>
+    <label class="field__label" for="discount-code">${t('Rabattkode')}</label>
     <div class="discount__row">
-      <input id="discount-code" class="input input--small" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="64" placeholder="Skriv inn koden" value=${text} onInput=${(e) => setText(e.currentTarget.value)} />
-      <${Button} size="small" variant="cream" disabled=${busy || text.trim() === ''} onClick=${apply}>${busy ? 'Sjekker …' : 'Bruk'}</${Button}>
+      <input id="discount-code" class="input input--small" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="64" placeholder=${t('Skriv inn koden')} value=${text} onInput=${(e) => setText(e.currentTarget.value)} />
+      <${Button} size="small" variant="cream" disabled=${busy || text.trim() === ''} onClick=${apply}>${busy ? t('Sjekker …') : t('Bruk')}</${Button}>
     </div>
     ${error && html`<p class="field__error" role="alert">${error}</p>`}
   </form>`;

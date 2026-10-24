@@ -46,7 +46,7 @@ export function startLocalHost({ restore = null } = {}) {
     local: true,
 
     /** A link for the host's own screen: messages go straight into the engine and back, no network involved. */
-    openLink(handlers, { create = false, mode = 'car' } = {}) {
+    openLink(handlers, { create = false, mode = 'car', lang } = {}) {
       let open = true;
       const conn = { ws: null, code: null, playerId: null };
       conn.ws = {
@@ -59,7 +59,7 @@ export function startLocalHost({ restore = null } = {}) {
       queueMicrotask(() => {
         if (!open) return;
         handlers.onopen();
-        if (create) hub.createWithCode(conn, code, mode);
+        if (create) hub.createWithCode(conn, code, mode, lang);
       });
       return {
         isOpen: () => open,

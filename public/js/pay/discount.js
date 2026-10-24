@@ -3,7 +3,9 @@
 // checkout (which counts it itself), and to Vipps through the payment server (which takes the price with it).
 // (A file of its own: pages are cached for ten minutes, and this one only uses what already was in the other files.)
 
+import { t, tServer } from '../i18n/lang.js';
 import { store } from '../store.js';
+import { withCurrency } from './currency.js';
 import { PayError } from './payments.js';
 
 const PLAN_IDS = ['evening', 'weekend', 'year']; // (what is for sale)
@@ -21,25 +23,25 @@ export async function lookUpDiscount(text) {
       body: JSON.stringify({ code: text }),
     });
   } catch {
-    throw new PayError('network', 'Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.');
+    throw new PayError('network', t('Fikk ikke kontakt med betalingen. Sjekk nettet og prøv igjen.'));
   }
   const data = await res.json().catch(() => ({}));
   // (what the server says to a code that is not good is for the host to read; any other trouble is told in one way)
-  if (res.status === 400 || res.status === 429) throw new PayError(data.error ?? 'discount', data.message ?? 'Rabattkoden ble ikke godtatt.');
-  if (!res.ok) throw new PayError('server', 'Fikk ikke sjekket koden akkurat nå. Prøv igjen om litt, eller skriv den inn i butikkens kasse.');
+  if (res.status === 400 || res.status === 429) throw new PayError(data.error ?? 'discount', data.message ? tServer(data.message) : t('Rabattkoden ble ikke godtatt.'));
+  if (!res.ok) throw new PayError('server', t('Fikk ikke sjekket koden akkurat nå. Prøv igjen om litt, eller skriv den inn i butikkens kasse.'));
   const plans = data.plans ?? {};
   if (data.ok !== true || typeof data.code !== 'string' || REQUIRED.some((id) => !whole(plans[id]?.price) || !whole(plans[id]?.now))) {
-    throw new PayError('server', 'Fikk ikke sjekket koden akkurat nå. Prøv igjen om litt, eller skriv den inn i butikkens kasse.');
+    throw new PayError('server', t('Fikk ikke sjekket koden akkurat nå. Prøv igjen om litt, eller skriv den inn i butikkens kasse.'));
   }
   return {
     code: data.code,
-    summary: String(data.summary ?? ''),
+    summary: String(data.summary ?? ''), // («10 % rabatt», «50 kr rabatt»: Norwegian from the server; screens/discount.js shows it with tServer())
     plans: Object.fromEntries(PLAN_IDS.filter((id) => whole(plans[id]?.price) && whole(plans[id]?.now)).map((id) => [id, { price: plans[id].price, now: plans[id].now, vipps: plans[id].vipps === true }])),
   };
 }
 
-/** Øre as the host reads it: «89 kr», «199,20 kr». */
-export const kr = (ore) => `${ore % 100 === 0 ? ore / 100 : (ore / 100).toFixed(2).replace('.', ',')} kr`;
+/** Øre as the host reads it: «89 kr», «199,20 kr» (in Danish and Swedish «89 NOK»). */
+export const kr = (ore) => withCurrency(ore % 100 === 0 ? ore / 100 : (ore / 100).toFixed(2).replace('.', ','));
 
 /** What a chosen package costs with the code in the store: { price, now, vipps } when the code takes something off it, otherwise null. */
 export const dealFor = (discount, plan) => {

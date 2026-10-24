@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
 import { startP2PSite } from './sites.mjs';
+import { quiet } from './quiet.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -21,6 +22,7 @@ const base = site.base;
 async function newPhone(name) {
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();
+  await quiet(page);
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   // remember every WebSocket and every WebRTC connection, so a test can cut them like a network would
   await page.evaluateOnNewDocument(() => {

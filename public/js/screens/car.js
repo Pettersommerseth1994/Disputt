@@ -7,11 +7,13 @@
 
 import { AVATARS } from '../../shared/avatars.mjs';
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
+import { t } from '../i18n/lang.js';
 import { impostorCount } from '../impostors.js';
 import { actions } from '../net.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, CloseIcon, Sheet } from '../ui.js';
-import { cx, plural } from '../util.js';
+import { rich } from '../i18n/rich.js';
+import { cx } from '../util.js';
 import { TableStrip } from './carstrip.js';
 import { Finished } from './finale.js';
 import { Connecting } from './home.js';
@@ -65,8 +67,8 @@ function RemoveButton({ player }) {
     setArmed(true);
     timer.current = setTimeout(() => setArmed(false), 3000);
   };
-  return html`<button type="button" class=${cx('roster__remove', armed && 'roster__remove--armed')} onClick=${tap} aria-label=${armed ? `Trykk igjen for å fjerne ${player.name}` : `Fjern ${player.name}`}>
-    ${armed ? 'Fjern?' : html`<${CloseIcon} />`}
+  return html`<button type="button" class=${cx('roster__remove', armed && 'roster__remove--armed')} onClick=${tap} aria-label=${armed ? t('Trykk igjen for å fjerne {name}', { name: player.name }) : t('Fjern {name}', { name: player.name })}>
+    ${armed ? t('Fjern?') : html`<${CloseIcon} />`}
   </button>`;
 }
 
@@ -92,28 +94,28 @@ export function PlayersStep({ view }) {
     <${Steps} current=${2} total=${CAR_SEGMENTS} onBack=${players.length <= 1 ? backToMode : undefined} />
     <div class="stack">
       <header class="stack stack--tight">
-        <h1 class="setup__title rise-in">Hvem spiller?</h1>
-        <p class="lead muted">Legg inn alle som sitter i bilen. Den øverste er verten og leser spørsmålene.</p>
+        <h1 class="setup__title rise-in">${t('Hvem spiller?')}</h1>
+        <p class="lead muted">${t('Legg inn alle som sitter i bilen. Den øverste er verten og leser spørsmålene.')}</p>
       </header>
       <ul class="roster">
         ${!you.ready &&
         html`<li class="roster__item">
           <button type="button" class="roster__main" onClick=${() => setForm(you.id)}>
             <span class="avatar avatar--sm" aria-hidden="true"></span>
-            <span class="roster__name">Skriv navnet ditt<span class="roster__host">vert</span></span>
+            <span class="roster__name">${t('Skriv navnet ditt')}<span class="roster__host">${t('vert')}</span></span>
           </button>
         </li>`}
         ${players.map(
           (p) => html`<li class="roster__item" key=${p.id}>
-            <button type="button" class="roster__main" onClick=${() => setForm(p.id)} aria-label=${`Endre ${p.name}`}>
+            <button type="button" class="roster__main" onClick=${() => setForm(p.id)} aria-label=${t('Endre {name}', { name: p.name })}>
               <${Avatar} id=${p.avatar} size="sm" />
-              <span class="roster__name">${p.name}${p.isHost && html`<span class="roster__host">vert</span>`}</span>
-              <span class="roster__edit">Endre</span>
+              <span class="roster__name">${p.name}${p.isHost && html`<span class="roster__host">${t('vert')}</span>`}</span>
+              <span class="roster__edit">${t('Endre')}</span>
             </button>
             ${!p.isHost && html`<${RemoveButton} player=${p} />`}
           </li>`,
         )}
-        ${!full && you.ready && html`<li class="roster__item"><button type="button" class="roster__add" onClick=${() => setForm('new')}>+ Legg til spiller</button></li>`}
+        ${!full && you.ready && html`<li class="roster__item"><button type="button" class="roster__add" onClick=${() => setForm('new')}>${t('+ Legg til spiller')}</button></li>`}
       </ul>
       ${players.length === 2 && html`<${TwoPlayersNote} />`}
     </div>
@@ -122,11 +124,13 @@ export function PlayersStep({ view }) {
         <${Faces} players=${players} />
         <p class="small">
           ${need > 0
-            ? html`<span class="muted">Legg inn ${need} ${plural(need, 'spiller', 'spillere')} til · minst ${view.limits.min}</span>`
-            : html`${players.length} ${plural(players.length, 'spiller', 'spillere')} er med`}
+            ? html`<span class="muted">${need === 1 ? t('Legg inn {need} spiller til · minst {min}', { need, min: view.limits.min }) : t('Legg inn {need} spillere til · minst {min}', { need, min: view.limits.min })}</span>`
+            : players.length === 1
+              ? t('{n} spiller er med', { n: players.length })
+              : t('{n} spillere er med', { n: players.length })}
         </p>
       </div>
-      <${Button} block onClick=${() => setStore({ step: 2 })} disabled=${need > 0 || !you.ready}>Neste</${Button}>
+      <${Button} block onClick=${() => setStore({ step: 2 })} disabled=${need > 0 || !you.ready}>${t('Neste')}</${Button}>
     </div>
   </main>
   ${shownForm && html`<${PlayerForm} view=${view} id=${shownForm} onClose=${() => setForm(null)} />`}`; // (the sheet is not inside the screen: like every other sheet it covers the screen's button bar)
@@ -175,10 +179,10 @@ function PlayerForm({ view, id, onClose }) {
     fn(value);
   };
 
-  return html`<${Sheet} title=${adding ? 'Ny spiller' : myself && !view.you.ready ? 'Hvem er du?' : 'Endre spiller'} onClose=${onClose}>
+  return html`<${Sheet} title=${adding ? t('Ny spiller') : myself && !view.you.ready ? t('Hvem er du?') : t('Endre spiller')} onClose=${onClose}>
     <form class="stack" onSubmit=${submit}>
       <div class="field">
-        <label class="field__label" for="player-name">Navn</label>
+        <label class="field__label" for="player-name">${t('Navn')}</label>
         <input
           id="player-name"
           class="input"
@@ -190,11 +194,11 @@ function PlayerForm({ view, id, onClose }) {
           autocorrect="off"
           spellcheck="false"
           enterkeyhint="done"
-          placeholder="Skriv navnet"
+          placeholder=${t('Skriv navnet')}
         />
       </div>
       <div class="field">
-        <span class="field__label" id="player-avatar-label">Velg avatar</span>
+        <span class="field__label" id="player-avatar-label">${t('Velg avatar')}</span>
         <div class="picker" role="radiogroup" aria-labelledby="player-avatar-label">
           ${AVATARS.map((a) => {
             const taken = takenBy.has(a.id);
@@ -204,7 +208,7 @@ function PlayerForm({ view, id, onClose }) {
               class="picker__item"
               key=${a.id}
               aria-checked=${avatar === a.id}
-              aria-label=${taken ? `${a.name} (tatt av ${takenBy.get(a.id)})` : a.name}
+              aria-label=${taken ? t('{avatar} (tatt av {name})', { avatar: t(a.name), name: takenBy.get(a.id) }) : t(a.name)}
               disabled=${taken}
               onClick=${edit(() => setAvatar(a.id))}
             >
@@ -213,7 +217,7 @@ function PlayerForm({ view, id, onClose }) {
           })}
         </div>
       </div>
-      <${Button} block type="submit" disabled=${!ready}>${adding ? 'Legg til' : 'Lagre'}</${Button}>
+      <${Button} block type="submit" disabled=${!ready}>${adding ? t('Legg til') : t('Lagre')}</${Button}>
     </form>
   </${Sheet}>`;
 }
@@ -252,15 +256,15 @@ export function CarRoles({ view }) {
   return html`<main class="screen rolelist">
     <${SetupHeader} />
     <div class="rolelist__head">
-      <p class="eyebrow">Runde ${view.round}</p>
-      <h1 class="setup__title rise-in">${done ? 'Alle har sett rollen sin' : 'Send telefonen rundt'}</h1>
-      <p class="lead muted">${done ? 'Gi telefonen tilbake til verten, som leser spørsmålet høyt for alle.' : 'Alle ser rollen sin, én og én. Hold inne knappen, og skjul skjermen for de andre.'}</p>
+      <p class="eyebrow">${t('Runde {round}', { round: view.round })}</p>
+      <h1 class="setup__title rise-in">${done ? t('Alle har sett rollen sin') : t('Send telefonen rundt')}</h1>
+      <p class="lead muted">${done ? t('Gi telefonen tilbake til verten, som leser spørsmålet høyt for alle.') : t('Alle ser rollen sin, én og én. Hold inne knappen, og skjul skjermen for de andre.')}</p>
     </div>
     <ol class="rolelist__list">
       ${table.map((r, i) => {
-        const tag = r.id === host?.id ? html`<small>vert</small>` : null;
+        const tag = r.id === host?.id ? html`<small>${t('vert')}</small>` : null;
         if (seen.includes(r.id)) {
-          return html`<li class="rolerow rolerow--done" key=${r.id}><span class="rolerow__n">${i + 1}</span><${Avatar} id=${r.avatar} size="sm" /><span class="rolerow__name">${r.name}${tag}</span><span class="rolerow__state">✓ Sett</span></li>`;
+          return html`<li class="rolerow rolerow--done" key=${r.id}><span class="rolerow__n">${i + 1}</span><${Avatar} id=${r.avatar} size="sm" /><span class="rolerow__name">${r.name}${tag}</span><span class="rolerow__state">${t('✓ Sett')}</span></li>`;
         }
         if (now && r.id === now.id) {
           return html`<li class="rolerow rolerow--strip" key=${r.id} ref=${activeRef}>
@@ -270,17 +274,17 @@ export function CarRoles({ view }) {
             <${TableStrip} key=${r.id} row=${r} impostors=${count} onRelease=${released(r)} lockMs=${HANDOVER_LOCK_MS} />
           </li>`;
         }
-        return html`<li class="rolerow rolerow--wait" key=${r.id}><span class="rolerow__n">${i + 1}</span><${Avatar} id=${r.avatar} size="sm" /><span class="rolerow__name">${r.name}${tag}</span><span class="rolerow__state">Venter</span></li>`;
+        return html`<li class="rolerow rolerow--wait" key=${r.id}><span class="rolerow__n">${i + 1}</span><${Avatar} id=${r.avatar} size="sm" /><span class="rolerow__name">${r.name}${tag}</span><span class="rolerow__state">${t('Venter')}</span></li>`;
       })}
     </ol>
     ${handTo &&
     html`<section class="card card--yellow handover" role="status">
       <${Avatar} id=${handTo.avatar} size="sm" />
-      <p>Gi telefonen til <strong>${handTo.name}</strong></p>
+      <p>${rich(t('Gi telefonen til {name}'), { name: html`<strong>${handTo.name}</strong>` })}</p>
     </section>`}
     <div class="dock">
-      <p class="small muted dock__count" role="status">${seen.length} av ${table.length} har sett rollen sin</p>
-      <${Button} block variant=${done ? 'lime' : undefined} disabled=${!done} onClick=${() => actions.begin()}>${done ? 'Vis spørsmålet' : 'Alle har sett rollen sin'}</${Button}>
+      <p class="small muted dock__count" role="status">${t('{seen} av {total} har sett rollen sin', { seen: seen.length, total: table.length })}</p>
+      <${Button} block variant=${done ? 'lime' : undefined} disabled=${!done} onClick=${() => actions.begin()}>${done ? t('Vis spørsmålet') : t('Alle har sett rollen sin')}</${Button}>
     </div>
   </main>`;
 }

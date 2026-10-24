@@ -3,6 +3,7 @@
 
 import { html, useState } from '../vendor/htm-preact.js';
 import { actions } from '../net.js';
+import { t } from '../i18n/lang.js';
 import { isP2P } from '../settings.js';
 import { setStore, saveSession, useStore } from '../store.js';
 import { Button } from '../ui.js';
@@ -24,10 +25,10 @@ export function RejoinCard() {
     setGone(true);
   };
   return html`<div class="card card--yellow rejoin rise-in" role="status">
-    <p><strong>Du var med i spillet ${last.code}${last.name ? ` som ${last.name}` : ''}.</strong></p>
+    <p><strong>${last.name ? t('Du var med i spillet {code} som {name}.', { code: last.code, name: last.name }) : t('Du var med i spillet {code}.', { code: last.code })}</strong></p>
     <div class="row row--center">
-      <${Button} size="small" variant="lime" onClick=${back}>Hopp inn igjen</${Button}>
-      <${Button} variant="text" onClick=${no}>Nei takk</${Button}>
+      <${Button} size="small" variant="lime" onClick=${back}>${t('Hopp inn igjen')}</${Button}>
+      <${Button} variant="text" onClick=${no}>${t('Nei takk')}</${Button}>
     </div>
   </div>`;
 }
