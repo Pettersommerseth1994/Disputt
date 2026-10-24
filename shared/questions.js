@@ -179,7 +179,7 @@ export const QUESTIONS = [
   // behind Marqués de Nombrevilla (1 038 717), which is not among the options: hence "av disse", which is right either way.
   {
     id: 'vinmonopolet-liter',
-    text: 'Hvilket av disse selger Vinmonopolet mest av i liter?',
+    text: 'Hvilket av disse solgte Vinmonopolet mest av i liter i 2025?',
     options: ['Falling Feather (rødvin)', 'Dworek Vodka', 'Jägermeister', 'Baileys'],
     correct: 0,
   },
@@ -262,7 +262,7 @@ export const QUESTIONS = [
   // ---- More in the same style: kropp og verdensrom
   { id: 'bein', text: 'Hvor mange bein har en voksen person?', options: ['106', '156', '206', '256'], correct: 2 },
   { id: 'blodtype', text: 'Hvilken blodtype er universell giver?', options: ['A positiv', 'AB positiv', 'O negativ', 'B negativ'], correct: 2 },
-  { id: 'maaner', text: 'Hvilken planet har flest kjente måner?', options: ['Saturn', 'Jupiter', 'Uranus', 'Neptun'], correct: 0 },
+  { id: 'maaner', text: 'Hvilken planet har flest kjente måner per 2026?', options: ['Saturn', 'Jupiter', 'Uranus', 'Neptun'], correct: 0 },
   // ---- Sammenligninger: høyde, vekt, drektighet, levealder, areal, økonomi, fødsel og død, innbyggere
   // (two of the four options are close on purpose, so it is mostly a choice between two)
   { id: 'putin-hoyde', text: 'Hvor høy er Vladimir Putin?', options: ['160 cm', '165 cm', '170 cm', '175 cm'], correct: 2 },
@@ -400,7 +400,7 @@ export const QUESTIONS = [
   },
   {
     id: 'bil-flest-merke',
-    text: 'Hvilket bilmerke produserer flest biler i året?',
+    text: 'Hvilket bilkonsern produserer flest biler i året?',
     options: ['Ford', 'Toyota', 'Volkswagen', 'Hyundai'],
     correct: 1,
   },
@@ -424,13 +424,13 @@ export const QUESTIONS = [
   },
   {
     id: 'okonomi-europa',
-    text: 'Hvilket av disse landene har størst økonomi?',
+    text: 'Hvilket av disse landene har størst økonomi (nominelt BNP)?',
     options: ['Italia', 'Storbritannia', 'Tyskland', 'Frankrike'],
     correct: 2,
   },
   {
     id: 'okonomi-norden',
-    text: 'Hvilket nordisk land har størst økonomi?',
+    text: 'Hvilket nordisk land har størst økonomi (nominelt BNP)?',
     options: ['Sverige', 'Norge', 'Finland', 'Danmark'],
     correct: 0,
   },
@@ -496,25 +496,25 @@ export const QUESTIONS = [
   },
   {
     id: 'by-flest-istanbul',
-    text: 'Hvilken av disse byene har flest innbyggere?',
+    text: 'Hvilken av disse byene har flest innbyggere i selve byen?',
     options: ['London', 'Moskva', 'Paris', 'Istanbul'],
     correct: 3,
   },
   {
     id: 'by-flest-berlin',
-    text: 'Hvilken av disse EU-byene har flest innbyggere?',
+    text: 'Hvilken av disse EU-byene har flest innbyggere i selve byen?',
     options: ['Roma', 'Berlin', 'Paris', 'Madrid'],
     correct: 1,
   },
   {
     id: 'by-flest-hamburg',
-    text: 'Hvilken av disse europeiske byene har flest innbyggere?',
+    text: 'Hvilken europeisk by har flest innbyggere i selve byen?',
     options: ['Hamburg', 'Milano', 'München', 'Barcelona'],
     correct: 0,
   },
   {
     id: 'by-flest-toronto',
-    text: 'Hvilken av disse byene i Nord-Amerika har flest innbyggere?',
+    text: 'Hvilken nordamerikansk by har flest innbyggere i selve byen?',
     options: ['Houston', 'Montréal', 'Toronto', 'Chicago'],
     correct: 2,
   },
@@ -528,7 +528,7 @@ export const QUESTIONS = [
   },
   {
     id: 'vinter-ol-gull',
-    text: 'Hvem har vunnet flest gullmedaljer i vinter-OL?',
+    text: 'Hvem har vunnet flest gullmedaljer i vinter-OL per 2026?',
     options: ['Ole Einar Bjørndalen', 'Bjørn Dæhlie', 'Marit Bjørgen', 'Johannes Høsflot Klæbo'],
     correct: 3,
   },
@@ -540,7 +540,7 @@ export const QUESTIONS = [
   },
   {
     id: 'rekord-100m',
-    text: 'Hva er verdensrekorden på 100 meter for menn?',
+    text: 'Hva er verdensrekorden på 100 meter for menn per 2026?',
     options: ['9,48 sek', '9,58 sek', '9,69 sek', '9,79 sek'],
     correct: 1,
   },
@@ -564,7 +564,7 @@ export const QUESTIONS = [
   },
   {
     id: 'grand-slam',
-    text: 'Hvem har vunnet flest grand slam-titler blant herrene?',
+    text: 'Hvem har vunnet flest grand slam-titler blant herrene per 2026?',
     options: ['Pete Sampras', 'Rafael Nadal', 'Roger Federer', 'Novak Djokovic'],
     correct: 3,
   },
