@@ -1,5 +1,5 @@
-// The first step of the host's set-up: how to play. The same game two ways: everybody on ONE phone, the host's (bilturmodus, two to five
-// players), or a phone each (hytteturmodus, two to ten). Nothing exists yet while this is on the screen: the game is made when the host goes
+// The first step of the host's set-up: how to play. The same game two ways: a phone each (hytteturmodus, two to ten, the first card), or everybody on
+// ONE phone, the host's (bilturmodus, two to five players). Nothing exists yet while this is on the screen: the game is made when the host goes
 // on (net.js: actions.create(mode)), and "back" is simply the start screen.
 // (A file of its own: pages are cached for ten minutes, and a module that imports something an older cached copy of another
 // module does not have would not load.)
@@ -16,8 +16,8 @@ import { CAR_SEGMENTS } from './steps-count.js';
 
 // (`players`: a car holds five, a phone each is ten: LIMITS.maxPlayersCar and LIMITS.maxPlayers in shared/game.js)
 export const MODES = [
-  { id: 'car', title: tx('Bilturmodus'), text: tx('Alle spiller på 1 telefon, som sendes rundt.'), art: 'bil', blob: 'blob-6', players: tx('2-5 deltakere') },
   { id: 'cabin', title: tx('Hytteturmodus'), text: tx('Alle spiller på sin egen telefon.'), art: 'hytte', blob: 'blob-4', players: tx('2-10 deltakere') },
+  { id: 'car', title: tx('Bilturmodus'), text: tx('Alle spiller på 1 telefon, som sendes rundt.'), art: 'bil', blob: 'blob-6', players: tx('2-5 deltakere') },
 ];
 
 /**

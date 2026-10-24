@@ -569,8 +569,8 @@
   transform: rotate(-3deg);
 }
 .logo-sticker img { width: min(62vw, 15rem); height: auto; }
-.logo-sticker--sm { padding: 0.45rem 1rem 0.6rem; box-shadow: 0 4px 0 var(--yellow-deep), 0 4px 0 1px var(--edge); }
-.logo-sticker--sm img { width: 6.4rem; }
+.logo-sticker--sm { padding: 0.36rem 0.8rem 0.48rem; box-shadow: 0 3px 0 var(--yellow-deep), 0 3px 0 1px var(--edge); } /* (20 % smaller than it was: 0.45 / 1 / 0.6 rem and 6.4 rem) */
+.logo-sticker--sm img { width: 5.12rem; }
 /* the logo as a button (the lobby: back to the start screen) */
 .logo-sticker--button { border: 0; cursor: pointer; font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; transition: transform var(--dur-1) var(--ease-bounce), box-shadow var(--dur-1) ease; }
 .logo-sticker--button:active { transform: translateY(3px) rotate(-3deg); box-shadow: 0 1px 0 var(--yellow-deep), 0 1px 0 1px var(--edge); }

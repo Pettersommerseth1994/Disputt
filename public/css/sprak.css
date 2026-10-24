@@ -14,7 +14,11 @@
   box-shadow: 0 0 0 2px rgb(var(--ink-rgb) / 0.55);
   line-height: 0;
 }
+.lang-flag { position: relative; }
 .lang-flag svg { display: block; width: 100%; height: 100%; }
+/* a thin dark rim over the edge of the flag: the white arms of the cross end against the cream card and the edge would otherwise run into it */
+.lang-flag::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1.5px rgb(var(--ink-rgb) / 0.8); pointer-events: none; }
+.lang-flag--round::after { box-shadow: inset 0 0 0 3px rgb(var(--ink-rgb) / 0.8); }
 .lang-flag--round { width: 4.4rem; aspect-ratio: 1; border-radius: 50%; box-shadow: 0 0 0 3px var(--cream), 0 0 0 5px rgb(var(--ink-rgb) / 0.55), 0 5px 0 5px var(--edge); }
 
 /* the dimmed page behind the card (over the sheets, under the connection banner and the toast) */
@@ -77,11 +81,11 @@
   box-shadow: var(--shadow-1);
 }
 
-/* the little flag on the start screen that opens the card again */
+/* the little flag on the start screen (at the right) that opens the card again */
 .lang-chip {
   position: fixed;
   top: calc(var(--mantra-total, 0px) + 0.4rem);
-  left: 0.5rem;
+  right: 0.5rem;
   z-index: 40;
   display: inline-flex;
   align-items: center;
