@@ -174,7 +174,7 @@ export const QUESTIONS = [
     correct: 3,
   },
   { id: 'gutenberg', text: 'Rundt hvilket år fant Gutenberg opp boktrykkerkunsten?', options: ['1450', '1540', '1630', '1720'], correct: 0 },
-  { id: 'ekvator-storst', text: 'Hva er det største landet ekvator krysser?', options: ['DR Kongo', 'Brasil', 'India', 'Colombia'], correct: 1 },
+  { id: 'ekvator-storst', text: 'Hva er det største landet (i areal) ekvator krysser?', options: ['DR Kongo', 'Brasil', 'India', 'Colombia'], correct: 1 },
   // The card says that Falling Feather is what Vinmonopolet sells most of. In 2025 it came second (1 004 058 litres), just
   // behind Marqués de Nombrevilla (1 038 717), which is not among the options: hence "av disse", which is right either way.
   {
@@ -358,43 +358,43 @@ export const QUESTIONS = [
   },
   {
     id: 'storst-argentina',
-    text: 'Hvilket land har størst areal av disse?',
+    text: 'Hvilket land er størst i areal av disse?',
     options: ['Argentina', 'Kasakhstan', 'DR Kongo', 'Algerie'],
     correct: 0,
   },
   {
     id: 'storst-mexico',
-    text: 'Hvilket av disse landene dekker størst areal?',
+    text: 'Hvilket av disse landene er størst i areal?',
     options: ['Iran', 'Indonesia', 'Peru', 'Mexico'],
     correct: 3,
   },
   {
     id: 'storst-frankrike',
-    text: 'Hvilket av disse europeiske landene er størst?',
+    text: 'Hvilket av disse europeiske landene er størst i areal?',
     options: ['Tyskland', 'Sverige', 'Frankrike', 'Spania'],
     correct: 2,
   },
   {
     id: 'minst-vatikan',
-    text: 'Hvilket av disse landene er minst?',
+    text: 'Hvilket av disse landene er minst i areal?',
     options: ['Vatikanstaten', 'Liechtenstein', 'Monaco', 'San Marino'],
     correct: 0,
   },
   {
     id: 'minst-nauru',
-    text: 'Hvilket land har minst areal av disse?',
+    text: 'Hvilket land er minst i areal av disse?',
     options: ['Nauru', 'Maldivene', 'Marshalløyene', 'Tuvalu'],
     correct: 0,
   },
   {
     id: 'minst-maldivene',
-    text: 'Hvilket av disse landene har minst landareal?',
+    text: 'I landareal: hvilket av disse landene er minst?',
     options: ['Malta', 'Luxembourg', 'Maldivene', 'Barbados'],
     correct: 2,
   },
   {
     id: 'minst-sanmarino',
-    text: 'Hvilket av disse europeiske landene er minst?',
+    text: 'Hvilket av disse europeiske landene er minst i areal?',
     options: ['San Marino', 'Liechtenstein', 'Andorra', 'Malta'],
     correct: 0,
   },
