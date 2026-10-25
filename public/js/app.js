@@ -18,11 +18,12 @@ import { FasitSheet } from './screens/fasit.js';
 import { AccessSheet, LoginSheet, Paywall, ThanksSheet } from './screens/pay.js';
 import { HostSheet, QrSheet, RulesSheet, ScoresSheet, SettingsSheet } from './screens/sheets.js';
 import { isP2P } from './settings.js';
+import { useSlowConnect } from './slowconnect.js';
 import { useStore } from './store.js';
 import { Button, useWakeLock } from './ui.js';
 
-// Two failed attempts in a row (about 30 s): most likely a network that does not let phones talk to each other directly.
-const STUCK_HINT = tx('Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.');
+// Ten seconds on the connecting screen (slowconnect.js), or two failed attempts in a row: most likely a network that does not let phones talk to each other directly.
+const STUCK_HINT = tx('Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Hjelper ikke det: be verten skru av Wi‑Fi og bruke bare mobildata (5G). Noen nett slipper ikke telefoner i direkte kontakt med hverandre.');
 
 function gameScreen(view, s) {
   if (view.mode === 'car') return carScreen(view, s); // everybody on one phone (screens/car.js)
@@ -79,7 +80,10 @@ export function App() {
   // ... and what the mantra's bubble goes away for: a new screen under it (the same things, and the packages)
   const screenKey = [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep, s.paywall].join('|');
 
-  const hint = isP2P && s.stuck >= 2 ? t(STUCK_HINT) : null;
+  // a guest who is on the way in (a game being joined, or their own game being found again): no game on screen yet, and not the host making one
+  const connecting = isP2P && !s.replaced && !view && !s.seats && !s.creating && (Boolean(s.session) || Boolean(s.joining) || s.route.page === 'join');
+  const slow = useSlowConnect(connecting);
+  const hint = isP2P && (s.stuck >= 2 || slow) ? t(STUCK_HINT) : null;
   let screen;
   let onHome = false; // the start screen: the little flag of the language is on it
   if (s.replaced) screen = html`<${Replaced} />`;

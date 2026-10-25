@@ -1,6 +1,6 @@
 // A guest whose line to the host never comes up (the host is known to the introduction service but never answers,
 // like a network that blocks direct phone-to-phone traffic) must be told what to try instead of staring at a spinner.
-//   node tools/qa/stuck.mjs [--shots]        (takes about 40 s: the hint appears after two failed 15 s attempts)
+//   node tools/qa/stuck.mjs [--shots]        (takes about 20 s: the hint appears after ten seconds of waiting)
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
@@ -32,12 +32,12 @@ try {
   await page.waitForFunction(() => /Blir med i ZZZZ/.test(document.body.innerText), { timeout: 10000 });
 
   const started = Date.now();
-  await sleep(10000);
+  await sleep(5000);
   assert.doesNotMatch(await text(), /Får ikke kontakt ennå/, 'no hint after the first few seconds');
-  await page.waitForFunction(() => /Får ikke kontakt ennå/.test(document.body.innerText), { timeout: 60000 });
+  await page.waitForFunction(() => /Får ikke kontakt ennå/.test(document.body.innerText), { timeout: 30000 });
   const seconds = (Date.now() - started) / 1000;
-  assert.ok(seconds > 25, `the hint waits for two failed attempts (it appeared after ${seconds.toFixed(0)} s)`);
-  assert.match(await text(), /Wi‑Fi og mobildata/);
+  assert.ok(seconds > 8 && seconds < 14, `the hint comes after ten seconds of waiting (it appeared after ${seconds.toFixed(1)} s)`);
+  assert.match(await text(), /be verten skru av Wi‑Fi og bruke bare mobildata/);
   console.log(`hint shown after ${seconds.toFixed(0)} s`);
   if (process.argv.includes('--shots')) {
     fs.mkdirSync('tmp', { recursive: true });

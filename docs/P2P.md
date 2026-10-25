@@ -32,7 +32,7 @@ Koden ligger i [`public/js/p2p/`](../public/js/p2p) (`host.js`, `guest.js`, `ada
 | En gjest mister nettleserdataene sine | Hen åpner lenken igjen, velger seg selv under «Var du med før?» og tar over plassen (med poengene). |
 | Noen vil bli med i et spill som allerede har startet | Det går an: hen velger navn, avatar og poengene hen kommer inn med (0 er standard), venter ut runden som pågår og spiller fra neste runde. Blir de seks, er to imposterer. |
 | En gjest forsvinner brått (batteri, tunnel) | Verten markerer hen som frakoblet etter ca. 35 s uten ping, og plassen kan overtas. |
-| En gjest får ikke koblet til (verten er funnet, men nettet slipper ikke telefonene i direkte kontakt) | Hen prøver på nytt hvert femtende sekund. Etter to mislykkede forsøk (ca. 30 s) står det et råd på skjermen: sjekk at verten har siden åpen, og bytt mellom Wi‑Fi og mobildata. |
+| En gjest får ikke koblet til (verten er funnet, men nettet slipper ikke telefonene i direkte kontakt) | Hen prøver på nytt hvert femtende sekund. Etter ti sekunder på «Blir med …»-skjermen (`public/js/slowconnect.js`; også etter to mislykkede forsøk på rad) står det et råd på skjermen: sjekk at verten har siden åpen, og be verten skru av Wi‑Fi og bruke bare mobildata (5G). |
 | Verten låser skjermen en stund, eller bytter mellom Wi‑Fi og mobildata | Når siden er synlig igjen (eller nettleseren sier «online») åpner verten en ny forbindelse til megleren, for den gamle kan være død uten at noen vet det, og da ville nye gjester få «fant ikke spillet». Åpne kanaler til gjestene røres ikke. |
 | En gjest er på «Hopp inn i spillet»-skjermen og mister linjen til verten | Siden kobler seg til igjen av seg selv, så trykket på plassen virker når linjen er tilbake. |
 | Megleren (`0.peerjs.com`) er nede | Nye spill og innmeldinger feiler. Pågående spill fortsetter (kanalene er direkte). |
@@ -69,7 +69,7 @@ npm run pages:build            # bygger dist/ (som GitHub Pages)
 npm run pages:preview          # bygger og serverer dist/ på http://localhost:8080
 npm run play:p2p -- 4 2        # UI-test: 4 «telefoner» spiller til 2 poeng over WebRTC
 npm run play:live              # samme test mot den publiserte siden (ekte megler og tidtakere)
-npm run qa:stuck               # gjest uten linje til verten får rådet «bytt mellom Wi‑Fi og mobildata»
+npm run qa:stuck               # gjest uten linje til verten får rådet «be verten skru av Wi‑Fi og bruke bare mobildata»
 npm run qa:signalling          # kontakten med meglertjenesten faller ut, verten våkner, plassvelgeren mister linjen: alt kommer seg
 npm run qa:hostile             # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn
 npm run play:subpath           # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages

@@ -60,8 +60,8 @@ export default {
   'Spillet er avsluttet.': 'Spillet er afsluttet.',
   'Fant ikke spillet ditt igjen. Start et nytt eller skann koden på nytt.': 'Vi kunne ikke finde dit spil igen. Start et nyt eller scan koden igen.',
   // ---- the app shell (app.js)
-  'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Det hjelper ofte å bytte mellom Wi‑Fi og mobildata, for noen nett slipper ikke telefoner i direkte kontakt med hverandre.':
-    'Ingen kontakt endnu. Tjek, at værten har Disputt åbent og skærmen tændt. Det hjælper ofte at skifte mellem Wi‑Fi og mobildata, for nogle net lader ikke telefoner komme i direkte kontakt med hinanden.',
+  'Får ikke kontakt ennå. Sjekk at verten har Disputt åpent og skjermen våken. Hjelper ikke det: be verten skru av Wi‑Fi og bruke bare mobildata (5G). Noen nett slipper ikke telefoner i direkte kontakt med hverandre.':
+    'Ingen kontakt endnu. Tjek, at værten har Disputt åbent og skærmen tændt. Hjælper det ikke: bed værten slå Wi‑Fi fra og kun bruge mobildata (5G). Nogle net lader ikke telefoner komme i direkte kontakt med hinanden.',
   'Spillet er åpnet et annet sted': 'Spillet er åbnet et andet sted',
   'Du har Disputt åpent i en annen fane eller på en annen enhet. Last inn siden på nytt for å bruke denne i stedet.': 'Du har Disputt åbent i en anden fane eller på en anden enhed. Indlæs siden igen for at bruge denne i stedet.',
   'Last inn på nytt': 'Indlæs igen',
