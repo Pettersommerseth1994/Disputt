@@ -22,6 +22,8 @@
 //   POST /vipps/webhook                           Vipps says that a payment was authorized, aborted or has expired (signed)
 //   POST /vipps/admin/webhook   (Bearer ADMIN_TOKEN)  registers that webhook at Vipps (once, and again if it is ever lost)
 //   GET  /vipps/admin/check     (Bearer ADMIN_TOKEN)  tries every connection (Vipps, Shopify, the prices) and says what works
+//   GET  /turn            { iceServers }          short-lived access to Cloudflare's relay (TURN) for phones that cannot reach each other directly (docs/P2P.md,
+//                                                 «Relé»); an empty list while the relay is not set up, and then the game goes on without it
 //   GET  /health                                  { ok, provider, mode: "test" | "live", site, shop, set, vipps, hooks }   (to check the set-up and to see
 //                                                 what became of the last calls from Shopify and Vipps; no secrets, no names, no order numbers)
 //
@@ -41,6 +43,8 @@
 //   VARIANT_WEEKEND         text     the variant id of the weekend product (72 hours); until it is set, the weekend is not offered
 //   VARIANT_LIFETIME        text     no longer for sale; may stay set so that orders of it that are paid later still count, or be left out
 //   ACCEPT_TEST_ORDERS      text     optional: "true" while testing with Shopify's test mode, so that test orders count. Never in live use.
+//   TURN_KEY_ID             text     the relay: the key's id (Cloudflare dashboard > Realtime > TURN Server). Optional.
+//   TURN_KEY_API_TOKEN      secret   the relay: the key's API token, made together with it. Optional. Both, or the relay stays off.
 // ... and for the button «Betal med Vipps» (all of them, or the button stays hidden; docs/VIPPS.md):
 //   VIPPS_ENABLED           text     "true" shows the button. Everything below must be set too.
 //   VIPPS_ENV               text     "test" (Vipps' test environment, and the orders in Shopify are test orders) or "live" (the default)
@@ -1223,7 +1227,43 @@ async function health(env) {
       /* none to show */
     }
   }
-  return { ok: true, provider: 'shopify', mode: testOrders(env) ? 'test' : 'live', site: siteUrl(env).href, shop: shopUrl, set, vipps, hooks };
+  const turn = isSet(env, 'TURN_KEY_ID') && isSet(env, 'TURN_KEY_API_TOKEN'); // (the relay: true when the two are set; /turn says whether the key works)
+  return { ok: true, provider: 'shopify', mode: testOrders(env) ? 'test' : 'live', site: siteUrl(env).href, shop: shopUrl, set, vipps, turn, hooks };
+}
+
+// ------------------------------------------------------------------------------------------------ the relay (TURN)
+
+// Two phones that cannot reach each other directly (two phones on the same home Wi-Fi often cannot, and some networks never let them) use a
+// relay: Cloudflare's TURN service sends their traffic (encrypted between the phones) through itself. The page asks for short-lived access
+// here, and the key to the service stays in this Worker. A relay that is not set up (TURN_KEY_ID, TURN_KEY_API_TOKEN) is an empty list, and the
+// game goes on as before. What is handed out is good for a day and is handed out again for half an hour (it has hours left).
+const TURN_TTL = 24 * 3600; // seconds
+const TURN_KEPT = 30 * 60_000; // milliseconds
+let turnKept = null;
+
+async function turnEndpoint(env) {
+  const id = clean(env.TURN_KEY_ID);
+  const token = clean(env.TURN_KEY_API_TOKEN);
+  if (!id || !token) return { iceServers: [] };
+  if (turnKept && turnKept.id === id && Date.now() - turnKept.at < TURN_KEPT) return { iceServers: turnKept.servers };
+  const base = clean(env.TURN_API_URL).replace(/\/+$/, '') || 'https://rtc.live.cloudflare.com';
+  let res = null;
+  // (Cloudflare has two paths for the same thing: the newer one returns a list that is ready to use; the older one an object)
+  for (const path of ['generate-ice-servers', 'generate']) {
+    res = await fetch(`${base}/v1/turn/keys/${encodeURIComponent(id)}/credentials/${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ttl: TURN_TTL }),
+    }).catch(() => null);
+    if (res && res.status !== 404) break;
+  }
+  if (!res || !res.ok) throw new HttpError(502, 'turn_failed', 'Releet svarte ikke.', res ? `status ${res.status}` : 'no answer');
+  const data = await res.json().catch(() => null);
+  const list = Array.isArray(data?.iceServers) ? data.iceServers : data?.iceServers ? [data.iceServers] : [];
+  const servers = list.filter((server) => server && (Array.isArray(server.urls) ? server.urls.length : server.urls)).map(({ urls, username, credential }) => ({ urls, ...(username ? { username, credential } : {}) }));
+  if (!servers.some((server) => server.credential)) throw new HttpError(502, 'turn_failed', 'Releet ga ingen tilgang.', 'no credential in the answer');
+  turnKept = { id, at: Date.now(), servers };
+  return { iceServers: servers };
 }
 
 // ------------------------------------------------------------------------------------------------ routing and CORS
@@ -1259,6 +1299,7 @@ async function route(request, env) {
 
   if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/health')) return json(200, await health(env), request, env);
   if (request.method === 'GET' && url.pathname === '/shop') return json(200, shop(env), request, env);
+  if (request.method === 'GET' && url.pathname === '/turn') return json(200, await turnEndpoint(env), request, env);
   if (request.method === 'POST' && url.pathname === '/restore') return json(200, await restore(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/shopify/webhook') return json(200, await webhook(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/discount') return json(200, await discountEndpoint(request, env), request, env);

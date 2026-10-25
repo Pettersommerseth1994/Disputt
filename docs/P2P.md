@@ -39,7 +39,7 @@ Koden ligger i [`public/js/p2p/`](../public/js/p2p) (`host.js`, `guest.js`, `ada
 
 ## Begrensninger
 
-- **Nettverk.** Direkte tilkobling krever at telefonene finner en vei til hverandre. STUN-serverne fikser det på de fleste hjemmenett og mobilnett, men ikke alle: strenge bedriftsnett og noen mobiloperatører (symmetrisk NAT) slipper ikke gjennom. Da blir en gjest stående på «Blir med …». Det hjelper å legge til en TURN-server (under), bytte til Wi‑Fi, eller bruke servermodus ([DEPLOY.md](DEPLOY.md)).
+- **Nettverk.** Direkte tilkobling krever at telefonene finner en vei til hverandre. STUN-serverne fikser det på de fleste hjemmenett og mobilnett, men ikke alle: strenge bedriftsnett og noen mobiloperatører (symmetrisk NAT) slipper ikke gjennom. Da blir en gjest stående på «Blir med …». Også to telefoner på samme hjemme-Wi‑Fi kan miste hverandre (ruteren slipper ikke trafikken gjennom via den offentlige adressen): da hjelper det at verten går over til mobildata. Det varige svaret er et relé (TURN, under), eller servermodus ([DEPLOY.md](DEPLOY.md)).
 - **Verten er serveren.** Alt står og faller med vertens telefon og at siden hennes er åpen.
 - **Hvem som helst med romkoden kan prøve seg.** Verten avviser kanaler av feil type, lukker tilkoblinger som ikke sier noe i løpet av ca. 15–20 s, og slipper alltid ekte spillere til foran slike tilkoblinger (`public/js/p2p/pool.js`, testet av `npm run qa:hostile`). Den som kjenner koden kan også ta over en *frakoblet* plass fra «Spillet har startet»-skjermen, siden en telefon som har mistet nettleserdataene ikke har noen hemmelighet å vise frem. Alle de andre får et varsel når det skjer, og den som tok over slipper plassen sin fra før. Blir dette et problem i vennegjengen, er neste steg at verten må godkjenne overtakelser.
 - **Fusk er mulig.** Verten kan i prinsippet lese alt (spørsmål, hvem som er imposter) med utviklerverktøy, og spørsmålsbanken ligger i den offentlige koden. Det passer for venner, ikke for konkurranser. Servermodus har ikke dette problemet.
@@ -60,7 +60,17 @@ Siden bygges av [`tools/pages/build.mjs`](../tools/pages/build.mjs), som skriver
 
 Etter å ha satt en variabel: Actions → **Pages** → *Run workflow* (eller push en endring).
 
-Gratis TURN finnes (f.eks. fra Metered eller Cloudflare), men krever en konto hos dem, så det har jeg ikke satt opp.
+### Relé (TURN) hos Cloudflare
+
+To telefoner på samme hjemme-Wi‑Fi finner ofte ikke hverandre direkte (ruteren slipper dem ikke gjennom via den offentlige adressen), og noen nett slipper aldri gjennom. Da sender et relé trafikken videre. Spillet bruker Cloudflares TURN-tjeneste, og bare når direkte kontakt ikke går (ICE velger den direkte veien først). Betalings-Workeren (`payments/worker-shopify.js`) deler ut tilgang som varer et døgn: `GET /turn` → `{ iceServers }`. Nøkkelen blir i Workeren; siden henter listen når den åpnes (`public/js/p2p/ice.js`, adressen er `/turn` hos betalingsserveren, eller `turnUrl` i `config.js`). Mangler nøkkelen, er listen tom, og alt er som før. Står ikke betalingsserveren i oppsettet (`config.payments`), brukes ikke noe relé.
+
+Oppsett (to innstillinger i Workeren, ingen endring i siden):
+
+1. Cloudflare-dashbordet → **Realtime** → **TURN Server** → opprett en nøkkel. Noter nøkkel-ID og API-token (token vises bare én gang).
+2. Workeren → **Settings → Variables and Secrets**: `TURN_KEY_ID` (tekst) og `TURN_KEY_API_TOKEN` (hemmelighet). Lim inn den nye `worker-shopify.js` og deploy.
+3. Sjekk: `<workeren>/health` har `"turn": true`, og `<workeren>/turn` viser en liste med `turn:turn.cloudflare.com …` og et brukernavn og passord.
+
+Pris: 0,05 USD per GB, med 1 000 GB gratis i måneden (delt med Cloudflares andre sanntidstjenester); et spill bruker svært lite. Nøkkelen kan slettes i dashbordet når som helst.
 
 ## Utvikling og testing
 

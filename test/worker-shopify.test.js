@@ -42,6 +42,7 @@ describe('health', () => {
         waiting: 0,
         stuck: 0,
       },
+      turn: false, // (the relay: not set up here, test/turn.test.js is about it)
       hooks: [],
     });
     const text = JSON.stringify(r.body);

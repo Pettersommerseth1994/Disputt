@@ -13,7 +13,10 @@ function resolve() {
     if (q.has('peerHost')) {
       config.peer = { host: q.get('peerHost'), port: Number(q.get('peerPort') || 9000), path: q.get('peerPath') || '/peerjs', secure: q.get('peerSecure') === '1' };
     }
-    if (q.get('ice') === 'none') config.iceServers = [];
+    if (q.get('ice') === 'none') {
+      config.iceServers = [];
+      config.noRelay = true;
+    }
   }
   return config;
 }

@@ -1,5 +1,6 @@
 // Loading PeerJS and talking to the signalling server. Peer-to-peer mode only.
 import { asset } from '../paths.js';
+import { withRelay } from './ice.js';
 
 /** Peer ids are "disputt1-<room code>" for hosts, "disputt1-g-<random>" for guests (the 1 is the protocol version). */
 export const PEER_PREFIX = 'disputt1-';
@@ -26,9 +27,10 @@ export function loadPeer() {
 export const peerOptions = (config) => ({ ...config.peer, config: { iceServers: config.iceServers }, debug: 1 });
 
 /** Registers `id` with the signalling server. Rejects with kind 'taken' (id in use) or 'offline' (no contact). */
-export function openPeer(Peer, id, config, timeoutMs = 12000) {
+export async function openPeer(Peer, id, config, timeoutMs = 12000) {
+  const withServers = await withRelay(config); // (the relay's servers on top of the list: only if the payment server has one set up, and never for long)
   return new Promise((resolve, reject) => {
-    const peer = new Peer(id, peerOptions(config));
+    const peer = new Peer(id, peerOptions(withServers));
     const fail = (err, kind) => {
       clearTimeout(timer);
       try {

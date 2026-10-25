@@ -188,11 +188,11 @@ try {
   assert.match(await bodyText(host), /Hvordan vil dere spille\?/);
   const modeCards = await host.page.$$eval('.mode', (els) => els.map((el) => el.innerText.replace(/\s+/g, ' ').trim()));
   assert.equal(modeCards.length, 2, 'two ways to play');
-  assert.match(modeCards[0], /Bilturmodus.*Alle spiller på 1 telefon, som sendes rundt\./, 'the first card is the car');
-  assert.match(modeCards[1], /Hytteturmodus.*Alle spiller på sin egen telefon\./, 'the second card is the cabin');
-  // (how many each takes: five in a car, ten with a phone each; and nothing about where it is perfect)
-  assert.ok(modeCards[0].includes('2-5 deltakere') && !/Perfekt/.test(modeCards[0]), `the car says that it takes two to five (${modeCards[0]})`);
-  assert.ok(modeCards[1].includes('2-10 deltakere') && !/Perfekt/.test(modeCards[1]), `the cabin says that it takes two to ten (${modeCards[1]})`);
+  assert.match(modeCards[0], /Hytteturmodus.*Alle spiller på sin egen telefon\./, 'the first card is the cabin');
+  assert.match(modeCards[1], /Bilturmodus.*Alle spiller på 1 telefon, som sendes rundt\./, 'the second card is the car');
+  // (how many each takes: ten with a phone each, five in a car; and nothing about where it is perfect)
+  assert.ok(modeCards[0].includes('2-10 deltakere') && !/Perfekt/.test(modeCards[0]), `the cabin says that it takes two to ten (${modeCards[0]})`);
+  assert.ok(modeCards[1].includes('2-5 deltakere') && !/Perfekt/.test(modeCards[1]), `the car says that it takes two to five (${modeCards[1]})`);
   assert.equal(await host.page.$$eval('.mode .mode__art', (els) => els.length), 2, 'each card has its picture');
   assert.equal(await host.page.$$eval('.mode .mode__pic .spark, .mode .mode__pic img[src*="star"], .mode .mode__pic img[src*="sparkle"]', (els) => els.length), 0, 'and no stars');
   assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), true, 'Neste waits for a way to play');

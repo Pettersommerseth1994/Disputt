@@ -89,7 +89,7 @@ function screensFor(fixtures) {
       'mode-step-chosen',
       async () => {
         await put({ modeStep: true });
-        await page.evaluate(() => document.querySelector('.mode').click());
+        await page.evaluate(() => document.querySelector('.mode--bil').click());
       },
     ],
     [

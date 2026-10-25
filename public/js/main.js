@@ -2,6 +2,7 @@ import { App } from './app.js';
 import { actions, connect, dropSession, reconnectNow } from './net.js';
 import { asset } from './paths.js';
 import { initPayments, handlePaymentReturn } from './pay/payments.js';
+import { prefetchRelay } from './p2p/ice.js';
 import { initShop, setKnownShop } from './pay/shop.js';
 import { config, isP2P } from './settings.js';
 import { html, render } from './vendor/htm-preact.js';
@@ -27,6 +28,9 @@ initPayments(config.payments)
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && reconnectNow());
 window.addEventListener('online', reconnectNow);
 window.addEventListener('pageshow', (e) => e.persisted && reconnectNow());
+
+// The relay for phones that cannot reach each other directly: asked for now, so that it is there when a game is made or joined (p2p/ice.js).
+if (isP2P) prefetchRelay(config);
 
 // Only our own Node server has /api/info (LAN addresses for the QR code). Static hosting does not.
 if (!isP2P && !config.serverUrl) {
