@@ -2,7 +2,7 @@
 
 > **Diskuter, manipuler og vinn.**
 
-Disputt er et sosialt bløff- og diskusjonsspill for **2–10 spillere**, og det kan spilles på to måter, med de samme reglene: **Hytteturmodus**, der alle spiller på sin egen telefon, samlet i samme rom (2–10 spillere), og **Bilturmodus**, der 2–5 spillere deler *én* telefon, vertens, som sendes rundt (f.eks. på en biltur). I begge er det alltid en eller flere imposterer, og gruppa må bli enige om riktig svar. Én av dere er imposter (to hvis dere er seks eller flere) og vet svaret på spørsmålet. De andre må finne ut hva som er riktig, uten å bli lurt.
+Disputt er et sosialt bløff- og diskusjonsspill for **2–10 spillere**, og det kan spilles på to måter, med de samme reglene: **På hver sin telefon**, der alle spiller på sin egen telefon, samlet i samme rom (2–10 spillere), og **På én telefon**, der 2–10 spillere deler *én* telefon, vertens, som sendes rundt (f.eks. på en biltur). I begge er det alltid en eller flere imposterer, og gruppa må bli enige om riktig svar. Én av dere er imposter (to hvis dere er seks eller flere) og vet svaret på spørsmålet. De andre må finne ut hva som er riktig, uten å bli lurt.
 
 Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden. I Hytteturmodus skanner de andre en QR-kode (eller får lenken sendt med «Del lenke»); i Bilturmodus trengs bare vertens telefon.
 
@@ -10,7 +10,7 @@ Spillet er *mobile first*, uten kontoer og uten app: verten åpner nettsiden. I 
 
 ### Test med venner (fra hvilket som helst nett)
 
-1. **Verten** åpner lenken over, trykker *Opprett spill* og går gjennom fire steg: hvordan dere vil spille (*Bilturmodus* eller *Hytteturmodus*), navn og avatar, hvor mange poeng man spiller til, og så invitasjonen. I Bilturmodus er det tre steg (modus, alle navnene, poeng), og det siste starter spillet. I Hytteturmodus trykker de andre *Bli med i spill* og skriver koden (eller skanner QR-koden).
+1. **Verten** åpner lenken over, trykker *Opprett spill* og går gjennom fem steg: hvordan dere vil spille (*På én telefon* eller *På hver sin telefon*), «Er du klar?» (Sofie: det er alltid en eller flere impostere, og dere må bli enige om riktig svar), navn og avatar, hvor mange poeng man spiller til, og så invitasjonen. På én telefon er det fire steg (modus, «Er du klar?», alle navnene, poeng), og det siste starter spillet. På hver sin telefon trykker de andre *Bli med i spill* og skriver koden (eller skanner QR-koden).
 2. De andre **skanner QR-koden** på vertens skjerm, eller verten trykker *Del lenke* og sender den i en chat. Man kan også gå til siden og skrive den firebokstavers koden.
 3. Verten trykker *Start Disputt* når alle er med (minst to). I Bilturmodus heter knappen *Start spillet*.
 
@@ -30,8 +30,8 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 
 ### To måter å spille på
 
-- **Hytteturmodus** (en telefon hver) er spillet slik det er beskrevet over.
-- **Bilturmodus** (2 til 5 spillere på én telefon, vertens): verten legger inn alle navnene i steg 2, «Hvem spiller?». Fem er det flest som får plass i en bil, så listen stopper der, og det er aldri to imposterer. Den øverste er verten, og verten leser alltid spørsmålet. Hver runde begynner med at telefonen sendes rundt: en liste med navnene nedover, der bare den som står for tur har «Hold for å se» (den samme stripen som i Hytteturmodus, med knappen til høyre og rollen til venstre mens den holdes). Slipper man, er rollen borte og turen går videre («Gi telefonen til …»). Når alle har sett rollen sin, gir de telefonen tilbake til verten, som trykker «Vis spørsmålet». Resten er som i Hytteturmodus, på vertens telefon. Glemt rollen din? «Se rolle» i stripen øverst åpner «Se rolle igjen»: trykk på navnet ditt og hold inne knappen. Et spill på én telefon bruker ikke nettverket, så det kan spilles uten dekning (i Hytteturmodus er verten fortsatt «serveren»).
+- **På hver sin telefon** (Hytteturmodus inni koden) er spillet slik det er beskrevet over.
+- **På én telefon** (Bilturmodus inni koden, 2 til 10 spillere, vertens telefon): verten legger inn alle navnene i steg 2, «Hvem spiller?». Ti er det flest som får plass (som på hver sin telefon), og fra seks spillere er det to impostere, som får vite hvem den andre er. Den øverste er verten, og verten leser alltid spørsmålet. Hver runde begynner med at telefonen sendes rundt: en liste med navnene nedover, der bare den som står for tur har «Hold for å se» (den samme stripen som i Hytteturmodus, med knappen til høyre og rollen til venstre mens den holdes). Slipper man, er rollen borte og turen går videre («Gi telefonen til …»). Når alle har sett rollen sin, gir de telefonen tilbake til verten, som trykker «Vis spørsmålet». Resten er som i Hytteturmodus, på vertens telefon. Glemt rollen din? «Se rolle» i stripen øverst åpner «Se rolle igjen»: trykk på navnet ditt og hold inne knappen. Et spill på én telefon bruker ikke nettverket, så det kan spilles uten dekning (i Hytteturmodus er verten fortsatt «serveren»).
 - **Betaling og tid er de samme i begge:** tre runder gratis, så pakkene, og ca. 6 minutter per poeng.
 - **Med to spillere** er en runde én av tre, like sannsynlige: den første er imposter, den andre er imposter, eller ingen er imposter (da får begge 1 poeng hvis dere svarer riktig, og ingen hvis dere svarer feil). Ellers ville den ene alltid visst hvem imposteren var. Rollen din sier ikke om den andre er imposter, og avsløringen ser lik ut i alle tre. Fra tre spillere er det alltid en imposter.
 
@@ -69,7 +69,7 @@ Terminalen skriver ut to adresser. Åpne **adressen merket «På mobilen (Wi‑F
 
 ## Betaling (av som standard)
 
-Spillet er gratis. Koden kan også ta betalt, men det er **slått av** helt til to variabler settes på GitHub: tre pakker bare verten kjøper (**En kveld** 149 kr, **En helg** 199 kr, **For ett år** 299 kr; «Livstid» selges ikke lenger), en betalingsmur etter tre gratis runder, betaling med **Vipps, Apple Pay eller kort** i en Shopify-butikk som åpner seg i en ny fane (eller hos Stripe), ingen innlogging på forsiden (etter de gratis rundene velger verten «Jeg har tilgang» og skriver inn koden fra e-posten, eller «Kjøp tilgang»). Betalingsserveren er én Cloudflare Worker: [`payments/worker-shopify.js`](payments/worker-shopify.js) (med en liten D1-database) for Shopify, og [`payments/worker.js`](payments/worker.js), som ikke lagrer noe, for Stripe. **Oppsettet, steg for steg: [docs/SHOPIFY.md](docs/SHOPIFY.md)** (Stripe: [docs/BETALING.md](docs/BETALING.md)). Som et tillegg til Shopify finnes en oransje knapp **Betal med Vipps** som går rett til Vipps og lager ordren i Shopify etterpå, også av som standard: [docs/VIPPS.md](docs/VIPPS.md).
+Spillet er gratis. Koden kan også ta betalt, men det er **slått av** helt til to variabler settes på GitHub: tre pakker bare verten kjøper (**En kveld** 149 kr, **En helg** 199 kr, **For ett år** 299 kr; «Livstid» selges ikke lenger), en betalingsmur etter tre gratis runder, betaling med **Vipps, Apple Pay eller kort** i en Shopify-butikk som åpner seg i en ny fane (eller hos Stripe), ingen innlogging på forsiden (etter de gratis rundene kommer pakkene med «Er du allerede kunde? Logg inn» under, der verten skriver inn koden fra e-posten). Betalingsserveren er én Cloudflare Worker: [`payments/worker-shopify.js`](payments/worker-shopify.js) (med en liten D1-database) for Shopify, og [`payments/worker.js`](payments/worker.js), som ikke lagrer noe, for Stripe. **Oppsettet, steg for steg: [docs/SHOPIFY.md](docs/SHOPIFY.md)** (Stripe: [docs/BETALING.md](docs/BETALING.md)). Som et tillegg til Shopify finnes en oransje knapp **Betal med Vipps** som går rett til Vipps og lager ordren i Shopify etterpå, også av som standard: [docs/VIPPS.md](docs/VIPPS.md).
 
 ## Designsystem
 
@@ -122,7 +122,7 @@ npm run qa:stuck       # en gjest som ikke får linje til verten får et råd p�
 npm run qa:signalling  # kontakten med meglertjenesten faller ut (også midt i et spill), verten våkner, plassvelgeren mister linjen: alt kommer seg
 npm run qa:hostile     # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn (ca. 30 s)
 npm run play:subpath   # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages
-npm run play:pay       # med betaling: valget «Jeg har tilgang» / «Kjøp tilgang» og pakkene etter runde 3, avbrutt og gjennomført betaling hos en falsk Stripe, runde 4, kjøp uten spill og innlogging på en ny telefon
+npm run play:pay       # med betaling: pakkene etter runde 3 (med «Logg inn» under), avbrutt og gjennomført betaling hos en falsk Stripe, runde 4, kjøp uten spill og innlogging på en ny telefon
 npm run play:pay-slow  # det samme, men verten er borte i 75 s mens han betaler: gjestene må vente på ham
 npm run play:pay-shopify  # med betaling i en falsk Shopify-butikk som åpner seg i en ny fane: lukket og åpnet igjen, avbrutt, sent varsel, gjennomført, kjøp uten spill og innlogging på en ny telefon
 npm run play:pay-shopify-slow  # det samme, men verten er borte i 75 s

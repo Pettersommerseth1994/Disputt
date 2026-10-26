@@ -28,17 +28,10 @@ export default {
   'Til forsiden': 'Till startsidan',
 
   // hvordan vil dere spille
-  'Bilturmodus': 'Bilresa-läge',
-  'Alle spiller på 1 telefon, som sendes rundt.': 'Alla spelar på 1 telefon, som skickas runt.',
-  '2-5 deltakere': '2-5 deltagare',
-  'Hytteturmodus': 'Stugläge',
   'Alle spiller på sin egen telefon.': 'Alla spelar på sin egen telefon.',
   '2-10 deltakere': '2-10 deltagare',
   'Hvordan vil dere spille?': 'Hur vill ni spela?',
   'Spillmodus': 'Spelläge',
-  'Likt i begge': 'Lika i båda',
-  'Det er alltid en eller flere impostere.': 'Det finns alltid en eller flera impostorer.',
-  'Dere må bli enige om riktig svar.': 'Ni måste bli överens om rätt svar.',
   'Neste': 'Nästa',
 
   // tilbake i spillet / sent inn
@@ -142,4 +135,25 @@ export default {
 
   // impostors.js
   '{names} og {last}': '{names} och {last}',
+
+  // ready.js («Er du klar?»)
+  'Er du klar?': 'Är du redo?',
+  'Hei, jeg er Sofie! To små ting før dere starter.': 'Hej, jag är Sofie! Två små saker innan ni startar.',
+  'Blant dere gjemmer det seg {mark} en imposter. Kanskje to.': 'Bland er gömmer sig {mark} en impostor. Kanske två.',
+  'alltid': 'alltid',
+  'Imposteren vil lure dere, så dere {mark} om riktig svar.': 'Impostorn vill lura er, så ni {mark} om rätt svar.',
+  'må bli enige': 'måste bli överens',
+  'Jeg har skjønt at det alltid er en eller flere impostere blant oss.': 'Jag har förstått att det alltid finns en eller flera impostorer bland oss.',
+  'Jeg har skjønt at vi må bli enige om riktig svar.': 'Jag har förstått att vi måste bli överens om rätt svar.',
+  'Trykk for å ta det tilbake': 'Tryck för att ta tillbaka det',
+  'Sofie skriver': 'Sofie skriver',
+  'Da er dere klare!': 'Då är ni redo!',
+  'Trykk Neste.': 'Tryck Nästa.',
+
+  // mode.js («Hvordan vil dere spille?»)
+  'På én telefon': 'På en telefon',
+  'Én telefon som sendes rundt mellom dere.': 'En telefon som skickas runt mellan er.',
+  'Passer best for bilturen': 'Passar bäst för bilresan',
+  'På hver sin telefon': 'På varsin telefon',
+  'Passer best for hytteturen': 'Passar bäst för stugresan',
 };

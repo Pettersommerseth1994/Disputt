@@ -11,7 +11,7 @@ import { cx } from '../util.js';
 import { formatCodeInput, isActive, normalizeCode } from '../pay/pass.js';
 import { requestNextRound } from '../pay/gate.js';
 import { forgetPass, restoreWithCode, startCheckout } from '../pay/payments.js';
-import { DEFAULT_PLAN, PERKS, describeValidity, formatPrice, planById } from '../pay/plans.js';
+import { DEFAULT_PLAN, describeValidity, formatPrice, planById } from '../pay/plans.js';
 import { dealFor, kr } from '../pay/discount.js';
 import { DiscountField } from './discount.js';
 import { ShopDock } from './shoppay.js';
@@ -60,8 +60,6 @@ const planName = (id) => {
   return plan ? t(plan.name) : '';
 };
 
-const Check = () => html`<svg class="perk__check" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>`;
-
 // ------------------------------------------------------------------------------------------------ the packages
 
 function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
@@ -70,7 +68,7 @@ function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
     <span class="plan__radio" aria-hidden="true"></span>
     <span class="plan__main">
       <span class="plan__name">${t(plan.name)}</span>
-      <span class="plan__sub">${t(plan.length)}</span>
+      <span class="plan__sub">${t(plan.length)}<span class="plan__nr">${t('Fornyes ikke')}</span></span>
     </span>
     ${deal
       ? html`<span class="plan__price plan__price--deal"><s class="plan__was">${formatPrice(plan.price)}</s><span>${kr(deal.now)}</span></span>`
@@ -97,21 +95,8 @@ export function Paywall({ view = null }) {
     addEventListener('pageshow', reset);
     return () => removeEventListener('pageshow', reset);
   }, []);
-  const chosen = planById(plan);
   const have = isActive(s.pass);
   const gate = Boolean(view?.you?.isHost) && view.round >= pay.freeRounds && !have;
-  // after the free rounds the host first says whether there is access already (the code) or whether to buy it; the packages are the second step
-  // (a payment that is waited for, and the packages opened from «Min tilgang» or «Pakker», go straight to the packages)
-  // (`payStage`: only the QA tools set it, to draw the packages without a tap. It is only the first step: giving up a payment that was waited for
-  // leaves the host at the packages, where the host was.)
-  const [stage, setStage] = useState(s.payStage ?? (gate && !s.payWaiting ? 'choose' : 'buy'));
-  const qaStage = useRef(s.payStage);
-  useEffect(() => {
-    if (qaStage.current === s.payStage) return;
-    qaStage.current = s.payStage;
-    setStage(s.payStage ?? (gate ? 'choose' : 'buy'));
-  }, [s.payStage]);
-  const choose = gate && stage === 'choose';
   const go = async (method) => {
     setBusy(method);
     setError('');
@@ -125,26 +110,8 @@ export function Paywall({ view = null }) {
   const label = { vipps: 'Vipps', applepay: 'Apple Pay' };
   const terms = [pay.termsUrl && [tx('Vilkår'), pay.termsUrl], pay.privacyUrl && [tx('Personvern'), pay.privacyUrl]].filter(Boolean);
 
-  if (choose) {
-    return html`<main class="screen paywall paywall--choose">
-      <div class="paywall__top"><${Button} variant="text" onClick=${() => setStore({ paywall: false })}>${t('‹ Tilbake')}</${Button}></div>
-      <header class="stack stack--tight">
-        <p class="eyebrow">${view.round <= pay.freeRounds ? t('Dere har spilt {rounds} gratis', { rounds: rounds(view.round) }) : t('Dere har spilt {rounds}', { rounds: rounds(view.round) })}</p>
-        <h1 class="setup__title rise-in">${t('Fortsett quizen')}</h1>
-        <p class="lead muted">${t('Verten betaler én gang, så kan alle spille videre.')}</p>
-      </header>
-      <div class="grow stack stack--loose paywall__choices">
-        <${Button} block variant="cream" class="paywall__choice" onClick=${() => setStore({ sheet: 'login' })}>
-          <span>${t('Jeg har tilgang')}</span><small>${t('Skriv inn koden din')}</small>
-        </${Button}>
-        <${Button} block class="paywall__choice" data-qa="buy" onClick=${() => setStage('buy')}>
-          <span>${t('Kjøp tilgang')}</span><small>${t('Se pakkene og betal')}</small>
-        </${Button}>
-      </div>
-    </main>`;
-  }
   return html`<main class="screen paywall">
-    <div class="paywall__top"><${Button} variant="text" onClick=${() => (gate ? setStage('choose') : setStore({ paywall: false }))}>${t('‹ Tilbake')}</${Button}></div>
+    <div class="paywall__top"><${Button} variant="text" onClick=${() => setStore({ paywall: false })}>${t('‹ Tilbake')}</${Button}></div>
     <header class="stack stack--tight">
       <p class="eyebrow">${gate ? (view.round <= pay.freeRounds ? t('Dere har spilt {rounds} gratis', { rounds: rounds(view.round) }) : t('Dere har spilt {rounds}', { rounds: rounds(view.round) })) : t('For verter')}</p>
       <h1 class="setup__title rise-in">${gate ? t('Fortsett quizen') : t('Pakker')}</h1>
@@ -153,25 +120,17 @@ export function Paywall({ view = null }) {
 
     ${have && html`<p class="chip chip--yellow paywall__have" role="status">${t('Du har tilgang: {plan} · {validity}', { plan: planName(s.pass.plan), validity: describeValidity(s.pass) })}</p>`}
 
+    ${pay.provider === 'shopify' && html`<${DiscountField} plan=${plan} />`}
+
     <div class="plans" role="radiogroup" aria-label=${t('Velg pakke')}>
       ${offered.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} deal=${dealFor(s.discount, p.id)} onSelect=${setPlan} />`)}
     </div>
-    <p class="small muted center plans__detail" aria-live="polite">${t(chosen.detail)}</p>
-    ${pay.provider === 'shopify' && html`<${DiscountField} plan=${plan} />`}
-
-    <section class="card stack stack--tight perks">
-      <h3>${t('Dette får du')}</h3>
-      <ul class="perks__list">
-        ${PERKS.map(([title, text]) => html`<li key=${title}><${Check} /><span><strong>${t(title)}</strong><small>${t(text)}</small></span></li>`)}
-      </ul>
-    </section>
+    <p class="center paywall__customer"><span class="muted">${t('Er du allerede kunde?')}</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}></p>
 
     <p class="small muted center paywall__fine">
       ${t('Engangsbetaling inkl. mva, ingen abonnement.')}${terms.length > 0 && ' '}
       ${terms.map(([name, href], i) => html`${i > 0 && ' · '}<a href=${href} target="_blank" rel="noopener">${t(name)}</a>`)}
     </p>
-    <p class="center"><span class="muted">${t('Allerede kunde?')}</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}></p>
-
     <div class="dock">
       ${pay.provider === 'shopify'
         ? html`<${ShopDock} plan=${plan} />`
@@ -189,12 +148,16 @@ export function Paywall({ view = null }) {
 
 /** A customer with a code from a receipt gets their pass back. There are no accounts: the code is the login. */
 export function LoginSheet() {
-  const shopify = useStore().payments?.provider === 'shopify';
-  const [typed, setTyped] = useState('');
+  const s = useStore();
+  const shopify = s.payments?.provider === 'shopify';
+  const [typed, setTyped] = useState(s.loginCode ?? ''); // (a code that was typed in the discount field by mistake is brought along)
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const field = useRef(null);
-  useEffect(() => field.current?.focus(), []);
+  useEffect(() => {
+    field.current?.focus();
+    if (s.loginCode) setStore({ loginCode: null });
+  }, []);
   const valid = normalizeCode(typed) !== null;
   const submit = async (e) => {
     e.preventDefault();

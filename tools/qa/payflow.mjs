@@ -21,7 +21,7 @@ const choosePlan = (p, id) => p.page.evaluate((plan) => document.querySelector(`
 export async function checkHome(t, phone) {
   await t.waitText(phone, /Reglene, kort fortalt/);
   const text = await t.bodyText(phone);
-  assert.doesNotMatch(text, /Allerede kunde|Logg inn/, 'there is no login on the start screen: «Jeg har tilgang» comes after the free rounds');
+  assert.doesNotMatch(text, /Allerede kunde|Logg inn/, 'there is no login on the start screen: «Logg inn» stands under the packages');
   assert.match(text, /Opprett spill/);
 }
 
@@ -47,25 +47,24 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
-  // first the choice: access that is there already (the code), or buy it
-  const choice = await bodyText(host);
-  assert.match(choice, /Dere har spilt tre runder gratis/);
-  assert.match(choice, /Jeg har tilgang/);
-  assert.match(choice, /Kjøp tilgang/);
-  assert.doesNotMatch(choice, /En kveld|Betal med/, 'the packages come after the choice');
-  await shot(host, '19-paywall-choice');
-  await clickButton(host, 'Jeg har tilgang');
+  // straight to the packages (no choice first); «Logg inn» for a host who has bought before stands under them
+  await waitText(host, /En kveld/);
+  const first0 = await bodyText(host);
+  assert.doesNotMatch(first0, /Jeg har tilgang|Kjøp tilgang/, 'no choice before the packages');
+  assert.doesNotMatch(first0, /Dette får du|Gjelder i 12 timer fra du betaler/, 'and no long text under the packages');
+  assert.match(first0, /Er du allerede kunde\?\s*Logg inn/);
+  await clickButton(host, 'Logg inn');
   await waitText(host, /Skriv inn koden du fikk da du betalte/);
   await clickButton(host, 'Har du ikke kjøpt ennå? Se pakkene');
   await waitText(host, /Fortsett quizen/);
-  await clickButton(host, 'Kjøp tilgang');
   await waitText(host, /En kveld/);
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt tre runder gratis/);
   for (const [name, price] of [['En kveld', 149], ['En helg', 199], ['For ett år', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Betal med Vipps/);
   assert.match(paywall, /Betal med Apple Pay/);
-  assert.match(paywall, /Allerede kunde\?/);
+  assert.match(paywall, /Er du allerede kunde\?/);
+  assert.equal((paywall.match(/(12 timer|72 timer|12 måneder)\s*Fornyes ikke/g) ?? []).length, 3, '«Fornyes ikke» stands by the length of every package');
   await shot(host, '20-paywall');
   for (const p of others) {
     const text = await bodyText(p);
@@ -77,7 +76,7 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
 
   // 1) "En kveld" with Apple Pay, and a change of mind on Stripe's page
   await choosePlan(host, 'evening');
-  await waitText(host, /Gjelder i 12 timer fra du betaler/);
+  await waitText(host, /12 timer\s*Fornyes ikke/);
   await clickButton(host, 'Betal med Apple Pay');
   await onStripe(host);
   const first = lastSession(stack);
@@ -100,7 +99,6 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   // 2) "En helg" with Vipps, paid
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
-  await clickButton(host, 'Kjøp tilgang');
   await waitText(host, /En kveld/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /En kveld/, 'the evening is the package that is chosen from the start');
   await choosePlan(host, 'weekend');

@@ -74,13 +74,13 @@ describe('the places where the rules are told', () => {
     assert.doesNotMatch(read('public/css/regler.css'), /rg__switch|rg__text|rgS--how/);
   });
 
-  it('end the set-up of Bilturmodus at the points, which starts the game (three steps, no «Klar? Slik funker det»)', () => {
+  it('end the set-up of Bilturmodus at the points, which starts the game (four steps with «Er du klar?», no «Klar? Slik funker det»)', () => {
     const car = read('public/js/screens/car.js');
     const setup = read('public/js/screens/setup.js');
     assert.doesNotMatch(car, /HowStep|Klar\? Slik funker det/);
-    assert.match(read('public/js/screens/steps-count.js'), /export const CAR_SEGMENTS = 3;/);
+    assert.match(read('public/js/screens/steps-count.js'), /export const CAR_SEGMENTS = 4;/);
     assert.match(setup, /Start spillet/, 'the last step of the car has that button');
-    assert.match(car, /<\$\{Steps\} current=\$\{2\} total=\$\{CAR_SEGMENTS\}/, 'and the bar before it counts three');
+    assert.match(car, /<\$\{Steps\} current=\$\{3\} total=\$\{CAR_SEGMENTS\}/, 'and the bar before it counts four');
   });
 });
 

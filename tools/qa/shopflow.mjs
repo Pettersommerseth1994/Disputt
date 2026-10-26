@@ -40,7 +40,6 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
-  await clickButton(host, 'Kjøp tilgang'); // (first the choice between «Jeg har tilgang» and «Kjøp tilgang»: see payflow.mjs)
   await waitText(host, /En kveld/);
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt tre runder gratis/);
@@ -63,7 +62,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
 
   // 1) "En kveld": the box, the button, a new tab; the tab is closed without paying, opened again, and the host gives up
   await choosePlan(host, 'evening');
-  await waitText(host, /Gjelder i 12 timer fra du betaler/);
+  await waitText(host, /12 timer\s*Fornyes ikke/);
   await tick(host);
   assert.equal((await button(host, 'Betal med kort')).disabled, false, 'ticked: the button is on');
   const pagesBefore = (await host.ctx.pages()).length;

@@ -1,0 +1,178 @@
+/* The first step of the set-up: «Hvordan vil dere spille?». Two wide cards one above the other (screens/mode.js): a huge phone with a «1» that swings between two avatars,
+   or four phones that each have an avatar and light up in turn. (A style sheet of its own that mode.js loads itself.) Everything here starts with .mc-. */
+
+.mc-root { gap: var(--s-3); }
+.mc-card { font: inherit; }
+.mc-root button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+.mc-stack { display: flex; flex-direction: column; gap: var(--s-3); }
+
+/* ---- shared parts ----------------------------------------------------------------------------------------------------------------------------- */
+.mc-chip {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.12rem 0.75rem 0.18rem;
+  border-radius: var(--r-pill);
+  font-weight: 800;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--cream);
+  background: var(--burgundy-600);
+  box-shadow: 0 2px 0 var(--edge);
+  transform: rotate(-3deg);
+}
+.mc-check { flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--cream); box-shadow: inset 0 0 0 3px rgb(var(--ink-rgb) / 0.3); transition: transform var(--dur-2) var(--ease-bounce); }
+.is-chosen .mc-check {
+  box-shadow: 0 2px 0 var(--edge);
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fae025' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.6 4.6L19 7'/%3E%3C/svg%3E") center / 80% no-repeat;
+  animation: pop var(--dur-3) var(--ease-bounce);
+}
+.mc-corner { position: absolute; top: -7px; right: -5px; z-index: 4; box-shadow: 0 2px 0 var(--edge), inset 0 0 0 3px rgb(var(--ink-rgb) / 0.3); }
+.is-chosen .mc-corner { box-shadow: 0 2px 0 var(--edge); }
+.mc-inner { position: absolute; top: 9px; right: 9px; z-index: 4; }
+.mc-pic__chip { position: absolute; left: 10px; top: 11px; z-index: 3; }
+.mc-pic__check { position: absolute; top: 10px; right: 10px; z-index: 3; }
+
+.mc-artdot { flex: none; width: auto; height: 1.55rem; }
+.mc-hint { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; font-size: 0.9rem; line-height: 1.15; }
+.mc-title { font-size: 1.55rem; line-height: 1.08; overflow-wrap: anywhere; }
+.mc-text { font-weight: 600; font-size: 0.92rem; line-height: 1.28; }
+.mc-body { display: grid; gap: 2px; min-width: 0; text-align: left; }
+
+/* a card: the cream «poster» of screens.css (.mode); the chosen one is yellow */
+.mc-card {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-card);
+  text-align: left;
+  color: var(--ink);
+  background: var(--tex-grain), var(--cream);
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-2) var(--ease-bounce), box-shadow var(--dur-1), background-color var(--dur-2), opacity var(--dur-2);
+}
+.mc-card--each { border-radius: 30px 24px 32px 26px / 24px 30px 26px 32px; }
+.mc-card.is-chosen {
+  background: var(--tex-grain), var(--tex-light), var(--yellow);
+  transform: translateY(3px) rotate(-0.3deg);
+  box-shadow: 0 3px 0 var(--yellow-deep), 0 3px 0 1px var(--edge);
+}
+.mc-card--one { --panel: var(--blue-light); }
+.mc-card--each { --panel: var(--pink-pale); }
+.mc-card.is-other { opacity: 0.92; }
+
+/* ---- the picture: a coloured patch with a pale blob behind the phones ----------------------------------------------------------------------- */
+.mc-pic {
+  --avs: 2.4rem;
+  position: relative;
+  display: block;
+  min-width: 0;
+  border-radius: 20px 26px 22px 28px / 26px 20px 28px 22px;
+  background: var(--tex-grain), var(--tex-light), var(--panel);
+  overflow: hidden;
+}
+.mc-pic__blob { position: absolute; left: 50%; top: 50%; width: auto; max-width: 66%; height: 88%; transform: translate(-50%, -50%); opacity: 0.7; transition: opacity var(--dur-3); }
+.mc-one, .mc-many { position: absolute; inset: 0; display: block; }
+
+/* a crayon phone: a wobbly frame in ink, a screen in colour and a speaker slit. --pw is its width, the height follows */
+.mc-phone {
+  --screen: var(--cream);
+  position: relative;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--pw, 22px);
+  height: calc(var(--pw, 22px) * 1.8);
+  border: calc(2px + var(--pw, 22px) * 0.03) solid var(--ink);
+  border-radius: 24% 21% 25% 22% / 14% 13% 15% 12%;
+  background: var(--tex-grain), var(--screen);
+  box-shadow: 0 calc(2px + var(--pw, 22px) * 0.05) 0 var(--edge);
+  transition: background-color var(--dur-2);
+}
+.mc-phone::before {
+  content: '';
+  position: absolute;
+  top: 4.5%;
+  left: 50%;
+  width: 34%;
+  height: calc(1px + var(--pw, 22px) * 0.045);
+  border-radius: 9px;
+  background: var(--ink);
+  opacity: 0.8;
+  transform: translateX(-50%);
+}
+.mc-phone--lit { --screen: var(--yellow-pale); }
+.mc-digit { font-size: calc(var(--pw) * 0.74); line-height: 1; color: var(--ink); margin-top: 0.1em; }
+
+/* one phone: swings from one side to the other, and the avatar it comes to jumps */
+.mc-one__sway {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: var(--place, center);
+  animation: mc-swing 3.6s ease-in-out infinite;
+}
+.mc-one__av { position: absolute; z-index: 2; display: grid; bottom: var(--avb, 8px); animation: mc-turn 3.6s ease-in-out infinite; }
+.mc-one__av--l { left: var(--avx, 8px); }
+.mc-one__av--r { right: var(--avx, 8px); animation-delay: 1.8s; }
+.mc-one__av .avatar { box-shadow: 0 3px 0 var(--edge); }
+@keyframes mc-swing {
+  0%, 100% { transform: translate(calc(var(--sway, 16%) * -1), var(--drop, 0px)) rotate(-5deg); }
+  50% { transform: translate(var(--sway, 16%), var(--drop, 0px)) rotate(5deg); }
+}
+@keyframes mc-turn { 0%, 22%, 100% { transform: none; } 8% { transform: scale(1.18) rotate(-4deg); } }
+
+/* several phones: they light up one after the other */
+.mc-many { display: flex; align-items: center; justify-content: space-evenly; padding: 0 2%; }
+.mc-many__cell { display: grid; transform: translateY(var(--dy, 0px)) rotate(var(--rot, 0deg)); }
+.mc-many__cell:nth-child(odd) { --dy: -7px; --rot: -5deg; }
+.mc-many__cell:nth-child(even) { --dy: 7px; --rot: 5deg; }
+.mc-many .mc-phone { animation: mc-glow 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * 0.8s); }
+.mc-many .avatar { box-shadow: none; }
+@keyframes mc-glow {
+  0%, 100% { background-color: var(--cream); transform: none; }
+  12%, 30% { background-color: var(--yellow); transform: translateY(-4px); }
+  45% { background-color: var(--cream); transform: none; }
+}
+.is-chosen .mc-one .mc-phone { animation: pulse 0.9s ease-in-out infinite; }
+
+/* the faces and the chip under the cards */
+.mc-crowd { display: flex; align-items: center; justify-content: center; gap: 0.8rem; }
+.mc-crowd__faces { display: flex; }
+.mc-crowd__faces .avatar { margin-left: -0.55rem; }
+.mc-crowd__faces .avatar:first-child { margin-left: 0; }
+
+
+/* ---- the cards: the picture on the left, the words on the right ----------------------------------------------------------------------------------- */
+.mc-root { --pic: clamp(124px, 21dvh, 190px); }
+.mc-card { display: grid; grid-template-columns: minmax(0, 47%) minmax(0, 1fr); gap: 12px; align-items: stretch; padding: 8px 10px 8px 8px; }
+.mc-pic { min-height: var(--pic); --avs: 2.1rem; }
+.mc-one { --pw: calc((var(--pic) - 18px) / 1.8); --sway: 11%; --avx: 4px; --avb: 6px; }
+.mc-many { --pw: min(40px, calc(var(--pic) / 3.4)); justify-content: center; gap: 0; padding: 0; }
+.mc-many__cell { margin-left: -5px; }
+.mc-many__cell:first-child { margin-left: 0; }
+.mc-many__cell:nth-child(1) { --dy: 4px; --rot: -9deg; }
+.mc-many__cell:nth-child(2) { --dy: -5px; --rot: -3deg; }
+.mc-many__cell:nth-child(3) { --dy: -5px; --rot: 3deg; }
+.mc-many__cell:nth-child(4) { --dy: 4px; --rot: 9deg; }
+.mc-body { align-content: center; gap: 4px; }
+.mc-title { font-size: 1.4rem; }
+.mc-text { font-size: 0.88rem; }
+.mc-hint { margin-top: 4px; align-items: center; font-size: 0.82rem; }
+
+/* ---- low screens (a phone with the browser's bars on): tighten what can be tightened ------------------------------------------------------- */
+@media (max-height: 760px) {
+  .mc-root { gap: var(--s-2); }
+  .mc-stack { gap: var(--s-2); }
+  .mc-card { padding: 6px 8px 6px 6px; }
+  .mc-text { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-root *, .mc-root *::before, .mc-root *::after { animation: none !important; }
+}

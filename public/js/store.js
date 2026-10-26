@@ -40,6 +40,9 @@ export const store = {
   route: parseRoute(),
   joining: null, // room code we are trying to join
   modeStep: false, // the host is choosing how to play (screens/mode.js), before any game exists
+  readyStep: false, // the host is on «Er du klar?» (screens/ready.js): after the way to play, before the game is made
+  readyMode: null, // the way to play that was chosen ('car' or 'cabin'), kept while «Er du klar?» is on the screen and when the host goes back to it
+  modeChoice: null, // the card that was chosen on the way to play, so that it is still chosen when the host comes back to it
   creating: false, // p2p: the host is being set up (reserving a room code with the signalling server)
   stuck: 0, // p2p: how many connection attempts in a row failed without ever finding a line to the host
   hostAwayUntil: 0, // p2p guest: the host said it was going away (to pay) and is expected back before this time (ms since 1970)
@@ -56,6 +59,7 @@ export const store = {
   paywall: false, // the packages are on screen (screens/pay.js)
   payBusy: false, // a payment is being checked after Stripe sent the host back
   discount: null, // a discount code the host has taken: { code, summary, plans: { evening: { price, now, vipps }, … } } in øre (pay/discount.js)
+  loginCode: null, // a long code typed in the discount field by mistake: the sheet «Logg inn» is opened with it
   payWaiting: null, // Shopify: the payment this tab is waiting for while the host pays in the other tab, { code, plan, url, at } (pay/shop.js)
   replaced: false, // the same player opened the game in another tab
   info: null, // /api/info (LAN urls etc.)

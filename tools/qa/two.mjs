@@ -10,6 +10,7 @@ import puppeteer from 'puppeteer-core';
 import { QUESTIONS } from '../../shared/questions.js';
 import { startNodeSite, startP2PSite } from './sites.mjs';
 import { quiet } from './quiet.mjs';
+import { passReady } from './ready.mjs';
 
 const flags = process.argv.slice(2).filter((a) => a.startsWith('--'));
 const SUBPATH = flags.includes('--subpath');
@@ -88,15 +89,16 @@ try {
   await host.page.goto(`${base}/`);
   await waitText(host, /Diskuter,?\s+manipuler\s+og\s+vinn/);
   await clickButton(host, 'Opprett spill');
-  await clickButton(host, 'Hytteturmodus');
+  await clickButton(host, 'På hver sin telefon');
   await clickButton(host, 'Neste');
+  await passReady(host.page);
   await register(host, 'Petter', 'Neste');
-  await waitText(host, /Steg 3 av 4/);
+  await waitText(host, /Steg 4 av 5/);
   await host.page.focus('#target');
   await host.page.keyboard.type('99'); // no end in sight: the rounds go on until all three kinds have come up
   await sleep(400);
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 4 av 4/);
+  await waitText(host, /Steg 5 av 5/);
   const code = await host.page.$eval('.lobby__code', (el) => el.textContent.trim());
   assert.match(await bodyText(host), /Vent på 1 spiller til · minst 2/, 'one friend is enough');
   assert.equal((await host.page.$$eval('button', (els) => els.find((b) => b.innerText.includes('Start Disputt')).disabled)), true, 'not before the friend is there');

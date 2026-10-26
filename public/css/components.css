@@ -400,6 +400,7 @@
 .plan__main { flex: 1; min-width: 0; display: grid; gap: 0.1rem; }
 .plan__name { font-family: var(--font-display); font-weight: 900; font-size: 1.4rem; line-height: 1.15; }
 .plan__sub { font-weight: 600; font-size: 0.88rem; line-height: 1.25; opacity: 0.8; }
+.plan__nr::before { content: '•'; margin: 0 0.4em 0 0.5em; }
 /* the badge sits on the card's top edge, so the text inside stays on two short lines */
 .plan__badge { position: absolute; top: -0.65rem; right: 1.1rem; padding: 0.1rem 0.7rem 0.15rem; border-radius: var(--r-pill); font-family: var(--font-text); font-weight: 800; font-size: 0.74rem; line-height: 1.3; color: var(--cream); background: var(--burgundy-600); box-shadow: 0 2px 0 var(--edge); transform: rotate(1.5deg); }
 .plan__price { flex: none; font-family: var(--font-display); font-weight: 900; font-size: 1.55rem; line-height: 1; white-space: nowrap; }
@@ -430,11 +431,6 @@
 .paywait { text-align: center; }
 .paywait__title { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 1.3rem; line-height: 1.2; }
 .paywait .small { margin: 0.2rem 0 0; }
-.perks__list { display: flex; flex-direction: column; gap: var(--s-3); margin: 0; padding: 0; list-style: none; }
-.perks__list li { display: flex; align-items: flex-start; gap: var(--s-3); }
-.perks__list span { display: grid; gap: 0.05rem; min-width: 0; }
-.perks__list small { font-size: 0.85rem; font-weight: 600; line-height: 1.3; opacity: 0.85; }
-.perk__check { flex: none; margin-top: 0.15rem; color: var(--lime); }
 .input--passcode { text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; letter-spacing: 0.1em; text-transform: uppercase; }
 .input--passcode::placeholder { letter-spacing: 0.06em; font-weight: 700; }
 .passcode { margin: 0; font-size: clamp(1.45rem, 6.8vw, 1.85rem); letter-spacing: 0.06em; line-height: 1.1; white-space: nowrap; }
@@ -642,11 +638,14 @@
 .decor { position: absolute; z-index: -1; pointer-events: none; user-select: none; }
 .decor--float { animation: float 7s ease-in-out infinite; }
 
-/* A discount code (screens/discount.js): a line under the packages that opens a field, and a chip with the code once it has been taken. On a package that
+/* A discount code (screens/discount.js): a dashed box with the field open, above the packages, and a chip with the code once it has been taken. On a package that
    gets a lower price, the old price is struck out above the new one. */
 .discount { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s-2) var(--s-3); }
-.discount--form { flex-direction: column; align-items: stretch; }
-.discount--form .field__label { font-size: 1rem; }
+.discount--form { flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: var(--s-2); padding: 0.7rem 0.85rem 0.85rem; border: 2px dashed rgb(var(--cream-rgb) / 0.45); border-radius: var(--r-card); }
+.discount__title { font-size: 1.3rem; line-height: 1.2; }
+.discount__input { text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 1.15rem; background: var(--tex-grain), var(--yellow-pale); }
+.discount__wrong { display: grid; justify-items: start; gap: var(--s-2); padding: 0.55rem 0.75rem; border-radius: var(--r-input); color: var(--ink); background: var(--tex-grain), var(--cream); }
+.discount__wrong p { margin: 0; font-size: 0.9rem; line-height: 1.3; }
 .discount__row { display: flex; align-items: center; gap: var(--s-3); }
 .discount__row .input { flex: 1; min-width: 0; text-transform: uppercase; } /* (the code is written in capitals, the hint is not) */
 .discount__row .input::placeholder { text-transform: none; }

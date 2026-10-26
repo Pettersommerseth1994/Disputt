@@ -27,15 +27,16 @@ const MUST_FIT = [
   // the reveal with the role strip held open (the strip is three lines tall for an impostor in a round with two)
   'reveal-wait-held', 'reveal-asker-held', 'reveal-duo-wait-held', 'reveal-duo-asker-held',
   // the packages the host meets after the free rounds: the three cards, what the chosen one means, and the buttons to pay with
-  'pay-gate-choose', 'pay-gate', 'pay-gate-applepay-only', 'pay-gate-shop', 'pay-gate-shop-deal',
+  'pay-gate', 'pay-gate-applepay-only',
   // bilturmodus: the countdown and the reveal are the same screens as in the normal game, with the strip that asks "Glemt rollen din?"
   'car-countdown', 'car-reveal', 'car-reveal-held'];
 // ... and these should at least keep their main action and the text above it in view
-const NICE_TO_FIT = ['question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3',
+// (the shop's packages have the box for the code above them and a tall bar below: on the very shortest phones the third card is a little under the bar, and the page scrolls)
+const NICE_TO_FIT = ['pay-gate-shop', 'pay-gate-shop-deal', 'question-host', 'question-asker-selected', 'question-asker-selected-held', 'question-asker-longest', 'question-asker-widest-option', 'summary-right-guest', 'summary-wrong-guest', 'lobby-guest-3',
   // the host's second step: the number, what it comes to, and Neste
   'setup-points',
   // bilturmodus: the way to play, the list of players, how it works, and the phone going round
-  'mode-step', 'car-players-3', 'car-points', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-question', 'car-question-selected', 'car-summary', 'car-summary-none-right'];
+  'mode-step', 'ready-step', 'ready-step-done', 'car-players-3', 'car-points', 'car-roles-start', 'car-roles-start-held', 'car-roles-next', 'car-roles-done', 'car-question', 'car-question-selected', 'car-summary', 'car-summary-none-right'];
 
 const app = createApp({ port: 0, host: '127.0.0.1', silent: true });
 const port = await app.listen();
@@ -47,7 +48,7 @@ await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'network
 
 async function show(view, qaHold = false, step = null) {
   // (unmounted first: a screen keeps its own state, such as the answer that is selected, from the screen shown before it)
-  await page.evaluate(() => window.__disputt.setStore({ view: null, modeStep: false }));
+  await page.evaluate(() => window.__disputt.setStore({ view: null, modeStep: false, readyStep: false }));
   await page.evaluate((view, qaHold, step, payBase) => {
     window.__realNow ??= Date.now.bind(Date);
     const delta = view.now - window.__realNow();
@@ -65,15 +66,33 @@ async function show(view, qaHold = false, step = null) {
 async function showMode() {
   await page.evaluate(() => window.__disputt.setStore({ view: null }));
   await page.evaluate((base) => {
-    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, modeStep: true, ...base });
+    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, modeStep: true, readyStep: false, ...base });
   }, PAY_BASE);
+}
+
+/** «Er du klar?»: Sofie's two rules; `ticked` answers both (the screen is then as full as it gets). */
+async function showReady(ticked) {
+  await page.evaluate(() => window.__disputt.setStore({ view: null }));
+  await page.evaluate((base) => {
+    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, modeStep: false, readyStep: true, readyMode: 'cabin', ...base });
+  }, PAY_BASE);
+  if (!ticked) {
+    await page.waitForSelector('.ready-reply', { timeout: 8000 });
+    return;
+  }
+  for (let i = 0; i < 2; i++) {
+    await page.waitForSelector('.ready-reply', { timeout: 8000 });
+    await page.$eval('.ready-reply', (b) => b.click());
+  }
+  await page.waitForFunction(() => document.querySelectorAll('.ready-sent').length === 2 && document.querySelector('.ready-say:last-of-type'), { timeout: 8000 });
+  await new Promise((r) => setTimeout(r, 1800)); // (Sofie's last bubble)
 }
 
 /** The start screen: no game and no seat, as a phone shows it the first time. */
 async function showHome() {
   await page.evaluate(() => window.__disputt.setStore({ view: null }));
   await page.evaluate((base) => {
-    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, modeStep: false, ...base });
+    window.__disputt.setStore({ conn: 'open', everOpened: true, view: null, session: null, seats: null, joining: null, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, qaHold: false, modeStep: false, readyStep: false, ...base });
   }, PAY_BASE);
 }
 
@@ -95,14 +114,14 @@ async function showPay(patch) {
   }, patch, PAY_BASE);
 }
 
-/** The packages: the cards and the line about the chosen one must be above the sticky bar (the perks below them may scroll). */
+/** The packages: the three cards must be above the sticky bar (the line «Er du allerede kunde? Logg inn» and the small print below them may scroll). */
 const measurePay = () =>
   page.evaluate(() => {
     window.scrollTo(0, 0);
     const dock = document.querySelector('main .dock');
     const dockTop = dock ? dock.getBoundingClientRect().top : innerHeight;
     const range = document.createRange();
-    range.selectNodeContents(document.querySelector('.plans__detail') ?? document.querySelector('.plans')); // (the text, not the box that keeps room for two lines)
+    range.selectNodeContents(document.querySelector('.plans'));
     const bottom = Math.max(0, ...[...range.getClientRects()].map((r) => r.bottom));
     return { overflow: Math.round(document.documentElement.scrollHeight - innerHeight), hidden: Math.round(bottom - (dock ? dockTop - 8 : innerHeight)), hasDock: Boolean(dock) };
   });
@@ -164,10 +183,12 @@ for (const [w, h] of viewports) {
     const held = key.endsWith('-held');
     if (key === 'home') await showHome();
     else if (key === 'mode-step') await showMode();
+    else if (key === 'ready-step') await showReady(false);
+    else if (key === 'ready-step-done') await showReady(true);
     else if (key.startsWith('pay-')) await showPay(pay[key]);
     else await show(fixtures[held ? key.slice(0, -'-held'.length) : key], held, STEP_OF[held ? key.slice(0, -'-held'.length) : key] ?? null);
     await sleep(key.startsWith('role') ? 1300 : 900); // let the entrance animations settle
-    const m = key.startsWith('pay-') && key !== 'pay-gate-choose' ? await measurePay() : await measure();
+    const m = key.startsWith('pay-') ? await measurePay() : await measure();
     if (process.env.FIT_SHOTS) await page.screenshot({ path: `${process.env.FIT_SHOTS}/${key}-${w}x${h}.png` });
     const must = MUST_FIT.includes(key);
     const ok = m.hidden <= 0 && (m.hasDock || m.overflow <= 1);

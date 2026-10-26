@@ -1,86 +1,77 @@
-// The first step of the host's set-up: how to play. The same game two ways: a phone each (hytteturmodus, two to ten, the first card), or everybody on
-// ONE phone, the host's (bilturmodus, two to five players). Nothing exists yet while this is on the screen: the game is made when the host goes
-// on (net.js: actions.create(mode)), and "back" is simply the start screen.
-// (A file of its own: pages are cached for ten minutes, and a module that imports something an older cached copy of another
-// module does not have would not load.)
+// The first step of the host's set-up: how to play. The same game two ways, both for two to ten players: on ONE phone, the host's, that is sent round the
+// table (bilturmodus inside: `car`), or a phone each (hytteturmodus inside: `cabin`). Nothing exists yet while this is on the screen: the game is made
+// when the host goes on (net.js: actions.create(mode)), and "back" is simply the start screen.
+// Two wide cards, one above the other: a huge phone with a «1» that swings between two avatars, or four phones that each have an avatar and light up in turn.
+// (A file of its own with a style sheet of its own, css/mode-cards.css, that it loads itself: pages are cached for ten minutes.)
 
-import { html, useEffect, useState } from '../vendor/htm-preact.js';
-import { actions } from '../net.js';
+import { html, useState } from '../vendor/htm-preact.js';
 import { t, tx } from '../i18n/lang.js';
+import { useStylesheet } from '../css-loader.js';
 import { asset } from '../paths.js';
-import { setStore } from '../store.js';
-import { Button, Logo } from '../ui.js';
+import { setStore, store } from '../store.js';
+import { Avatar, Button, Logo } from '../ui.js';
 import { cx } from '../util.js';
 import { Steps } from './setup.js';
 import { CAR_SEGMENTS } from './steps-count.js';
 
-// (`players`: a car holds five, a phone each is ten: LIMITS.maxPlayersCar and LIMITS.maxPlayers in shared/game.js)
 export const MODES = [
-  { id: 'cabin', title: tx('Hytteturmodus'), text: tx('Alle spiller på sin egen telefon.'), art: 'hytte', blob: 'blob-4', players: tx('2-10 deltakere') },
-  { id: 'car', title: tx('Bilturmodus'), text: tx('Alle spiller på 1 telefon, som sendes rundt.'), art: 'bil', blob: 'blob-6', players: tx('2-5 deltakere') },
+  { id: 'car', title: tx('På én telefon'), text: tx('Én telefon som sendes rundt mellom dere.'), hint: tx('Passer best for bilturen'), art: 'bil', blob: 'blob-6' },
+  { id: 'cabin', title: tx('På hver sin telefon'), text: tx('Alle spiller på sin egen telefon.'), hint: tx('Passer best for hytteturen'), art: 'hytte', blob: 'blob-4' },
 ];
 
-/**
- * Now and then one of the two eyes blinks by itself: the id of the card whose eye does it just now, or null. (The blink is drawn in screens.css,
- * from the class mode--blink; right after a tap the chosen card blinks twice on its own, there, with no help from here.) A timer that wakes up
- * every few seconds and a transform for half a second is all it costs. Nothing happens while the page is hidden, and nothing at all for those
- * who have asked for less motion.
- */
-function useBlinks() {
-  const [who, setWho] = useState(null);
-  useEffect(() => {
-    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
-    let timer;
-    function rest() {
-      timer = setTimeout(blink, 3500 + Math.random() * 4500);
-    }
-    function blink() {
-      if (document.hidden) return rest();
-      setWho(MODES[Math.floor(Math.random() * MODES.length)].id);
-      timer = setTimeout(() => {
-        setWho(null);
-        rest();
-      }, 700);
-      return undefined;
-    }
-    rest();
-    return () => clearTimeout(timer);
-  }, []);
-  return who;
+const FACES = ['lime', 'mandarin', 'blabaer', 'leppa', 'sol', 'drue', 'sky', 'kirsebaer'];
+const ONE_FACES = ['mandarin', 'blabaer'];
+const EACH_FACES = ['lime', 'leppa', 'sol', 'drue'];
+
+const Phone = ({ cls, children }) => html`<span class=${cx('mc-phone', cls)} aria-hidden="true">${children}</span>`;
+
+/** One big phone with a «1» that swings between two avatars (the one it comes to jumps), or four phones that each have an avatar and light up in turn. */
+function One() {
+  return html`<span class="mc-one" aria-hidden="true">
+    <span class="mc-one__av mc-one__av--l"><${Avatar} id=${ONE_FACES[0]} style="--size:var(--avs)" /></span>
+    <span class="mc-one__av mc-one__av--r"><${Avatar} id=${ONE_FACES[1]} style="--size:var(--avs)" /></span>
+    <span class="mc-one__sway"><${Phone} cls="mc-phone--lit"><span class="mc-digit display">1</span></${Phone}></span>
+  </span>`;
+}
+function Many() {
+  return html`<span class="mc-many" aria-hidden="true">
+    ${EACH_FACES.map((a, i) => html`<span class="mc-many__cell" key=${a} style=${`--i:${i}`}><${Phone}><${Avatar} id=${a} style="--size:calc(var(--pw) * 0.62)" /></${Phone}></span>`)}
+  </span>`;
 }
 
 export function ModeStep() {
-  const [mode, setMode] = useState(null);
-  const blinking = useBlinks();
+  const ready = useStylesheet(asset('css/mode-cards.css'));
+  const [mode, setMode] = useState(store.modeChoice);
+  if (!ready) return null;
   const back = () => setStore({ modeStep: false });
-  return html`<main class="screen setup">
+  return html`<main class="screen setup mc-root">
     <header class="row row--between">
       <${Logo} small onClick=${back} />
     </header>
     <${Steps} current=${1} total=${mode === 'car' ? CAR_SEGMENTS : undefined} onBack=${back} />
     <h1 class="setup__title rise-in">${t('Hvordan vil dere spille?')}</h1>
-    <div class="modes" role="radiogroup" aria-label=${t('Spillmodus')}>
+    <div class="mc-stack" role="radiogroup" aria-label=${t('Spillmodus')}>
       ${MODES.map(
-        (m) => html`<button type="button" role="radio" class=${cx('mode', `mode--${m.art}`, mode === m.id && 'mode--chosen', blinking === m.id && 'mode--blink')} key=${m.id} aria-checked=${mode === m.id} onClick=${() => setMode(m.id)}>
-          <span class="mode__pic">
-            <img class="mode__blob" src=${asset(`assets/art/${m.blob}.svg`)} alt="" decoding="async" />
-            <img class="mode__art" src=${asset(`assets/art/${m.art}.svg`)} alt="" width="400" height="300" decoding="async" />
-            <span class="mode__chip">${t(m.players)}</span>
-            <span class="mode__check" aria-hidden="true"></span>
+        (m) => html`<button type="button" role="radio" class=${cx('mc-card', `mc-card--${m.id === 'car' ? 'one' : 'each'}`, mode === m.id && 'is-chosen', mode && mode !== m.id && 'is-other')} key=${m.id} aria-checked=${mode === m.id} onClick=${() => setMode(m.id)}>
+          <span class=${cx('mc-pic', `mc-pic--${m.id === 'car' ? 'one' : 'each'}`)} aria-hidden="true">
+            <img class="mc-pic__blob" src=${asset(`assets/art/${m.blob}.svg`)} alt="" decoding="async" />
+            ${m.id === 'car' ? html`<${One} />` : html`<${Many} />`}
           </span>
-          <span class="mode__body">
-            <span class="mode__title display">${t(m.title)}</span>
-            <span class="mode__text">${t(m.text)}</span>
+          <span class="mc-body">
+            <span class="mc-title display">${t(m.title)}</span>
+            <span class="mc-text">${t(m.text)}</span>
+            <span class="mc-hint"><img class="mc-artdot" src=${asset(`assets/art/${m.art}.svg`)} alt="" width="400" height="300" decoding="async" /><span>${t(m.hint)}</span></span>
           </span>
+          <span class="mc-check mc-corner" aria-hidden="true"></span>
         </button>`,
       )}
     </div>
-    <section class="pillars-note" aria-label=${t('Likt i begge')}>
-      <p><b></b>${t('Det er alltid en eller flere impostere.')}</p>
-      <p><b></b>${t('Dere må bli enige om riktig svar.')}</p>
-    </section>
+    <div class="mc-crowd">
+      <span class="mc-crowd__faces" aria-hidden="true">${FACES.map((f) => html`<${Avatar} key=${f} id=${f} size="xs" />`)}</span>
+      <span class="mc-chip">${t('2-10 deltakere')}</span>
+    </div>
     <div class="dock">
-      <${Button} block disabled=${!mode} onClick=${() => actions.create(mode)}>${t('Neste')}</${Button}>
+      <${Button} block disabled=${!mode} onClick=${() => setStore({ modeStep: false, readyStep: true, readyMode: mode, modeChoice: mode })}>${t('Neste')}</${Button}>
     </div>
   </main>`;
 }

@@ -26,6 +26,7 @@ import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
 import { buyAndComeBackVipps, payAfterFreeRoundsVipps, payAfterFreeRoundsVippsApp } from './vippsflow.mjs';
 import { quiet } from './quiet.mjs';
+import { passReady } from './ready.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -182,43 +183,50 @@ try {
   if (PAY || PAY_SHOP) await checkHome({ waitText, bodyText }, host);
   await shot(host, '01-home');
   await clickButton(host, 'Opprett spill');
-  // the host sets the game up in four steps: how to play, who you are, how long to play, and last the invitation
-  await waitText(host, /Steg 1 av 4/);
+  // the host sets the game up in five steps: how to play, are you ready, who you are, how long to play, and last the invitation
+  await waitText(host, /Steg 1 av 5/);
   await shot(host, '01a-setup-1-mode');
   assert.match(await bodyText(host), /Hvordan vil dere spille\?/);
-  const modeCards = await host.page.$$eval('.mode', (els) => els.map((el) => el.innerText.replace(/\s+/g, ' ').trim()));
+  const modeCards = await host.page.$$eval('.mc-card', (els) => els.map((el) => el.innerText.replace(/\s+/g, ' ').trim()));
   assert.equal(modeCards.length, 2, 'two ways to play');
-  assert.match(modeCards[0], /Hytteturmodus.*Alle spiller på sin egen telefon\./, 'the first card is the cabin');
-  assert.match(modeCards[1], /Bilturmodus.*Alle spiller på 1 telefon, som sendes rundt\./, 'the second card is the car');
-  // (how many each takes: ten with a phone each, five in a car; and nothing about where it is perfect)
-  assert.ok(modeCards[0].includes('2-10 deltakere') && !/Perfekt/.test(modeCards[0]), `the cabin says that it takes two to ten (${modeCards[0]})`);
-  assert.ok(modeCards[1].includes('2-5 deltakere') && !/Perfekt/.test(modeCards[1]), `the car says that it takes two to five (${modeCards[1]})`);
-  assert.equal(await host.page.$$eval('.mode .mode__art', (els) => els.length), 2, 'each card has its picture');
-  assert.equal(await host.page.$$eval('.mode .mode__pic .spark, .mode .mode__pic img[src*="star"], .mode .mode__pic img[src*="sparkle"]', (els) => els.length), 0, 'and no stars');
+  assert.match(modeCards[0], /På én telefon.*Én telefon som sendes rundt mellom dere\..*Passer best for bilturen/, 'the first card is one phone');
+  assert.match(modeCards[1], /På hver sin telefon.*Alle spiller på sin egen telefon\..*Passer best for hytteturen/, 'the second card is a phone each');
+  // (both take two to ten: said once, under the cards, with the faces)
+  assert.match(await bodyText(host), /2-10 deltakere/, 'both ways take two to ten players');
+  assert.equal(await host.page.$$eval('.mc-card .mc-pic', (els) => els.length), 2, 'each card has its picture');
   assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), true, 'Neste waits for a way to play');
-  await clickButton(host, 'Hytteturmodus'); // (a phone each: this script is the cabin; car.mjs is the car)
+  await clickButton(host, 'På hver sin telefon'); // (a phone each: this script is the cabin; car.mjs is the car)
   assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), false, 'Neste is there once a way is chosen');
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 2 av 4/);
-  // alone in the game, "back" gives it up and goes back to the choice, and on again makes a new one
+  await waitText(host, /Steg 2 av 5/);
+  assert.match(await bodyText(host), /Er du klar\?/);
+  // «Er du klar?» makes no game yet: "back" goes to the choice (which is kept), and on again
   await clickButton(host, 'Tilbake');
-  await waitText(host, /Steg 1 av 4/);
+  await waitText(host, /Steg 1 av 5/);
   assert.match(await bodyText(host), /Hvordan vil dere spille\?/);
-  await clickButton(host, 'Hytteturmodus');
+  assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), false, 'the way that was chosen is still chosen');
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 2 av 4/);
+  await waitText(host, /Steg 2 av 5/);
+  await passReady(host.page, { shot: () => shot(host, '01a2-setup-2-ready') });
+  await waitText(host, /Steg 3 av 5/);
+  // alone in the game, "back" from the profile gives it up and goes back to «Er du klar?»
+  await clickButton(host, 'Tilbake');
+  await waitText(host, /Steg 2 av 5/);
+  assert.match(await bodyText(host), /Er du klar\?/);
+  await passReady(host.page);
+  await waitText(host, /Steg 3 av 5/);
   await shot(host, '01b-setup-2-profile');
   assert.match(await bodyText(host), /Hvem er du\?/);
   assert.equal(await host.page.$eval('.dock .btn', (b) => b.disabled), true, 'Neste waits for a name and an avatar');
   await register(host, NAMES[0], 0, 'Neste');
-  await waitText(host, /Steg 3 av 4/);
+  await waitText(host, /Steg 4 av 5/);
   assert.match(await bodyText(host), /Hvor lenge skal dere spille\?/);
   // "back" keeps the profile, and going on again is possible
   await clickButton(host, 'Tilbake');
-  await waitText(host, /Steg 2 av 4/);
+  await waitText(host, /Steg 3 av 5/);
   assert.equal(await host.page.$eval('#name', (i) => i.value), NAMES[0], 'the profile is still there after going back');
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 3 av 4/);
+  await waitText(host, /Steg 4 av 5/);
   await shot(host, '01c-setup-3-points');
   // the points go in the free-text field (focusing selects the old value, so typing replaces it), and a point takes six minutes
   await host.page.focus('#target');
@@ -226,7 +234,7 @@ try {
   await sleep(500);
   if (TARGET * 6 < 90) assert.match(await bodyText(host), new RegExp(`ca\\. ${TARGET * 6} min`), 'six minutes a point');
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 4 av 4/);
+  await waitText(host, /Steg 5 av 5/);
   await waitText(host, /Spillere\s+1\/10/);
   // a phone that refuses to keep the screen awake must tell its owner to turn auto-lock off by hand
   await waitText(host, /sett skjermlåsen/i, 5000);

@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { startP2PSite } from './sites.mjs';
 import { quiet } from './quiet.mjs';
+import { passReady } from './ready.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -40,13 +41,14 @@ try {
   await quiet(host);
   await host.goto(`${base}/`);
   await clickButton(host, 'Opprett spill');
-  await clickButton(host, 'Hytteturmodus'); // (the way to play: the first of the host's four steps)
+  await clickButton(host, 'På hver sin telefon'); // (the way to play: the first of the host's five steps)
   await clickButton(host, 'Neste');
-  await host.waitForSelector('#name', { timeout: 20000 }); // the second
+  await passReady(host); // the second
+  await host.waitForSelector('#name', { timeout: 20000 }); // the third
   await host.type('#name', 'Petter');
   await host.evaluate(() => document.querySelectorAll('.picker__item:not([disabled])')[0].click());
   await clickButton(host, 'Neste');
-  await waitText(host, /Steg 3 av 4/);
+  await waitText(host, /Steg 4 av 5/);
   await clickButton(host, 'Neste');
   await host.waitForSelector('.lobby__code', { timeout: 20000 });
   const code = await host.$eval('.lobby__code', (el) => el.textContent.trim());

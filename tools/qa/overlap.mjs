@@ -55,7 +55,7 @@ page.on('pageerror', (e) => console.error('PAGE ERROR:', e.message));
 await page.goto(`http://127.0.0.1:${port}/?debug=offline`, { waitUntil: 'networkidle0' });
 
 /** Put the app in a state: everything not mentioned goes back to "nothing special". */
-const BASE = { view: null, session: null, seats: null, joining: null, modeStep: false, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' }, ...PAY_BASE };
+const BASE = { view: null, session: null, seats: null, joining: null, modeStep: false, readyStep: false, creating: false, replaced: false, notice: null, sheet: null, editing: false, step: null, stuck: 0, toast: null, conn: 'open', everOpened: true, qaHold: false, route: { page: 'home' }, ...PAY_BASE };
 const put = (patch) =>
   page.evaluate(
     (base, patch) => {
@@ -85,11 +85,12 @@ function screensFor(fixtures) {
     ...payScreens(fixtures).map(([key, patch]) => [key, () => put(patch)]),
     // the way to play is chosen before any game exists; and bilturmodus: the sheets, and the form for a player
     ['mode-step', () => put({ modeStep: true })],
+    ['ready-step', () => put({ readyStep: true, readyMode: 'cabin' })],
     [
       'mode-step-chosen',
       async () => {
         await put({ modeStep: true });
-        await page.evaluate(() => document.querySelector('.mode--bil').click());
+        await page.evaluate(() => document.querySelector('.mc-card--one').click());
       },
     ],
     [

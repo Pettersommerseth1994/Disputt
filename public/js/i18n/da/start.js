@@ -28,17 +28,10 @@ export default {
   'Til forsiden': 'Til forsiden',
 
   // hvordan vil dere spille
-  'Bilturmodus': 'Biltur-tilstand',
-  'Alle spiller på 1 telefon, som sendes rundt.': 'Alle spiller på 1 telefon, som sendes rundt.',
-  '2-5 deltakere': '2-5 deltagere',
-  'Hytteturmodus': 'Sommerhus-tilstand',
   'Alle spiller på sin egen telefon.': 'Alle spiller på hver sin telefon.',
   '2-10 deltakere': '2-10 deltagere',
   'Hvordan vil dere spille?': 'Hvordan vil I spille?',
   'Spillmodus': 'Spiltilstand',
-  'Likt i begge': 'Ens i begge',
-  'Det er alltid en eller flere impostere.': 'Der er altid en eller flere imposterer.',
-  'Dere må bli enige om riktig svar.': 'I skal blive enige om det rigtige svar.',
   'Neste': 'Næste',
 
   // tilbake i spillet / sent inn
@@ -142,4 +135,25 @@ export default {
 
   // impostors.js
   '{names} og {last}': '{names} og {last}',
+
+  // ready.js («Er du klar?»)
+  'Er du klar?': 'Er du klar?',
+  'Hei, jeg er Sofie! To små ting før dere starter.': 'Hej, jeg er Sofie! To små ting, før I starter.',
+  'Blant dere gjemmer det seg {mark} en imposter. Kanskje to.': 'Blandt jer gemmer der sig {mark} en imposter. Måske to.',
+  'alltid': 'altid',
+  'Imposteren vil lure dere, så dere {mark} om riktig svar.': 'Imposteren vil narre jer, så I {mark} om det rigtige svar.',
+  'må bli enige': 'skal blive enige',
+  'Jeg har skjønt at det alltid er en eller flere impostere blant oss.': 'Jeg har forstået, at der altid er en eller flere impostere blandt os.',
+  'Jeg har skjønt at vi må bli enige om riktig svar.': 'Jeg har forstået, at vi skal blive enige om det rigtige svar.',
+  'Trykk for å ta det tilbake': 'Tryk for at tage det tilbage',
+  'Sofie skriver': 'Sofie skriver',
+  'Da er dere klare!': 'Så er I klar!',
+  'Trykk Neste.': 'Tryk Næste.',
+
+  // mode.js («Hvordan vil dere spille?»)
+  'På én telefon': 'På én telefon',
+  'Én telefon som sendes rundt mellom dere.': 'Én telefon, der sendes rundt mellem jer.',
+  'Passer best for bilturen': 'Passer bedst til bilturen',
+  'På hver sin telefon': 'På hver sin telefon',
+  'Passer best for hytteturen': 'Passer bedst til sommerhusturen',
 };

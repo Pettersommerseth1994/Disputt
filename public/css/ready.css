@@ -1,0 +1,55 @@
+/* ==========================================================================
+   DISPUTT DESIGN SYSTEM — «Er du klar?»
+   The step after the way to play: Sofie says in speech bubbles that there is always an imposter and that the group must agree, and the host answers with a tick.
+   (public/js/screens/ready.js; a style sheet of its own that the script loads itself)
+   ========================================================================== */
+
+.ready { gap: var(--s-3); }
+
+/* the hand-drawn tick: a marker line that draws itself */
+.ready-tick { display: block; width: 100%; height: 100%; overflow: visible; fill: none; stroke: currentColor; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
+.ready-tick path { opacity: 0; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 0.4s cubic-bezier(0.5, 0, 0.2, 1) 0.04s, opacity 0s 0.04s; }
+[aria-checked='true'] .ready-tick path { opacity: 1; stroke-dashoffset: 0; }
+@keyframes ready-pop { 0% { transform: scale(0.8); } 55% { transform: scale(1.14) rotate(-3deg); } 100% { transform: none; } }
+
+.ready-chat { display: flex; flex: 1 1 auto; flex-direction: column; gap: 0.6rem; }
+.ready-chat__pair { display: flex; flex-direction: column; gap: 0.6rem; }
+.ready-say { display: flex; align-items: flex-end; gap: 0.55rem; transform-origin: 0 100%; animation: ready-bubble 0.4s var(--ease-bounce) both; }
+.ready-say__who { flex: none; --size: 3.4rem; }
+.ready-say__bubble {
+  position: relative; display: flex; align-items: center; gap: 0.7rem; min-width: 0; padding: 0.75rem 0.9rem 0.8rem 1rem; color: var(--ink);
+  border-radius: 24px 26px 26px 6px / 26px 24px 26px 6px; background: var(--tex-grain), var(--cream); box-shadow: var(--shadow-1);
+}
+.ready-say__text { flex: 1; min-width: 0; font-weight: 600; font-size: 1.04rem; line-height: 1.32; }
+.ready-say__text b { font-weight: 800; background: linear-gradient(to top, transparent 6%, var(--yellow) 6% 58%, transparent 58%); }
+.ready-say__art { flex: none; width: 5rem; height: auto; transform: rotate(5deg); }
+.ready-say__bubble--dots { gap: 0.35rem; padding: 0.95rem 1.1rem; }
+.ready-say__bubble--dots i { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--ink); opacity: 0.4; animation: ready-dots 1s ease-in-out infinite; }
+.ready-say__bubble--dots i:nth-child(2) { animation-delay: 0.15s; }
+.ready-say__bubble--dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ready-dots { 0%, 60%, 100% { transform: none; opacity: 0.35; } 30% { transform: translateY(-0.3rem); opacity: 0.9; } }
+@keyframes ready-bubble { from { transform: scale(0.6) translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* the answers: a yellow-ringed bubble that waits for a tap, and the green one it turns into */
+.ready-sent,
+.ready-reply {
+  display: flex; align-items: center; gap: 0.7rem; max-width: 94%; margin-left: auto; padding: 0.65rem 1rem 0.7rem 0.75rem; border: 0; text-align: left; font: 700 0.98rem/1.25 var(--font-text);
+  border-radius: 26px 26px 6px 26px / 26px 26px 6px 26px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ready-sent { color: var(--ink); background: var(--tex-grain), var(--tex-light), var(--lime); box-shadow: 0 3px 0 var(--lime-deep); transform-origin: 100% 100%; animation: ready-bubble 0.4s var(--ease-bounce) both; }
+.ready-reply { color: var(--cream); background: rgb(var(--cream-rgb) / 0.1); box-shadow: inset 0 0 0 3px var(--yellow); animation: ready-nudge 2.4s ease-in-out 0.8s infinite; }
+.ready-reply:active { transform: scale(0.97); }
+@keyframes ready-nudge { 0%, 70%, 100% { transform: none; } 80% { transform: translateX(-4px) rotate(-0.5deg); } 90% { transform: translateX(3px); } }
+.ready-sent__box,
+.ready-reply__box { flex: none; display: grid; place-items: center; width: 2.3rem; height: 2.3rem; padding: 0.38rem; border-radius: 50%; }
+.ready-sent__box { color: var(--ink); background: var(--cream); box-shadow: inset 0 0 0 3px var(--ink); animation: ready-pop 0.45s var(--ease-bounce); }
+.ready-reply__box { color: var(--yellow); background: rgb(var(--shadow-rgb) / 0.25); box-shadow: inset 0 0 0 3px var(--yellow); }
+.ready-tray { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-3); margin-top: auto; padding-top: var(--s-2); scroll-margin-bottom: 9.5rem; }
+
+@media (max-height: 740px) {
+  .ready-say__text { font-size: 0.93rem; }
+  .ready-say__art { width: 3.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ready-reply, .ready-say__bubble--dots i { animation: none; }
+}

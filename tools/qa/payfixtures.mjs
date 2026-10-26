@@ -21,7 +21,7 @@ export const SHOP_INFO = { shop: 'https://shop.example.test', variants: { evenin
 export const DEAL = { code: 'VENN20', summary: '20 % rabatt', plans: { evening: { price: 14900, now: 11920, vipps: true }, weekend: { price: 19900, now: 15920, vipps: true }, year: { price: 29900, now: 23920, vipps: true } } };
 
 /** What the payment fields of the store go back to between two screens. */
-export const PAY_BASE = { payments: null, discount: null, pass: null, passCode: null, paywall: false, payBusy: false, payWaiting: null, hostAwayUntil: 0, payStage: null };
+export const PAY_BASE = { payments: null, discount: null, pass: null, passCode: null, paywall: false, payBusy: false, payWaiting: null, hostAwayUntil: 0 };
 
 const DAY = 86_400_000;
 /** A pass as the page keeps it after checking it (pay/pass.js). */
@@ -42,10 +42,9 @@ export function payScreens(fixtures = buildFixtures()) {
   return [
     ['pay-home', { payments: PAY }],
     ['pay-home-customer', { payments: PAY, pass: passOf('year'), passCode: CODE }],
-    // after the free rounds: first «Jeg har tilgang» or «Kjøp tilgang», then the packages (`payStage: 'buy'` draws them without the tap)
-    ['pay-gate-choose', { payments: PAY, view: host, paywall: true }],
-    ['pay-gate', { payments: PAY, view: host, paywall: true, payStage: 'buy' }],
-    ['pay-gate-applepay-only', { payments: { ...PAY, methods: ['applepay'] }, view: host, paywall: true, payStage: 'buy' }],
+    // after the free rounds: the packages at once (with «Er du allerede kunde? Logg inn» under them)
+    ['pay-gate', { payments: PAY, view: host, paywall: true }],
+    ['pay-gate-applepay-only', { payments: { ...PAY, methods: ['applepay'] }, view: host, paywall: true }],
     ['pay-browse', { payments: PAY, paywall: true }],
     ['pay-browse-customer', { payments: PAY, paywall: true, pass: passOf('evening'), passCode: CODE }],
     ['pay-login', { payments: PAY, sheet: 'login' }],
@@ -58,9 +57,9 @@ export function payScreens(fixtures = buildFixtures()) {
     ['pay-guest-host-away', { payments: PAY, view: guest, conn: 'closed', hostAwayUntil: Date.now() + 10 * 60_000 }],
     ['pay-checking', { payments: PAY, view: host, payBusy: true }],
     // the same with a Shopify shop: one button and a box to tick, the host in the shop's tab, and the sheets that say where the code is
-    ['pay-gate-shop', { payments: PAY_SHOP, view: host, paywall: true, payStage: 'buy' }],
+    ['pay-gate-shop', { payments: PAY_SHOP, view: host, paywall: true }],
     ['pay-browse-shop', { payments: PAY_SHOP, paywall: true }],
-    ['pay-gate-shop-deal', { payments: PAY_SHOP, view: host, paywall: true, discount: DEAL, payStage: 'buy' }],
+    ['pay-gate-shop-deal', { payments: PAY_SHOP, view: host, paywall: true, discount: DEAL }],
     ['pay-browse-shop-deal', { payments: PAY_SHOP, paywall: true, discount: DEAL }],
     ['pay-waiting-shop', { payments: PAY_SHOP, view: host, paywall: true, payWaiting: { code: CODE, plan: 'year', url: 'https://shop.example.test/cart/44000000000002:1', at: Date.now() } }],
     ['pay-login-shop', { payments: PAY_SHOP, sheet: 'login' }],

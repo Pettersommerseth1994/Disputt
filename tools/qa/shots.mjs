@@ -72,7 +72,7 @@ await page.evaluate(() => window.__disputt.setStore({ sheet: null }));
 // the first step of the host's set-up: the way to play (no game exists yet)
 await page.evaluate(() => window.__disputt.setStore({ modeStep: true }));
 await shot('02-mode-step-empty', { wait: 600 });
-await page.evaluate(() => document.querySelector('.mode--bil')?.click());
+await page.evaluate(() => document.querySelector('.mc-card--one')?.click());
 await shot('02-mode-step', { wait: 500 }); // (the gallery of the style guide shows this one: a card chosen)
 await page.evaluate(() => window.__disputt.setStore({ modeStep: false }));
 

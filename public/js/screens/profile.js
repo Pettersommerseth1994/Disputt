@@ -46,7 +46,7 @@ export function Profile({ view, editing, wizard = false, late = false }) {
   const alone = view.players.every((p) => p.id === you.id) && view.pending - (you.ready ? 0 : 1) <= 0;
   const backToMode = () => {
     actions.leave();
-    setStore({ modeStep: true });
+    setStore({ readyStep: true, readyMode: view.mode });
   };
 
   const submit = (e) => {
@@ -67,7 +67,7 @@ export function Profile({ view, editing, wizard = false, late = false }) {
   };
 
   return html`<main class=${wizard ? 'screen setup' : 'screen'}>
-    ${wizard && html`<${SetupHeader} /><${Steps} current=${2} onBack=${alone ? backToMode : undefined} />`}
+    ${wizard && html`<${SetupHeader} /><${Steps} current=${3} onBack=${alone ? backToMode : undefined} />`}
     <form class="stack stack--loose grow" onSubmit=${submit}>
       <header class="stack stack--tight">
         ${!wizard && html`<p class="eyebrow">${late ? t('Spill {code} har startet', { code: view.code }) : t('Spill {code}', { code: view.code })}</p>`}

@@ -69,7 +69,6 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
-  await clickButton(host, 'Kjøp tilgang'); // (first the choice between «Jeg har tilgang» and «Kjøp tilgang»: see payflow.mjs)
   await host.page.waitForSelector('.btn--vipps', { timeout: 10000 }); // (the packages ask the payment server whether Vipps is set up, and the button comes with the answer)
   const paywall = await bodyText(host);
   assert.match(paywall, /Dere har spilt tre runder gratis/);
@@ -107,7 +106,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
 
   // 1) "En kveld": the box, the button, a new tab at Vipps; the host gives up in the game, which closes the tab
   await choosePlan(host, 'evening');
-  await waitText(host, /Gjelder i 12 timer fra du betaler/);
+  await waitText(host, /12 timer\s*Fornyes ikke/);
   await tick(host);
   assert.equal(await waitsForBox(host), false, 'ticked: the button is on');
   await clickButton(host, 'Betal med Vipps');
@@ -174,8 +173,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   admin.addDiscount('VENN20', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 0.2 }, items: { __typename: 'AllDiscountItems' } } });
   admin.addDiscount('GRATIS', { customerGets: { value: { __typename: 'DiscountPercentage', percentage: 1 }, items: { __typename: 'AllDiscountItems' } } });
   assert.equal(await host.page.$$eval('.plan__was', (els) => els.length), 0, 'no code, no struck-out prices');
-  await clickButton(host, 'Har du rabattkode?');
-  await host.page.type('#discount-code', 'finnesikke');
+  await host.page.type('#discount-code', 'finnesikke'); // (the field is open from the start, in a dashed box above the packages)
   await clickButton(host, 'Bruk');
   await waitText(host, /Fant ikke den rabattkoden/);
   assert.equal(await host.page.$$eval('.plan__was', (els) => els.length), 0, 'a code that is no good changes no price');
@@ -197,9 +195,8 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   await clickButton(host, 'Avbryt');
   await waitText(host, /Betal med kort/);
   await clickButton(host, 'Fjern');
-  await waitText(host, /Har du rabattkode\?/);
+  await waitText(host, /Har du en rabattkode\?/);
   assert.equal(await host.page.$$eval('.plan__was', (els) => els.length), 0, 'taken away: the ordinary prices');
-  await clickButton(host, 'Har du rabattkode?');
   await host.page.type('#discount-code', 'venn20');
   await host.page.keyboard.press('Enter');
   await waitText(host, /20 % rabatt/);
@@ -377,7 +374,6 @@ export async function payAfterFreeRoundsVippsApp(t, { host, others, stack }) {
   const { vipps, admin } = stack;
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
-  await clickButton(host, 'Kjøp tilgang');
   await host.page.waitForSelector('.btn--vipps', { timeout: 10000 });
   await choosePlan(host, 'weekend');
   await tick(host);

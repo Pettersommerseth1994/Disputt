@@ -368,10 +368,10 @@ export const actions = {
   create: (mode = 'cabin') => {
     wantedMode = mode;
     if (isP2P) {
-      setStore({ modeStep: false, step: null }); // (a new game starts at its first step)
+      setStore({ modeStep: false, readyStep: false, step: null }); // (a new game starts at its first step)
       return void createP2PRoom(mode);
     }
-    setStore({ modeStep: false, step: null, creating: true }); // (so that the start screen does not show for a moment while the server answers)
+    setStore({ modeStep: false, readyStep: false, step: null, creating: true }); // (so that the start screen does not show for a moment while the server answers)
     return send({ t: 'create', mode, lang: getLang() });
   },
   join: (code) => {

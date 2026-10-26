@@ -2,8 +2,7 @@
 // The phone only counts down and keeps the score: what is revealed (the answer, the impostors) is said out loud.
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
-import { useHold } from '../hold.js';
-import { t, tx } from '../i18n/lang.js';
+import { t } from '../i18n/lang.js';
 import { actions } from '../net.js';
 import { serverNow } from '../net.js';
 import { impostorCount, joinNames, matesOf, summaryImpostors } from '../impostors.js';
@@ -14,6 +13,7 @@ import { Avatar, Button, GearIcon, RoleStrip, Scoreboard, Timer, TrophyIcon } fr
 import { rich } from '../i18n/rich.js';
 import { cx, letter, playerById, useRemaining, vibrate } from '../util.js';
 import { CarStrip } from './carstrip.js';
+import { Roll, TimeField, useEqualHold, useEqualStyles } from './equal.js';
 
 /** The reminder of your role above the game screens. In bilturmodus the phone is everybody's, so it asks "Glemt rollen din?" instead (carstrip.js). */
 const Strip = ({ view }) => (view.mode === 'car' ? html`<${CarStrip} />` : html`<${RoleStrip} you=${view.you} impostors=${impostorCount(view)} />`);
@@ -36,12 +36,6 @@ export function GameBar({ view }) {
 // the time every phone shows the same thing, so a neighbour who glances at your screen learns nothing from it.
 
 const EYES = { impostor: 'assets/art/eye-impostor.svg', loyal: 'assets/art/eye-loyal.svg' };
-const TIPS = {
-  impostor: tx('Få de andre til å svare feil, uten å bli avslørt.'),
-  impostorDuo: tx('Hjelp hverandre med å få de andre til å svare feil, uten å bli avslørt.'),
-  loyal: tx('Finn ut hva som er riktig svar sammen, og ikke la imposteren lure dere.'),
-  loyalDuo: tx('Finn ut hva som er riktig svar sammen, og ikke la imposterne lure dere.'),
-};
 
 /**
  * The card that appears while the button is held. A loyal player has nothing to look up, so the card is only the role. The
@@ -50,10 +44,16 @@ const TIPS = {
 function RoleCard({ you, count }) {
   const impostor = you.role === 'impostor';
   const mates = matesOf(you);
-  return html`<article class=${cx('rolecard pop-in', impostor && count > 1 && 'rolecard--duo', !impostor && 'rolecard--loyal')}>
-    <div class="rolecard__head">
-      <img class="rolecard__eye" src=${asset(EYES[you.role])} alt="" width="400" height="300" />
-      <h1 class=${cx('rolecard__word', impostor ? 'rolecard__word--impostor' : 'rolecard__word--loyal')}>${impostor ? t('Imposter') : t('Lojal')}</h1>
+  const head = html`<div class="rolecard__head">
+    <img class="rolecard__eye" src=${asset(EYES[you.role])} alt="" width="400" height="300" />
+    <h1 class=${cx('rolecard__word', impostor ? 'rolecard__word--impostor' : 'rolecard__word--loyal')}>${impostor ? t('Imposter') : t('Lojal')}</h1>
+  </div>`;
+  // «Du er» in small type above the big word. The imposter's card is there at once; a loyal player's picture and word wait a little and roll in from the left
+  // (the same for the eye and the word: the two pictures would otherwise tell the role at once; screens/equal.js)
+  return html`<article class=${cx('rolecard eq-card pop-in', impostor && count > 1 && 'rolecard--duo', !impostor && 'rolecard--loyal')}>
+    <div class="eq-card__top">
+      <p class="eq-card__lead">${t('Du er')}</p>
+      ${impostor ? head : html`<${Roll} block>${head}</${Roll}>`}
     </div>
     ${impostor &&
     html`<div class="rolecard__answer">
@@ -77,7 +77,11 @@ export function RoleReveal({ view }) {
   const asker = playerById(view, view.turn.askerId);
   const total = view.timings.roleMs;
   const left = useRef(Math.max(0, Math.min(total, view.roleEndsAt - serverNow())));
-  const { held, bind } = useHold();
+  const styled = useEqualStyles();
+  const [early, setEarly] = useState(false);
+  // everybody holds the same time (4 s): a finger that lifts too soon hides the role, and the bar starts again
+  const hold = useEqualHold({ onSeen: () => setEarly(false), onEarly: () => setEarly(true) });
+  const { held, bind } = hold;
   const count = impostorCount(view);
   // the same short buzz for everybody: a different pattern per role would give the role away to whoever feels or hears it
   useEffect(() => vibrate(70), []);
@@ -86,22 +90,24 @@ export function RoleReveal({ view }) {
     new Image().src = asset(EYES[you.role]);
   }, [you.role]);
 
+  if (!styled) return null;
   return html`<main class="screen role">
     <p class="eyebrow role__eyebrow">${t('Din rolle')}</p>
+    <${TimeField} hold=${hold} early=${early} />
     <div class="role__mid">
       <div class="slot" role="status">
         ${held
           ? html`<${RoleCard} you=${you} count=${count} />`
           : html`<div class="slot__closed">
               <img class="slot__eye" src=${asset('assets/art/eye-wait.svg')} alt="" width="300" height="200" />
-              <p>${t('Rollen din er skjult')}</p>
+              <p>${early ? t('For tidlig! Hold hele tiden') : t('Rollen din er skjult')}</p>
             </div>`}
       </div>
     </div>
     <div class="role__hold">
-      <p class="role__hint">${held ? t(TIPS[you.role + (count > 1 ? 'Duo' : '')]) : t('Skjul rollen din godt!')}</p>
-      <button type="button" class=${cx('btn btn--block hold-btn', held && 'is-held')} ...${bind} aria-label=${t('Hold inne for å se rollen din')}>
-        ${held ? t('Slipp for å skjule') : t('Hold for å se rollen din')}
+      <p class="role__hint">${t('Skjul rollen din godt!')}</p>
+      <button type="button" class=${cx('btn btn--block hold-btn', held && 'is-held', hold.done && 'eq-done')} ...${bind} aria-label=${t('Hold inne for å se rollen din')}>
+        ${hold.done ? t('Slipp for å skjule') : held ? t('Hold inne …') : t('Hold for å se rollen din')}
       </button>
       <p class="role__next">${asker ? rich(t('{name} får spørsmålet …'), { name: html`<strong>${asker.name}</strong>` }) : ''}</p>
     </div>

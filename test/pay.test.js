@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { CODE_ALPHABET, bytesToB64url, formatCodeInput, isActive, needsPayment, normalizeCode, verifyPass } from '../public/js/pay/pass.js';
-import { DEFAULT_PLAN, PERKS, PLANS, describeValidity, formatPrice, planById } from '../public/js/pay/plans.js';
+import { DEFAULT_PLAN, PLANS, describeValidity, formatPrice, planById } from '../public/js/pay/plans.js';
 import { mod, makeKeys } from './helpers/worker.mjs';
 
 const te = new TextEncoder();
@@ -154,7 +154,6 @@ describe('the packages', () => {
     assert.equal(planById('nope'), null);
     assert.equal(planById('lifetime').name, 'Livstid', 'Livstid is not for sale, but a host who bought it is still told its name');
     assert.equal(formatPrice(149), '149 kr');
-    assert.ok(PERKS.length >= 3);
   });
 
   it('cost on the page what the payment server will accept (and nothing else)', () => {

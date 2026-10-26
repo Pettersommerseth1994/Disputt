@@ -69,7 +69,7 @@ function HostLobby({ view }) {
 
   return html`<main class="screen lobby">
     <${SetupHeader} />
-    <${Steps} current=${4} onBack=${() => setStore({ step: 2 })} />
+    <${Steps} current=${5} onBack=${() => setStore({ step: 2 })} />
 
     <div class="stack">
       <header class="stack stack--tight">

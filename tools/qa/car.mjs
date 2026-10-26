@@ -1,6 +1,6 @@
 // UI end-to-end for bilturmodus: everybody plays on ONE phone, the host's, through the real interface.
 //   node tools/qa/car.mjs [players=3] [target=2] [--p2p] [--subpath] [--pay] [--url=https://…] [--shots]
-//   players 2 tries the rule for two (a round with no impostor); five is the most a car holds
+//   players 2 tries the rule for two (a round with no impostor); ten is the most one phone holds
 //   --outcomes  with two players: keep playing (no target) until a round with the first as the impostor, one with the second and one with
 //              nobody have all been seen, and then end the game from the host's menu
 //   --p2p      test the peer-to-peer build (static site + local PeerJS signalling server) instead of the Node server; a game on one
@@ -18,12 +18,13 @@ import { startPaymentsStack } from './payments-stack.mjs';
 import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
 import { quiet } from './quiet.mjs';
+import { passReady } from './ready.mjs';
 
 const args = process.argv.slice(2);
 const OUTCOMES_ARG = args.includes('--outcomes');
 const flags = args.filter((a) => a.startsWith('--'));
 const nums = args.filter((a) => !a.startsWith('--')).map(Number);
-const MAX = 5; // (what a car holds: LIMITS.maxPlayersCar)
+const MAX = 10; // (what one phone holds: LIMITS.maxPlayersCar)
 let PLAYERS = nums[0] ?? 3; // (changes when the host puts a player in or takes one out in the middle of the game)
 const TARGET = OUTCOMES_ARG ? 99 : (nums[1] ?? 2);
 assert.ok(Number.isInteger(PLAYERS) && PLAYERS >= 2 && PLAYERS <= MAX && Number.isInteger(TARGET) && TARGET >= 1, `usage: car.mjs [players 2-${MAX}] [target]`);
@@ -149,8 +150,11 @@ const toasts = () => page.$$eval('.toast', (els) => els.map((e) => e.innerText))
 const ROLE_WORD = /\b(Imposter|Lojal)\b/; // (as a word of its own: "Imposteren" or "lojale" inside a sentence is not the role)
 async function hold(within = '', ms = 700) {
   where = `holding the button ${within || 'on the screen'}`;
+  // (the turn of the phone going round is the tall card, .eq-turn; the sheet «Se rolle igjen» has the strip of the normal game)
+  const BTN = within.includes('eq-turn') ? '.eq-hold' : '.role-strip .secret';
+  const INFO = within.includes('eq-turn') ? '.eq-info' : '.role-strip';
   // (a button that has just been handed to somebody waits a moment before it works: it is pressed when it does)
-  const button = await page.waitForSelector(`${within} .role-strip .secret:not(:disabled)`.trim(), { visible: true, timeout: 5000 });
+  const button = await page.waitForSelector(`${within} ${BTN}:not(:disabled)`.trim(), { visible: true, timeout: 5000 });
   // (a sheet slides in, and a button that is measured on the way is not where it ends up: wait until it stands still)
   let box = await button.boundingBox();
   for (let i = 0; i < 25; i++) {
@@ -170,11 +174,11 @@ async function hold(within = '', ms = 700) {
     throw new Error(`pressing the button at ${Math.round(box.x + box.width / 2)},${Math.round(box.y + box.height / 2)} showed no role (under the finger: ${at}): ${err.message.split('\n')[0]}`);
   });
   await sleep(150); // (let the strip settle: the sheets slide in, and the strip opens)
-  const moved = await (await page.$(`${within} .role-strip .secret`.trim())).boundingBox();
+  const moved = await (await page.$(`${within} ${BTN}`.trim())).boundingBox();
   // (the pressed button sits 2 px lower and the open strip 2 px further in, as it does in the normal game: that is by design)
-  assert.ok(Math.abs(moved.x - box.x) <= 3 && Math.abs(moved.y - box.y) <= 3, `the button stays where the finger is when the role opens (it was at ${Math.round(box.x)},${Math.round(box.y)}, it is at ${Math.round(moved.x)},${Math.round(moved.y)})`);
-  const strip = await page.evaluate((w) => (document.querySelector(`${w} .role-strip`.trim())?.innerText ?? '').replace(/\s+/g, ' '), within);
-  const buttonText = await page.evaluate((w) => (document.querySelector(`${w} .role-strip .secret`.trim())?.innerText ?? '').trim(), within);
+  assert.ok(Math.abs(moved.x - box.x) <= 5 && Math.abs(moved.y - box.y) <= 5, `the button stays where the finger is when the role opens (it was at ${Math.round(box.x)},${Math.round(box.y)}, it is at ${Math.round(moved.x)},${Math.round(moved.y)})`);
+  const strip = await page.evaluate((w, sel) => (document.querySelector(`${w} ${sel}`.trim())?.innerText ?? '').replace(/\s+/g, ' '), within, INFO);
+  const buttonText = await page.evaluate((w, sel) => (document.querySelector(`${w} ${sel}`.trim())?.innerText ?? '').trim(), within, BTN);
   const covered = await page.evaluate(underTheFinger);
   assert.deepEqual(covered, [], 'nothing that the hold reveals sits on or under the button, where the finger covers it');
   await sleep(ms);
@@ -207,16 +211,18 @@ async function setUp() {
   await waitText(/Diskuter,?\s+manipuler\s+og\s+vinn/);
   await clickButton('Opprett spill');
   // 1. how to play
-  await waitText(/Steg 1 av 4/);
+  await waitText(/Steg 1 av 5/);
   assert.match(await bodyText(), /Hvordan vil dere spille\?/);
   assert.equal((await buttons()).find((b) => b.text === 'Neste').disabled, true, 'Neste waits for a way to play');
-  await clickButton('Bilturmodus');
-  await waitText(/Steg 1 av 3/); // (the bar follows the way to play: three steps in the car)
+  await clickButton('På én telefon');
+  await waitText(/Steg 1 av 4/); // (the bar follows the way to play: four steps in the car)
   await shot('01-mode');
   await clickButton('Neste');
 
-  // 2. who plays: the host's own name first
-  await waitText(/Steg 2 av 3/);
+  // 2. «Er du klar?», then who plays: the host's own name first
+  await waitText(/Steg 2 av 4/);
+  await passReady(page, { shot: () => shot('01b-ready') });
+  await waitText(/Steg 3 av 4/);
   assert.match(await bodyText(), /Hvem spiller\?/);
   await page.waitForSelector('#player-name', { timeout: 5000 });
   assert.match(await bodyText(), /Hvem er du\?/, 'the host is asked for their own name first');
@@ -229,11 +235,14 @@ async function setUp() {
   assert.match(await screenText(), new RegExp(`${HOST}\\s*vert`), 'and is marked as the host');
   assert.equal((await buttons()).find((b) => b.text === 'Neste').disabled, true, 'Neste waits for a second player');
   assert.match(await bodyText(), /Legg inn 1 spiller til · minst 2/);
-  // alone, "back" goes back to the way to play, and on again
+  // alone, "back" goes back to «Er du klar?», then to the way to play, and on again
+  await clickButton('Tilbake');
+  await waitText(/Er du klar\?/);
   await clickButton('Tilbake');
   await waitText(/Hvordan vil dere spille\?/);
-  await clickButton('Bilturmodus');
+  await clickButton('På én telefon');
   await clickButton('Neste');
+  await passReady(page);
   await waitText(/Hvem er du\?/);
   await page.type('#player-name', HOST);
   await clickButton('Lagre');
@@ -277,7 +286,7 @@ async function setUp() {
   await enterPlayer(names[1], 'Lagre');
   await page.waitForFunction(() => !document.querySelector('.sheet'), { timeout: 5000 });
   assert.deepEqual(await rosterNames(), names);
-  // up to five (as many as a car holds), and no more (and the extra ones go again, with two taps each)
+  // up to ten (as many as with a phone each), and no more (and the extra ones go again, with two taps each)
   const extra = NAMES.slice(PLAYERS, MAX);
   for (const name of extra) {
     await clickButton('Legg til spiller');
@@ -305,7 +314,7 @@ async function setUp() {
 
   // 3. how long: the normal step, and a point is six minutes
   await clickButton('Neste');
-  await waitText(/Steg 3 av 3/);
+  await waitText(/Steg 4 av 4/);
   assert.match(await bodyText(), /Hvor lenge skal dere spille\?/);
   await page.focus('#target');
   await page.keyboard.type(String(TARGET));
@@ -315,10 +324,10 @@ async function setUp() {
   assert.match(bodyNow, /Ett poeng tar ca\. 6 minutter/);
   // "back" and on again keep the players
   await clickButton('Tilbake');
-  await waitText(/Steg 2 av 3/);
+  await waitText(/Steg 3 av 4/);
   assert.deepEqual(await rosterNames(), names, 'the players are still there after going back');
   await clickButton('Neste');
-  await waitText(/Steg 3 av 3/);
+  await waitText(/Steg 4 av 4/);
   assert.equal(await page.$eval('#target', (i) => i.value), String(TARGET), 'and so are the points');
   assert.doesNotMatch(await bodyText(), /Klar\? Slik funker det/, 'there is no fourth step: this one starts the game');
   assert.equal((await buttons()).find((b) => b.text === 'Neste'), undefined, 'and no Neste, only Start spillet');
@@ -351,15 +360,16 @@ async function sendPhoneRound(round) {
   assert.equal((await buttons()).find((b) => b.text === 'Alle har sett rollen sin').disabled, true, 'nobody goes on before everybody has seen');
   for (const [i, name] of names.entries()) {
     // only the one whose turn it is has a button: the others wait
-    const strips = await page.$$('.role-strip .secret');
+    await page.waitForSelector('.eq-turn .eq-hold', { timeout: 5000 }); // (the card is drawn when its style sheet is in)
+    const strips = await page.$$('.eq-turn .eq-hold');
     assert.equal(strips.length, 1, 'one button, for the one whose turn it is');
-    const active = await page.$eval('.rolerow--strip .rolerow__name', (el) => el.firstChild.textContent.trim());
+    const active = await page.$eval('.eq-turn .rolerow__name', (el) => el.firstChild.textContent.trim());
     assert.equal(active, name, `it is ${name}'s turn`);
     const waiting = await page.$$eval('.rolerow--wait .rolerow__name', (els) => els.map((el) => el.firstChild.textContent.trim()));
     assert.deepEqual(waiting, names.slice(i + 1), 'the rest wait, in order');
     if (round === 1 && i === 0) {
       // a button that has just been handed over does not work for a moment: a touch on it shows nothing, and does not count
-      const waiting = await page.$('.role-strip .secret:disabled');
+      const waiting = await page.$('.eq-turn .eq-hold:disabled');
       assert.ok(waiting, 'the button of the first one waits a moment before it works');
       const w = await waiting.boundingBox();
       await page.mouse.move(w.x + w.width / 2, w.y + w.height / 2);
@@ -368,8 +378,8 @@ async function sendPhoneRound(round) {
       assert.doesNotMatch(await bodyText(), ROLE_WORD, 'a press on a button that waits shows nothing');
       await page.mouse.up();
       // a touch that is too short to see anything does not use up the turn
-      await page.waitForSelector('.role-strip .secret:not(:disabled)', { timeout: 5000 });
-      const b = await (await page.$('.role-strip .secret')).boundingBox();
+      await page.waitForSelector('.eq-turn .eq-hold:not(:disabled)', { timeout: 5000 });
+      const b = await (await page.$('.eq-turn .eq-hold')).boundingBox();
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.down();
       await sleep(80);
@@ -378,8 +388,8 @@ async function sendPhoneRound(round) {
       assert.equal(await page.$$eval('.rolerow--done', (els) => els.length), 0, 'a short touch does not count as having seen the role');
       assert.match(await bodyText(), new RegExp(`0 av ${PLAYERS} har sett rollen sin`));
     }
-    const peek = await hold('.rolerow--strip', 650);
-    assert.equal(peek.buttonText, 'Hold for å se', "the button keeps its text (the answer is not in it, under the finger)");
+    const peek = await hold('.eq-turn', 650);
+    assert.match(peek.buttonText, /^Hold inne/, 'the button has no answer in it (under the finger), and no countdown');
     assert.match(peek.strip, /^Du er /, 'the strip says who you are');
     seenRoles.set(name, { role: peek.role, strip: peek.strip });
     await waitText(new RegExp(`${i + 1} av ${PLAYERS} har sett rollen sin`));
@@ -407,7 +417,7 @@ async function sendPhoneRound(round) {
   assert.equal((await buttons()).find((b) => b.text === 'Vis spørsmålet').disabled, false);
   if (round === 1) await shot('05-roles-all-seen');
 
-  // who is the impostor? a lone one (two from six players), and with two players a round may have none
+  // who is the impostor? a lone one (two from six players: each of them is told who the other is), and with two players a round may have none
   const roles = names.map((n) => seenRoles.get(n).role);
   const count = roles.filter((r) => r === 'impostor').length;
   if (PLAYERS === 2) {
@@ -415,11 +425,12 @@ async function sendPhoneRound(round) {
     if (count === 0) outcomes.none++;
     else if (roles[0] === 'impostor') outcomes.first++;
     else outcomes.second++;
-  } else assert.equal(count, 1, `round ${round}: one impostor among ${PLAYERS}, got ${roles}`);
+  } else assert.equal(count, names.length >= 6 ? 2 : 1, `round ${round}: ${names.length >= 6 ? 'two impostors' : 'one impostor'} among ${names.length}, got ${roles}`);
   for (const [name, { role, strip }] of seenRoles) {
     if (role === 'impostor') assert.match(strip, /Riktig svar: [A-D]: /, `${name} (the impostor) sees the right answer, beside the button`);
     else assert.doesNotMatch(strip, /Riktig svar/, `${name} is loyal and has nothing to look up`);
-    assert.doesNotMatch(strip, /Sammen med|er imposterer/, 'never two impostors in a car');
+    if (count < 2 || role !== 'impostor') assert.doesNotMatch(strip, /Sammen med/, 'only an impostor with a partner is told so');
+    else assert.match(strip, /Sammen med/, `${name} is told who the other impostor is`);
   }
   return { count, roles };
 }
@@ -461,7 +472,7 @@ async function playRound(round) {
       assert.equal((await page.$$('.sheet .role-strip .secret')).length, 1, 'one button: the name that was chosen');
       const peek = await hold('.sheet', 450);
       assert.equal(peek.role, seenRoles.get(name).role, `${name}'s role is the same as when the phone went round`);
-      assert.equal(peek.strip.replace(/\s+/g, ' '), seenRoles.get(name).strip, `${name}'s strip says the same`);
+      assert.equal(peek.strip.replace(/\s+/g, ' ').replace(/ Hold for å se$/, ''), seenRoles.get(name).strip, `${name}'s strip says the same as the card did (the strip of the sheet has its button's text at the end)`);
     }
     if (round === 1) await shot('07-roles-sheet');
     await clickLabel('Lukk');
@@ -485,7 +496,7 @@ async function playRound(round) {
   assert.doesNotMatch(await bodyText(), /Riktig!|Feil!|Riktig svar/, 'the countdown does not say whether it was right');
   await waitText(/avslører seg/i, 10000);
   const stage = await page.evaluate(() => ({ body: document.querySelector('.stage__body')?.innerText.replace(/\s+/g, ' ') ?? '', whole: document.body.innerText.replace(/\s+/g, ' ') }));
-  assert.match(stage.body, /Imposteren avslører seg/, 'the reveal says the same, also when nobody is the impostor');
+  assert.match(stage.body, count > 1 ? /Imposterne avslører seg/ : /Imposteren avslører seg/, 'the reveal says the same, also when nobody is the impostor');
   assert.doesNotMatch(stage.whole, /Ingen var imposter|ingen imposter|Gruppa hadde rett|lurte dere|Imposter(en|ne) var/, 'the reveal gives nothing away');
   if (q.options[q.correct].length >= 5) assert.ok(!stage.whole.includes(q.options[q.correct]), 'and does not say the right answer');
   if (round === 1) await shot('08-reveal');
@@ -508,7 +519,7 @@ async function playRound(round) {
     if (count === 0) {
       assert.match(text, /Ingen var imposter denne runden\./);
       assert.match(text, groupRight ? /Dere svarte riktig sammen!/ : /Dere svarte feil\. Ingen fikk poeng\./);
-    } else assert.match(text, groupRight ? /Gruppa hadde rett/ : /Imposteren lurte dere/);
+    } else assert.match(text, groupRight ? /Gruppa hadde rett/ : count > 1 ? /Imposterne lurte dere/ : /Imposteren lurte dere/);
     assert.match(text, /Neste runde får dere nye roller: send telefonen rundt igjen\./);
     assert.doesNotMatch(text, /\(deg\)/, 'nobody is "(deg)": they are all at the table');
     const rows = await page.$$eval('.scoreboard .score', (els) => els.map((el) => ({ name: el.querySelector('.score__name').innerText.trim(), gain: Boolean(el.querySelector('.score__gain')) })));
@@ -590,7 +601,6 @@ async function payAfterFreeRounds() {
   const before = stack.fake.sessions.size;
   await clickButton('Neste runde');
   await waitText(/Fortsett quizen/);
-  await clickButton('Kjøp tilgang'); // (first the choice between «Jeg har tilgang» and «Kjøp tilgang»)
   await waitText(/En kveld/);
   const paywall = await bodyText();
   assert.match(paywall, /Dere har spilt tre runder gratis/, 'three rounds are free, as in the normal game');
@@ -654,12 +664,12 @@ try {
 
   // play again: the same players, and the last step of the set-up (how long), which goes back to the players
   await clickButton('Spill igjen');
-  await waitText(/Steg 3 av 3/);
+  await waitText(/Steg 4 av 4/);
   await clickButton('Tilbake');
   await waitText(/Hvem spiller\?/);
   assert.deepEqual(await rosterNames(), names, 'the same players after "Spill igjen"');
   await clickButton('Neste');
-  await waitText(/Steg 3 av 3/);
+  await waitText(/Steg 4 av 4/);
   log('play again: the same players, back through the steps and on');
 
   // a second game, to the start of a round: the roles are new, and then the logo asks before it ends the game

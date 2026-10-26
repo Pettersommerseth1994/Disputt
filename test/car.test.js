@@ -222,19 +222,19 @@ describe('the car: a room', () => {
     throwsCode(() => room.addPlayer(), 'single_phone');
   });
 
-  it('puts the players in on the host\'s phone, up to five (as many as a car holds), and they are always there', () => {
-    const ctx = car(5);
-    assert.equal(ctx.room.players.size, 5);
+  it('puts the players in on the host\'s phone, up to ten (as many as with a phone each), and they are always there', () => {
+    const ctx = car(10);
+    assert.equal(ctx.room.players.size, 10);
     for (const p of ctx.players.slice(1)) assert.deepEqual([p.local, p.connected], [true, true]);
     const view = ctx.room.viewFor(ctx.host.id);
     assert.equal(view.mode, 'car');
-    assert.equal(view.players.length, 5);
-    assert.equal(view.limits.max, 5, 'the page is told how many fit');
+    assert.equal(view.players.length, 10);
+    assert.equal(view.limits.max, 10, 'the page is told how many fit');
     assert.ok(view.players.every((p) => p.connected), 'nobody shows as disconnected');
     // ('too_many', not 'full': to a page, 'full' means that a room has no seat for another phone, and it leaves the game)
-    throwsCode(() => ctx.room.addLocalPlayer(ctx.host.id, { name: 'Sjette', avatar: AVATAR_IDS[5] }), 'too_many');
-    assert.equal(ctx.room.players.size, 5, 'and nobody was put in');
-    // a phone each is still ten
+    throwsCode(() => ctx.room.addLocalPlayer(ctx.host.id, { name: 'Ellevte', avatar: AVATAR_IDS[5] }), 'too_many');
+    assert.equal(ctx.room.players.size, 10, 'and nobody was put in');
+    // a phone each is ten, too
     const phones = cabin(3);
     assert.equal(phones.room.viewFor(phones.host.id).limits.max, LIMITS.maxPlayers);
     assert.equal(LIMITS.maxPlayers, 10);
@@ -280,7 +280,7 @@ describe('the car: a room', () => {
     const add = (ctx, name, points) => ctx.room.addLocalPlayer(ctx.host.id, { name, avatar: AVATAR_IDS.find((id) => ![...ctx.room.players.values()].some((p) => p.avatar === id)), ...(points === undefined ? {} : { points }) });
 
     it('puts in a player who comes in with 0 points (or the points that are chosen) and plays from the next round', () => {
-      const ctx = car(3);
+      const ctx = car(8);
       ctx.room.start(ctx.host.id);
       const cur = ctx.room.current;
       const none = add(ctx, 'Null');
@@ -289,11 +289,11 @@ describe('the car: a room', () => {
       assert.equal(ctx.room.players.get(some.id).score, 2);
       assert.ok(!cur.participants.includes(some.id), 'not in the round that is on');
       assert.equal(ctx.room.players.get(some.id).local, true);
-      throwsCode(() => add(ctx, 'For mange'), 'too_many'); // (five in a car)
+      throwsCode(() => add(ctx, 'For mange'), 'too_many'); // (ten on a phone)
       ctx.room.finishRoundWithoutPoints();
       ctx.room.nextRound(ctx.host.id);
       assert.ok(ctx.room.current.participants.includes(some.id), 'in the next one');
-      assert.equal(ctx.room.viewFor(ctx.host.id).table.length, 5, 'and the phone goes round to all five');
+      assert.equal(ctx.room.viewFor(ctx.host.id).table.length, 10, 'and the phone goes round to all ten');
     });
 
     it('refuses points that are as many as the target or more', () => {

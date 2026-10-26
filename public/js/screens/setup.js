@@ -13,7 +13,7 @@ import { cx } from '../util.js';
 import { CAR_SEGMENTS } from './steps-count.js';
 
 export const MINUTES_PER_POINT = 6;
-const SEGMENTS = 4; // the bar at the top of every step (three in the car: steps-count.js)
+const SEGMENTS = 5; // the bar at the top of every step (four in the car: steps-count.js)
 const LAST = 3; // what `store.step` counts, after the way to play has been chosen: 1 who you are, 2 how long, 3 the invitation
 
 export function duration(minutes) {
@@ -107,7 +107,7 @@ export function PointsStep({ view }) {
   };
   return html`<main class="screen setup">
     <${SetupHeader} />
-    <${Steps} current=${3} total=${car ? CAR_SEGMENTS : SEGMENTS} onBack=${goTo(1)} />
+    <${Steps} current=${4} total=${car ? CAR_SEGMENTS : SEGMENTS} onBack=${goTo(1)} />
     <h1 class="setup__title rise-in">${t('Hvor lenge skal dere spille?')}</h1>
     <section class="card card--paper card--tilt-r setup__points center stack">
       <label class="sr-only" for="target">${t('Antall poeng å spille til')}</label>

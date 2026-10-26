@@ -14,7 +14,6 @@ export const PLANS = [
     name: tx('En kveld'),
     price: 149,
     length: tx('12 timer'),
-    detail: tx('Til én spillkveld eller biltur. Gjelder i 12 timer fra du betaler, og fornyes ikke av seg selv.'),
     badge: tx('Mest populær'),
   },
   {
@@ -22,14 +21,12 @@ export const PLANS = [
     name: tx('En helg'),
     price: 199,
     length: tx('72 timer'),
-    detail: tx('Fornyes ikke av seg selv.'),
   },
   {
     id: 'year',
     name: tx('For ett år'),
     price: 299,
     length: tx('12 måneder'),
-    detail: tx('For faste spillekvelder. Gjelder i 12 måneder fra du betaler, og fornyes ikke av seg selv.'),
   },
 ];
 
@@ -48,14 +45,6 @@ const RETIRED_PLANS = [
 export const DEFAULT_PLAN = 'evening';
 
 export const planById = (id) => PLANS.find((p) => p.id === id) ?? RETIRED_PLANS.find((p) => p.id === id) ?? null;
-
-/** What every package gives. Only the host pays: the others play for free, whatever the host has bought. */
-export const PERKS = [
-  [tx('Så mange runder dere vil'), tx('Ingen grense på antall runder eller spørsmål.')],
-  [tx('Bare verten betaler'), tx('De andre spiller gratis, på sine egne telefoner.')],
-  [tx('Ingen konto'), tx('Ingen passord å huske: du får en kode som gir deg tilgangen tilbake på en annen telefon.')],
-  [tx('Én betaling'), tx('Ikke et abonnement, og ingenting fornyes av seg selv.')],
-];
 
 /** «149 kr» (Norwegian) or «149 NOK» (Danish, Swedish): pay/currency.js decides. */
 export const formatPrice = (kroner) => withCurrency(kroner);

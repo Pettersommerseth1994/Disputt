@@ -1,5 +1,5 @@
-// «Har du rabattkode?» under the packages: a line that opens a field, and, when a code has been taken, what it takes off and a way to take it
-// away again. (pay/discount.js asks the payment server; the prices on the cards and the payment itself read what is in the store.)
+// «Har du en rabattkode?» above the packages: a dashed box with the field open, and, when a code has been taken, what it takes off and a way to take it
+// away again. A code that is the long access code from a receipt (not a discount code) is told so, with a way to «Logg inn» with it. (pay/discount.js asks the payment server; the prices on the cards and the payment itself read what is in the store.)
 // (A file of its own: pages are cached for ten minutes ...)
 
 import { html, useEffect, useState } from '../vendor/htm-preact.js';
@@ -7,13 +7,13 @@ import { t, tServer } from '../i18n/lang.js';
 import { setStore, useStore } from '../store.js';
 import { Button } from '../ui.js';
 import { dealFor, lookUpDiscount } from '../pay/discount.js';
+import { formatCodeInput, normalizeCode } from '../pay/pass.js';
 import { knownShop, loadShop } from '../pay/shop.js';
 import { vippsIsOfferedIn } from '../pay/vippslang.js';
 
 export function DiscountField({ plan }) {
   const s = useStore();
   const [shop, setShop] = useState(knownShop());
-  const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +37,6 @@ export function DiscountField({ plan }) {
     try {
       const found = await lookUpDiscount(text.trim());
       setStore({ discount: found });
-      setOpen(false);
       setText('');
     } catch (err) {
       setError(err.message);
@@ -55,15 +54,19 @@ export function DiscountField({ plan }) {
       ${here && !here.vipps && vippsIsOfferedIn() && html`<p class="small muted discount__note">${t('Denne koden gjelder i butikkens kasse (Betal med kort), ikke med Vipps.')}</p>`}
     </div>`;
   }
-  if (!open) {
-    return html`<div class="discount"><${Button} variant="text" onClick=${() => setOpen(true)}>${t('Har du rabattkode?')}</${Button}></div>`;
-  }
+  // the long code from a receipt is not a discount code: it is the way back in (the sheet «Logg inn» takes it along)
+  const access = normalizeCode(text) !== null;
   return html`<form class="discount discount--form" onSubmit=${apply}>
-    <label class="field__label" for="discount-code">${t('Rabattkode')}</label>
+    <label class="discount__title display" for="discount-code">${t('Har du en rabattkode?')}</label>
     <div class="discount__row">
-      <input id="discount-code" class="input input--small" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="64" placeholder=${t('Skriv inn koden')} value=${text} onInput=${(e) => setText(e.currentTarget.value)} />
-      <${Button} size="small" variant="cream" disabled=${busy || text.trim() === ''} onClick=${apply}>${busy ? t('Sjekker …') : t('Bruk')}</${Button}>
+      <input id="discount-code" class="input discount__input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="64" placeholder="VENN20" value=${text} onInput=${(e) => (setText(e.currentTarget.value), setError(''))} />
+      <${Button} size="small" variant="cream" type="submit" disabled=${busy || text.trim() === '' || access}>${busy ? t('Sjekker …') : t('Bruk')}</${Button}>
     </div>
-    ${error && html`<p class="field__error" role="alert">${error}</p>`}
+    ${access &&
+    html`<div class="discount__wrong" role="status">
+      <p><strong>${t('Dette ser ut som en tilgangskode.')}</strong> ${t('Den lange koden fra e-posten gir deg tilgangen tilbake. Den gir ikke rabatt.')}</p>
+      <${Button} size="small" variant="lime" onClick=${() => setStore({ sheet: 'login', loginCode: formatCodeInput(text) })}>${t('Logg inn med den ›')}</${Button}>
+    </div>`}
+    ${error && !access && html`<p class="field__error" role="alert">${error}</p>`}
   </form>`;
 }

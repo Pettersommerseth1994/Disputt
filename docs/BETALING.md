@@ -25,7 +25,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 <td align="center"><img src="../public/design-system/screens/pay-gate.webp" width="220" alt="Pakkene: En kveld, For ett år og Livstid, med knappene Betal med Vipps og Betal med Apple Pay"><br><sub>Verten trykker «Neste runde» etter runde 2 og får pakkene</sub></td>
 <td align="center"><img src="../public/design-system/screens/pay-guest-host-away.webp" width="220" alt="Poengskjermen hos en gjest, med varselet Verten betaler"><br><sub>Gjestene ser «Verten betaler» og venter</sub></td>
 <td align="center"><img src="../public/design-system/screens/pay-thanks.webp" width="220" alt="Velkommen-arket med tilgangen, koden og knappen Start runde 3"><br><sub>«Velkommen!» med koden, og én knapp som starter runde 3</sub></td>
-<td align="center"><img src="../public/design-system/screens/pay-login.webp" width="220" alt="Logg inn: skriv inn koden fra kvitteringen"><br><sub>«Jeg har tilgang» etter de gratis rundene</sub></td>
+<td align="center"><img src="../public/design-system/screens/pay-login.webp" width="220" alt="Logg inn: skriv inn koden fra kvitteringen"><br><sub>«Logg inn» under pakkene</sub></td>
 </tr>
 </table>
 
@@ -60,7 +60,7 @@ Alle er engangsbetalinger. Ingenting fornyes av seg selv. Bare **verten** betale
 3. Verten velger pakke og trykker **Betal med Vipps** eller **Betal med Apple Pay**. Gjestene får beskjed om at verten betaler og venter.
 4. Verten betaler på **Stripes betalingsside** og sendes tilbake til spillet, i samme fane.
 5. **«Velkommen!»** viser tilgangen og en kode. Knappen **Start runde 3** fortsetter spillet. Gjestene kobler seg til igjen av seg selv.
-6. Neste kveld ligger tilgangen på telefonen. På en ny telefon: spill de gratis rundene, velg **Jeg har tilgang**, og skriv koden.
+6. Neste kveld ligger tilgangen på telefonen. På en ny telefon: spill de gratis rundene, trykk **Logg inn** under pakkene, og skriv koden.
 
 ### Tre deler
 
@@ -339,7 +339,7 @@ Test-kopien er laget: <https://github.com/Pettersommerseth1994/Disputt-test> (of
 3. - [ ] Sett `SITE_URL` i **test-Workeren** til `https://pettersommerseth1994.github.io/Disputt-test/` (med skråstrek på slutten) og trykk Deploy. Betalingsserveren svarer bare til den siden, og sender verten tilbake dit etter betalingen.
 4. - [ ] Åpne test-kopien på telefonen.
 
-   **Du skal se:** etter de gratis rundene kommer valget **Jeg har tilgang / Kjøp tilgang**. Er det ikke slik, mangler en av variablene, eller byggingen er ikke kjørt etter at du la dem inn (Actions-fanen).
+   **Du skal se:** etter de gratis rundene kommer pakkene, med «Er du allerede kunde? Logg inn» under. Er det ikke slik, mangler en av variablene, eller byggingen er ikke kjørt etter at du la dem inn (Actions-fanen).
 
 ### 9.2 Direkte på hovedsiden (bare hvis ingen andre spiller)
 
@@ -354,8 +354,8 @@ Testkort ([Stripes testkort](https://docs.stripe.com/testing)): `4242 4242 4242 
 | # | Test | Forventet |
 | --- | --- | --- |
 | 1 | Åpne `…/health` på Workeren | `ok: true`, `mode: "test"` |
-| 2 | Forsiden | ingen innlogging; «Reglene, kort fortalt» og «Opprett spill» (koden skrives etter de gratis rundene: «Jeg har tilgang») |
-| 3 | Spill tre runder. Verten trykker «Neste runde» | Verten får først valget **Jeg har tilgang / Kjøp tilgang**, og med «Kjøp tilgang» **pakkene**. Gjestene ser «Venter på at verten starter neste runde» og får aldri pakkene |
+| 2 | Forsiden | ingen innlogging; «Reglene, kort fortalt» og «Opprett spill» (koden skrives under pakkene: «Er du allerede kunde? Logg inn») |
+| 3 | Spill tre runder. Verten trykker «Neste runde» | Verten får **pakkene**, med «Er du allerede kunde? Logg inn» under. Gjestene ser «Venter på at verten starter neste runde» og får aldri pakkene |
 | 4 | Velg **En kveld**, trykk **Betal med Apple Pay**. Betal med `4242…` | Stripe-siden viser 89 kr. Tilbake i spillet: «Velkommen!» med koden og knappen **Start runde 3** |
 | 5 | Mens verten er hos Stripe: se på en gjest | «Verten betaler, spillet fortsetter straks». Gjesten blir i spillet, også etter flere minutter (opptil ti) |
 | 6 | Trykk **Start runde 3** | Runde 3 starter. Er en gjest ikke tilbake ennå, står det «Venter på at … kommer tilbake …» under koden |
@@ -401,7 +401,7 @@ Først når alt over virker i testmiljøet.
 | --- | --- |
 | **Refusjon** | Stripe → Payments → betalingen → **Refund**. Refunderer du **hele** beløpet, virker koden ikke lenger på nye telefoner. En delvis refusjon (for eksempel 20 av 89 kr som imøtekommelse) låser ikke noe: kunden beholder det de kjøpte. En betaling som banken har bestridt (tvist) låses også. Telefoner som allerede har tilgangen beholder den (tilgangen er en signert fil som ikke kan trekkes tilbake, se del 14). |
 | **Mistet koden** | Kunden skriver til deg med e-posten som ble brukt. Finn betalingen i Stripe (Payments, søk på e-post), åpne den og se **Metadata → code**. Send koden. (Eller send kvitteringslenken.) |
-| **Kundens telefon er byttet** | «Jeg har tilgang» med koden (etter de gratis rundene). Nettleseren husker tilgangen etterpå. |
+| **Kundens telefon er byttet** | «Logg inn» under pakkene, med koden. Nettleseren husker tilgangen etterpå. |
 | **Rotere Stripe-nøkkelen** | Dashboard → API keys → ⋯ → *Rotate key* (du får opptil 7 dagers overlapp), og legg den nye verdien i `STRIPE_KEY` i Cloudflare. |
 | **Rotere signeringsnøkkelen** | Lag et nytt par (del 7.2). Legg privatnøkkelen i `JWT_PRIVATE_KEY` og den offentlige i `DISPUTT_PAYMENTS_KEY` på GitHub, og kjør Pages på nytt. Alle må «Logge inn» med koden én gang. |
 | **Endre priser** | Fire steder må være like: prisene i Stripe (lag en ny Price, ikke endre en gammel), `PLANS` i `payments/worker.js` (beløp i øre), `PLANS` i `public/js/pay/plans.js` og prisene i vilkårene (`public/vilkar.html`, punkt 1). Testene (`test/pay.test.js` og `test/pages-build.test.js`) feiler hvis filene er uenige. Lim inn den nye Worker-koden, oppdater `PRICE_…` og bygg siden på nytt; stemmer ikke Stripe-prisen med tabellen, sier betalingsserveren fra før noen betaler. **De som har betalt før endringen beholder alt:** beløpet de betalte ligger i betalingen hos Stripe og er det som kontrolleres, så koden virker fortsatt på nye telefoner. |

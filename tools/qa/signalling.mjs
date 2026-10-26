@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
 import { startP2PSite } from './sites.mjs';
 import { quiet } from './quiet.mjs';
+import { passReady } from './ready.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -83,10 +84,11 @@ try {
   const host = await newPhone('Petter');
   await host.page.goto(`${base}/`);
   await clickButton(host, 'Opprett spill');
-  await clickButton(host, 'Hytteturmodus'); // the host's first step: the way to play
+  await clickButton(host, 'På hver sin telefon'); // the host's first step: the way to play (then «Er du klar?»)
   await clickButton(host, 'Neste');
-  await register(host, 0, 'Neste'); // the second
-  await waitText(host, /Steg 3 av 4/);
+  await passReady(host.page); // the second
+  await register(host, 0, 'Neste'); // the third
+  await waitText(host, /Steg 4 av 5/);
   await host.page.focus('#target'); // one point, so that a game is over after a single round
   await host.page.keyboard.type('1');
   await sleep(400);
@@ -171,14 +173,14 @@ try {
   //    would do nothing at all.
   const c = await newPhone('Kari');
   await c.page.goto(`${base}/?j=${code}`);
-  await waitText(c, /Spillet har startet/i, 30000);
+  await waitText(c, /Spill \w+ har startet/i, 30000);
   const seatShown = () => c.page.evaluate(() => [...document.querySelectorAll('.player')].some((el) => el.innerText.includes('Ola')));
   for (let tries = 0; !(await seatShown()); tries++) {
     assert.ok(tries < 15, 'Ola\'s seat became available');
     await sleep(2000); // the host needs a moment to see that Ola's line is gone
     if (await seatShown()) break;
     await clickButton(c, 'Sjekk på nytt');
-    await waitText(c, /Spillet har startet/i);
+    await waitText(c, /Spill \w+ har startet/i);
   }
   log('a newcomer found the game and the seat picker');
   await cutLines(c);

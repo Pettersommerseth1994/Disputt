@@ -11,6 +11,7 @@ import { HomeSheet } from './screens/leave.js';
 import { useRememberGame } from './lastgame.js';
 import { Mantra } from './mantra/mantra.js';
 import { ModeStep } from './screens/mode.js';
+import { ReadyStep } from './screens/ready.js';
 import { Profile } from './screens/profile.js';
 import { PointsStep, hostStep } from './screens/setup.js';
 import { Countdown, Discussion, Question, RevealAsker, RoleReveal, Summary, WaitReveal } from './screens/round.js';
@@ -76,9 +77,9 @@ export function App() {
   useRememberGame(s.session, view); // (a guest's seat is remembered, so that closing the page is not the end of it: screens/rejoin.js)
 
   // every new screen starts at the top
-  useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep]);
+  useEffect(() => window.scrollTo(0, 0), [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep, s.readyStep]);
   // ... and what the mantra's bubble goes away for: a new screen under it (the same things, and the packages)
-  const screenKey = [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep, s.paywall].join('|');
+  const screenKey = [view?.phase, view?.turn?.number, view?.round, view?.you?.ready, s.editing, s.step, s.modeStep, s.readyStep, s.paywall].join('|');
 
   // a guest who is on the way in (a game being joined, or their own game being found again): no game on screen yet, and not the host making one
   const connecting = isP2P && !s.replaced && !view && !s.seats && !s.creating && (Boolean(s.session) || Boolean(s.joining) || s.route.page === 'join');
@@ -93,6 +94,7 @@ export function App() {
   else if (s.creating) screen = html`<${Connecting} text=${t('Starter spillet …')} />`;
   else if (s.session) screen = html`<${Connecting} text=${t('Kobler til spillet ditt …')} hint=${hint} />`;
   else if (s.joining || s.route.page === 'join') screen = html`<${Connecting} text=${t('Blir med i {code} …', { code: s.joining ?? s.route.code })} hint=${hint} />`;
+  else if (s.readyStep) screen = html`<${ReadyStep} />`;
   else if (s.modeStep) screen = html`<${ModeStep} />`;
   else {
     screen = html`<${Home} />`;

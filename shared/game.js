@@ -31,7 +31,7 @@ export const PHASE = Object.freeze({
 export const LIMITS = Object.freeze({
   minPlayers: 2,
   maxPlayers: 10, // a phone each
-  maxPlayersCar: 5, // everybody on one phone: as many as a car holds
+  maxPlayersCar: 10, // everybody on one phone: the same as with a phone each
   twoImpostorsFrom: 6, // a round with this many players or more has two impostors instead of one
   targetMin: 1,
   targetMax: 99,
@@ -108,7 +108,7 @@ export class Room {
    * Plain-JSON copy of everything needed to carry on later. The peer-to-peer host keeps this in sessionStorage, so a
    * reload (or a browser that discards the tab) does not end the game. `JSON.stringify(room)` uses it too.
    */
-  /** The most players this game takes: ten with a phone each (cabin), five on one phone (car). */
+  /** The most players this game takes: ten, both with a phone each (cabin) and on one phone (car). */
   get maxPlayers() {
     return this.mode === MODE.CAR ? LIMITS.maxPlayersCar : LIMITS.maxPlayers;
   }

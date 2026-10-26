@@ -14,7 +14,7 @@ import { setStore, useStore } from '../store.js';
 import { Avatar, Button, CloseIcon, Sheet } from '../ui.js';
 import { rich } from '../i18n/rich.js';
 import { cx } from '../util.js';
-import { TableStrip } from './carstrip.js';
+import { CarTurn } from './carturn.js';
 import { Finished } from './finale.js';
 import { Connecting } from './home.js';
 import { Countdown, Question, RevealAsker, Summary } from './round.js';
@@ -23,8 +23,6 @@ import { CAR_SEGMENTS } from './steps-count.js';
 import { TwoPlayersNote } from './twonote.js';
 
 const NAME_MAX = 14;
-const MIN_HOLD_MS = 500; // a role counts as seen when the button has been held this long: a stray touch does not use somebody's turn up
-const HANDOVER_LOCK_MS = 1500; // a button that has just been handed over waits this long before it works (see TableStrip)
 
 /** The same view with nobody marked "(deg)": all of them are at the table. */
 export const anonymous = (view) => ({ ...view, you: { ...view.you, id: null } });
@@ -87,11 +85,11 @@ export function PlayersStep({ view }) {
   // back to where the way to play is chosen: only while nobody but the host is in (the names that were put in would be lost)
   const backToMode = () => {
     actions.leave();
-    setStore({ modeStep: true });
+    setStore({ readyStep: true, readyMode: 'car' });
   };
   return html`<main class="screen lobby players-step">
     <${SetupHeader} />
-    <${Steps} current=${2} total=${CAR_SEGMENTS} onBack=${players.length <= 1 ? backToMode : undefined} />
+    <${Steps} current=${3} total=${CAR_SEGMENTS} onBack=${players.length <= 1 ? backToMode : undefined} />
     <div class="stack">
       <header class="stack stack--tight">
         <h1 class="setup__title rise-in">${t('Hvem spiller?')}</h1>
@@ -248,8 +246,9 @@ export function CarRoles({ view }) {
     activeRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
   }, [now?.id]);
 
-  const released = (row) => (ms) => {
-    if (ms >= MIN_HOLD_MS && !seen.includes(row.id)) actions.seen(row.id);
+  // a role counts as seen when the finger has held for the whole time that everybody holds (screens/equal.js): a stray touch does not use somebody's turn up
+  const seenNow = (row) => () => {
+    if (!seen.includes(row.id)) actions.seen(row.id);
   };
   const handTo = done ? host : seen.length > 0 ? now : null;
 
@@ -258,7 +257,7 @@ export function CarRoles({ view }) {
     <div class="rolelist__head">
       <p class="eyebrow">${t('Runde {round}', { round: view.round })}</p>
       <h1 class="setup__title rise-in">${done ? t('Alle har sett rollen sin') : t('Send telefonen rundt')}</h1>
-      <p class="lead muted">${done ? t('Gi telefonen tilbake til verten, som leser spørsmålet høyt for alle.') : t('Alle ser rollen sin, én og én. Hold inne knappen, og skjul skjermen for de andre.')}</p>
+      <p class="lead muted">${done ? t('Gi telefonen tilbake til verten, som leser spørsmålet høyt for alle.') : t('Alle ser rollen sin, én og én. Alle holder like lenge.')}</p>
     </div>
     <ol class="rolelist__list">
       ${table.map((r, i) => {
@@ -267,12 +266,7 @@ export function CarRoles({ view }) {
           return html`<li class="rolerow rolerow--done" key=${r.id}><span class="rolerow__n">${i + 1}</span><${Avatar} id=${r.avatar} size="sm" /><span class="rolerow__name">${r.name}${tag}</span><span class="rolerow__state">${t('✓ Sett')}</span></li>`;
         }
         if (now && r.id === now.id) {
-          return html`<li class="rolerow rolerow--strip" key=${r.id} ref=${activeRef}>
-            <span class="rolerow__n">${i + 1}</span>
-            <${Avatar} id=${r.avatar} size="sm" />
-            <span class="rolerow__name">${r.name}${tag}</span>
-            <${TableStrip} key=${r.id} row=${r} impostors=${count} onRelease=${released(r)} lockMs=${HANDOVER_LOCK_MS} />
-          </li>`;
+          return html`<${CarTurn} key=${r.id} row=${r} n=${i + 1} isHost=${r.id === host?.id} first=${seen.length === 0} impostors=${count} onSeen=${seenNow(r)} innerRef=${activeRef} />`;
         }
         return html`<li class="rolerow rolerow--wait" key=${r.id}><span class="rolerow__n">${i + 1}</span><${Avatar} id=${r.avatar} size="sm" /><span class="rolerow__name">${r.name}${tag}</span><span class="rolerow__state">${t('Venter')}</span></li>`;
       })}

@@ -124,10 +124,10 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
     });
 
     it('says how to use the code on another phone, with the name of the button that the game really has', () => {
-      assert.match(t, /Skal du bruke den på en annen telefon\? 1 Åpne Disputt 2 Når du blir bedt om å betale, trykk «Jeg har tilgang» 3 Skriv inn koden Ta vare på denne e-posten\./);
+      assert.match(t, /Skal du bruke den på en annen telefon\? 1 Åpne Disputt 2 Når du blir bedt om å betale, trykk «Logg inn» under pakkene 3 Skriv inn koden Ta vare på denne e-posten\./);
       const pay = read('public/js/screens/pay.js');
-      assert.ok(pay.includes("t('Jeg har tilgang')"), 'the game has a button called «Jeg har tilgang», where the e-mail sends the customer');
-      assert.ok(read('public/js/i18n/da/pay.js').includes("'Jeg har tilgang': 'Jeg har adgang'") && read('public/js/i18n/sv/pay.js').includes("'Jeg har tilgang': 'Jag har tillgång'"), 'and it is called that in Danish and Swedish, as the e-mails say');
+      assert.ok(pay.includes("t('Logg inn')"), 'the game has a button called «Logg inn» under the packages, where the e-mail sends the customer');
+      assert.ok(read('public/js/i18n/da/pay.js').includes("'Logg inn': 'Log ind'") && read('public/js/i18n/sv/pay.js').includes("'Logg inn': 'Logga in'"), 'and it is called that in Danish and Swedish, as the e-mails say');
     });
 
     it('lists what was bought, the total with VAT, how it was paid and the billing address', () => {
@@ -156,7 +156,7 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.match(mail, /<html lang="da">/);
       assert.match(t, /Tak for din bestilling! Ordre #1003/);
       assert.match(t, /Din kode K7M2-9QXD-4TRB Gælder i 12 timer fra betalingen Fornyes ikke automatisk\. Adgangen er allerede klar i spillet\./);
-      assert.match(t, /Skal du bruge den på en anden telefon\? 1 Åbn Disputt 2 Når du bliver bedt om at betale, tryk på «Jeg har adgang» 3 Indtast koden Gem denne e-mail\./);
+      assert.match(t, /Skal du bruge den på en anden telefon\? 1 Åbn Disputt 2 Når du bliver bedt om at betale, tryk på «Log ind» under pakkerne 3 Indtast koden Gem denne e-mail\./);
       assert.match(t, /Din ordre Disputt – En kveld \(12 timer\) × 1 149,00 kr I alt 149,00 kr NOK Heraf moms \(25 %\) 29,80 kr/);
       assert.match(t, /Betalt med Visa •••• 5031 Faktureringsadresse Mette Hansen Eksempelvej 12 2100 København Ø Danmark/);
       assert.match(t, /Fortrydelsesret: Du accepterede vilkårene og at adgangen leveres med det samme, før du betalte\. Dermed bortfalder fortrydelsesretten\./);
@@ -170,7 +170,7 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.match(mail, /<html lang="sv">/);
       assert.match(t, /Tack för din beställning! Order #1003/);
       assert.match(t, /Din kod K7M2-9QXD-4TRB Gäller i 12 timmar från betalningen Förnyas inte automatiskt\. Tillgången är redan klar i spelet\./);
-      assert.match(t, /Ska du använda den på en annan telefon\? 1 Öppna Disputt 2 När du blir ombedd att betala, tryck på «Jag har tillgång» 3 Skriv in koden Spara det här mejlet\./);
+      assert.match(t, /Ska du använda den på en annan telefon\? 1 Öppna Disputt 2 När du blir ombedd att betala, tryck på «Logga in» under paketen 3 Skriv in koden Spara det här mejlet\./);
       assert.match(t, /Din beställning Disputt – En kveld \(12 timer\) × 1 149,00 kr Totalt 149,00 kr NOK Varav moms \(25 %\) 29,80 kr/);
       assert.match(t, /Betalat med Visa •••• 5031 Faktureringsadress/);
       assert.match(t, /Ångerrätt: Du godkände villkoren och att tillgången levereras direkt innan du betalade\. Då förlorar du ångerrätten\./);

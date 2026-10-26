@@ -12,4 +12,6 @@ export const quiet = (page, lang = LANG) =>
     } catch {
       /* a page without storage */
     }
+    // everybody holds a role button for the same time, 4 s (screens/equal.js); a test holds for 0.6 s so that a whole game does not take minutes
+    window.__DISPUTT_HOLD_MS = 600;
   }, lang);
