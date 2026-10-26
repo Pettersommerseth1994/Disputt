@@ -34,10 +34,9 @@ export function Home() {
       <${Button} block onClick=${() => setStore({ modeStep: true })} disabled=${s.conn !== 'open'}>${t('Opprett spill')}</${Button}>
       <${Button} block variant="cream" onClick=${() => setMode('code')}>${t('Bli med i spill')}</${Button}>
       ${s.payments?.enabled &&
+      isActive(s.pass) &&
       html`<div class="row row--center home__links">
-        ${isActive(s.pass)
-          ? html`<span class="muted">${t('Du har tilgang')}</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>${t('Min tilgang')}</${Button}>`
-          : html`<span class="muted">${t('Allerede kunde?')}</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}>`}
+        <span class="muted">${t('Du har tilgang')}</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>${t('Min tilgang')}</${Button}>
       </div>`}
     </div>
   </main>`;

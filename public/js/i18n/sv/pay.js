@@ -180,4 +180,9 @@ export default {
   'Vipps er ikke slått på ennå.': 'Vipps är inte påslaget än.',
   'Betalingstjenesten ga ikke en betalingsside. Prøv igjen.': 'Betaltjänsten gav ingen betalningssida. Försök igen.',
   'Ugyldig betalings-ID.': 'Ogiltigt betalnings-ID.',
+  'Jeg har tilgang': 'Jag har tillgång',
+  'Skriv inn koden din': 'Skriv in din kod',
+  'Kjøp tilgang': 'Köp tillgång',
+  'Se pakkene og betal': 'Se paketen och betala',
+  'Fornyes ikke av seg selv.': 'Förnyas inte automatiskt.',
 };

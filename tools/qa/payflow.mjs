@@ -17,15 +17,23 @@ const storedPass = (p) =>
   });
 const choosePlan = (p, id) => p.page.evaluate((plan) => document.querySelector(`input[name=plan][value=${plan}]`).click(), id);
 
-/** What the start screen says once payments are on: "Allerede kunde? Logg inn" at the bottom, and the rules link ("Reglene, kort fortalt") that is always there. */
+/** What the start screen says once payments are on: nothing about logging in (the code is asked for after the free rounds), and the rules link that is always there. */
 export async function checkHome(t, phone) {
-  await t.waitText(phone, /Allerede kunde\?/);
+  await t.waitText(phone, /Reglene, kort fortalt/);
   const text = await t.bodyText(phone);
-  assert.match(text, /Logg inn/);
-  assert.match(text, /Reglene, kort fortalt/, 'the link to the rules is there as well');
-  const buttons = await phone.page.$$eval('button', (els) => els.map((b) => b.innerText.trim()));
-  assert.ok(buttons.includes('Logg inn'), '"Logg inn" is a button (a link-button)');
+  assert.doesNotMatch(text, /Allerede kunde|Logg inn/, 'there is no login on the start screen: «Jeg har tilgang» comes after the free rounds');
+  assert.match(text, /Opprett spill/);
 }
+
+/** The login sheet and the packages (without a game) are reached from the paywall in the real game; here the page is told to show them (the page has the hook with ?debug). */
+/** The start page with the page's QA hook (?debug), and the address made clean again (what the flows check after a payment is that nothing is left in it). */
+export async function openStart(phone, base) {
+  await phone.page.goto(`${base}/?debug`);
+  await phone.page.waitForFunction(() => Boolean(window.__disputt));
+  await phone.page.evaluate(() => history.replaceState(null, '', location.pathname));
+}
+export const showLogin = (phone) => phone.page.evaluate(() => window.__disputt.setStore({ sheet: 'login' }));
+export const showPackages = (phone) => phone.page.evaluate(() => window.__disputt.setStore({ sheet: null, paywall: true }));
 
 /**
  * The host is at the points of the last free round. Returns the code of the access that was bought.
@@ -39,8 +47,21 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
+  // first the choice: access that is there already (the code), or buy it
+  const choice = await bodyText(host);
+  assert.match(choice, /Dere har spilt tre runder gratis/);
+  assert.match(choice, /Jeg har tilgang/);
+  assert.match(choice, /Kjøp tilgang/);
+  assert.doesNotMatch(choice, /En kveld|Betal med/, 'the packages come after the choice');
+  await shot(host, '19-paywall-choice');
+  await clickButton(host, 'Jeg har tilgang');
+  await waitText(host, /Skriv inn koden du fikk da du betalte/);
+  await clickButton(host, 'Har du ikke kjøpt ennå? Se pakkene');
+  await waitText(host, /Fortsett quizen/);
+  await clickButton(host, 'Kjøp tilgang');
+  await waitText(host, /En kveld/);
   const paywall = await bodyText(host);
-  assert.match(paywall, /Dere har spilt to runder gratis/);
+  assert.match(paywall, /Dere har spilt tre runder gratis/);
   for (const [name, price] of [['En kveld', 149], ['En helg', 199], ['For ett år', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Betal med Vipps/);
   assert.match(paywall, /Betal med Apple Pay/);
@@ -79,6 +100,8 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   // 2) "En helg" with Vipps, paid
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
+  await clickButton(host, 'Kjøp tilgang');
+  await waitText(host, /En kveld/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /En kveld/, 'the evening is the package that is chosen from the start');
   await choosePlan(host, 'weekend');
   await clickButton(host, 'Betal med Vipps');
@@ -117,13 +140,13 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
   assert.equal(paid.amount, 19900);
   assert.equal(new URL(host.page.url()).search, '');
   const sheetButtons = await host.page.$$eval('.sheet button', (els) => els.map((b) => b.innerText.trim()));
-  assert.ok(sheetButtons.includes('Start runde 3'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
+  assert.ok(sheetButtons.includes('Start runde 4'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
   await shot(host, '22-thanks');
   log(`paid with Vipps: "Velkommen!" with the code ${code}`);
 
   // the guests find their way back; then the round the host asked for starts with one tap
   await host.page.waitForFunction(() => !/Venter på at .* kommer tilbake/.test(document.querySelector('.sheet')?.innerText ?? ''), { timeout: 45000 });
-  await clickButton(host, 'Start runde 3');
+  await clickButton(host, 'Start runde 4');
   return { code };
 }
 
@@ -135,9 +158,9 @@ export async function payAfterFreeRounds(t, { host, others, stack, holdMs = 0 })
 export async function buyAndComeBackByTheBackButton(t, { base, stack }) {
   const { clickButton, waitText, bodyText, newPhone, shot, log } = t;
   const phone = await newPhone('Kjøper');
-  await phone.page.goto(`${base}/`);
+  await openStart(phone, base);
   await checkHome(t, phone);
-  await clickButton(phone, 'Logg inn');
+  await showLogin(phone);
   await waitText(phone, /Skriv inn koden/);
   await clickButton(phone, 'Har du ikke kjøpt ennå? Se pakkene');
   await waitText(phone, /Pakker/);
@@ -172,9 +195,9 @@ export async function buyAndComeBackByTheBackButton(t, { base, stack }) {
 export async function restoreOnNewPhone(t, { base, code }) {
   const { clickButton, waitText, bodyText, newPhone, shot } = t;
   const phone = await newPhone('Kunde');
-  await phone.page.goto(`${base}/`);
+  await openStart(phone, base);
   await checkHome(t, phone);
-  await clickButton(phone, 'Logg inn');
+  await showLogin(phone);
   await waitText(phone, /Skriv inn koden du fikk da du betalte/);
   await shot(phone, '23-login');
   const field = '#pass-code';
@@ -198,7 +221,6 @@ export async function restoreOnNewPhone(t, { base, code }) {
   assert.equal(stored.code, code);
   const text = await bodyText(phone);
   assert.match(text, /Du har tilgang/);
-  assert.doesNotMatch(text, /Allerede kunde/);
 
   // "Min tilgang" on the start screen: what the phone has, and taking it off takes two taps
   await clickButton(phone, 'Min tilgang');
@@ -209,7 +231,8 @@ export async function restoreOnNewPhone(t, { base, code }) {
   await waitText(phone, /Trykk igjen for å fjerne/);
   assert.notEqual(await storedPass(phone), null, 'one tap does not remove it');
   await clickButton(phone, 'Trykk igjen for å fjerne');
-  await waitText(phone, /Allerede kunde\?/);
+  await waitText(phone, /Opprett spill/);
+  assert.doesNotMatch(await bodyText(phone), /Du har tilgang/, 'no access any more: nothing on the start screen says so');
   assert.equal(await storedPass(phone), null);
   t.log('a new phone gets the access back with the code from the receipt (typed loosely), and can take it off again');
 }

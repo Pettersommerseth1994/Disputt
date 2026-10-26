@@ -6,7 +6,7 @@
 //
 // `t` is play.mjs's own toolbox: { clickButton, waitText, bodyText, newPhone, shot, sleep, log }.
 import assert from 'node:assert/strict';
-import { checkHome } from './payflow.mjs';
+import { checkHome, openStart, showLogin } from './payflow.mjs';
 
 const CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
 /** The pass this phone keeps (it sits under a key that names the payment server it came from), or null. */
@@ -40,8 +40,10 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
+  await clickButton(host, 'Kjøp tilgang'); // (first the choice between «Jeg har tilgang» and «Kjøp tilgang»: see payflow.mjs)
+  await waitText(host, /En kveld/);
   const paywall = await bodyText(host);
-  assert.match(paywall, /Dere har spilt to runder gratis/);
+  assert.match(paywall, /Dere har spilt tre runder gratis/);
   assert.match(await host.page.$eval('.plan.is-selected', (el) => el.innerText), /En kveld/, 'the evening is the package that is chosen from the start');
   for (const [name, price] of [['En kveld', 149], ['En helg', 199], ['For ett år', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.match(paywall, /Betal med kort/);
@@ -147,7 +149,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   assert.equal(await host.page.evaluate(() => sessionStorage.getItem('disputt:shop')), null, 'and the game tab has forgotten that it waited');
   assert.equal(new URL(host.page.url()).search, '');
   const sheetButtons = await host.page.$$eval('.sheet button', (els) => els.map((b) => b.innerText.trim()));
-  assert.ok(sheetButtons.includes('Start runde 3'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
+  assert.ok(sheetButtons.includes('Start runde 4'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
   await shot(host, '22-thanks-shop');
   log(`paid in the shop's tab: "Velkommen!" with the code ${shown}`);
 
@@ -165,7 +167,7 @@ export async function payAfterFreeRoundsShop(t, { host, others, stack, holdMs = 
   await visitor.close();
 
   await host.page.bringToFront();
-  await clickButton(host, 'Start runde 3');
+  await clickButton(host, 'Start runde 4');
   return { code };
 }
 
@@ -180,9 +182,9 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   await phone.page.evaluateOnNewDocument(() => {
     window.open = () => null; // (a pop-up blocker)
   });
-  await phone.page.goto(`${base}/`);
+  await openStart(phone, base);
   await checkHome(t, phone);
-  await clickButton(phone, 'Logg inn');
+  await showLogin(phone);
   await waitText(phone, /Skriv inn koden/);
   await clickButton(phone, 'Har du ikke kjøpt ennå? Se pakkene');
   await waitText(phone, /Pakker/);
@@ -222,8 +224,8 @@ export async function buyAndComeBackShop(t, { base, stack }) {
   await other.page.evaluateOnNewDocument(() => {
     window.open = () => null;
   });
-  await other.page.goto(`${base}/`);
-  await clickButton(other, 'Logg inn');
+  await openStart(other, base);
+  await showLogin(other);
   await clickButton(other, 'Har du ikke kjøpt ennå? Se pakkene');
   await waitText(other, /Pakker/);
   await choosePlan(other, 'evening');

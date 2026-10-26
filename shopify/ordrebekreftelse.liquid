@@ -23,8 +23,7 @@
 
 {%- comment %} Språk {% endcomment -%}
 {%- assign lang = attributes.sprak | default: order.customer_locale | default: customer.locale | default: 'nb' | downcase | slice: 0, 2 -%}
-{%- assign login_button = 'Allerede kunde? Logg inn' -%}
-{%- comment %} (Knappen heter det samme på alle språk helt til spillet er oversatt: kunden skal få se det som står i spillet.) {% endcomment -%}
+{%- comment %} (Etter tre gratis runder velger verten «Jeg har tilgang» og skriver inn koden: knappen heter som i spillet på hvert språk.) {% endcomment -%}
 
 {%- if lang == 'da' -%}
   {%- assign t_title = 'Tak for din bestilling!' -%}
@@ -43,7 +42,7 @@
   {%- assign t_plan_generic = 'Hvor længe adgangen varer, fremgår af den pakke, du købte, og af vilkårene.' -%}
   {%- assign t_steps_title = 'Skal du bruge den på en anden telefon?' -%}
   {%- assign t_step1 = 'Åbn Disputt' -%}
-  {%- assign t_step2 = 'Tryk på «' | append: login_button | append: '»' -%}
+  {%- assign t_step2 = 'Når du bliver bedt om at betale, tryk på «Jeg har adgang»' -%}
   {%- assign t_step3 = 'Indtast koden' -%}
   {%- assign t_keep = 'Gem denne e-mail.' -%}
   {%- assign t_nocode = 'Har du betalt uden at få en kode i spillet? Svar på denne e-mail, eller skriv til kontakt@disputt.site med ordrenummeret, så hjælper vi dig.' -%}
@@ -79,7 +78,7 @@
   {%- assign t_plan_generic = 'Hur länge tillgången gäller framgår av paketet du köpte och av villkoren.' -%}
   {%- assign t_steps_title = 'Ska du använda den på en annan telefon?' -%}
   {%- assign t_step1 = 'Öppna Disputt' -%}
-  {%- assign t_step2 = 'Tryck på «' | append: login_button | append: '»' -%}
+  {%- assign t_step2 = 'När du blir ombedd att betala, tryck på «Jag har tillgång»' -%}
   {%- assign t_step3 = 'Skriv in koden' -%}
   {%- assign t_keep = 'Spara det här mejlet.' -%}
   {%- assign t_nocode = 'Har du betalat utan att få en kod i spelet? Svara på det här mejlet eller skriv till kontakt@disputt.site med ordernumret, så hjälper vi dig.' -%}
@@ -116,7 +115,7 @@
   {%- assign t_plan_generic = 'Hvor lenge tilgangen varer, står i pakken du kjøpte og i vilkårene.' -%}
   {%- assign t_steps_title = 'Skal du bruke den på en annen telefon?' -%}
   {%- assign t_step1 = 'Åpne Disputt' -%}
-  {%- assign t_step2 = 'Trykk «' | append: login_button | append: '»' -%}
+  {%- assign t_step2 = 'Når du blir bedt om å betale, trykk «Jeg har tilgang»' -%}
   {%- assign t_step3 = 'Skriv inn koden' -%}
   {%- assign t_keep = 'Ta vare på denne e-posten.' -%}
   {%- assign t_nocode = 'Har du betalt uten å få en kode i spillet? Svar på denne e-posten, eller skriv til kontakt@disputt.site med ordrenummeret, så hjelper vi deg.' -%}

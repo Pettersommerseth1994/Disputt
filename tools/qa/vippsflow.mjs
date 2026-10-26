@@ -7,7 +7,7 @@
 //
 // `t` is play.mjs's own toolbox: { clickButton, waitText, bodyText, newPhone, shot, sleep, log }.
 import assert from 'node:assert/strict';
-import { checkHome } from './payflow.mjs';
+import { checkHome, openStart, showLogin } from './payflow.mjs';
 
 const CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
 const REFERENCE = /^disputt-[0-9a-hjkmnp-tv-z]{24}$/;
@@ -69,9 +69,10 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   // "Neste runde" shows the packages to the host. The others just wait, like between any two rounds.
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
+  await clickButton(host, 'Kjøp tilgang'); // (first the choice between «Jeg har tilgang» and «Kjøp tilgang»: see payflow.mjs)
   await host.page.waitForSelector('.btn--vipps', { timeout: 10000 }); // (the packages ask the payment server whether Vipps is set up, and the button comes with the answer)
   const paywall = await bodyText(host);
-  assert.match(paywall, /Dere har spilt to runder gratis/);
+  assert.match(paywall, /Dere har spilt tre runder gratis/);
   assert.match(paywall, /Betal med Vipps/);
   assert.match(paywall, /Betal med kort/, 'the shop is still there for those who want a card or Apple Pay');
   assert.match(paywall, /Jeg godtar vilkårene og at tilgangen leveres med en gang\./);
@@ -246,7 +247,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   assert.equal(await host.page.evaluate(() => sessionStorage.getItem('disputt:shop')), null, 'and the game tab has forgotten that it waited');
   assert.equal(new URL(host.page.url()).search, '');
   const sheetButtons = await host.page.$$eval('.sheet button', (els) => els.map((b) => b.innerText.trim()));
-  assert.ok(sheetButtons.includes('Start runde 3'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
+  assert.ok(sheetButtons.includes('Start runde 4'), `the thank-you sheet offers the round the host asked for (${sheetButtons.join(' | ')})`);
   await shot(host, '33-thanks-vipps');
   log(`paid in the tab for Vipps with the webhook held back: "Velkommen!" with the code ${shown}${sawThanks ? ', and the page in the tab said «Velkommen!»' : ''}`);
 
@@ -303,7 +304,7 @@ export async function payAfterFreeRoundsVipps(t, { host, others, stack, holdMs =
   log('the page the host comes back to says «Velkommen!» for a payment that is in, and asks for nothing when it is opened with nothing');
 
   await host.page.bringToFront();
-  await clickButton(host, 'Start runde 3');
+  await clickButton(host, 'Start runde 4');
   return { code };
 }
 
@@ -320,9 +321,9 @@ export async function buyAndComeBackVipps(t, { base, stack }) {
   await phone.page.evaluateOnNewDocument(() => {
     window.open = () => null; // (a pop-up blocker)
   });
-  await phone.page.goto(`${base}/`);
+  await openStart(phone, base);
   await checkHome(t, phone);
-  await clickButton(phone, 'Logg inn');
+  await showLogin(phone);
   await waitText(phone, /Skriv inn koden/);
   await clickButton(phone, 'Har du ikke kjøpt ennå? Se pakkene');
   await waitText(phone, /Pakker/);
@@ -376,6 +377,7 @@ export async function payAfterFreeRoundsVippsApp(t, { host, others, stack }) {
   const { vipps, admin } = stack;
   await clickButton(host, 'Neste runde');
   await waitText(host, /Fortsett quizen/);
+  await clickButton(host, 'Kjøp tilgang');
   await host.page.waitForSelector('.btn--vipps', { timeout: 10000 });
   await choosePlan(host, 'weekend');
   await tick(host);
@@ -413,6 +415,6 @@ export async function payAfterFreeRoundsVippsApp(t, { host, others, stack }) {
   await back.close();
   await host.page.bringToFront();
   log(`paid in the app: the pass came to the game tab by itself ("Velkommen!", the code ${code}), with one extra tab in all`);
-  await clickButton(host, 'Start runde 3');
+  await clickButton(host, 'Start runde 4');
   return { code };
 }

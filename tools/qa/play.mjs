@@ -43,10 +43,10 @@ const PAY_SHOP_SLOW = flags.includes('--pay-shopify-slow');
 const PAY_VIPPS_APP = flags.includes('--pay-vipps-app');
 const PAY_VIPPS = flags.includes('--pay-vipps') || PAY_VIPPS_APP;
 const PAY_SHOP = flags.includes('--pay-shopify') || PAY_SHOP_SLOW || PAY_VIPPS; // (Vipps is a button in the Shopify edition)
-const FREE_ROUNDS = 2; // (the page's default)
+const FREE_ROUNDS = 3; // (the page's default)
 const P2P = LIVE || SUBPATH || flags.includes('--p2p');
 const SLOW = LIVE ? 2 : 1; // the deployed site runs on the real timers and a real network
-if (PAY || PAY_SHOP) assert.ok(!LIVE && TARGET >= 3, '--pay needs a local site and a target of 3 or more, so that there is a third round to pay for');
+if (PAY || PAY_SHOP) assert.ok(!LIVE && TARGET >= FREE_ROUNDS + 1, `--pay needs a local site and a target of ${FREE_ROUNDS + 1} or more, so that there is a round to pay for`);
 assert.ok(!(PAY && PAY_SHOP), 'a game is paid for at Stripe or at Shopify, not both');
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 'Nina', 'Lars'];

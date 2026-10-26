@@ -100,6 +100,18 @@ export function Paywall({ view = null }) {
   const chosen = planById(plan);
   const have = isActive(s.pass);
   const gate = Boolean(view?.you?.isHost) && view.round >= pay.freeRounds && !have;
+  // after the free rounds the host first says whether there is access already (the code) or whether to buy it; the packages are the second step
+  // (a payment that is waited for, and the packages opened from «Min tilgang» or «Pakker», go straight to the packages)
+  // (`payStage`: only the QA tools set it, to draw the packages without a tap. It is only the first step: giving up a payment that was waited for
+  // leaves the host at the packages, where the host was.)
+  const [stage, setStage] = useState(s.payStage ?? (gate && !s.payWaiting ? 'choose' : 'buy'));
+  const qaStage = useRef(s.payStage);
+  useEffect(() => {
+    if (qaStage.current === s.payStage) return;
+    qaStage.current = s.payStage;
+    setStage(s.payStage ?? (gate ? 'choose' : 'buy'));
+  }, [s.payStage]);
+  const choose = gate && stage === 'choose';
   const go = async (method) => {
     setBusy(method);
     setError('');
@@ -113,8 +125,26 @@ export function Paywall({ view = null }) {
   const label = { vipps: 'Vipps', applepay: 'Apple Pay' };
   const terms = [pay.termsUrl && [tx('Vilkår'), pay.termsUrl], pay.privacyUrl && [tx('Personvern'), pay.privacyUrl]].filter(Boolean);
 
+  if (choose) {
+    return html`<main class="screen paywall paywall--choose">
+      <div class="paywall__top"><${Button} variant="text" onClick=${() => setStore({ paywall: false })}>${t('‹ Tilbake')}</${Button}></div>
+      <header class="stack stack--tight">
+        <p class="eyebrow">${view.round <= pay.freeRounds ? t('Dere har spilt {rounds} gratis', { rounds: rounds(view.round) }) : t('Dere har spilt {rounds}', { rounds: rounds(view.round) })}</p>
+        <h1 class="setup__title rise-in">${t('Fortsett quizen')}</h1>
+        <p class="lead muted">${t('Verten betaler én gang, så kan alle spille videre.')}</p>
+      </header>
+      <div class="grow stack stack--loose paywall__choices">
+        <${Button} block variant="cream" class="paywall__choice" onClick=${() => setStore({ sheet: 'login' })}>
+          <span>${t('Jeg har tilgang')}</span><small>${t('Skriv inn koden din')}</small>
+        </${Button}>
+        <${Button} block class="paywall__choice" data-qa="buy" onClick=${() => setStage('buy')}>
+          <span>${t('Kjøp tilgang')}</span><small>${t('Se pakkene og betal')}</small>
+        </${Button}>
+      </div>
+    </main>`;
+  }
   return html`<main class="screen paywall">
-    <div class="paywall__top"><${Button} variant="text" onClick=${() => setStore({ paywall: false })}>${t('‹ Tilbake')}</${Button}></div>
+    <div class="paywall__top"><${Button} variant="text" onClick=${() => (gate ? setStage('choose') : setStore({ paywall: false }))}>${t('‹ Tilbake')}</${Button}></div>
     <header class="stack stack--tight">
       <p class="eyebrow">${gate ? (view.round <= pay.freeRounds ? t('Dere har spilt {rounds} gratis', { rounds: rounds(view.round) }) : t('Dere har spilt {rounds}', { rounds: rounds(view.round) })) : t('For verter')}</p>
       <h1 class="setup__title rise-in">${gate ? t('Fortsett quizen') : t('Pakker')}</h1>

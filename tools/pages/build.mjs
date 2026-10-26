@@ -6,7 +6,7 @@
 //                              [--ice-servers '<json array>'] [--timings '<json object>'] [--no-csp]
 //                              [--payments-url https://pay.example.workers.dev --payments-key <base64> [--payments-methods vipps,applepay]
 //                               [--payments-provider stripe|shopify]
-//                               [--free-rounds 2] [--terms-url https://…] [--privacy-url https://…]]
+//                               [--free-rounds 3] [--terms-url https://…] [--privacy-url https://…]]
 //
 // The same settings can come from the environment (handy in CI): DISPUTT_MODE, DISPUTT_SERVER_URL, DISPUTT_PEER_HOST,
 // DISPUTT_PEER_PORT, DISPUTT_PEER_PATH, DISPUTT_PEER_SECURE, DISPUTT_ICE_SERVERS, and for payments (docs/BETALING.md)
@@ -128,7 +128,7 @@ export async function buildConfig(opts) {
       apiUrl: new URL(opts.paymentsUrl).origin,
       publicKey: opts.paymentsKey,
       ...(shopify ? { provider: 'shopify' } : { methods: opts.paymentsMethods ? [...new Set(opts.paymentsMethods.split(','))] : ['applepay'] }),
-      freeRounds: opts.freeRounds === undefined ? 2 : Number(opts.freeRounds),
+      freeRounds: opts.freeRounds === undefined ? 3 : Number(opts.freeRounds),
       ...(opts.termsUrl ? { termsUrl: opts.termsUrl } : {}),
       ...(opts.privacyUrl ? { privacyUrl: opts.privacyUrl } : {}),
     };

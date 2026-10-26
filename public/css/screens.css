@@ -101,6 +101,10 @@
 .paywall__top { display: flex; align-items: center; min-height: 2.1rem; }
 .paywall__top .btn--text { min-height: 2.1rem; margin-left: -0.6rem; }
 .paywall__have { align-self: flex-start; }
+/* «Jeg har tilgang» / «Kjøp tilgang»: two big buttons with a small line under each, before the packages */
+.paywall__choices { justify-content: center; }
+.paywall__choice { flex-direction: column; gap: 0.35rem; min-height: 6.4rem; }
+.paywall__choice small { font-family: var(--font-text); font-weight: 600; font-size: var(--fs-small); opacity: 0.85; }
 .plans__detail { margin: 0; min-height: 2.4em; }
 .paywall__fine { margin: 0; line-height: 1.35; }
 .paywall__fine a { color: inherit; }

@@ -22,7 +22,7 @@ const passKey = () => `disputt:pass:${store.payments.apiUrl}`;
 
 /** What the page knows about payments, from the build's config. `secure` is the browser's crypto (only on https pages). */
 export function paymentSettings(cfg = config.payments, secure = globalThis.crypto?.subtle) {
-  if (!cfg?.apiUrl || !cfg?.publicKey || !secure) return { enabled: false, freeRounds: 2, methods: [] };
+  if (!cfg?.apiUrl || !cfg?.publicKey || !secure) return { enabled: false, freeRounds: 3, methods: [] };
   const methods = [...new Set((cfg.methods ?? []).filter((m) => METHODS.includes(m)))];
   return {
     enabled: true,
@@ -30,7 +30,7 @@ export function paymentSettings(cfg = config.payments, secure = globalThis.crypt
     apiUrl: String(cfg.apiUrl).replace(/\/+$/, ''),
     publicKey: String(cfg.publicKey),
     methods: methods.length ? methods : ['applepay'],
-    freeRounds: Number.isInteger(cfg.freeRounds) && cfg.freeRounds >= 1 ? cfg.freeRounds : 2, // (the first round is always free: the packages come at "Neste runde")
+    freeRounds: Number.isInteger(cfg.freeRounds) && cfg.freeRounds >= 1 ? cfg.freeRounds : 3, // (the first round is always free: the packages come at "Neste runde")
     // (the terms and the privacy statement are pages of the app, vilkar.html and personvern.html, unless the build says otherwise)
     termsUrl: cfg.termsUrl ? String(cfg.termsUrl) : 'vilkar.html',
     privacyUrl: cfg.privacyUrl ? String(cfg.privacyUrl) : 'personvern.html',

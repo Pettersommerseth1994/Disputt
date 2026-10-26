@@ -83,7 +83,7 @@ npm run qa:stuck               # gjest uten linje til verten får rådet «be ve
 npm run qa:signalling          # kontakten med meglertjenesten faller ut, verten våkner, plassvelgeren mister linjen: alt kommer seg
 npm run qa:hostile             # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn
 npm run play:subpath           # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages
-npm run play:pay               # med betaling: verten møter pakkene etter runde 2, angrer, betaler med «Vipps» hos en falsk Stripe og spiller videre (og et kjøp fra forsiden, med hjemreise via tilbakeknappen)
+npm run play:pay               # med betaling: verten møter valget «Jeg har tilgang / Kjøp tilgang» og pakkene etter runde 3, angrer, betaler med «Vipps» hos en falsk Stripe og spiller videre (og et kjøp fra forsiden, med hjemreise via tilbakeknappen)
 npm run play:pay-slow          # det samme, men verten er borte i 75 s mens han betaler: gjestene må vente på ham
 ```
 

@@ -123,11 +123,11 @@ describe('the settings', () => {
     assert.equal(on.privacyUrl, 'https://site.test/personvern');
   });
 
-  it('fall back to Apple Pay and two free rounds, and ignore methods that do not exist', () => {
+  it('fall back to Apple Pay and three free rounds, and ignore methods that do not exist', () => {
     const s = pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', methods: ['bitcoin'], freeRounds: -1 }, {});
     assert.deepEqual(s.methods, ['applepay']);
-    assert.equal(s.freeRounds, 2);
-    assert.equal(pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', freeRounds: 0 }, {}).freeRounds, 2, 'the first round is always free, so "none" is not a setting');
+    assert.equal(s.freeRounds, 3);
+    assert.equal(pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', freeRounds: 0 }, {}).freeRounds, 3, 'the first round is always free, so "none" is not a setting');
     assert.equal(pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', freeRounds: 1 }, {}).freeRounds, 1);
     assert.deepEqual(pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k', methods: ['vipps', 'vipps', 'applepay'] }, {}).methods, ['vipps', 'applepay'], 'a method named twice is one button');
     const bare = pay.paymentSettings({ apiUrl: 'https://pay.test', publicKey: 'k' }, {});

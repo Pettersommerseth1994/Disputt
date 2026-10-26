@@ -32,7 +32,7 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 
 - **Hytteturmodus** (en telefon hver) er spillet slik det er beskrevet over.
 - **Bilturmodus** (2 til 5 spillere på én telefon, vertens): verten legger inn alle navnene i steg 2, «Hvem spiller?». Fem er det flest som får plass i en bil, så listen stopper der, og det er aldri to imposterer. Den øverste er verten, og verten leser alltid spørsmålet. Hver runde begynner med at telefonen sendes rundt: en liste med navnene nedover, der bare den som står for tur har «Hold for å se» (den samme stripen som i Hytteturmodus, med knappen til høyre og rollen til venstre mens den holdes). Slipper man, er rollen borte og turen går videre («Gi telefonen til …»). Når alle har sett rollen sin, gir de telefonen tilbake til verten, som trykker «Vis spørsmålet». Resten er som i Hytteturmodus, på vertens telefon. Glemt rollen din? «Se rolle» i stripen øverst åpner «Se rolle igjen»: trykk på navnet ditt og hold inne knappen. Et spill på én telefon bruker ikke nettverket, så det kan spilles uten dekning (i Hytteturmodus er verten fortsatt «serveren»).
-- **Betaling og tid er de samme i begge:** to runder gratis, så pakkene, og ca. 6 minutter per poeng.
+- **Betaling og tid er de samme i begge:** tre runder gratis, så pakkene, og ca. 6 minutter per poeng.
 - **Med to spillere** er en runde én av tre, like sannsynlige: den første er imposter, den andre er imposter, eller ingen er imposter (da får begge 1 poeng hvis dere svarer riktig, og ingen hvis dere svarer feil). Ellers ville den ene alltid visst hvem imposteren var. Rollen din sier ikke om den andre er imposter, og avsløringen ser lik ut i alle tre. Fra tre spillere er det alltid en imposter.
 
 ### Valg som er tatt (og kan endres)
@@ -69,7 +69,7 @@ Terminalen skriver ut to adresser. Åpne **adressen merket «På mobilen (Wi‑F
 
 ## Betaling (av som standard)
 
-Spillet er gratis. Koden kan også ta betalt, men det er **slått av** helt til to variabler settes på GitHub: tre pakker bare verten kjøper (**En kveld** 149 kr, **En helg** 199 kr, **For ett år** 299 kr; «Livstid» selges ikke lenger), en betalingsmur etter to gratis runder, betaling med **Vipps, Apple Pay eller kort** i en Shopify-butikk som åpner seg i en ny fane (eller hos Stripe), ingen innlogging (en kode fra e-posten gir tilgangen tilbake på en ny telefon). Betalingsserveren er én Cloudflare Worker: [`payments/worker-shopify.js`](payments/worker-shopify.js) (med en liten D1-database) for Shopify, og [`payments/worker.js`](payments/worker.js), som ikke lagrer noe, for Stripe. **Oppsettet, steg for steg: [docs/SHOPIFY.md](docs/SHOPIFY.md)** (Stripe: [docs/BETALING.md](docs/BETALING.md)). Som et tillegg til Shopify finnes en oransje knapp **Betal med Vipps** som går rett til Vipps og lager ordren i Shopify etterpå, også av som standard: [docs/VIPPS.md](docs/VIPPS.md).
+Spillet er gratis. Koden kan også ta betalt, men det er **slått av** helt til to variabler settes på GitHub: tre pakker bare verten kjøper (**En kveld** 149 kr, **En helg** 199 kr, **For ett år** 299 kr; «Livstid» selges ikke lenger), en betalingsmur etter tre gratis runder, betaling med **Vipps, Apple Pay eller kort** i en Shopify-butikk som åpner seg i en ny fane (eller hos Stripe), ingen innlogging på forsiden (etter de gratis rundene velger verten «Jeg har tilgang» og skriver inn koden fra e-posten, eller «Kjøp tilgang»). Betalingsserveren er én Cloudflare Worker: [`payments/worker-shopify.js`](payments/worker-shopify.js) (med en liten D1-database) for Shopify, og [`payments/worker.js`](payments/worker.js), som ikke lagrer noe, for Stripe. **Oppsettet, steg for steg: [docs/SHOPIFY.md](docs/SHOPIFY.md)** (Stripe: [docs/BETALING.md](docs/BETALING.md)). Som et tillegg til Shopify finnes en oransje knapp **Betal med Vipps** som går rett til Vipps og lager ordren i Shopify etterpå, også av som standard: [docs/VIPPS.md](docs/VIPPS.md).
 
 ## Designsystem
 
@@ -116,15 +116,15 @@ npm run play:live      # det samme mot den publiserte siden på GitHub Pages (ek
 npm run play:car       # Bilturmodus (alle på én telefon): oppsettet, telefonen sendt rundt, «Se rolle igjen», poengene, spill igjen (node tools/qa/car.mjs [spillere] [poeng])
 npm run play:car:p2p   # det samme i peer-to-peer-bygget: ingen WebSocket og ingen WebRTC, og siden lastes på nytt midt i spillet
 npm run play:car:two   # Bilturmodus med to spillere: runder til første er imposter, andre er imposter og ingen er imposter alle har kommet opp
-npm run play:car:pay   # Bilturmodus med betaling: to runder gratis, så pakkene, hos en falsk Stripe, og tilbake til samme spill
+npm run play:car:pay   # Bilturmodus med betaling: tre runder gratis, så pakkene, hos en falsk Stripe, og tilbake til samme spill
 npm run play:two       # to spillere, en telefon hver: runder til alle tre utfall har kommet opp (og en runde uten imposter ser lik ut på begge telefoner til poengene)
 npm run qa:stuck       # en gjest som ikke får linje til verten får et råd på skjermen (ca. 40 s)
 npm run qa:signalling  # kontakten med meglertjenesten faller ut (også midt i et spill), verten våkner, plassvelgeren mister linjen: alt kommer seg
 npm run qa:hostile     # tilkoblinger av feil type, tilkoblinger som tier, og en full vert: ekte spillere kommer likevel inn (ca. 30 s)
 npm run play:subpath   # hele spillet mot den bygde siden under /Disputt/, som på GitHub Pages
-npm run play:pay       # med betaling: pakkene etter runde 2, avbrutt og gjennomført betaling hos en falsk Stripe, runde 3, kjøp fra forsiden og innlogging på en ny telefon
+npm run play:pay       # med betaling: valget «Jeg har tilgang» / «Kjøp tilgang» og pakkene etter runde 3, avbrutt og gjennomført betaling hos en falsk Stripe, runde 4, kjøp uten spill og innlogging på en ny telefon
 npm run play:pay-slow  # det samme, men verten er borte i 75 s mens han betaler: gjestene må vente på ham
-npm run play:pay-shopify  # med betaling i en falsk Shopify-butikk som åpner seg i en ny fane: lukket og åpnet igjen, avbrutt, sent varsel, gjennomført, kjøp fra forsiden og innlogging på en ny telefon
+npm run play:pay-shopify  # med betaling i en falsk Shopify-butikk som åpner seg i en ny fane: lukket og åpnet igjen, avbrutt, sent varsel, gjennomført, kjøp uten spill og innlogging på en ny telefon
 npm run play:pay-shopify-slow  # det samme, men verten er borte i 75 s
 npm run qa:shop-live -- --url=https://pettersommerseth1994.github.io/Disputt-test  # en utlagt kopi mot den ekte butikken, til og med kassen og ikke et skritt lenger: ingenting kjøpes
 npm run shots          # skjermbilde av hver skjerm i mobilstørrelse -> tmp/shots/ (VIEWPORT=390x664 for en nettleser med verktøylinjer)

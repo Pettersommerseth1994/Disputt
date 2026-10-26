@@ -16,7 +16,7 @@ export default {
 
   // Payments. null = the game is free. The Pages build fills this in when the repository variables DISPUTT_PAYMENTS_URL and
   // DISPUTT_PAYMENTS_KEY are set (docs/SHOPIFY.md, or docs/BETALING.md for Stripe): { apiUrl, publicKey, provider: 'shopify' | 'stripe',
-  // methods: ['vipps', 'applepay'] (Stripe only), freeRounds: 2, termsUrl, privacyUrl } (the last two default to the pages vilkar.html and
+  // methods: ['vipps', 'applepay'] (Stripe only), freeRounds: 3, termsUrl, privacyUrl } (the last two default to the pages vilkar.html and
   // personvern.html of the app).
   payments: null,
 

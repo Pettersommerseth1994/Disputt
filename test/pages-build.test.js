@@ -167,7 +167,7 @@ describe('payments in the build', () => {
     assert.doesNotMatch(contentSecurityPolicy(off), /workers\.dev/);
 
     const on = await buildConfig({ mode: 'p2p', paymentsUrl: 'https://disputt-pay.example.workers.dev', paymentsKey: KEY });
-    assert.deepEqual(on.payments, { apiUrl: 'https://disputt-pay.example.workers.dev', publicKey: KEY, methods: ['applepay'], freeRounds: 2 });
+    assert.deepEqual(on.payments, { apiUrl: 'https://disputt-pay.example.workers.dev', publicKey: KEY, methods: ['applepay'], freeRounds: 3 });
     assert.match(contentSecurityPolicy(on), /connect-src 'self' wss:\/\/0\.peerjs\.com https:\/\/0\.peerjs\.com https:\/\/disputt-pay\.example\.workers\.dev(;|$)/);
     assert.match(contentSecurityPolicy(on), /script-src 'self'(;|$)/);
 
@@ -177,9 +177,9 @@ describe('payments in the build', () => {
 
   it('can be set up for Shopify: no payment methods to choose, and Stripe is what is built when nothing is said', async () => {
     const shopify = await buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com', paymentsKey: KEY, paymentsProvider: 'shopify', paymentsMethods: 'vipps' });
-    assert.deepEqual(shopify.payments, { apiUrl: 'https://pay.example.com', publicKey: KEY, provider: 'shopify', freeRounds: 2 }, 'the methods are Stripe\'s and are left out');
+    assert.deepEqual(shopify.payments, { apiUrl: 'https://pay.example.com', publicKey: KEY, provider: 'shopify', freeRounds: 3 }, 'the methods are Stripe\'s and are left out');
     const stripe = await buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com', paymentsKey: KEY, paymentsProvider: 'stripe' });
-    assert.deepEqual(stripe.payments, { apiUrl: 'https://pay.example.com', publicKey: KEY, methods: ['applepay'], freeRounds: 2 });
+    assert.deepEqual(stripe.payments, { apiUrl: 'https://pay.example.com', publicKey: KEY, methods: ['applepay'], freeRounds: 3 });
     await assert.rejects(buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com', paymentsKey: KEY, paymentsProvider: 'paypal' }), /provider/);
     await assert.rejects(buildConfig({ mode: 'p2p', paymentsUrl: 'https://pay.example.com', paymentsKey: KEY, paymentsProvider: 'shopify;x' }), /provider/);
   });

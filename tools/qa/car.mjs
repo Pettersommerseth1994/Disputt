@@ -35,8 +35,8 @@ const LIVE = Boolean(LIVE_URL);
 const SUBPATH = flags.includes('--subpath');
 const PAY = flags.includes('--pay');
 const P2P = LIVE || SUBPATH || flags.includes('--p2p');
-const FREE_ROUNDS = 2; // (the page's default)
-if (PAY) assert.ok(!LIVE && P2P && TARGET >= 3, '--pay needs --p2p, a local site and a target of 3 or more, so that there is a third round to pay for');
+const FREE_ROUNDS = 3; // (the page's default)
+if (PAY) assert.ok(!LIVE && P2P && TARGET >= FREE_ROUNDS + 1, `--pay needs --p2p, a local site and a target of ${FREE_ROUNDS + 1} or more, so that there is a round to pay for`);
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const NAMES = ['Petter', 'Mari', 'Ola', 'Sofie', 'Jonas', 'Ida', 'Kari', 'Per', 'Nina', 'Lars'];
 let names = NAMES.slice(0, PLAYERS);
@@ -590,8 +590,10 @@ async function payAfterFreeRounds() {
   const before = stack.fake.sessions.size;
   await clickButton('Neste runde');
   await waitText(/Fortsett quizen/);
+  await clickButton('Kjøp tilgang'); // (first the choice between «Jeg har tilgang» and «Kjøp tilgang»)
+  await waitText(/En kveld/);
   const paywall = await bodyText();
-  assert.match(paywall, /Dere har spilt to runder gratis/, 'two rounds are free, as in the normal game');
+  assert.match(paywall, /Dere har spilt tre runder gratis/, 'three rounds are free, as in the normal game');
   for (const [name, price] of [['En kveld', 149], ['En helg', 199], ['For ett år', 299]]) assert.match(paywall, new RegExp(`${name}[\\s\\S]*${price} kr`), `${name} is shown with its price`);
   assert.equal(stack.fake.sessions.size, before, 'nothing is started at Stripe until the host chooses');
   await shot('20-paywall');

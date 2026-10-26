@@ -129,7 +129,7 @@ Betaling er av som standard ([SHOPIFY.md](SHOPIFY.md), [BETALING.md](BETALING.md
 - **Koden** (`.passcode`, `.input--passcode`) står i visningsfonten, i store bokstaver. Innskrivingen setter inn bindestreker mens man skriver, og små bokstaver og O/I/L godtas.
 - **«Velkommen!»** (`ThanksSheet`) viser tilgangen, koden og én knapp som starter runden verten ba om («Start runde 3»). Mens gjestene er på vei tilbake står det «Venter på at … kommer tilbake …».
 - **Gjestene** får bannerteksten «Verten betaler, spillet fortsetter straks» i stedet for «Mistet forbindelsen» mens verten er hos Stripe.
-- **Forsiden** sier «Allerede kunde? Logg inn» nederst (og «Du har tilgang · Min tilgang» på en telefon som har tilgang). Lenken til reglene er et rosa klistremerke, «▶ Reglene, kort fortalt», litt skjevt under slagordet og over de to store knappene (`.home-tag`, `screens/home.js`); den åpner historien «Slik spiller dere».
+- **Forsiden** har ingen innlogging (koden skrives etter de gratis rundene: «Jeg har tilgang»); en telefon som har tilgang ser «Du har tilgang · Min tilgang» nederst. Lenken til reglene er et rosa klistremerke, «▶ Reglene, kort fortalt», litt skjevt under slagordet og over de to store knappene (`.home-tag`, `screens/home.js`); den åpner historien «Slik spiller dere».
 - Alle betalingsskjermene ligger i `tools/qa/payfixtures.mjs` og er med i `qa:overlap`, `qa:fit` og `shots`.
 
 ## Små skjermer

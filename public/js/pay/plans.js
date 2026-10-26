@@ -22,7 +22,7 @@ export const PLANS = [
     name: tx('En helg'),
     price: 199,
     length: tx('72 timer'),
-    detail: tx('Til en helg eller hyttetur. Gjelder i 72 timer fra du betaler, og fornyes ikke av seg selv.'),
+    detail: tx('Fornyes ikke av seg selv.'),
   },
   {
     id: 'year',
