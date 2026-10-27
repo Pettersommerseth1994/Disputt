@@ -38,7 +38,7 @@ function useReadyStyles() {
   useEffect(() => {
     if (ready) return undefined;
     let alive = true;
-    loadStyles().then((ok) => alive && setReady(ok));
+    loadStyles().then(() => alive && setReady(true)); // (also when it could not be fetched: a blank screen is worse than an unstyled one)
     return () => {
       alive = false;
     };

@@ -93,7 +93,7 @@ export function PlayersStep({ view }) {
     <div class="stack">
       <header class="stack stack--tight">
         <h1 class="setup__title rise-in">${t('Hvem spiller?')}</h1>
-        <p class="lead muted">${t('Legg inn alle som sitter i bilen. Den øverste er verten og leser spørsmålene.')}</p>
+        <p class="lead muted">${t('Legg inn alle som skal spille. Den øverste er verten og leser spørsmålene.')}</p>
       </header>
       <ul class="roster">
         ${!you.ready &&

@@ -73,7 +73,7 @@ export default {
   'Fjern {name}': 'Ta bort {name}',
   'Fjern?': 'Ta bort?',
   'Hvem spiller?': 'Vem spelar?',
-  'Legg inn alle som sitter i bilen. Den øverste er verten og leser spørsmålene.': 'Lägg in alla som sitter i bilen. Den översta är värden och läser frågorna.',
+  'Legg inn alle som skal spille. Den øverste er verten og leser spørsmålene.': 'Lägg in alla som ska spela. Den översta är värden och läser frågorna.',
   'Skriv navnet ditt': 'Skriv ditt namn',
   'vert': 'värd',
   'Endre {name}': 'Ändra {name}',

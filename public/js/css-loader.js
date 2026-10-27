@@ -1,5 +1,7 @@
 // A screen that has a style sheet of its own loads it itself (pages are cached for ten minutes: a script and an index.html that are not equally new, from the
 // cache, must still work). `useStylesheet(href)` is true when the sheet is in; the screen draws nothing until it is, so that it never shows unstyled.
+// A sheet that cannot be fetched (a bad connection) is no reason to draw nothing: the screen is drawn without it, which is better than a blank one where a role
+// or a way to play is to be chosen. `preloadStylesheets` asks for the sheets of the screens of a game when the page starts, so that they are there in time.
 
 import { useEffect, useState } from './vendor/htm-preact.js';
 
@@ -34,10 +36,17 @@ export function useStylesheet(href) {
   useEffect(() => {
     if (ready) return undefined;
     let alive = true;
-    load(href).then((ok) => alive && setReady(ok));
+    load(href).then(() => alive && setReady(true)); // (also when it could not be fetched: see above)
     return () => {
       alive = false;
     };
   }, [href, ready]);
   return ready;
+}
+
+/** Asks for style sheets now (`hrefs` as the screens give them to useStylesheet), without waiting for them. */
+export function preloadStylesheets(hrefs) {
+  const go = () => hrefs.forEach((href) => load(href));
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(go, { timeout: 3000 });
+  else setTimeout(go, 500);
 }

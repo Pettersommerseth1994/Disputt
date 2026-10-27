@@ -48,3 +48,10 @@ test('the big number of the countdown has room round it, so that a slanted 3 is 
   assert.match(rule, /padding: [^;]*0\.3em[^;]*;/, 'room on the right, where the letters and the shadow reach out');
   assert.match(rule, /margin: -[^;]*-0\.3em[^;]*;/, 'taken back with negative margins, so that nothing moves');
 });
+
+test('a style sheet that cannot be fetched does not leave a screen blank, and the sheets are asked for when the page starts', () => {
+  const loader = read('public/js/css-loader.js');
+  assert.match(loader, /load\(href\)\.then\(\(\) => alive && setReady\(true\)\)/, 'the screen is drawn also when the sheet failed');
+  assert.match(read('public/js/screens/ready.js'), /loadStyles\(\)\.then\(\(\) => alive && setReady\(true\)\)/);
+  assert.match(read('public/js/main.js'), /preloadStylesheets\(\[asset\('css\/mode-cards\.css'\), asset\('css\/ready\.css'\), asset\('css\/equal\.css'\)\]\)/);
+});
