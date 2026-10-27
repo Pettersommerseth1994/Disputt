@@ -40,7 +40,7 @@ const SLIDES = [
     id: 'secret',
     title: tx('Imposteren får vite riktig svar'),
     // (the answer itself is on the note on the table: the line only says who gets to know it)
-    line: tx('Bare imposteren får vite riktig svar. Er dere seks eller flere, er det to imposterer, og de vet hvem den andre er.'),
+    line: tx('Bare imposteren får vite riktig svar. Er dere seks eller flere, er det to impostere, og de vet hvem den andre er.'),
     carLine: tx('Bare imposteren får vite riktig svar. De andre får ikke vite det.'),
   },
   {

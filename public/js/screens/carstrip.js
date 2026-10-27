@@ -55,7 +55,7 @@ export function TableStrip({ row, impostors = 1, onRelease, lockMs = 0 }) {
               ? html`<span class="role-strip__line role-strip__line--answer"><span>${t('Riktig svar:')}</span><span class="role-strip__answer">${row.secret.letter}: ${row.secret.text}</span></span>`
               : html`<span class="role-strip__line">${t('Ikke bli lurt!')}</span>`}
             ${impostors > 1 &&
-            html`<span class="role-strip__line">${impostor ? t('Sammen med {names}', { names: joinNames(matesOf(row).map((m) => m.name)) }) : t('To av dere er imposterer')}</span>`}`
+            html`<span class="role-strip__line">${impostor ? t('Sammen med {names}', { names: joinNames(matesOf(row).map((m) => m.name)) }) : t('To av dere er impostere')}</span>`}`
         : html`<span>${t('Din rolle')}</span>`}
     </div>
     <button type="button" class=${cx('secret', held && 'secret--held', locked && 'secret--wait')} disabled=${locked} ...${locked ? {} : bind} aria-label=${t('Hold inne for å se rollen din')}>${t('Hold for å se')}</button>

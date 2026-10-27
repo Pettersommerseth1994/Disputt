@@ -5,7 +5,7 @@ export default {
   'Alle får en hemmelig rolle. De fleste er lojale, men én er imposter.': 'Alla får en hemlig roll. De flesta är lojala, men en är impostor.',
   'Send telefonen rundt. Én og én ser rollen sin, og skjuler den igjen.': 'Skicka runt telefonen. En i taget ser sin roll och gömmer den igen.',
   'Imposteren får vite riktig svar': 'Impostorn får veta rätt svar',
-  'Bare imposteren får vite riktig svar. Er dere seks eller flere, er det to imposterer, og de vet hvem den andre er.': 'Bara impostorn får veta rätt svar. Är ni sex eller fler är det två impostorer, och de vet vem den andra är.',
+  'Bare imposteren får vite riktig svar. Er dere seks eller flere, er det to impostere, og de vet hvem den andre er.': 'Bara impostorn får veta rätt svar. Är ni sex eller fler är det två impostorer, och de vet vem den andra är.',
   'Bare imposteren får vite riktig svar. De andre får ikke vite det.': 'Bara impostorn får veta rätt svar. De andra får inte veta det.',
   'Én får spørsmålet': 'En får frågan',
   'Én av dere får spørsmålet og leser det høyt for de andre.': 'En av er får frågan och läser upp den för de andra.',

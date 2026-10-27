@@ -106,7 +106,7 @@ export default {
   'Riktig svar:': 'Rigtigt svar:',
   'Ikke bli lurt!': 'Lad dig ikke snyde!',
   'Sammen med {names}': 'Sammen med {names}',
-  'To av dere er imposterer': 'To af jer er imposterer',
+  'To av dere er impostere': 'To af jer er impostere',
   'Hold for å se': 'Hold for at se',
   'Glemt rollen din?': 'Glemt din rolle?',
   'Se rolle': 'Se rolle',

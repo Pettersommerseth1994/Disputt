@@ -24,7 +24,7 @@ function RoleBody({ row, impostors }) {
       ? html`<p class="eq-role__ans"><span class="eq-role__label">${t('Riktig svar:')}</span> <b class=${cx('eq-role__answer', answer.length > 15 && 'is-long', answer.length > 24 && 'is-longer')}>${answer}</b></p>`
       : html`<p class="eq-role__tip"><${Roll}>${t('Ikke bli lurt!')}</${Roll}></p>`}
     ${impostors > 1 &&
-    html`<p class="eq-role__mates">${imp ? t('Sammen med {names}', { names: joinNames(matesOf(row).map((m) => m.name)) }) : t('To av dere er imposterer')}</p>`}
+    html`<p class="eq-role__mates">${imp ? t('Sammen med {names}', { names: joinNames(matesOf(row).map((m) => m.name)) }) : t('To av dere er impostere')}</p>`}
   </div>`;
 }
 

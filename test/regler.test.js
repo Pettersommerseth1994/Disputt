@@ -46,7 +46,7 @@ describe('the steps of the animated rules', () => {
     assert.match(secret.line, /^Bare imposteren får vite riktig svar\. Er dere/, 'a full stop after «riktig svar»: the answer itself is on the note on the table');
     assert.doesNotMatch(secret.line, /London|\{svar\}/);
     assert.match(secret.line, /seks eller flere/);
-    assert.match(secret.line, /to imposterer/);
+    assert.match(secret.line, /to impostere/);
     assert.match(secret.line, /vet hvem den andre er/);
   });
 
@@ -62,7 +62,7 @@ describe('the steps of the animated rules', () => {
     assert.match(car.find((s) => s.id === 'ask').line, /Verten/);
     assert.match(car.find((s) => s.id === 'lock').line, /Verten krysser av/);
     assert.match(car.find((s) => s.id === 'again').line, /Telefonen sendes rundt igjen/);
-    assert.doesNotMatch(car.find((s) => s.id === 'secret').line, /to imposterer/);
+    assert.doesNotMatch(car.find((s) => s.id === 'secret').line, /to impostere/);
   });
 });
 

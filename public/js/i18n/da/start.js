@@ -116,7 +116,7 @@ export default {
   'Spillkode {code}': 'Spilkode {code}',
   'Spiller til': 'Spiller til',
   '{n} poeng': '{n} point',
-  'to imposterer': 'to imposterer',
+  'to impostere': 'to impostere',
   'Endre': 'Ret',
   'Spillere': 'Spillere',
   'Endre navn eller avatar': 'Skift navn eller avatar',

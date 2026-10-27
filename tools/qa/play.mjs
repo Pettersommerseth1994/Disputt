@@ -444,8 +444,8 @@ try {
         assert.match(text, roles[i] === 'impostor' ? /\bImposter\b/ : /\bLojal\b/, `${p.name}'s role strip agrees with the role screen`);
         if (expectedImpostors === 2) {
           if (roles[i] === 'impostor') assert.match(card, new RegExp(`Sammen med ${impostors.find((o) => o !== p).name}\\b`), `${p.name}'s strip names the other impostor`);
-          else assert.match(card, /To av dere er imposterer/);
-        } else assert.doesNotMatch(card, /Sammen med|er imposterer/);
+          else assert.match(card, /To av dere er impostere/);
+        } else assert.doesNotMatch(card, /Sammen med|er impostere/);
       }
       await shot(asker, '06-question-asker');
       await shot(all.find((p) => p !== asker), '07-discussion');

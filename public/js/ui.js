@@ -102,7 +102,7 @@ export function RoleStrip({ you, impostors = 1 }) {
               ? html`<span class="role-strip__line role-strip__line--answer"><span>${t('Riktig svar:')}</span><span class="role-strip__answer">${you.secret.letter}:\u00a0${you.secret.text}</span></span>`
               : html`<span class="role-strip__line">${t('Ikke bli lurt!')}</span>`}
             ${impostors > 1 &&
-            html`<span class="role-strip__line">${impostor ? t('Sammen med {names}', { names: joinNames(matesOf(you).map((m) => m.name)) }) : t('To av dere er imposterer')}</span>`}`
+            html`<span class="role-strip__line">${impostor ? t('Sammen med {names}', { names: joinNames(matesOf(you).map((m) => m.name)) }) : t('To av dere er impostere')}</span>`}`
         : html`<span>${t('Din rolle')}</span>`}
     </div>
     <button type="button" class=${cx('secret', held && 'secret--held')} ...${bind} aria-label=${t('Hold inne for å se rollen din')}>${t('Hold for å se')}</button>

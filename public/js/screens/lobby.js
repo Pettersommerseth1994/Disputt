@@ -90,7 +90,7 @@ function HostLobby({ view }) {
       </section>
 
       <div class="row row--center row--wrap lobby__rules">
-        <p class="small">${t('Spiller til')} <strong>${t('{n} poeng', { n: view.target })}</strong> · ${duration(view.target * MINUTES_PER_POINT)}${twoImpostors ? ` · ${t('to imposterer')}` : ''}</p>
+        <p class="small">${t('Spiller til')} <strong>${t('{n} poeng', { n: view.target })}</strong> · ${duration(view.target * MINUTES_PER_POINT)}${twoImpostors ? ` · ${t('to impostere')}` : ''}</p>
         <${Button} variant="text" onClick=${() => setStore({ step: 2 })}>${t('Endre')}</${Button}>
       </div>
 

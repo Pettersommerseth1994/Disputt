@@ -167,7 +167,7 @@ export function buildFixtures({ stress = false } = {}) {
   }
   {
     const { room, ids } = room0({ players: 6 });
-    out['lobby-host-6'] = room.viewFor(ids[0]); // the host's lobby says "to imposterer"
+    out['lobby-host-6'] = room.viewFor(ids[0]); // the host's lobby says "to impostere"
   }
 
   // ---- wrong answer + mid-game scores, impostor = Ola (2)

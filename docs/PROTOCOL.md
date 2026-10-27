@@ -11,7 +11,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `join` | `code` | ny spiller | `welcome`, eller feil `room_not_found`, `full`, `single_phone`. Et spill som har startet tar også imot nye spillere (de får en plassholder som i lobbyen og velger profil, se `profile`). Et nytt `join` på en tilkobling som allerede er med i rommet gir samme plass igjen, ikke en ny. Forlatte plassholdere (ingen navn, frakoblet) blir liggende en stund, så den som lot skjermen låse seg på profilsiden kan komme tilbake. Ligger det mer enn to igjen (eller er rommet fullt av dem), overtar neste som kommer den som har vært borte lengst, så gjentatte forsøk ikke fyller lobbyen med spøkelser |
 | `resume` | `code, playerId, token` | tilbakevendende | `welcome`, eller feil `bad_token` / `room_not_found` |
 | `claim` | `code, playerId` | spiller uten nettleserdata | `welcome` med ny token (kun for frakoblede plasser). Krever ingen hemmelighet, for en telefon som har mistet nettleserdataene har ingen, så alle andre i rommet får `notice` om at plassen er overtatt. Tilkoblingen slipper plassen den hadde fra før |
-| `profile` | `name, avatar`, evt. `id`, evt. `points` | lobby; for en nykommer også etter at spillet har startet | setter/endrer navn og avatar (unike). Etter at spillet har startet kan bare en spiller uten profil velge en, og `points` (0 er standard, opptil én under poengmålet; ingenting når spillet er ferdig) er poengene hen kommer inn med. Hen er ikke med i runden som pågår (`you.inRound` er `false`), men spiller fra neste runde, og antall imposterer følger antall spillere (to fra seks). De andre får et varsel («X ble med i spillet med N poeng»). I bilturmodus kan verten sette profilen til en spiller på vertens telefon med `id` (andre gir `not_host`, og en `id` som ikke er en spiller på vertens telefon gir `bad_value`) |
+| `profile` | `name, avatar`, evt. `id`, evt. `points` | lobby; for en nykommer også etter at spillet har startet | setter/endrer navn og avatar (unike). Etter at spillet har startet kan bare en spiller uten profil velge en, og `points` (0 er standard, opptil én under poengmålet; ingenting når spillet er ferdig) er poengene hen kommer inn med. Hen er ikke med i runden som pågår (`you.inRound` er `false`), men spiller fra neste runde, og antall impostere følger antall spillere (to fra seks). De andre får et varsel («X ble med i spillet med N poeng»). I bilturmodus kan verten sette profilen til en spiller på vertens telefon med `id` (andre gir `not_host`, og en `id` som ikke er en spiller på vertens telefon gir `bad_value`) |
 | `player.add` | `name, avatar`, evt. `points` | vert, bare bilturmodus | legger inn en spiller på vertens telefon (høyst 5, `limits.max`, ellers `too_many`; `bad_mode` i hytteturmodus). Spilleren har ingen telefon, så er alltid «tilkoblet». Også etter at spillet har startet (fra vertsvalgene): `points` er poengene hen kommer inn med (0 er standard, opptil én under poengmålet), og hen spiller fra neste runde |
 | `seen` | `id` | vert, fase `role`, bare bilturmodus | spilleren har sett rollen sin (telefonen sendes rundt) |
 | `begin` | | vert, fase `role`, bare bilturmodus | alle har sett rollen sin: videre til spørsmålet (`not_all` hvis noen ikke har det) |
@@ -64,7 +64,7 @@ I `reveal` vises ingenting om utfallet: imposterne sier riktig svar høyt, og sk
 {
   "code": "KRAP", "mode": "cabin", "lang": "no",           // "cabin" (en telefon hver) eller "car" (alle på vertens telefon)
   "phase": "question", "round": 3, "target": 5, "hostId": "…", "now": 1790000000000,
-  "limits": { "min": 2, "max": 10, "twoImpostorsFrom": 6 },   // max er 5 i bilturmodus   // fra så mange spillere i runden er det to imposterer
+  "limits": { "min": 2, "max": 10, "twoImpostorsFrom": 6 },   // max er 5 i bilturmodus   // fra så mange spillere i runden er det to impostere
   "timings": { "roleMs": 8000, "countdownMs": 5000 },
   "players": [{ "id": "…", "name": "Mari", "avatar": "mandarin", "score": 2, "connected": true, "isHost": false }],
   "pending": 0,                       // tilkoblede som ikke har valgt profil ennå
@@ -75,7 +75,7 @@ I `reveal` vises ingenting om utfallet: imposterne sier riktig svar høyt, og sk
     "secret": { "index": 2, "letter": "C", "text": "Frankrike" },  // KUN for imposterne
     "mates": [{ "id": "…", "name": "Kari", "avatar": "sky" }]      // KUN for en imposter i en runde med to: den andre
   },
-  "turn": { "number": 3, "askerId": "…", "impostors": 1 },   // antall imposterer er ingen hemmelighet
+  "turn": { "number": 3, "askerId": "…", "impostors": 1 },   // antall impostere er ingen hemmelighet
   "roleEndsAt": 0,                    // fase role (ikke i bilturmodus: der har fasen ingen tid)
   "table": [{ "id": "…", "name": "Mari", "avatar": "mandarin", "role": "impostor", "secret": {}, "mates": [] }],  // KUN verten i bilturmodus, i en runde: alles roller (telefonen viser én bare mens den spilleren holder knappen)
   "seen": ["<id>"],                   // KUN verten i bilturmodus, fase role: hvem som har sett rollen sin
