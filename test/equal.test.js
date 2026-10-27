@@ -55,3 +55,11 @@ test('a style sheet that cannot be fetched does not leave a screen blank, and th
   assert.match(read('public/js/screens/ready.js'), /loadStyles\(\)\.then\(\(\) => alive && setReady\(true\)\)/);
   assert.match(read('public/js/main.js'), /preloadStylesheets\(\[asset\('css\/mode-cards\.css'\), asset\('css\/ready\.css'\), asset\('css\/equal\.css'\)\]\)/);
 });
+
+test('«Betal med Vipps» is offered in Norwegian, Danish and Swedish, and the Danish texts say MobilePay', () => {
+  assert.match(read('public/js/pay/vippslang.js'), /\['no', 'da', 'sv'\]\.includes\(lang\)/);
+  const da = read('public/js/i18n/da/pay.js');
+  assert.match(da, /'Betal med Vipps': 'Betal med MobilePay'/);
+  assert.match(da, /'Fullfør betalingen i Vipps-appen\.': 'Gennemfør betalingen i MobilePay-appen\.'/);
+  assert.match(read('public/js/i18n/sv/pay.js'), /'Betal med Vipps': 'Betala med Vipps'/, 'Swedes have the Vipps app');
+});
