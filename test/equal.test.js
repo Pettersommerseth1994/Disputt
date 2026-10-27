@@ -40,3 +40,11 @@ test('the place of the role has the same size open and closed, so the button nev
   assert.match(css, /\.eq-info \{[^}]*height: 8\.2rem;/);
   assert.match(turn, /impostors > 1 && 'eq-info--duo'/, 'taller when there are two impostors: for everybody');
 });
+
+test('the big number of the countdown has room round it, so that a slanted 3 is not cut off at the edge (iPhone)', () => {
+  const screens = read('public/css/screens.css');
+  const rule = screens.match(/\.countdown__n \{[^}]*\}/)[0];
+  assert.match(rule, /display: inline-block;/);
+  assert.match(rule, /padding: [^;]*0\.3em[^;]*;/, 'room on the right, where the letters and the shadow reach out');
+  assert.match(rule, /margin: -[^;]*-0\.3em[^;]*;/, 'taken back with negative margins, so that nothing moves');
+});

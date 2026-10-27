@@ -1,7 +1,7 @@
 // The files that go into Shopify (shopify/): tried with the little Liquid that tools/qa/miniliquid.mjs knows, and held to what the page and the
 // payment server say about the same things (the name of the cart attribute that carries the code, the address of the game, the packages).
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { PLANS, planById } from '../public/js/pay/plans.js';
 import { renderLiquid } from '../tools/qa/miniliquid.mjs';
@@ -322,7 +322,10 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
         }
         assert.ok(Buffer.byteLength(mail) < 60_000, `${Buffer.byteLength(mail)} byte: Gmail cuts an e-mail off at 102 000`);
         assert.doesNotMatch(mail, /<script/i);
-        assert.equal((mail.match(/<img /g) ?? []).length, (mail.match(/<img [^>]*alt="[^"]+"/g) ?? []).length, 'every picture has an alt text, which is what a mail program shows when it does not load pictures');
+        // (the logo has an alt text, which is what a mail program shows when it does not load pictures; the eye on the card is decoration, with an empty one)
+        assert.equal((mail.match(/<img /g) ?? []).length, (mail.match(/<img [^>]*alt="/g) ?? []).length, 'every picture has an alt attribute');
+        assert.ok((mail.match(/<img [^>]*alt="Disputt"/g) ?? []).length === 1, 'and the logo says its name');
+        for (const [, url] of mail.matchAll(/(?:src|background)="(https:\/\/disputt\.site\/assets\/email\/[^"?]+)/g)) assert.ok(existsSync(new URL(`../public/${url.replace('https://disputt.site/', '')}`, import.meta.url)), `${url} exists on the site`);
         for (const [, url] of mail.matchAll(/href="([^"]*)"/g)) assert.match(url, /^(https:\/\/|mailto:)/, `${url} is a web or mail address, not something else`);
       }
     });
@@ -348,12 +351,13 @@ describe('the order confirmation (shopify/ordrebekreftelse.liquid)', () => {
       assert.equal((MAIL.match(/padding:26px 20px/g) ?? []).length, 3, 'the three cards have 20 px at the sides, and 28 px where there is room');
     });
 
-    it('has a picture at the top that exists on the site, at twice the size it is shown at', () => {
+    it('has a picture at the top that exists on the site, drawn larger than it is shown', () => {
       const [, path, width, height] = MAIL.match(/<img src="https:\/\/disputt\.site\/(assets\/email\/[^"?]+)(?:\?v=\d+)?" width="(\d+)" height="(\d+)"/);
       const png = readBinary(`public/${path}`);
       assert.deepEqual([...png.slice(0, 4)], [137, 80, 78, 71], 'a PNG');
       const at = (offset) => png[offset] * 2 ** 24 + png[offset + 1] * 2 ** 16 + png[offset + 2] * 2 ** 8 + png[offset + 3];
-      assert.deepEqual([at(16), at(20)], [width * 2, height * 2], 'shown at width x height, drawn at twice that');
+      assert.deepEqual([at(16), at(20)], [680, 272], 'drawn at 680 x 272, so that it stays sharp on a phone');
+      assert.deepEqual([Number(width), Number(height)], [170, 68], 'and shown at 170 x 68: half the size it was at first');
       assert.match(read('tools/logo/email-header.html'), /\.box \{[^}]*width: 340px; height: 136px/, 'and made by tools/logo/email-header.html at the same size');
     });
   });

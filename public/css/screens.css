@@ -316,6 +316,13 @@
   color: var(--yellow);
   text-shadow: 8px 10px 0 var(--edge);
   animation: pop 0.65s var(--ease-bounce) both;
+  /* The slanted black letters reach out past the box of the number (the top bar of a 3 over its right edge) and the shadow lies further out still:
+     a phone that draws the animated number in a layer of its own cuts it off at the edge of the box. So the box is wider than the number, with
+     room for both, and pulled back with negative margins so that nothing moves. */
+  display: inline-block;
+  padding: 0.08em 0.3em 0.12em 0.16em;
+  margin: -0.08em -0.3em -0.12em -0.16em;
+  overflow: visible;
 }
 
 /* ---- The reveal stage ------------------------------------------------------------------
