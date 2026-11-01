@@ -38,8 +38,6 @@ export const LIMITS = Object.freeze({
   twoImpostorsFrom: 6, // a round with this many players or more has two impostors instead of one
   targetMin: 1,
   targetMax: 99,
-  timerMinSec: 30,
-  timerMaxSec: 60 * 60,
 });
 
 /** The two ways to play: a phone each ("cabin", hytteturmodus) or one phone for everybody ("car", bilturmodus). */
@@ -60,7 +58,6 @@ export const DEFAULT_TIMINGS = Object.freeze({
   roleMs: 8000,
   countdownMs: 5000,
   discussionMs: 6 * 60_000,
-  addMs: 60_000,
   hostGraceMs: 3 * 60_000, // host offline this long during a game -> someone else takes over
   hostGraceLobbyMs: 10 * 60_000, // phones lock their screens while friends are still scanning the code
   placeholderMs: 60_000,
@@ -251,7 +248,22 @@ export class Room {
     p.connected = true;
     p.lastSeen = this.clock();
     if (playerId === this.hostId) this.hostAwaySince = null;
+    this.joinRoundLate(p);
     this.touch();
+  }
+
+  /**
+   * Somebody who belongs to the game but had no line when the round began (a closed tab, a sleeping phone) comes into that round when they are back
+   * while the group is still talking: they get the role that was drawn for them (it can be the impostor's) and can score from it. After the answer
+   * is locked it is too late, and they play from the next round. (Somebody new, who got a profile after the round began, is not in `late`.)
+   */
+  joinRoundLate(p) {
+    const cur = this.current;
+    if (!cur || this.mode === MODE.CAR || (this.phase !== PHASE.ROLE && this.phase !== PHASE.QUESTION)) return;
+    const at = cur.late?.indexOf(p.id) ?? -1;
+    if (at < 0) return;
+    cur.late.splice(at, 1);
+    if (isReady(p) && !cur.participants.includes(p.id)) cur.participants.push(p.id);
   }
 
   disconnect(playerId) {
@@ -473,27 +485,6 @@ export class Room {
     this.touch();
   }
 
-  /** Sets the remaining discussion time. */
-  setTimer(playerId, seconds) {
-    this.needAsker(playerId, PHASE.QUESTION);
-    const s = Number(seconds);
-    if (!Number.isFinite(s) || s < LIMITS.timerMinSec || s > LIMITS.timerMaxSec) {
-      throw new GameError('bad_value', 'Ugyldig tid.');
-    }
-    this.current.discussionEndsAt = this.clock() + Math.round(s) * 1000;
-    this.touch();
-  }
-
-  addTime(playerId, seconds = this.timings.addMs / 1000) {
-    this.needAsker(playerId, PHASE.QUESTION);
-    const s = Number(seconds);
-    if (!Number.isFinite(s) || s < 1 || s > 600) throw new GameError('bad_value', 'Ugyldig tid.');
-    const now = this.clock();
-    const base = Math.max(this.current.discussionEndsAt, now);
-    this.current.discussionEndsAt = Math.min(base + Math.round(s) * 1000, now + LIMITS.timerMaxSec * 1000);
-    this.touch();
-  }
-
   /** Asker locks in the answer the group agreed on; the reveal countdown starts. */
   lock(playerId, index) {
     this.needAsker(playerId, PHASE.QUESTION);
@@ -587,6 +578,9 @@ export class Room {
     const car = this.mode === MODE.CAR;
     // (in the car everybody is on the host's phone, so everybody is here)
     const pool = car ? this.readyPlayers() : this.connectedReadyPlayers();
+    // Everybody who belongs to the game is drawn for the impostor, also somebody who is away for a moment (the toilet, a closed tab): they come in when
+    // they are back (joinRoundLate) and find out then. Only a phone that is here can be the asker, for the asker reads the question aloud.
+    const everyone = this.readyPlayers();
     const now = this.clock();
     let impostors;
     if (pool.length === 2) {
@@ -595,12 +589,12 @@ export class Room {
       const outcome = this.rand.int(3);
       impostors = outcome === 0 ? [] : [pool[outcome - 1]];
     } else {
-      impostors = [pool[this.rand.int(pool.length)]];
+      impostors = [everyone[this.rand.int(everyone.length)]];
     }
     // (in the car the host always asks: the question is on the one phone, and that is the host's)
     const asker = car ? this.players.get(this.hostId) : pool[this.rand.int(pool.length)]; // may be an impostor too
-    while (impostors.length > 0 && impostors.length < impostorCount(pool.length)) {
-      const rest = pool.filter((p) => !impostors.includes(p));
+    while (impostors.length > 0 && impostors.length < impostorCount(pool.length)) { // (how many follows from how many are here)
+      const rest = everyone.filter((p) => !impostors.includes(p));
       impostors.push(rest[this.rand.int(rest.length)]);
     }
     const first = impostors[0] ?? null;
@@ -615,6 +609,7 @@ export class Room {
       impostor: first ? info(first) : null,
       askerId: asker.id,
       participants: pool.map((p) => p.id), // only players who were in this round can score from it
+      late: car ? [] : everyone.filter((p) => !pool.includes(p)).map((p) => p.id), // belong to the game but had no line: they come in if they are back before the answer is locked (joinRoundLate)
       question: this.nextQuestion(),
       roleEndsAt: car ? null : now + this.timings.roleMs,
       ...(car ? { seen: [] } : {}), // (who has seen their role: the phone goes round, and the host goes on when all have)
@@ -657,7 +652,7 @@ export class Room {
       // the group was fooled: every impostor scores
       for (const id of cur.impostorIds) {
         const impostor = this.players.get(id);
-        if (impostor) {
+        if (impostor && cur.participants.includes(id)) { // (an impostor who never came back to the round has not played it)
           impostor.score += 1;
           gained[impostor.id] = 1;
         }

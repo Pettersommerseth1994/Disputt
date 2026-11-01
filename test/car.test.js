@@ -429,7 +429,6 @@ describe('the car: a round', () => {
     const ctx = car(3, { rand: scripted(1, 5) });
     toQuestion(ctx);
     ctx.room.select(ctx.host.id, right(ctx));
-    ctx.room.setTimer(ctx.host.id, 120);
     lockAndShow(ctx, right(ctx));
     assert.equal(ctx.room.phase, PHASE.SUMMARY);
     assert.deepEqual([score(ctx, 0), score(ctx, 1), score(ctx, 2)], [1, 0, 1], 'the loyal ones are right');

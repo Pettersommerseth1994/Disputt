@@ -30,7 +30,7 @@ test('a blink that mends itself does not bring the card up, and the page is load
 test('the button asks for a new line from nothing, and the page loads it again if there is still none', () => {
   const src = read('public/js/screens/reconnect.js');
   assert.match(src, /reconnectNow\(\{ force: true \}\)/);
-  assert.match(src, /setTimeout\(\(\) => location\.reload\(\), RELOAD_AFTER_MS\)/);
+  assert.match(src, /location\.reload\(\)\), RELOAD_AFTER_MS\)/);
   assert.match(read('public/js/app.js'), /<\$\{ReconnectModal\} \/>/, 'the app draws it');
   assert.match(read('public/js/net.js'), /export function reconnectNow\(\{ force = false \} = \{\}\)/);
 });
@@ -46,4 +46,17 @@ test('the host has the button on the reveal, and the others are told that the ho
   const round = read('public/js/screens/round.js');
   assert.match(round, /Verten trykker videre når det er sagt\./);
   assert.doesNotMatch(round, /er borte, gå videre/);
+});
+
+test('the host gets the card too when its own phone has lost the line to the introduction service, though the game itself runs on', () => {
+  const host = { ...game, conn: 'open', view: { phase: 'question', you: { isHost: true } } };
+  assert.equal(lostLine(host), false, 'a line that is fine');
+  assert.equal(lostLine({ ...host, hostOffline: true }), true);
+  assert.equal(lostLine({ ...host, hostOffline: true, replaced: true }), false);
+  const net = read('public/js/net.js');
+  assert.match(net, /const hostSignal = \(up\) => setStore\(\{ hostOffline: !up \}\)/);
+  assert.match(net, /startHost\(\{ onSignal: hostSignal \}\)/);
+  assert.match(net, /startHost\(\{ restore: snapshot, onSignal: hostSignal \}\)/);
+  assert.match(read('public/js/p2p/host.js'), /onSignal\?\.\(up\)/);
+  assert.match(read('public/js/screens/reconnect.js'), /lineOnly \? setTrying\(false\) : location\.reload\(\)/, 'a host that only lost the introduction service does not load the page again');
 });

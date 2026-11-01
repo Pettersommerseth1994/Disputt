@@ -18,8 +18,6 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `target` | `value` (1–99) | vert, når som helst før spillet er ferdig | poengmål (sjekkes for vinner når runden er ferdig). Et nytt spill har 8 (`DEFAULT_TARGET`); appen tilbyr 8 (Småkrangel) og 12 (Storkrangel), men motoren godtar alle fra 1 til 99 |
 | `start` | | vert, lobby | starter første runde (min. 2 klare og tilkoblede) |
 | `select` | `index` (0–3 / null) | den som svarer | lagrer foreløpig valg (overlever sideoppdatering) |
-| `timer.set` | `seconds` (30–3600) | den som svarer | setter gjenstående tid (2/6/10 min i UI) |
-| `timer.add` | `seconds` | den som svarer | legger til tid (starter fra nå hvis tiden er ute) |
 | `lock` | `index` | den som svarer | låser svaret, starter 5-sekunders nedtelling |
 | `continue` | | verten (motoren godtar også den som svarte) | teller poeng, viser poengene (eller vinner). Sendes når imposteren har sagt riktig svar høyt: knappen «Det er sagt, vis poengene» |
 | `next` | | vert, oppsummering | neste runde |
@@ -97,6 +95,6 @@ Alle tidspunkter er serverens epoch-millisekunder. Klienten regner ut `serverNow
 ## Gjenoppkobling
 
 1. Klienten lagrer `{code, playerId, token}` i `sessionStorage` ved `welcome`.
-2. Ved hver (re)tilkobling sender den `resume`. Serveren svarer med `welcome` og full `view`: spilleren er tilbake i samme fase, med samme rolle og hemmelighet.
+2. Ved hver (re)tilkobling sender den `resume`. Serveren svarer med `welcome` og full `view`: spilleren er tilbake i samme fase, med samme rolle og hemmelighet. Var spilleren borte da runden startet (`current.late`), kommer hen med i runden når hen er tilbake i fasen `role` eller `question` (en lojal rolle; `you.inRound` blir `true`). Etter at svaret er låst er det for sent: hen spiller fra neste runde.
 3. Åpnes samme identitet i en annen fane, får den første `closed {reason:"replaced"}`.
 4. Er nettleserdata borte, kan spilleren åpne lenken eller skrive koden igjen: `join` gir en ny plassholder, og siden viser «Var du med før?» med de frakoblede spillerne i `view.players`. `claim` overtar en plass og gir ny token (poengene følger plassen).

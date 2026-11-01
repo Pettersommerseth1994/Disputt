@@ -336,14 +336,67 @@ describe('roles', () => {
     assert.ok(Math.abs(same - N / 4) < N * 0.05, 'asker == impostor about 1 in 4 times');
   });
 
-  it('skips disconnected players when choosing roles', () => {
+  it('never makes somebody whose phone is away the asker, but may make them the impostor (they find out when they are back)', () => {
+    let awayImpostor = 0;
     for (let seed = 1; seed < 60; seed++) {
       const ctx = lobby(5, { seed });
       ctx.room.disconnect(ctx.players[4].id);
       ctx.room.start(ctx.host.id);
-      assert.notEqual(ctx.room.current.impostorId, ctx.players[4].id);
       assert.notEqual(ctx.room.current.askerId, ctx.players[4].id);
+      if (ctx.room.current.impostorId === ctx.players[4].id) awayImpostor++;
     }
+    assert.ok(awayImpostor > 0, 'the one who is away is drawn for the impostor too, now and then');
+    assert.ok(awayImpostor < 59, 'and not every time');
+  });
+
+  it('an impostor who was away finds out when back (with the right answer to look at), and plays the round from then on', () => {
+    for (let seed = 1; seed < 200; seed++) {
+      const c = lobby(5, { seed });
+      c.room.setTarget(c.host.id, 50);
+      c.room.disconnect(c.players[4].id);
+      c.room.start(c.host.id);
+      if (c.room.current.impostorId !== c.players[4].id) continue;
+      const cur = c.room.current;
+      const away = c.players[4];
+      assert.ok(!cur.participants.includes(away.id));
+      assert.equal(c.room.viewFor(away.id).you.inRound, false);
+      c.clock.advance(DEFAULT_TIMINGS.roleMs);
+      c.room.tick(c.clock.now());
+      c.clock.advance(2 * 60_000); // two minutes into the discussion
+      c.room.connect(away.id);
+      const view = c.room.viewFor(away.id);
+      assert.equal(view.you.inRound, true);
+      assert.equal(view.you.role, 'impostor');
+      assert.equal(view.you.secret.index, cur.question.correct);
+      // the group goes for a wrong answer: the impostor who came late scores, as any impostor does
+      c.room.lock(cur.askerId, (cur.question.correct + 1) % 4);
+      c.clock.advance(DEFAULT_TIMINGS.countdownMs);
+      c.room.tick(c.clock.now());
+      c.room.continueRound(cur.askerId);
+      assert.equal(byId(c.room, away.id).score, 1);
+      return;
+    }
+    assert.fail('no seed made the absent player the impostor');
+  });
+
+  it('an impostor who never came back to the round has not played it: nobody scores when the group is wrong', () => {
+    for (let seed = 1; seed < 200; seed++) {
+      const c = lobby(5, { seed });
+      c.room.setTarget(c.host.id, 50);
+      c.room.disconnect(c.players[4].id);
+      c.room.start(c.host.id);
+      if (c.room.current.impostorId !== c.players[4].id) continue;
+      const cur = c.room.current;
+      c.clock.advance(DEFAULT_TIMINGS.roleMs);
+      c.room.tick(c.clock.now());
+      c.room.lock(cur.askerId, (cur.question.correct + 1) % 4);
+      c.clock.advance(DEFAULT_TIMINGS.countdownMs);
+      c.room.tick(c.clock.now());
+      c.room.continueRound(cur.askerId);
+      assert.deepEqual(c.room.readyPlayers().map((p) => p.score), [0, 0, 0, 0, 0]);
+      return;
+    }
+    assert.fail('no seed made the absent player the impostor');
   });
 
   it('moves from the role reveal to the question after five seconds', () => {
@@ -384,7 +437,7 @@ describe('two impostors from six players', () => {
     }
   });
 
-  it('counts the players who are in the round: somebody whose phone is away has no role and does not count', () => {
+  it('counts the players who are here when the round begins: somebody whose phone is away does not count for how many impostors there are', () => {
     for (let seed = 1; seed <= 30; seed++) {
       const six = lobby(6, { seed });
       six.room.disconnect(six.players[5].id); // six in the lobby, five in the round
@@ -395,7 +448,8 @@ describe('two impostors from six players', () => {
       seven.room.disconnect(seven.players[6].id); // seven in the lobby, six in the round
       seven.room.start(seven.host.id);
       assert.equal(seven.room.current.impostorIds.length, 2);
-      assert.ok(!seven.room.current.impostorIds.includes(seven.players[6].id));
+      assert.equal(seven.room.current.participants.length, 6);
+      assert.ok(!seven.room.current.participants.includes(seven.players[6].id));
     }
   });
 
@@ -549,35 +603,85 @@ describe('question phase', () => {
     }
   });
 
-  it('lets only the asker set the clock (2/6/10 minutes), add time and select an option', () => {
+  it('lets only the asker select an option, and the discussion is always six minutes (nobody sets or adds to the clock)', () => {
     const ctx = lobby(4);
     const { asker } = toQuestion(ctx);
     const other = ctx.players.find((p) => p.id !== asker.id);
-    throwsCode(() => ctx.room.setTimer(other.id, 120), 'not_asker');
-    throwsCode(() => ctx.room.addTime(other.id), 'not_asker');
     throwsCode(() => ctx.room.select(other.id, 1), 'not_asker');
     throwsCode(() => ctx.room.lock(other.id, 1), 'not_asker');
-
-    for (const minutes of [2, 6, 10]) {
-      ctx.room.setTimer(asker.id, minutes * 60);
-      assert.equal(ctx.room.current.discussionEndsAt, ctx.clock.now() + minutes * 60_000);
-    }
-    ctx.clock.advance(30_000);
-    ctx.room.addTime(asker.id);
-    assert.equal(ctx.room.current.discussionEndsAt, ctx.clock.now() + 600_000 - 30_000 + 60_000);
+    assert.equal(DEFAULT_TIMINGS.discussionMs, 6 * 60_000);
+    assert.equal(ctx.room.current.discussionEndsAt, ctx.clock.now() + 6 * 60_000);
+    assert.equal(ctx.room.setTimer, undefined);
+    assert.equal(ctx.room.addTime, undefined);
 
     ctx.room.select(asker.id, 2);
     assert.equal(ctx.room.viewFor(asker.id).selected, 2);
     throwsCode(() => ctx.room.select(asker.id, 7), 'bad_value');
-    throwsCode(() => ctx.room.setTimer(asker.id, 5), 'bad_value');
   });
 
-  it('adding time after the clock ran out restarts from now', () => {
-    const ctx = lobby(4);
-    const { asker } = toQuestion(ctx);
-    ctx.clock.advance(DEFAULT_TIMINGS.discussionMs + 90_000);
-    ctx.room.addTime(asker.id);
-    assert.equal(ctx.room.current.discussionEndsAt, ctx.clock.now() + 60_000);
+  describe('somebody who was away when the round began', () => {
+    const awayRound = () => {
+      const ctx = lobby(5);
+      const away = ctx.players[4];
+      ctx.room.disconnect(away.id); // (a closed tab: the others still are enough to play)
+      ctx.room.start(ctx.host.id);
+      return { ctx, away };
+    };
+
+    it('is not in the round, but gets in (with a role to look at) when back while the group is talking', () => {
+      const { ctx, away } = awayRound();
+      const cur = ctx.room.current;
+      assert.ok(!cur.participants.includes(away.id));
+      assert.equal(ctx.room.viewFor(away.id).you.inRound, false);
+      ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+      ctx.room.tick(ctx.clock.now());
+      assert.equal(ctx.room.phase, PHASE.QUESTION);
+      ctx.room.connect(away.id);
+      assert.ok(cur.participants.includes(away.id));
+      const view = ctx.room.viewFor(away.id);
+      assert.equal(view.you.inRound, true);
+      assert.ok(['loyal', 'impostor'].includes(view.you.role));
+      assert.equal(view.you.role, cur.impostorIds.includes(away.id) ? 'impostor' : 'loyal');
+      assert.deepEqual(cur.late, []);
+    });
+
+    it('is in as soon as the line is back during the role phase, and scores when the group is right', () => {
+      const { ctx, away } = awayRound();
+      ctx.room.connect(away.id);
+      assert.equal(ctx.room.viewFor(away.id).you.inRound, true);
+      ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+      ctx.room.tick(ctx.clock.now());
+      finishRound(ctx, true);
+      const { impostorIds } = ctx.room.current;
+      assert.equal(byId(ctx.room, away.id).score, impostorIds.includes(away.id) ? 0 : 1);
+    });
+
+    it('comes too late once the answer is locked: not in that round, in the next', () => {
+      const { ctx, away } = awayRound();
+      ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+      ctx.room.tick(ctx.clock.now());
+      const cur = ctx.room.current;
+      ctx.room.lock(cur.askerId, cur.question.correct);
+      ctx.room.connect(away.id);
+      assert.ok(!cur.participants.includes(away.id));
+      assert.equal(ctx.room.viewFor(away.id).you.inRound, false);
+      ctx.clock.advance(DEFAULT_TIMINGS.countdownMs);
+      ctx.room.tick(ctx.clock.now());
+      ctx.room.continueRound(cur.askerId);
+      nextRound(ctx);
+      assert.ok(ctx.room.current.participants.includes(away.id));
+    });
+
+    it('does not let somebody new, who got a profile after the round began, into it', () => {
+      const ctx = lobby(4);
+      ctx.room.start(ctx.host.id);
+      const fresh = ctx.room.addPlayer();
+      ctx.room.connect(fresh.id);
+      ctx.room.setProfile(fresh.id, { name: 'Ny', avatar: AVATAR_IDS[7] });
+      ctx.room.disconnect(fresh.id);
+      ctx.room.connect(fresh.id);
+      assert.ok(!ctx.room.current.participants.includes(fresh.id));
+    });
   });
 
   it('does not lock without a valid choice', () => {
@@ -988,7 +1092,7 @@ describe('absent players', () => {
     assert.equal(byId(ctx.room, dropper.id).score, 1);
   });
 
-  it('a seat taken over mid-round does not score that round, but plays the next one', () => {
+  it('a seat taken over while the group is still talking is in that round (and scores from it); one taken over after the answer is locked plays the next', () => {
     const ctx = lobby(4, { seed: 9 });
     ctx.room.setTarget(ctx.host.id, 50);
     ctx.room.disconnect(ctx.players[3].id);
@@ -997,10 +1101,25 @@ describe('absent players', () => {
     ctx.room.tick(ctx.clock.now());
     ctx.room.claimSeat(ctx.players[3].id);
     ctx.room.connect(ctx.players[3].id);
-    finishRound(ctx, true);
-    assert.equal(byId(ctx.room, ctx.players[3].id).score, 0);
-    nextRound(ctx);
     assert.ok(ctx.room.current.participants.includes(ctx.players[3].id));
+    finishRound(ctx, true);
+    const back = byId(ctx.room, ctx.players[3].id);
+    assert.equal(back.score, ctx.room.current.impostorIds.includes(back.id) ? 0 : 1);
+
+    ctx.room.disconnect(back.id);
+    ctx.room.nextRound(ctx.host.id);
+    ctx.clock.advance(DEFAULT_TIMINGS.roleMs);
+    ctx.room.tick(ctx.clock.now());
+    const cur = ctx.room.current;
+    ctx.room.lock(cur.askerId, cur.question.correct);
+    ctx.room.claimSeat(back.id);
+    ctx.room.connect(back.id);
+    assert.ok(!cur.participants.includes(back.id), 'too late: the answer is locked');
+    ctx.clock.advance(DEFAULT_TIMINGS.countdownMs);
+    ctx.room.tick(ctx.clock.now());
+    ctx.room.continueRound(cur.askerId);
+    nextRound(ctx);
+    assert.ok(ctx.room.current.participants.includes(back.id));
   });
 
   it('keeps a decided round when the offline asker is removed after the answer was locked', () => {

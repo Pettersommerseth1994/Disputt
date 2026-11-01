@@ -30,6 +30,8 @@ const outbox = [];
 
 const UNREACHABLE_LIMIT = 15; // ~1 minute of backoff: long enough for a host who is reloading, short enough to give up
 const AWAY_MAX_MS = 15 * 60_000; // ...unless the host said it was going away (to pay): then as long as the host asked for, within reason
+/** p2p host: its own line to the signalling server went down (true: it is back). Makes «Mistet forbindelsen» come up on the host's phone too. */
+const hostSignal = (up) => setStore({ hostOffline: !up });
 const hostIsAway = () => store.hostAwayUntil > Date.now();
 
 // serverNow() = Date.now() + clockOffset. Refined by ping round-trips (lowest RTT wins).
@@ -135,6 +137,7 @@ function teardown() {
     host.stop();
     host = null;
   }
+  setStore({ hostOffline: false });
   resetGuest();
   outbox.length = 0;
 }
@@ -176,7 +179,7 @@ async function connectP2P() {
         const started =
           snapshot?.room?.mode === 'car'
             ? (await import('./p2p/local.js')).startLocalHost({ restore: snapshot }) // (a game on one phone: no network to set up)
-            : await (await import('./p2p/host.js')).startHost({ restore: snapshot });
+            : await (await import('./p2p/host.js')).startHost({ restore: snapshot, onSignal: hostSignal });
         if (gen !== generation) return started.stop();
         host = started;
       }
@@ -201,7 +204,7 @@ async function createP2PRoom(mode) {
       started = (await import('./p2p/local.js')).startLocalHost(); // everybody on this phone: nothing to reserve, nothing to connect to
     } else {
       const { startHost } = await import('./p2p/host.js');
-      started = await startHost();
+      started = await startHost({ onSignal: hostSignal });
     }
     if (gen !== generation) return started.stop();
     host = started;
@@ -233,7 +236,8 @@ function scheduleRetry() {
  */
 export function reconnectNow({ force = false } = {}) {
   if (stopped) return;
-  host?.ensureOnline(); // p2p host: new and returning guests need the signalling server
+  if (force) host?.refreshSignalling?.(); // p2p host: new and returning guests need the signalling server (the button: a fresh socket)
+  else host?.ensureOnline();
   const restart = (fresh) => {
     generation++; // its callbacks now ignore everything
     const dead = link;
@@ -402,8 +406,6 @@ export const actions = {
   start: () => send({ t: 'start' }),
   select: (index) => send({ t: 'select', index }),
   lock: (index) => send({ t: 'lock', index }),
-  setTimer: (seconds) => send({ t: 'timer.set', seconds }),
-  addTime: (seconds = 60) => send({ t: 'timer.add', seconds }),
   proceed: () => send({ t: 'continue' }),
   next: () => send({ t: 'next' }),
   skip: () => send({ t: 'skip' }),

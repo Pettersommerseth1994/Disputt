@@ -316,6 +316,10 @@
 }
 .timer__d { display: inline-block; width: 0.66em; text-align: center; }
 .timer__c { display: inline-block; width: 0.3em; text-align: center; transform: translateY(-0.06em); }
+/* The slanted letters reach out past the box of each digit (the top bar of a 7 over its right edge) and the shadow lies further out still: a phone that
+   draws the digits in layers of their own cuts them off at the edge of the box. So every box is wider than its digit, with room for both, and pulled
+   back with negative margins so that nothing moves. */
+.timer__d, .timer__c { box-sizing: content-box; overflow: visible; padding: 0.08em 0.3em 0.12em 0.16em; margin: -0.08em -0.3em -0.12em -0.16em; }
 .timer--low { color: var(--yellow); }
 .timer--out { color: var(--pink); animation: pulse 0.9s ease-in-out infinite; }
 .timer--sm { font-size: clamp(2.6rem, 13vw, 3.6rem); }

@@ -253,12 +253,6 @@ export class Hub {
       case 'select':
         room.select(pid, msg.index ?? null);
         break;
-      case 'timer.set':
-        room.setTimer(pid, msg.seconds);
-        break;
-      case 'timer.add':
-        room.addTime(pid, msg.seconds);
-        break;
       case 'lock':
         room.lock(pid, msg.index);
         break;

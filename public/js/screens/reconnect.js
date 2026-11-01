@@ -41,7 +41,9 @@ export function ReconnectModal() {
     setTrying(true);
     reconnectNow({ force: true });
     clearTimeout(reload.current);
-    reload.current = setTimeout(() => location.reload(), RELOAD_AFTER_MS);
+    // (a host whose game is fine and who has only lost the line to the introduction service has nothing to load again: back to the button)
+    const lineOnly = host && s.conn === 'open';
+    reload.current = setTimeout(() => (lineOnly ? setTrying(false) : location.reload()), RELOAD_AFTER_MS);
   };
   return html`<div class="rc-back">
     <div class="rc-card" role="alertdialog" aria-modal="true" aria-labelledby="rc-title" aria-describedby="rc-text">

@@ -119,21 +119,14 @@ export function RoleReveal({ view }) {
 
 // ------------------------------------------------------------------ 2. question (asker) and discussion (everyone else)
 
-const PRESETS = [2, 6, 10];
-
 export function Question({ view }) {
   const { question } = view;
   const [sel, setSel] = useState(view.selected); // restored from the server after a reload, then local
-  const [preset, setPreset] = useState(6);
   const ms = useRemaining(view.discussion.endsAt);
 
   const pick = (i) => {
     setSel(i);
     actions.select(i);
-  };
-  const setTime = (minutes) => {
-    setPreset(minutes);
-    actions.setTimer(minutes * 60);
   };
 
   return html`<main class="screen question">
@@ -142,10 +135,6 @@ export function Question({ view }) {
 
     <div class="timebar">
       <${Timer} endsAt=${view.discussion.endsAt} small />
-      <div class="segmented segmented--compact" role="group" aria-label=${t('Sett klokka til')}>
-        ${PRESETS.map((m) => html`<button type="button" class="segmented__item" key=${m} aria-pressed=${preset === m} onClick=${() => setTime(m)}>${m}<small>${t('min')}</small></button>`)}
-      </div>
-      <${Button} variant="cream" size="small" onClick=${() => actions.addTime(60)} aria-label=${t('Legg til ett minutt')}>+1</${Button}>
     </div>
     ${ms <= 0 && html`<p class="timeup">${t('Tiden er ute, bli enige og lås svaret!')}</p>`}
 

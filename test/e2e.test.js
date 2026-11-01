@@ -87,15 +87,11 @@ describe('a full game over WebSockets', () => {
       assert.ok(q, 'asker received a real question');
       assert.deepEqual(asker.view.question.options, q.options);
 
-      // asker adjusts the clock; others cannot
+      // the clock is six minutes for everybody, and nobody can change it
       const other = all.find((c) => c !== asker);
       other.send({ t: 'timer.set', seconds: 120 });
-      await other.error('not_asker');
-      asker.send({ t: 'timer.set', seconds: 600 });
-      await asker.until((c) => c.view.discussion.endsAt - c.view.now > 590_000, 'timer set to 10 minutes');
-      asker.send({ t: 'timer.add', seconds: 60 });
-      await asker.until((c) => c.view.discussion.endsAt - c.view.now > 650_000, 'one more minute');
-      await other.until((c) => c.view.discussion.endsAt - c.view.now > 640_000, 'everybody sees the adjusted clock');
+      await other.error('bad_message');
+      await asker.until((c) => c.view.discussion.endsAt - c.view.now > 350_000 && c.view.discussion.endsAt - c.view.now <= 360_000, 'six minutes on the clock');
 
       // alternate right and wrong answers so both impostor and loyal scoring are exercised
       const groupRight = rounds % 2 === 1;

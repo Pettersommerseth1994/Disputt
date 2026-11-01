@@ -125,7 +125,7 @@ describe('hub cleanup', () => {
       noInternalError();
     }
     join(conn, { t: 'create' });
-    for (const bad of [{ t: 'profile', name: { a: 1 }, avatar: 5 }, { t: 'target', value: {} }, { t: 'select', index: 'x' }, { t: 'lock', index: NaN }, { t: 'kick' }, { t: 'timer.set', seconds: 'a' }]) {
+    for (const bad of [{ t: 'profile', name: { a: 1 }, avatar: 5 }, { t: 'target', value: {} }, { t: 'select', index: 'x' }, { t: 'lock', index: NaN }, { t: 'kick' }]) {
       join(conn, bad);
       noInternalError();
     }

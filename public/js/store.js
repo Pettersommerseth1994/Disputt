@@ -45,6 +45,7 @@ export const store = {
   modeChoice: null, // the card that was chosen on the way to play, so that it is still chosen when the host comes back to it
   creating: false, // p2p: the host is being set up (reserving a room code with the signalling server)
   stuck: 0, // p2p: how many connection attempts in a row failed without ever finding a line to the host
+  hostOffline: false, // p2p host: this phone has lost its line to the introduction service (new and returning guests cannot get in)
   hostAwayUntil: 0, // p2p guest: the host said it was going away (to pay) and is expected back before this time (ms since 1970)
   wakeLockDenied: false, // the browser refused to keep the screen awake (low-power mode, home-screen app …): tell players to turn auto-lock off
   seats: null, // { code, seats } when the game has already started and a seat can be claimed

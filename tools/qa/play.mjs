@@ -472,11 +472,10 @@ try {
       log('the host options sit behind the gear next to "Poeng"');
     }
 
-    // asker: adjust the clock, then reload the page to prove the session survives, then answer
-    await clickButton(asker, '10');
-    await sleep(300);
+    // asker: the clock is six minutes and cannot be changed, then reload the page to prove the session survives, then answer
+    assert.equal((await asker.page.$$('.timebar .segmented, .timebar .btn')).length, 0, 'nobody sets the clock or adds time');
     const clockText = await asker.page.$eval('.timer', (el) => el.textContent.replace(/\s/g, ''));
-    assert.match(clockText, /^(09:5\d|10:00)$/, `clock reset to ten minutes (${clockText})`);
+    assert.match(clockText, /^(05:\d\d|06:00)$/, `the clock started at six minutes (${clockText})`);
     if (round === 1) {
       const bystander = all.find((p) => p !== asker && p !== host) ?? host;
       await bystander.page.reload();

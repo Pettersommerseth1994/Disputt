@@ -33,8 +33,9 @@ async function reservePeer(Peer, code, patientMs) {
 /**
  * Starts hosting. With `restore` (a saved room) the same room code comes back; otherwise a free code is reserved.
  * Rejects with err.kind 'offline' (cannot reach the signalling server) or 'busy' (no free room code found).
+ * `onSignal(up)` is called whenever the host's own line to the signalling server goes down or comes back (new and returning guests need it).
  */
-export async function startHost({ restore = null } = {}) {
+export async function startHost({ restore = null, onSignal = null } = {}) {
   const Peer = await loadPeer();
   const hub = new Hub({ timings: config.timings ?? undefined });
   let peer = null;
@@ -167,6 +168,18 @@ export async function startHost({ restore = null } = {}) {
   addEventListener('online', refreshSignalling);
   wirePeer(peer);
 
+  // ---- does the host itself have a line? (told to the screen, so that the host gets «Mistet forbindelsen» too)
+  let signalUp = true;
+  const checkSignal = () => {
+    if (stopped) return;
+    const up = Boolean(peer) && !peer.destroyed && !peer.disconnected && navigator.onLine !== false;
+    if (up === signalUp) return;
+    signalUp = up;
+    onSignal?.(up);
+  };
+  const signalTimer = setInterval(checkSignal, 1000);
+  addEventListener('offline', checkSignal);
+
   // ---- engine clock and persistence
   const tickTimer = setInterval(() => hub.tick(), 100);
   const sweepTimer = setInterval(() => hub.sweep(), 60_000);
@@ -226,6 +239,9 @@ export async function startHost({ restore = null } = {}) {
     /** Called when the phone wakes up: make sure new guests can still find us. */
     ensureOnline: keepSignalling,
 
+    /** The button «Koble til igjen»: drop the signalling socket and open a fresh one (the old one can look open and be dead). */
+    refreshSignalling,
+
     /** Sends a message to every guest's phone, past the engine ("the host is away for a moment"). Returns how many it reached. */
     announce(msg) {
       const text = JSON.stringify(msg);
@@ -249,6 +265,8 @@ export async function startHost({ restore = null } = {}) {
       clearInterval(tickTimer);
       clearInterval(sweepTimer);
       clearInterval(reaper);
+      clearInterval(signalTimer);
+      removeEventListener('offline', checkSignal);
       clearTimeout(persistTimer);
       clearTimeout(reconnectTimer);
       document.removeEventListener('visibilitychange', onHide);

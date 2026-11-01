@@ -478,9 +478,8 @@ async function playRound(round) {
   }
 
   // the clock and the answer: the group agrees, and the host locks it
-  await clickButton('10');
-  await sleep(300);
-  assert.match(await page.$eval('.timer', (el) => el.textContent.replace(/\s/g, '')), /^(09:5\d|10:00)$/, 'the clock is set to ten minutes');
+  assert.equal((await page.$$('.timebar .segmented, .timebar .btn')).length, 0, 'nobody sets the clock or adds time');
+  assert.match(await page.$eval('.timer', (el) => el.textContent.replace(/\s/g, '')), /^(0[45]:\d\d|06:00)$/, 'the clock started at six minutes (and has run a little)');
   const groupRight = round % 2 === 1;
   const choice = groupRight ? q.correct : (q.correct + 1) % 4;
   await page.evaluate((i) => document.querySelectorAll('.option')[i].click(), choice);

@@ -101,7 +101,7 @@ const SCREENS = [
   ['role-impostor-held', 'Rolle: mens du holder', 'Kortet vises bare mens knappen holdes. Imposteren ser også riktig svar; lojale ser «?».'],
   ['role-impostor-duo-held', 'Rolle: to impostere', 'Fra seks spillere er det to impostere. De ser hverandre på kortet; de lojale ser «?» der.'],
   ['car-roles-start-held', 'Bilturmodus: telefonen sendes rundt', 'Én og én ser rollen sin: bare den som står for tur har knappen, med samme stripe som ellers (knappen til høyre, rollen til venstre mens den holdes).'],
-  ['question-asker-selected', 'Spørsmål', 'Den som svarer: klokke, 2/6/10 min, spørsmål, alternativer og lås.'],
+  ['question-asker-selected', 'Spørsmål', 'Den som svarer: klokken (alltid seks minutter), spørsmål, alternativer og lås.'],
   ['discussion-impostor', 'Diskusjon', 'Alle andre: hvem som har spørsmålet, klokka og en rollestripe som er lik for alle til den holdes.'],
   ['countdown-asker', 'Nedtelling', '5 – 4 – 3 – 2 – 1 etter at svaret er låst, lik på alle telefoner og med det dere låste.'],
   ['reveal-wait', 'Avsløringen', 'Lik skjerm på alle telefoner. Imposteren sier riktig svar høyt; bare den som hadde spørsmålet har en knapp.'],

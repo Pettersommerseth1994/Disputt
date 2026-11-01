@@ -293,8 +293,6 @@
 .question { gap: var(--s-3); }
 .timebar { display: flex; align-items: center; gap: var(--s-3); }
 .timebar .timer { flex: none; font-size: 2.35rem; text-shadow: 2px 3px 0 var(--edge); }
-.timebar .segmented { flex: 1; min-width: 0; }
-.timebar .btn { flex: none; padding-inline: 0.8rem; }
 .question .timeup { text-align: center; }
 .question__card { padding: var(--s-3) var(--s-4) var(--s-4); }
 .question .option { min-height: 3.6rem; padding-block: 0.45rem; }
