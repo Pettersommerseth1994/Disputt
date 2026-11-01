@@ -2,8 +2,9 @@
 // game. Two ways, tried in this order:
 //  1. the Screen Wake Lock API (most phones);
 //  2. a tiny silent video that plays in a loop, out of sight (a page that plays a video keeps the screen on, also where the first way is
-//     missing or refused: for instance Chrome on an iPhone). The browser only lets a page start a video after a touch, so it is started by
-//     the first touch after the game has begun.
+//     missing or refused). The browser only lets a page start a video after a touch, so it is started by the first touch after the game has begun.
+// On an iPhone or iPad (every browser there is Safari underneath, Chrome too) BOTH are used at once: the wake lock can be granted there and still not keep
+// the screen on (Chrome on an iPhone), and then the video is what holds. The wake lock is also taken again when the phone lets go of it while the page is in front.
 // The host (and everybody else) can switch it off by hand («Hold skjermen våken» in the settings); that is remembered on the phone.
 // (A file of its own: pages are cached for ten minutes, and a module that imports something an older cached copy of another module does not have would not load.)
 
@@ -12,6 +13,9 @@ import { asset } from './paths.js';
 
 const KEY = 'disputt:awake';
 const GESTURES = ['pointerdown', 'touchend', 'click', 'keydown'];
+
+/** An iPhone or an iPad (also one that says it is a Mac: the iPad's browser does by default), in any browser. */
+export const isApple = (nav) => /iPhone|iPad|iPod/.test(nav?.userAgent ?? '') || (nav?.platform === 'MacIntel' && (nav?.maxTouchPoints ?? 0) > 1);
 
 /** What it is doing: 'api' (the wake lock), 'video' (the silent video), 'waiting' (the video waits for a touch), 'off' (switched off by hand), 'failed' (nothing worked), 'idle' (no game). */
 let state = 'idle';
@@ -55,7 +59,10 @@ export function startAwake({ wanted = awakeWanted(), env = {} } = {}) {
   let stopped = false;
   let lock = null;
   let video = null;
+  let videoState = null; // 'video' | 'waiting' | 'failed' | null (no video)
   const armed = [];
+  // what is shown: the wake lock when it is held, otherwise how the video is doing
+  const show = () => setState(lock ? 'api' : (videoState ?? 'failed'));
 
   const disarm = () => {
     while (armed.length) doc.removeEventListener(...armed.pop());
@@ -66,12 +73,14 @@ export function startAwake({ wanted = awakeWanted(), env = {} } = {}) {
       await video.play();
       if (!stopped) {
         disarm();
-        setState('video');
+        videoState = 'video';
+        show();
       }
     } catch {
       if (stopped) return;
       // (refused even after a touch: this phone will not play it, and the person is told to set the screen lock by hand)
-      setState(afterTouch ? 'failed' : 'waiting');
+      videoState = afterTouch ? 'failed' : 'waiting';
+      show();
       if (armed.length === 0) {
         // (the first touch after this starts it: a browser lets a page play a video only after one)
         for (const type of GESTURES) {
@@ -97,12 +106,20 @@ export function startAwake({ wanted = awakeWanted(), env = {} } = {}) {
   };
   const acquire = async () => {
     if (stopped) return;
+    if (isApple(nav)) startVideo(); // (a wake lock that is granted there may keep nothing awake: the video goes with it)
     if (!('wakeLock' in nav)) return startVideo();
     try {
       const l = await nav.wakeLock.request('screen');
       if (stopped) return void l.release?.();
       lock = l;
-      setState('api');
+      // (let go of by the phone, with the page in front: take it again; let go of because the page went out of sight: onVisible takes it)
+      l.addEventListener?.('release', () => {
+        if (lock !== l) return;
+        lock = null;
+        show();
+        if (!stopped && doc.visibilityState === 'visible') acquire();
+      });
+      show();
     } catch {
       // refused (low-power mode, a home-screen app …): the video is the second way
       startVideo();
@@ -111,7 +128,7 @@ export function startAwake({ wanted = awakeWanted(), env = {} } = {}) {
   const onVisible = () => {
     if (doc.visibilityState !== 'visible' || stopped) return;
     if (video && video.paused) playVideo(); // (a video that was paused while the page was hidden)
-    else if (!video) acquire(); // (the wake lock is let go of when the page is hidden: take it again)
+    if (!lock) acquire(); // (the wake lock is let go of when the page is hidden: take it again)
   };
   doc.addEventListener('visibilitychange', onVisible);
   acquire();
@@ -127,6 +144,7 @@ export function startAwake({ wanted = awakeWanted(), env = {} } = {}) {
         /* already released */
       }
       lock = null;
+      videoState = null;
       if (video) {
         try {
           video.pause();

@@ -22,7 +22,7 @@ const Strip = ({ view }) => (view.mode === 'car' ? html`<${CarStrip} />` : html`
 export function GameBar({ view }) {
   const round = view.turn?.number ?? view.summary?.round ?? view.round;
   return html`<header class="gamebar row row--between">
-    <span class="chip">${t('Runde {round} · først til {target}', { round, target: view.target })}</span>
+    <span class="chip">${t('Runde {round}', { round })}</span>
     <div class="row gamebar__actions">
       <${Button} variant="ghost" size="small" onClick=${() => setStore({ sheet: 'scores' })} aria-label=${t('Se poengtavle')}><${TrophyIcon} /> ${t('Poeng')}</${Button}>
       ${view.you.isHost && html`<${Button} variant="ghost" size="small icon" onClick=${() => setStore({ sheet: 'host' })} aria-label=${t('Vertsvalg')}><${GearIcon} /></${Button}>`}
@@ -219,13 +219,11 @@ export function Countdown({ view }) {
 
 /**
  * Nothing is revealed on a screen. The impostors say the right answer out loud, and so out themselves, while everybody looks
- * at each other. The phones are the same for everybody (a different screen would give the impostors away); only the asker, who
- * had the question, has a button, and moves on when it has been said.
+ * at each other. The phones are the same for everybody (a different screen would give the impostors away); only the host, who
+ * has the button on every screen that moves on, presses it when it has been said. (`asker`: the host's screen.)
  */
 function RevealStage({ view, asker = false }) {
   const count = impostorCount(view);
-  const holder = playerById(view, view.turn.askerId);
-  const stuck = view.you.isHost && !asker && holder && !holder.connected;
   useEffect(() => vibrate(60), []); // (the same for everybody)
   return html`<main class="screen stage">
     <${GameBar} view=${view} />
@@ -238,13 +236,12 @@ function RevealStage({ view, asker = false }) {
     ${asker
       ? html`<div class="dock"><${Button} block variant="cream" onClick=${() => actions.proceed()}>${t('Det er sagt, vis poengene')}</${Button}></div>`
       : html`<div class="foot center">
-          <p class="muted" role="status">${holder ? t('{name} trykker videre når det er sagt.', { name: holder.name }) : t('Spilleren med spørsmålet trykker videre når det er sagt.')}</p>
-          ${stuck && html`<${Button} variant="cream" onClick=${() => actions.proceed()}>${t('{name} er borte, gå videre', { name: holder.name })}</${Button}>`}
+          <p class="muted" role="status">${t('Verten trykker videre når det er sagt.')}</p>
         </div>`}
   </main>`;
 }
 
-// (the two names are kept: the app opens them by these names)
+// (the two names are kept: the app opens them by these names; the host's screen is the first)
 export const RevealAsker = ({ view }) => html`<${RevealStage} view=${view} asker />`;
 export const WaitReveal = ({ view }) => html`<${RevealStage} view=${view} />`;
 

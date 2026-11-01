@@ -68,6 +68,6 @@ export function Table({ id, b, car }) {
     ${id === 'lock' && html`<div class="rgE__mid"><span class=${`rgE__tick ${b >= 1 ? 'is-in' : ''}`}>${RIGHT_TEXT}</span>${b >= 2 && html`<b class="rgE__five" key=${b}>${7 - b}</b>`}</div>`}
     ${id === 'reveal' && html`<div class="rgE__mid"><${Pic} name="lips" class=${b >= 1 ? 'is-in' : ''} />${b >= 2 && html`<${Bubble} tail="up" tone="red" class="rgE__ans">${RIGHT_TEXT}!</${Bubble}>`}${b >= 3 && html`<span class="rg-stamp">${t('Dere hadde rett!')}</span>`}</div>`}
     ${id === 'points' && html`<div class="rgE__mid"><em>${wrong ? t('Feil svar') : t('Rett svar')}</em></div>`}
-    ${id === 'again' && b >= 2 && html`<div class="rgE__mid"><${Pic} name="crown" /><span>${t('Først til 5 poeng')}</span></div>`}
+    ${id === 'again' && b >= 2 && html`<div class="rgE__mid"><${Pic} name="crown" /><span>${t('Først i mål vinner')}</span></div>`}
   </div>`;
 }

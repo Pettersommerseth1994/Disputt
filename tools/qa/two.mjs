@@ -148,7 +148,7 @@ try {
     assert.equal(new Set(stage.map((s) => s.body)).size, 1, `round ${round}: the reveal looks the same on both phones`);
     assert.match(stage[0].body, /Imposteren avslører seg/, 'and says so also when nobody is the impostor');
     assert.equal(new Set(stage.map((s) => s.strip)).size, 1, `round ${round}: and so does the role strip`);
-    await clickButton(asker, 'Det er sagt');
+    await clickButton(host, 'Det er sagt');
     await Promise.all(all.map((p) => waitText(p, /Poengene/, 12000)));
 
     // the points

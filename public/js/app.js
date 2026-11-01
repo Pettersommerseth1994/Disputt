@@ -1,5 +1,6 @@
 import { html, useEffect } from './vendor/htm-preact.js';
 import { LangChip, LangChooser } from './i18n/chooser.js';
+import { ReconnectModal } from './screens/reconnect.js';
 import { t, tx, useLang } from './i18n/lang.js';
 import { anonymous, carScreen } from './screens/car.js';
 import { RolesSheet } from './screens/carstrip.js';
@@ -49,7 +50,7 @@ function gameScreen(view, s) {
     case 'locked':
       return html`<${Countdown} view=${view} />`;
     case 'reveal':
-      return view.you.isAsker ? html`<${RevealAsker} view=${view} />` : html`<${WaitReveal} view=${view} />`;
+      return view.you.isHost ? html`<${RevealAsker} view=${view} />` : html`<${WaitReveal} view=${view} />`;
     case 'summary':
       return html`<${Summary} view=${view} />`;
     case 'finished':
@@ -125,6 +126,7 @@ export function App() {
     ${onHome && !s.modeStep && html`<${LangChip} />`}
     ${sheet}
     <${LangChooser} />
+    <${ReconnectModal} />
     ${s.toast && html`<div class="toast" role="alert" key=${s.toast}>${s.toast}</div>`}
   `;
 }

@@ -5,7 +5,7 @@ import { beforeEach, describe, it } from 'node:test';
 import { awakeState, awakeWanted, rememberAwakeWanted, startAwake } from '../public/js/wake.js';
 
 /** A pretend page: a body to put the video in, events, and a video that only plays after a touch (like a phone's browser). */
-function pretendPage({ lock = 'granted', touched = false } = {}) {
+function pretendPage({ lock = 'granted', touched = false, apple = false } = {}) {
   const listeners = new Map();
   const doc = {
     visibilityState: 'visible',
@@ -28,8 +28,13 @@ function pretendPage({ lock = 'granted', touched = false } = {}) {
     fire(type) { for (const fn of listeners.get(type) ?? []) fn(); },
   };
   const released = [];
-  const navigator = lock === 'missing' ? {} : { wakeLock: { request: async () => { if (lock === 'denied') throw new DOMException('Denied', 'NotAllowedError'); return { release: async () => released.push(1) }; } } };
-  return { env: { document: doc, navigator, src: '/assets/awake/blank.mp4' }, doc, released };
+  const granted = []; // the locks that were handed out, so that a test can make the phone let go of one
+  const mouth = (l) => (type, fn) => type === 'release' && (l.onrelease = fn);
+  const navigator = {
+    ...(apple ? { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/130.0 Mobile/15E148 Safari/604.1' } : {}),
+    ...(lock === 'missing' ? {} : { wakeLock: { request: async () => { if (lock === 'denied') throw new DOMException('Denied', 'NotAllowedError'); const l = { release: async () => released.push(1) }; l.addEventListener = mouth(l); granted.push(l); return l; } } }),
+  };
+  return { env: { document: doc, navigator, src: '/assets/awake/blank.mp4' }, doc, released, granted };
 }
 const tick = () => new Promise((r) => setTimeout(r, 5));
 
@@ -43,6 +48,68 @@ describe('the wake lock', () => {
     awake.stop();
     assert.deepEqual(page.released, [1]);
     assert.equal(awakeState(), 'idle');
+  });
+});
+
+describe('an iPhone (Chrome there is Safari underneath)', () => {
+  it('gets the wake lock AND the video, because a lock that is granted there may keep nothing awake', async () => {
+    const page = pretendPage({ apple: true, touched: true });
+    const awake = startAwake({ wanted: true, env: page.env });
+    await tick();
+    assert.equal(page.doc.body.children.length, 1, 'a video is put in the page although the lock was granted');
+    assert.equal(page.doc.body.children[0].paused, false);
+    assert.equal(awakeState(), 'api');
+    awake.stop();
+    assert.equal(page.doc.body.children.length, 0);
+  });
+
+  it('is still told it is on while the video waits for the first touch', async () => {
+    const page = pretendPage({ apple: true });
+    const awake = startAwake({ wanted: true, env: page.env });
+    await tick();
+    assert.equal(awakeState(), 'api');
+    assert.equal(page.doc.count('pointerdown'), 1, 'and the first touch starts the video');
+    page.doc.touch();
+    await tick();
+    assert.equal(page.doc.body.children[0].paused, false);
+    awake.stop();
+  });
+
+  it('is only a lock on a phone that is not an iPhone', async () => {
+    const page = pretendPage();
+    const awake = startAwake({ wanted: true, env: page.env });
+    await tick();
+    assert.equal(page.doc.body.children.length, 0);
+    awake.stop();
+  });
+});
+
+describe('a lock that the phone lets go of', () => {
+  it('is taken again while the page is in front, and by the video while that is all there is', async () => {
+    const page = pretendPage();
+    const awake = startAwake({ wanted: true, env: page.env });
+    await tick();
+    assert.equal(page.granted.length, 1);
+    page.granted[0].onrelease();
+    await tick();
+    assert.equal(page.granted.length, 2, 'a new one is asked for');
+    assert.equal(awakeState(), 'api');
+    awake.stop();
+  });
+
+  it('is not asked for again while the page is out of sight, but is when it is back', async () => {
+    const page = pretendPage();
+    const awake = startAwake({ wanted: true, env: page.env });
+    await tick();
+    page.doc.visibilityState = 'hidden';
+    page.granted[0].onrelease();
+    await tick();
+    assert.equal(page.granted.length, 1);
+    page.doc.visibilityState = 'visible';
+    page.doc.fire('visibilitychange');
+    await tick();
+    assert.equal(page.granted.length, 2);
+    awake.stop();
   });
 });
 

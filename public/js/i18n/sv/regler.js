@@ -37,7 +37,7 @@ export default {
   'Dere hadde rett!': 'Ni hade rätt!',
   'Feil svar': 'Fel svar',
   'Rett svar': 'Rätt svar',
-  'Først til 5 poeng': 'Först till 5 poäng',
+  'Først i mål vinner': 'Först i mål vinner',
   'Mantra': 'Mantra',
   'Disputt er et sosialt selskapsspill, laget for å spilles mellom mennesker.': 'Disputt är ett socialt sällskapsspel, skapat för att spelas mellan människor.',
   'Telefonen er bare et støtteverktøy for quizen. Vi vil at du bruker den så lite som mulig.': 'Telefonen är bara ett hjälpmedel för frågesporten. Vi vill att du använder den så lite som möjligt.',

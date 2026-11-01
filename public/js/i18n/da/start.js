@@ -99,7 +99,7 @@ export default {
   'poeng': 'point',
   'Det blir {time}': 'Det bliver {time}',
   'Skriv et tall mellom 1 og 99.': 'Skriv et tal mellem 1 og 99.',
-  'Ett poeng tar ca. {n} minutter. Vi anbefaler minst 5 poeng for å krone en vinner.': 'Ét point tager ca. {n} minutter. Vi anbefaler mindst 5 point for at kåre en vinder.',
+  'Ett poeng tar ca. {n} minutter.': 'Ét point tager ca. {n} minutter.',
   'Start spillet': 'Start spillet',
 
   // lobby

@@ -527,25 +527,25 @@ try {
       assert.doesNotMatch(s.whole, /Riktig!|Feil!|Riktig svar|Gruppa hadde rett|lurte dere|Imposter(en|ne) var/, `${all[i].name}'s screen reveals nothing`);
       // (as text, not as a pattern: an answer such as "Falling Feather (rødvin)" has characters that mean something in one)
       if (q.options[q.correct].length >= 5) assert.ok(!s.whole.includes(q.options[q.correct]), `${all[i].name}'s screen does not say the right answer`);
-      assert.equal(s.buttons.some((b) => b.includes('Det er sagt')), all[i] === asker, `only the asker has the button (${all[i].name})`);
+      assert.equal(s.buttons.some((b) => b.includes('Det er sagt')), all[i] === host, `only the host has the button (${all[i].name})`);
     });
     if (round === 1) {
       // an impostor can still look the answer up, on the strip, beside the button
       const { card } = await holdAndRead(impostors[0]);
       assert.match(card, /Riktig svar: [A-D]: /, 'an impostor can read the answer on the strip while the reveal is on');
-      await shot(asker, '08-reveal');
-      await shot(all.find((p) => p !== asker), '08b-reveal-wait');
+      await shot(host, '08-reveal');
+      await shot(all.find((p) => p !== host), '08b-reveal-wait');
     }
     // a double tap on "Det er sagt": the second tap hits a screen that is already out of date, and must not show an error
-    await asker.page.evaluate(() => {
+    await host.page.evaluate(() => {
       const b = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('Det er sagt'));
       b.click();
       b.click();
     });
-    await waitText(asker, /Poengene|vant!|Delt seier/i, 8000 * SLOW);
+    await waitText(host, /Poengene|vant!|Delt seier/i, 8000 * SLOW);
     await sleep(300);
     // (the notices that a seat was taken over by a new phone, and that somebody came into the game, are toasts too, and are meant to be there)
-    const toasts = await asker.page.$$eval('.toast', (els) => els.map((e) => e.innerText));
+    const toasts = await host.page.$$eval('.toast', (els) => els.map((e) => e.innerText));
     assert.deepEqual(toasts.filter((t) => !/^(Plassen til .* ble tatt over av en ny telefon\.|.* ble med i spillet( med \d+ poeng)?\. .* spiller fra neste runde\.)$/.test(t)), [], 'no error toast after a double tap');
 
     // the points (or the winner)

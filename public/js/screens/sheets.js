@@ -81,7 +81,6 @@ export function ScoresSheet({ view }) {
     <div class="stack stack--loose">
       <div class="card stack">
         <${Scoreboard} view=${view} />
-        <p class="small muted center">${t('Først til {target} poeng vinner.', { target: view.target })}</p>
       </div>
       <${GameCode} view=${view} />
       ${!view.you.isHost && html`<${Button} block variant="ghost" onClick=${() => setStore({ sheet: 'rules' })}>${t('Slik spiller dere')}</${Button}>`}

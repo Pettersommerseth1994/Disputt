@@ -119,7 +119,7 @@ export function PointsStep({ view }) {
       <p class="setup__unit">${t('poeng')}</p>
       ${goal.valid ? html`<p class="setup__time">${t('Det blir {time}', { time: duration(goal.n * MINUTES_PER_POINT) })}</p>` : !goal.emptied && html`<p class="field__error">${t('Skriv et tall mellom 1 og 99.')}</p>`}
     </section>
-    <p class="small muted center" id="target-hint">${t('Ett poeng tar ca. {n} minutter. Vi anbefaler minst 5 poeng for å krone en vinner.', { n: MINUTES_PER_POINT })}</p>
+    <p class="small muted center" id="target-hint">${t('Ett poeng tar ca. {n} minutter.', { n: MINUTES_PER_POINT })}</p>
     <div class="dock">
       ${car
         ? html`<${Button} block variant="lime" onClick=${() => (goal.flush(), actions.start())} disabled=${!(goal.valid || goal.emptied) || !canStart}>${t('Start spillet')}</${Button}>`

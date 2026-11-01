@@ -226,31 +226,41 @@ function scheduleRetry() {
   retryTimer = setTimeout(connect, delay);
 }
 
-/** Phones drop connections when they sleep; reconnect the moment the page is visible / online again. */
-export function reconnectNow() {
+/**
+ * Phones drop connections when they sleep; reconnect the moment the page is visible / online again.
+ * `force` (the button «Koble til igjen»): a link that is still being set up, or that does not answer at once, is thrown away together with the
+ * signalling connection it hangs on, and a new one is made from nothing. (Called as an event handler too: the event has no `force`.)
+ */
+export function reconnectNow({ force = false } = {}) {
   if (stopped) return;
   host?.ensureOnline(); // p2p host: new and returning guests need the signalling server
+  const restart = (fresh) => {
+    generation++; // its callbacks now ignore everything
+    const dead = link;
+    link = null;
+    linkState = 'idle';
+    try {
+      dead?.close();
+    } catch {
+      /* already gone */
+    }
+    if (fresh && !host) resetGuest(); // (the button: a fresh signalling connection too, for the old one can look open and be dead)
+    retry = 0;
+    connect();
+  };
   if (linkState === 'idle') {
     retry = 0;
     connect();
+  } else if (linkState === 'connecting' && force) {
+    restart(true);
   } else if (linkState === 'open' && link?.isOpen()) {
     // After a long sleep a link can look open while being dead. Ask for a pong; if none arrives, start over.
     const asked = Date.now();
     ping();
     setTimeout(() => {
       if (stopped || lastMessageAt >= asked || linkState !== 'open' || !link?.isOpen()) return;
-      const dead = link;
-      generation++; // its callbacks now ignore everything
-      link = null;
-      linkState = 'idle';
-      try {
-        dead.close();
-      } catch {
-        /* already gone */
-      }
-      retry = 0;
-      connect();
-    }, 2500);
+      restart(force);
+    }, force ? 1500 : 2500);
   }
 }
 

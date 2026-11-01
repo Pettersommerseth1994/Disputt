@@ -1,6 +1,5 @@
 // da dictionary: play (the Norwegian text is the key). See docs/I18N.md.
 export default {
-  'Runde {round} · først til {target}': 'Runde {round} · først til {target}',
   'Se poengtavle': 'Se pointtavlen',
   'Poeng': 'Point',
   'Vertsvalg': 'Værtens valg',
@@ -37,9 +36,7 @@ export default {
   'Imposterne sier riktig svar sammen.': 'Imposterne siger det rigtige svar sammen.',
   'Imposteren sier riktig svar høyt.': 'Imposteren siger det rigtige svar højt.',
   'Det er sagt, vis poengene': 'Det er sagt, vis pointene',
-  '{name} trykker videre når det er sagt.': '{name} trykker videre, når det er sagt.',
-  'Spilleren med spørsmålet trykker videre når det er sagt.': 'Spilleren med spørgsmålet trykker videre, når det er sagt.',
-  '{name} er borte, gå videre': '{name} er væk, gå videre',
+  'Verten trykker videre når det er sagt.': 'Verten trykker videre, når det er sagt.',
   'Runden ble hoppet over. Ingen fikk poeng.': 'Runden blev sprunget over. Ingen fik point.',
   'Ingen var imposter denne runden.': 'Ingen var imposter i denne runde.',
   'Gruppa hadde rett!': 'Gruppen havde ret!',
@@ -135,7 +132,6 @@ export default {
   'Spillkode': 'Spilkode',
   'Mistet du forbindelsen? Åpne disputt.site, trykk «Bli med i spill» og skriv koden. Velg deg selv, så er du tilbake med poengene dine.': 'Mistede du forbindelsen? Åbn disputt.site, tryk på »Deltag i spil« og skriv koden. Vælg dig selv, så er du tilbage med dine point.',
   'Poengtavle': 'Pointtavle',
-  'Først til {target} poeng vinner.': 'Først til {target} point vinder.',
   'Slik spiller dere': 'Sådan spiller I',
   'Min tilgang': 'Min adgang',
   'Innstillinger': 'Indstillinger',
@@ -169,4 +165,13 @@ export default {
   'Knappen er klar om et øyeblikk.': 'Knappen er klar om et øjeblik.',
   'Hold knappen, og skjul skjermen for de andre.': 'Hold knappen nede, og skjul skærmen for de andre.',
   'Alle ser rollen sin, én og én. Alle holder like lenge.': 'Alle ser deres rolle, én ad gangen. Alle holder lige længe.',
+
+  // «Mistet forbindelsen»: the card with the button «Koble til igjen» (screens/reconnect.js)
+  'Mistet forbindelsen': 'Mistet forbindelsen',
+  'Kobler til igjen …': 'Forbinder igen …',
+  'Spillet kjører på din telefon, og vennene dine venter. Trykk for å koble til igjen.': 'Spillet kører på din telefon, og dine venner venter. Tryk for at forbinde igen.',
+  'Du ble koblet fra spillet. Trykk for å komme tilbake i det.': 'Du blev koblet fra spillet. Tryk for at komme tilbage i det.',
+  'Kobler til …': 'Forbinder …',
+  'Koble til igjen': 'Forbind igen',
+  'Vent litt': 'Vent lidt',
 };
