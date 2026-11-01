@@ -60,3 +60,16 @@ fails above it).
 
 Copy `characters/lime.mjs`, change the seed/shape/palette/eye options, register it in
 `characters/index.mjs`, run the build and `preview.mjs --one=<id>`.
+
+## The two game lengths (`krangel/`)
+
+The pictures on the cards «Småkrangel» and «Storkrangel» and the two little symbols on their lines (a star, a clock) are not made by `build.mjs`: they are the characters' own pictures
+with brows and an open mouth drawn over them (`krangel/faces.mjs`), a speech balloon full of swear symbols, and so on, drawn in the same pastel style (`krangel/crayon.mjs`: a base colour,
+hatching strokes in lighter and darker tones, a thin outline, and the filter of the avatars, rescaled), then photographed with Google Chrome on a transparent background and saved as WebP.
+
+```sh
+node tools/art/krangel/build.mjs   # → public/assets/art/krangel-lite.webp, krangel-stor.webp, icon-star.webp, icon-clock.webp (about 120 KB in all; the same bytes every time)
+```
+
+The red character «leppa» has its lips left out in these pictures (the build takes the three layers of the lips out of `public/assets/avatars/leppa.svg`; it stops with a message if that file changes).
+Not part of `npm run art`, which needs no browser.

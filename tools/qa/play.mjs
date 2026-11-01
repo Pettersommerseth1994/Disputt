@@ -27,6 +27,7 @@ import { underTheFinger } from './underfinger.mjs';
 import { buyAndComeBackVipps, payAfterFreeRoundsVipps, payAfterFreeRoundsVippsApp } from './vippsflow.mjs';
 import { quiet } from './quiet.mjs';
 import { passReady } from './ready.mjs';
+import { checkLengthCards, setTarget } from './length.mjs';
 
 const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
@@ -228,11 +229,9 @@ try {
   await clickButton(host, 'Neste');
   await waitText(host, /Steg 4 av 5/);
   await shot(host, '01c-setup-3-points');
-  // the points go in the free-text field (focusing selects the old value, so typing replaces it), and a point takes six minutes
-  await host.page.focus('#target');
-  await host.page.keyboard.type(String(TARGET));
-  await sleep(500);
-  if (TARGET * 6 < 90) assert.match(await bodyText(host), new RegExp(`ca\\. ${TARGET * 6} min`), 'six minutes a point');
+  // how long: two cards, first to 8 is chosen; then a short game for the test, sent the way a tap on a card does
+  await checkLengthCards(host.page, () => bodyText(host), (name) => clickButton(host, name));
+  await setTarget(host.page, TARGET);
   await clickButton(host, 'Neste');
   await waitText(host, /Steg 5 av 5/);
   await waitText(host, /Spillere\s+1\/10/);
@@ -357,7 +356,7 @@ try {
   assert.match(await bodyText(host), new RegExp(NAMES[PLAYERS - 1]), 'one tap does not remove anyone');
 
   // the invitation says what the second step set, and the host starts
-  await waitText(host, new RegExp(`Spiller til ${TARGET} poeng`));
+  await waitText(host, new RegExp(`Første til ${TARGET} poeng`));
   await clickButton(host, 'Start Disputt');
 
   // ------------------------------------------------------------ rounds
@@ -453,14 +452,21 @@ try {
       // the host's options are behind the gear in the header (not under the scoreboard), and only the host has the gear
       for (const p of others) assert.equal(await p.page.$('button[aria-label="Vertsvalg"]'), null, `${p.name} is not the host and has no gear`);
       await clickLabel(host, 'Vertsvalg');
-      await waitText(host, /Poengmål/);
+      await waitText(host, /Spillets lengde/);
+      // the host can change how long the game is, during the game: both cards are there (none is chosen: the test has set a target of its own), and a tap on one
+      // makes the game first to 12 (then back to the test's own)
+      await host.page.waitForSelector('.sheet .mc-card', { timeout: 5000 });
+      assert.equal(await host.page.$('.sheet .mc-card.is-chosen'), null, 'the test\'s own target has no card');
+      await clickButton(host, 'Storkrangel');
+      await host.page.waitForFunction(() => document.querySelector('.sheet .mc-card.is-chosen .mc-title')?.textContent.trim() === 'Storkrangel', { timeout: 5000 });
+      await setTarget(host.page, TARGET);
       const options = await bodyText(host);
       for (const label of [/Hopp over denne runden/, /Avslutt spillet nå/, /Slik spiller dere/]) assert.match(options, label);
       await clickLabel(host, 'Lukk');
       await host.page.waitForFunction(() => !document.querySelector('.sheet'));
       await clickLabel(host, 'Se poengtavle');
       await waitText(host, /Poengtavle/);
-      assert.doesNotMatch(await bodyText(host), /Vertsvalg|Poengmål|Hopp over denne runden|Avslutt spillet nå|Slik spiller dere/, 'under the scoreboard there is only the scoreboard');
+      assert.doesNotMatch(await bodyText(host), /Vertsvalg|Spillets lengde|Hopp over denne runden|Avslutt spillet nå|Slik spiller dere/, 'under the scoreboard there is only the scoreboard');
       await clickLabel(host, 'Lukk');
       await host.page.waitForFunction(() => !document.querySelector('.sheet'));
       log('the host options sit behind the gear next to "Poeng"');

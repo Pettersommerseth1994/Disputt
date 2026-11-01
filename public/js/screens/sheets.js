@@ -6,6 +6,7 @@ import { actions } from '../net.js';
 import { RulesHub } from '../regler/hub.js';
 import { AwakeToggle } from './awake.js';
 import { AddPlayerSheet, CarPlayers } from './carplayers.js';
+import { LengthCards } from './lengthcards.js';
 import { setStore, useStore } from '../store.js';
 import { Avatar, Button, QR, Scoreboard, Sheet, ShareLink, joinSite, joinUrl } from '../ui.js';
 
@@ -33,17 +34,12 @@ function HostControls({ view }) {
   const inRound = ['role', 'question', 'locked', 'reveal'].includes(view.phase);
   const canTarget = view.phase !== 'finished';
   const offline = view.players.filter((p) => !p.connected && !p.isHost);
-  const bump = (d) => actions.target(Math.min(99, Math.max(1, view.target + d)));
   return html`<section class="stack">
     ${canTarget &&
     html`<div class="field">
-      <span class="field__label">${t('Poengmål')}</span>
-      <div class="stepper">
-        <${Button} variant="cream" size="icon" onClick=${() => bump(-1)} aria-label=${t('Ett poeng mindre')} disabled=${view.target <= 1}>−</${Button}>
-        <output class="input input--number" aria-live="polite">${view.target}</output>
-        <${Button} variant="cream" size="icon" onClick=${() => bump(1)} aria-label=${t('Ett poeng mer')} disabled=${view.target >= 99}>+</${Button}>
-      </div>
-      <span class="field__hint">${t('Ett poeng tar ca. 6 minutter. Du kan justere underveis.')}</span>
+      <span class="field__label">${t('Spillets lengde')}</span>
+      <${LengthCards} view=${view} sheet />
+      <span class="field__hint">${t('Du kan bytte underveis.')}</span>
     </div>`}
     ${inRound && html`<${ConfirmButton} block variant="orange" onConfirm=${() => { actions.skip(); close(); }}>${t('Hopp over denne runden')}</${ConfirmButton}>`}
     ${offline.length > 0 &&

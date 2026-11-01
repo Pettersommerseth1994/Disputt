@@ -123,8 +123,6 @@ export default {
   'Ett poeng mer': 'Ét point mere',
   '0 er vanlig. Spillet er til {target} poeng, så fra 0 til {highest}. Hen spiller fra neste runde.': '0 er det normale. Spillet går til {target} point, så fra 0 til {highest}. Spilleren er med fra næste runde.',
   'Trykk igjen for å bekrefte': 'Tryk igen for at bekræfte',
-  'Poengmål': 'Pointmål',
-  'Ett poeng tar ca. 6 minutter. Du kan justere underveis.': 'Ét point tager ca. 6 minutter. Du kan justere undervejs.',
   'Hopp over denne runden': 'Spring denne runde over',
   'Frakoblet akkurat nå': 'Offline lige nu',
   'De kan hoppe inn igjen med spillkoden {code} og beholde poengene sine. Fjerner du dem, mister de poengene og kommer ikke inn igjen.': 'De kan hoppe ind igen med spilkoden {code} og beholde deres point. Fjerner du dem, mister de deres point og kommer ikke ind igen.',

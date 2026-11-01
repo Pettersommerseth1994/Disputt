@@ -19,20 +19,20 @@ Gode råd, fordi siden kjører uten spillserver (se [docs/P2P.md](docs/P2P.md)):
 ## Slik spilles det
 
 1. **Verten** åpner Disputt og starter et spill. Hen får en QR-kode som de andre skanner.
-2. Alle skriver inn **navn** og velger en av ti **avatarer**. Verten gjør det først, velger så hvor mange **poeng** man spiller til (ett poeng tar ca. 6 min) og kommer til invitasjonen: en QR-kode (trykk for å forstørre), koden og «Del lenke», mens spillerne kommer inn. Så trykker verten **Start Disputt**.
+2. Alle skriver inn **navn** og velger en av ti **avatarer**. Verten gjør det først, velger så hvor lenge man vil spille (**Småkrangel**: først til 8 poeng, ca. 1 time, eller **Storkrangel**: først til 12, ca. 2 timer) og kommer til invitasjonen: en QR-kode (trykk for å forstørre), koden og «Del lenke», mens spillerne kommer inn. Så trykker verten **Start Disputt**.
 3. **Roller:** én tilfeldig spiller blir **imposter** (får se riktig svar, f.eks. «C: Frankrike»), og er dere **seks eller flere, blir to impostere**, som får vite hvem den andre er. Alle andre er **lojale**. Rollen vises bare mens du holder en finger på knappen («Hold for å se rollen din») og er borte igjen når du slipper, så ingen kan se den over skulderen din. Resten av tiden er skjermen lik på alles telefon. Rolleskjermen varer i 8 sekunder.
 4. En tilfeldig spiller (kan også være imposteren) får **spørsmålet** med fire alternativer og leser det høyt. Klokka starter med en gang; hen kan sette den til **2, 6 eller 10 minutter** og legge til tid underveis.
 5. Alle **diskuterer**. Imposteren (eller imposterne) prøver å lure de andre til å svare feil. Hvordan man blir enige er opp til gruppa.
 6. Spilleren med spørsmålet **krysser av** svaret dere ble enige om og låser det. Så telles det ned **5-4-3-2-1** på alle telefoner, og alle ser hva dere låste.
 7. **Imposteren avslører seg.** Telefonene viser ingenting om fasit eller hvem imposteren er. Imposteren (eller imposterne, sammen) sier riktig svar høyt, og dere ser selv om dere hadde rett. Så trykker verten «Det er sagt, vis poengene».
 8. **Riktig svar:** alle lojale får 1 poeng. **Feil svar:** bare imposteren får 1 poeng (er det to, får begge 1 poeng hver). Poengskjermen har en liten knapp, «Se fasit», for når dere er uenige om hva som ble sagt. Så en ny runde med nye roller, ny spiller og nytt spørsmål.
-9. Først til målet vinner. Poengtavlen kan åpnes når som helst. Verten har et tannhjul ved siden av «Poeng» med vertsvalg: justere poengmålet, hoppe over runden, fjerne frakoblede spillere og avslutte spillet.
+9. Først til målet vinner. Poengtavlen kan åpnes når som helst. Verten har et tannhjul ved siden av «Poeng» med vertsvalg: bytte mellom Småkrangel og Storkrangel, hoppe over runden, fjerne frakoblede spillere og avslutte spillet.
 
 ### To måter å spille på
 
 - **På hver sin telefon** (Hytteturmodus inni koden) er spillet slik det er beskrevet over.
 - **På én telefon** (Bilturmodus inni koden, 2 til 10 spillere, vertens telefon): verten legger inn alle navnene i steg 2, «Hvem spiller?». Ti er det flest som får plass (som på hver sin telefon), og fra seks spillere er det to impostere, som får vite hvem den andre er. Den øverste er verten, og verten leser alltid spørsmålet. Hver runde begynner med at telefonen sendes rundt: en liste med navnene nedover, der bare den som står for tur har «Hold for å se» (den samme stripen som i Hytteturmodus, med knappen til høyre og rollen til venstre mens den holdes). Slipper man, er rollen borte og turen går videre («Gi telefonen til …»). Når alle har sett rollen sin, gir de telefonen tilbake til verten, som trykker «Vis spørsmålet». Resten er som i Hytteturmodus, på vertens telefon. Glemt rollen din? «Se rolle» i stripen øverst åpner «Se rolle igjen»: trykk på navnet ditt og hold inne knappen. Et spill på én telefon bruker ikke nettverket, så det kan spilles uten dekning (i Hytteturmodus er verten fortsatt «serveren»).
-- **Betaling og tid er de samme i begge:** tre runder gratis, så pakkene, og ca. 6 minutter per poeng.
+- **Betaling og tid er de samme i begge:** tre runder gratis, så pakkene. Spillet er enten Småkrangel (først til 8 poeng, ca. 1 time) eller Storkrangel (først til 12, ca. 2 timer).
 - **Med to spillere** er en runde én av tre, like sannsynlige: den første er imposter, den andre er imposter, eller ingen er imposter (da får begge 1 poeng hvis dere svarer riktig, og ingen hvis dere svarer feil). Ellers ville den ene alltid visst hvem imposteren var. Rollen din sier ikke om den andre er imposter, og avsløringen ser lik ut i alle tre. Fra tre spillere er det alltid en imposter.
 
 ### Valg som er tatt (og kan endres)

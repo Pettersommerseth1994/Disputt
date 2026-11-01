@@ -15,7 +15,7 @@ Klient og server snakker JSON over én WebSocket (`/ws`). (I peer-to-peer-modus,
 | `player.add` | `name, avatar`, evt. `points` | vert, bare bilturmodus | legger inn en spiller på vertens telefon (høyst 5, `limits.max`, ellers `too_many`; `bad_mode` i hytteturmodus). Spilleren har ingen telefon, så er alltid «tilkoblet». Også etter at spillet har startet (fra vertsvalgene): `points` er poengene hen kommer inn med (0 er standard, opptil én under poengmålet), og hen spiller fra neste runde |
 | `seen` | `id` | vert, fase `role`, bare bilturmodus | spilleren har sett rollen sin (telefonen sendes rundt) |
 | `begin` | | vert, fase `role`, bare bilturmodus | alle har sett rollen sin: videre til spørsmålet (`not_all` hvis noen ikke har det) |
-| `target` | `value` (1–99) | vert, når som helst før spillet er ferdig | poengmål (sjekkes for vinner når runden er ferdig) |
+| `target` | `value` (1–99) | vert, når som helst før spillet er ferdig | poengmål (sjekkes for vinner når runden er ferdig). Et nytt spill har 8 (`DEFAULT_TARGET`); appen tilbyr 8 (Småkrangel) og 12 (Storkrangel), men motoren godtar alle fra 1 til 99 |
 | `start` | | vert, lobby | starter første runde (min. 2 klare og tilkoblede) |
 | `select` | `index` (0–3 / null) | den som svarer | lagrer foreløpig valg (overlever sideoppdatering) |
 | `timer.set` | `seconds` (30–3600) | den som svarer | setter gjenstående tid (2/6/10 min i UI) |
@@ -63,7 +63,7 @@ I `reveal` vises ingenting om utfallet: imposterne sier riktig svar høyt, og sk
 ```jsonc
 {
   "code": "KRAP", "mode": "cabin", "lang": "no",           // "cabin" (en telefon hver) eller "car" (alle på vertens telefon)
-  "phase": "question", "round": 3, "target": 5, "hostId": "…", "now": 1790000000000,
+  "phase": "question", "round": 3, "target": 8, "hostId": "…", "now": 1790000000000,
   "limits": { "min": 2, "max": 10, "twoImpostorsFrom": 6 },   // max er 5 i bilturmodus   // fra så mange spillere i runden er det to impostere
   "timings": { "roleMs": 8000, "countdownMs": 5000 },
   "players": [{ "id": "…", "name": "Mari", "avatar": "mandarin", "score": 2, "connected": true, "isHost": false }],

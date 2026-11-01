@@ -53,7 +53,7 @@ test('a style sheet that cannot be fetched does not leave a screen blank, and th
   const loader = read('public/js/css-loader.js');
   assert.match(loader, /load\(href\)\.then\(\(\) => alive && setReady\(true\)\)/, 'the screen is drawn also when the sheet failed');
   assert.match(read('public/js/screens/ready.js'), /loadStyles\(\)\.then\(\(\) => alive && setReady\(true\)\)/);
-  assert.match(read('public/js/main.js'), /preloadStylesheets\(\[asset\('css\/mode-cards\.css'\), asset\('css\/ready\.css'\), asset\('css\/equal\.css'\)\]\)/);
+  assert.match(read('public/js/main.js'), /preloadStylesheets\(\[asset\('css\/mode-cards\.css'\), asset\('css\/length-cards\.css'\), asset\('css\/ready\.css'\), asset\('css\/equal\.css'\)\]\)/);
 });
 
 test('«Betal med Vipps» is offered in Norwegian, Danish and Swedish, and the Danish texts say MobilePay', () => {

@@ -19,6 +19,7 @@ import { FAST, startNodeSite, startP2PSite } from './sites.mjs';
 import { underTheFinger } from './underfinger.mjs';
 import { quiet } from './quiet.mjs';
 import { passReady } from './ready.mjs';
+import { checkLengthCards, setTarget } from './length.mjs';
 
 const args = process.argv.slice(2);
 const OUTCOMES_ARG = args.includes('--outcomes');
@@ -312,23 +313,20 @@ async function setUp() {
   }
   log(`${PLAYERS} players put in on the host's phone`);
 
-  // 3. how long: the normal step, and a point is six minutes
+  // 3. how long: the normal step, two cards
   await clickButton('Neste');
   await waitText(/Steg 4 av 4/);
   assert.match(await bodyText(), /Hvor lenge skal dere spille\?/);
-  await page.focus('#target');
-  await page.keyboard.type(String(TARGET));
-  await sleep(500);
-  const bodyNow = await bodyText();
-  if (TARGET * 6 < 90) assert.match(bodyNow, new RegExp(`ca\\. ${TARGET * 6} min`), 'six minutes a point');
-  assert.match(bodyNow, /Ett poeng tar ca\. 6 minutter/);
+  await checkLengthCards(page, bodyText, clickButton);
+  await clickButton('Storkrangel');
   // "back" and on again keep the players
   await clickButton('Tilbake');
   await waitText(/Steg 3 av 4/);
   assert.deepEqual(await rosterNames(), names, 'the players are still there after going back');
   await clickButton('Neste');
   await waitText(/Steg 4 av 4/);
-  assert.equal(await page.$eval('#target', (i) => i.value), String(TARGET), 'and so are the points');
+  assert.equal(await page.$eval('.mc-card.is-chosen .mc-title', (e) => e.textContent.trim()), 'Storkrangel', 'and so is the length');
+  await setTarget(page, TARGET); // a short game for the test
   assert.doesNotMatch(await bodyText(), /Klar\? Slik funker det/, 'there is no fourth step: this one starts the game');
   assert.equal((await buttons()).find((b) => b.text === 'Neste'), undefined, 'and no Neste, only Start spillet');
 
@@ -561,7 +559,7 @@ async function changePlayers() {
     await page.waitForSelector('#new-player-name', { timeout: 5000 });
     await page.type('#new-player-name', name);
     await shot('11-add-player');
-    // (the host's options have a stepper of their own, for the points of the game: the buttons of the form are the ones in the form)
+    // (the buttons of the form are the ones in the form)
     await page.evaluate(() => document.querySelector('form [aria-label="Ett poeng mer"]').click());
     await page.evaluate(() => document.querySelector('form button[type=submit]').click());
     await waitText(new RegExp(`${name}\\s*·\\s*1 poeng`)); // (the sheet is back, with the player in the list and the point they came in with)

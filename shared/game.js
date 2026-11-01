@@ -28,6 +28,9 @@ export const PHASE = Object.freeze({
   FINISHED: 'finished',
 });
 
+/** What a new game is played to: «Småkrangel», the short of the two lengths the host is offered (the other is «Storkrangel»: 12). */
+export const DEFAULT_TARGET = 8;
+
 export const LIMITS = Object.freeze({
   minPlayers: 2,
   maxPlayers: 10, // a phone each
@@ -90,7 +93,7 @@ export class Room {
     this.creatorId = null; // the player who opened the room; never cleaned up as an unfinished profile
     this.phase = PHASE.LOBBY;
     this.round = 0;
-    this.target = 5;
+    this.target = DEFAULT_TARGET;
     this.current = null;
     this.winnerIds = [];
     this.history = [];

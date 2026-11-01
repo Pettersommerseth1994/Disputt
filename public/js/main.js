@@ -30,9 +30,9 @@ document.addEventListener('visibilitychange', () => document.visibilityState ===
 window.addEventListener('online', reconnectNow);
 window.addEventListener('pageshow', (e) => e.persisted && reconnectNow());
 
-// The style sheets of the screens that have one of their own (the way to play, «Er du klar?», the role screens) are fetched when the page starts, so that the first
+// The style sheets of the screens that have one of their own (the way to play, how long to play, «Er du klar?», the role screens) are fetched when the page starts, so that the first
 // role is not drawn late on a slow connection (css-loader.js).
-preloadStylesheets([asset('css/mode-cards.css'), asset('css/ready.css'), asset('css/equal.css')]);
+preloadStylesheets([asset('css/mode-cards.css'), asset('css/length-cards.css'), asset('css/ready.css'), asset('css/equal.css')]);
 
 // The relay for phones that cannot reach each other directly: asked for now, so that it is there when a game is made or joined (p2p/ice.js).
 if (isP2P) prefetchRelay(config);

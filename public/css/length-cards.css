@@ -1,0 +1,22 @@
+/* The two cards «Småkrangel» (first to 8 points) and «Storkrangel» (first to 12): the step «Hvor lenge skal dere spille?» and the host's option for the same (screens/lengthcards.js).
+   They are made of the cards of the way to play (mode-cards.css: .mc-card, .mc-pic, .mc-body, .mc-title, .mc-check ...) and add what is theirs; everything here starts with .gl-.
+   The words never wrap: on a narrow phone they get smaller. (.gl-body is a container; its width is in cqw: a row is a star or a clock, a gap and the longest text in
+   Norwegian, Danish or Swedish, which is 8.7 em wide: «Første til 12 poeng», and a title is at most 6.1 em: «Småskænderi».) */
+
+.gl-stack { --pic: clamp(124px, 21dvh, 190px); }
+.gl-stack--sheet { --pic: 118px; }
+
+.gl-pic__art { position: absolute; left: 50%; top: 50%; height: 100%; width: auto; transform: translate(-50%, -50%); }
+
+.mc-body.gl-body { container-type: inline-size; }
+.mc-title.gl-title { white-space: nowrap; overflow-wrap: normal; font-size: clamp(1.15rem, 5.4vw, 1.4rem); }
+.gl-rows { display: grid; justify-items: start; gap: 0.36em; margin: 0.2rem 0 0.1rem; font-size: clamp(0.7rem, 3.5vw, 0.9rem); }
+.gl-row { display: flex; align-items: center; gap: 0.38em; white-space: nowrap; font-weight: 800; line-height: 1.1; }
+.gl-ico { flex: none; width: 1.3em; height: 1.3em; }
+.gl-hint { margin-top: 0.25rem; font-weight: 700; font-size: 0.84rem; line-height: 1.2; opacity: 0.92; text-wrap: balance; }
+.gl-stack--sheet .gl-hint { display: none; }
+
+@supports (width: 1cqw) {
+  .mc-title.gl-title { font-size: min(1.4rem, 15.5cqw); }
+  .gl-rows { font-size: min(0.9rem, 9.3cqw); }
+}

@@ -9,7 +9,8 @@ import { Avatar, Button, CloseIcon, GearIcon, HelpIcon, Logo, QR, ShareLink, joi
 import { isP2P } from '../settings.js';
 import { cx } from '../util.js';
 import { AwakeTip } from './awake.js';
-import { MINUTES_PER_POINT, SetupHeader, Steps, duration } from './setup.js';
+import { lengthOf } from './lengths.js';
+import { SetupHeader, Steps } from './setup.js';
 import { TwoPlayersNote } from './twonote.js';
 
 export function Lobby({ view }) {
@@ -90,7 +91,7 @@ function HostLobby({ view }) {
       </section>
 
       <div class="row row--center row--wrap lobby__rules">
-        <p class="small">${t('Spiller til')} <strong>${t('{n} poeng', { n: view.target })}</strong> · ${duration(view.target * MINUTES_PER_POINT)}${twoImpostors ? ` · ${t('to impostere')}` : ''}</p>
+        <p class="small"><strong>${t('Første til {n} poeng', { n: view.target })}</strong>${lengthOf(view.target) ? ` · ${t(lengthOf(view.target).time)}` : ''}${twoImpostors ? ` · ${t('to impostere')}` : ''}</p>
         <${Button} variant="text" onClick=${() => setStore({ step: 2 })}>${t('Endre')}</${Button}>
       </div>
 

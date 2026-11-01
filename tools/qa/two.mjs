@@ -11,6 +11,7 @@ import { QUESTIONS } from '../../shared/questions.js';
 import { startNodeSite, startP2PSite } from './sites.mjs';
 import { quiet } from './quiet.mjs';
 import { passReady } from './ready.mjs';
+import { setTarget } from './length.mjs';
 
 const flags = process.argv.slice(2).filter((a) => a.startsWith('--'));
 const SUBPATH = flags.includes('--subpath');
@@ -94,9 +95,7 @@ try {
   await passReady(host.page);
   await register(host, 'Petter', 'Neste');
   await waitText(host, /Steg 4 av 5/);
-  await host.page.focus('#target');
-  await host.page.keyboard.type('99'); // no end in sight: the rounds go on until all three kinds have come up
-  await sleep(400);
+  await setTarget(host.page, 99); // no end in sight: the rounds go on until all three kinds have come up
   await clickButton(host, 'Neste');
   await waitText(host, /Steg 5 av 5/);
   const code = await host.page.$eval('.lobby__code', (el) => el.textContent.trim());

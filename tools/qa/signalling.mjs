@@ -11,6 +11,7 @@ import puppeteer from 'puppeteer-core';
 import { startP2PSite } from './sites.mjs';
 import { quiet } from './quiet.mjs';
 import { passReady } from './ready.mjs';
+import { setTarget } from './length.mjs';
 
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -89,9 +90,7 @@ try {
   await passReady(host.page); // the second
   await register(host, 0, 'Neste'); // the third
   await waitText(host, /Steg 4 av 5/);
-  await host.page.focus('#target'); // one point, so that a game is over after a single round
-  await host.page.keyboard.type('1');
-  await sleep(400);
+  await setTarget(host.page, 1); // one point, so that a game is over after a single round
   await clickButton(host, 'Neste');
   await host.page.waitForSelector('.lobby__code', { timeout: 20000 });
   const code = await host.page.$eval('.lobby__code', (el) => el.textContent.trim());

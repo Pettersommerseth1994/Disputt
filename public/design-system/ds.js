@@ -94,7 +94,7 @@ const SCREENS = [
   ['mode-step', 'Oppsett: hvordan dere vil spille', 'Vertens første steg (av fire): Bilturmodus (2-5 spillere på én telefon) eller Hytteturmodus (2-10, en telefon hver). Likt i begge: alltid en eller flere impostere, og dere må bli enige.'],
   ['profile-new', 'Profil', 'Navn og avatar. Tatte avatarer er utilgjengelige.'],
   ['car-players-3', 'Bilturmodus: hvem spiller', 'Verten legger inn alle navnene (den øverste er verten). Et navn er nok: neste ledige avatar er allerede valgt.'],
-  ['setup-points', 'Oppsett: poeng', 'Vertens tredje steg (av fire): hvor mange poeng. Ett poeng tar ca. 6 minutter, i begge måter å spille på.'],
+  ['setup-points', 'Oppsett: poeng', 'Vertens tredje steg (av fire): hvor lenge. To kort, Småkrangel (først til 8 poeng, ca. 1 time) og Storkrangel (først til 12, ca. 2 timer), i begge måter å spille på.'],
   ['lobby-host-3', 'Invitasjon – vert', 'Siste steg: QR-koden, koden og «Del lenke». Hvem som er med står over Start Disputt.'],
   ['lobby-guest-3', 'Lobby – spiller', 'Venter på verten. Kan se hvem som er med.'],
   ['role-impostor', 'Rolle: skjult', 'Lik på alles telefon til en finger holder knappen. Lojal og imposter ser det samme. 8 sekunder.'],

@@ -19,7 +19,7 @@ function scripted(first) {
 }
 
 // `mate` is the seat of the second impostor in a round of six or more (the full stress rooms always have two)
-function makeRoom({ players = 5, impostor = 1, asker = 3, mate = 4, target = 5, stress = false, exact = false } = {}) {
+function makeRoom({ players = 5, impostor = 1, asker = 3, mate = 4, target = 8, stress = false, exact = false } = {}) {
   if (stress && !exact) players = Math.max(players, 10); // stress rooms are full unless a screen needs a free seat
   // (a third pick only when the round has a second impostor: otherwise the question shuffle would use it up, and the first
   // question would no longer be the one that every fixture and test counts on)
@@ -40,7 +40,7 @@ function makeRoom({ players = 5, impostor = 1, asker = 3, mate = 4, target = 5, 
  * A room in bilturmodus: everybody on the host's phone. `impostor` is the seat of the impostor, `outcome` (two players only) is the
  * one of three: 0 nobody, 1 the first, 2 the second. The host asks, so there is no pick for that.
  */
-function makeCarRoom({ players = 3, impostor = 1, mate = 4, outcome = 1, target = 5, stress = false } = {}) {
+function makeCarRoom({ players = 3, impostor = 1, mate = 4, outcome = 1, target = 8, stress = false } = {}) {
   const picks = players === 2 ? [outcome] : players >= LIMITS.twoImpostorsFrom ? [impostor, mate > impostor ? mate - 1 : mate] : [impostor];
   const room = new Room({ code: 'KRAP', rand: scripted(picks), now: () => Date.now(), mode: MODE.CAR });
   const host = room.addPlayer({ asHost: true });
@@ -72,7 +72,7 @@ const tick = (room, ms) => {
 export function buildFixtures({ stress = false } = {}) {
   const out = {};
   // (stress rooms play to 99: a two-digit target on every screen that shows it; a screen that needs a finished game says so)
-  const room0 = (opts) => makeRoom({ ...opts, target: opts.target ?? (stress ? 99 : 5), stress });
+  const room0 = (opts) => makeRoom({ ...opts, target: opts.target ?? (stress ? 99 : 8), stress });
 
   // ---- lobby / profile
   {
