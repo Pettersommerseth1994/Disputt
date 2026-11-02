@@ -257,7 +257,7 @@ export function CarRoles({ view }) {
     <div class="rolelist__head">
       <p class="eyebrow">${t('Runde {round}', { round: view.round })}</p>
       <h1 class="setup__title rise-in">${done ? t('Alle har sett rollen sin') : t('Send telefonen rundt')}</h1>
-      <p class="lead muted">${done ? t('Gi telefonen tilbake til verten, som leser spørsmålet høyt for alle.') : t('Alle ser rollen sin, én og én. Alle holder like lenge.')}</p>
+      <p class="lead muted">${done ? t('Gi telefonen tilbake til verten, som leser spørsmålet høyt for alle.') : t('Alle ser rollen sin, én og én.')}</p>
     </div>
     <ol class="rolelist__list">
       ${table.map((r, i) => {

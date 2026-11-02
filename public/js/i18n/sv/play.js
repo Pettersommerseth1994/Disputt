@@ -159,7 +159,7 @@ export default {
   'Gi telefonen til': 'Ge telefonen till',
   'Knappen er klar om et øyeblikk.': 'Knappen är redo om ett ögonblick.',
   'Hold knappen, og skjul skjermen for de andre.': 'Håll knappen nedtryckt och göm skärmen för de andra.',
-  'Alle ser rollen sin, én og én. Alle holder like lenge.': 'Alla ser sin roll, en i taget. Alla håller lika länge.',
+  'Alle ser rollen sin, én og én.': 'Alla ser sin roll, en i taget.',
 
   // «Mistet forbindelsen»: the card with the button «Koble til igjen» (screens/reconnect.js)
   'Mistet forbindelsen': 'Anslutningen försvann',

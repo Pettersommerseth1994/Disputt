@@ -1,7 +1,7 @@
 // The first step of the host's set-up: how to play. The same game two ways, both for two to ten players: on ONE phone, the host's, that is sent round the
 // table (bilturmodus inside: `car`), or a phone each (hytteturmodus inside: `cabin`). Nothing exists yet while this is on the screen: the game is made
 // when the host goes on (net.js: actions.create(mode)), and "back" is simply the start screen.
-// Two wide cards, one above the other: a huge phone with a «1» that swings between two avatars, or four phones that each have an avatar and light up in turn.
+// Two wide cards, one above the other: four phones that each have an avatar and light up in turn (a phone each, first), or a huge phone with a «1» that swings between two avatars.
 // (A file of its own with a style sheet of its own, css/mode-cards.css, that it loads itself: pages are cached for ten minutes.)
 
 import { html, useState } from '../vendor/htm-preact.js';
@@ -15,8 +15,8 @@ import { Steps } from './setup.js';
 import { CAR_SEGMENTS } from './steps-count.js';
 
 export const MODES = [
-  { id: 'car', title: tx('På én telefon'), text: tx('Én telefon som sendes rundt mellom dere.'), hint: tx('Passer best for bilturen'), art: 'bil', blob: 'blob-6' },
   { id: 'cabin', title: tx('På hver sin telefon'), text: tx('Alle spiller på sin egen telefon.'), hint: tx('Passer best for hytteturen'), art: 'hytte', blob: 'blob-4' },
+  { id: 'car', title: tx('På én telefon'), text: tx('Én telefon som sendes rundt mellom dere.'), hint: tx('Passer best for bilturen'), art: 'bil', blob: 'blob-6' },
 ];
 
 const FACES = ['lime', 'mandarin', 'blabaer', 'leppa', 'sol', 'drue', 'sky', 'kirsebaer'];

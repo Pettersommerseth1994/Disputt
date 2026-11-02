@@ -1,5 +1,5 @@
 // Bilturmodus: the turn of the player whose turn it is while the phone goes round. The tall card (screens/car.js, CarRoles, puts it where the strip was):
-// the field with the time above it (screens/equal.js), the avatar and the name, the place of the role, and the standard button under it. The place of the role
+// the field with the time above it (screens/equal.js), and in the yellow frame the avatar and the name, the place of the role, and the standard button under it. The place of the role
 // has the same size open and closed, so the button never moves when it opens, and it is dark and the same for everybody while nothing is held. The role is on the
 // screen only while the finger holds; everybody holds the same time (4 s); a finger that lifts too soon hides the role and does not count.
 // A button that has just been handed over is locked for a moment («Vent …»): the finger that let go of the last one may still be there.
@@ -64,9 +64,9 @@ export function CarTurn({ row, n, isHost, first, impostors = 1, onSeen, innerRef
       <div class=${cx('eq-info', open && 'is-open', imp && 'is-imp', impostors > 1 && 'eq-info--duo')} role="status" aria-live="polite">
         ${open ? html`<${RoleBody} row=${row} impostors=${impostors} />` : html`<${Closed} locked=${hold.locked} early=${early} />`}
       </div>
+      <${Button} block class=${cx('eq-hold', open && 'is-held', hold.done && 'eq-done')} disabled=${hold.locked} ...${hold.bind} aria-label=${t('Hold inne for å se rollen din')}>
+        ${hold.locked ? t('Vent …') : open ? t('Hold inne …') : t('Hold for å se')}
+      </${Button}>
     </div>
-    <${Button} block class=${cx('eq-hold', open && 'is-held', hold.done && 'eq-done')} disabled=${hold.locked} ...${hold.bind} aria-label=${t('Hold inne for å se rollen din')}>
-      ${hold.locked ? t('Vent …') : open ? t('Hold inne …') : t('Hold for å se')}
-    </${Button}>
   </li>`;
 }

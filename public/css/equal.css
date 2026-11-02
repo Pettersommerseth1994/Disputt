@@ -28,9 +28,9 @@
 .eq-hold.is-held { transform: translateY(4px) rotate(var(--tilt, -0.6deg)); box-shadow: 0 1px 0 var(--btn-edge), 0 1px 0 1px var(--edge); }
 .eq-done { --btn-bg: var(--lime); --btn-edge: var(--lime-deep); }
 
-/* the turn: the field, the tall card and the button (the same width as the buttons in the dock) */
+/* the turn: the field above, and the tall card with the yellow frame that has the name, the place of the role and the button in it */
 .eq-turn { display: grid; gap: 0.6rem; scroll-margin: 0.6rem 0 8.4rem; /* (the dock sits on the bottom of the screen: the turn is centred in what is left above it) */ }
-.eq-turn > .btn { margin-bottom: 6px; } /* (the shadow under it) */
+.eq-now > .btn { margin-bottom: 6px; } /* (the shadow under it) */
 
 .eq-now {
   display: grid;

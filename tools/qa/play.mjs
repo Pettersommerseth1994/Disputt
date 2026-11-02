@@ -190,8 +190,8 @@ try {
   assert.match(await bodyText(host), /Hvordan vil dere spille\?/);
   const modeCards = await host.page.$$eval('.mc-card', (els) => els.map((el) => el.innerText.replace(/\s+/g, ' ').trim()));
   assert.equal(modeCards.length, 2, 'two ways to play');
-  assert.match(modeCards[0], /På én telefon.*Én telefon som sendes rundt mellom dere\..*Passer best for bilturen/, 'the first card is one phone');
-  assert.match(modeCards[1], /På hver sin telefon.*Alle spiller på sin egen telefon\..*Passer best for hytteturen/, 'the second card is a phone each');
+  assert.match(modeCards[0], /På hver sin telefon.*Alle spiller på sin egen telefon\..*Passer best for hytteturen/, 'the first card is a phone each');
+  assert.match(modeCards[1], /På én telefon.*Én telefon som sendes rundt mellom dere\..*Passer best for bilturen/, 'the second card is one phone');
   // (both take two to ten: said once, under the cards, with the faces)
   assert.match(await bodyText(host), /2-10 deltakere/, 'both ways take two to ten players');
   assert.equal(await host.page.$$eval('.mc-card .mc-pic', (els) => els.length), 2, 'each card has its picture');
