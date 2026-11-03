@@ -29,7 +29,12 @@ export function daysBetween(from, to) {
 }
 
 /** A share as text («42 %»), or a dash when there is nothing to divide by. */
-export const percent = (part, whole) => (whole > 0 ? `${Math.round((part / whole) * 100)} %` : '–');
+export const percent = (part, whole) => (whole > 0 ? `${Math.round((part / whole) * 100)}\u00a0%` : '–'); // (a non-breaking space before %, the Norwegian way)
+
+const DAY_SHORT = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const DAY_LONG = new Intl.DateTimeFormat('nb-NO', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+/** A day as the Norwegians write it: «3. nov.», or «tir. 3. nov.» with the weekday. `day` is 2026-11-03. */
+export const formatDay = (day, withWeekday = false) => (withWeekday ? DAY_LONG : DAY_SHORT).format(new Date(`${day}T12:00:00Z`));
 
 /** The paid orders that count (a cancelled or disputed order does not), and what they brought in per currency, in whole units, after refunds. */
 export function salesSummary(sales) {
@@ -128,6 +133,11 @@ export function summarize(data) {
     { id: 'stor', label: 'Storkrangel', hint: 'første til 12 poeng, ca. 2 timer', n: total('length_12') },
     { id: 'other', label: 'Annen lengde', hint: 'et annet poengmål enn de to kortene', n: total('length_other') },
   ];
+  // the round that the host had got to when the packages came on screen (paywall_round_1 ... 10, and 11 or more)
+  const paywallRounds = [
+    ...Array.from({ length: 10 }, (_, i) => ({ round: i + 1, label: `Runde ${i + 1}`, n: total(`paywall_round_${i + 1}`) })),
+    { round: 11, label: 'Runde 11 eller senere', n: total('paywall_round_more') },
+  ].filter((r) => r.n > 0);
   const lobbies = total('lobby');
   const firstRounds = total('game_start');
   const kpi = {
@@ -137,5 +147,5 @@ export function summarize(data) {
     averageOrder: sum.orders ? Math.round((sum.revenue.NOK ?? 0) / sum.orders) : null, // (kroner)
   };
   kpi.playersPerGame = countedGames ? Math.round((players.reduce((n, p) => n + p.size * p.total, 0) / countedGames) * 10) / 10 : null;
-  return { game, pay, byLang, byMode, checkouts, days, weekdays, kpi, players, lengths, countedGames, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit'), games: lobbies, firstRounds, first: events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '') };
+  return { game, pay, byLang, byMode, checkouts, days, weekdays, kpi, players, lengths, countedGames, paywallRounds, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit'), games: lobbies, firstRounds, first: events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '') };
 }

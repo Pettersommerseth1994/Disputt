@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { beforeEach, describe, it } from 'node:test';
-import { change, daysBetween, percent, ratio, salesSummary, splitPeriods, summarize } from '../public/js/stats-math.js';
+import { change, daysBetween, formatDay, percent, ratio, salesSummary, splitPeriods, summarize } from '../public/js/stats-math.js';
 
 // (a pretend browser: the page modules read these when they are loaded, so this comes first)
 const memory = () => {
@@ -96,6 +96,7 @@ describe('the steps that are counted', () => {
     observe({ ...base, paywall: false }, send);
     observe({ ...base, paywall: true }, send);
     assert.deepEqual(sent.filter(([n]) => n === 'paywall'), [['paywall', 'car'], ['paywall', '']]);
+    assert.deepEqual(sent.filter(([n]) => n.startsWith('paywall_round')), [['paywall_round_1', 'car']], 'and the round the host had got to, when there is one');
     sent = [];
     resetWatch();
     observe({ route: { page: 'home' }, session: { code: 'x' }, paywall: true, payments: { enabled: false } }, send);
@@ -138,7 +139,7 @@ describe('the owner\'s sums', () => {
 
   it('gives days in order, and a dash when there is nothing to divide by', () => {
     assert.deepEqual(daysBetween('2026-02-27', '2026-03-02'), ['2026-02-27', '2026-02-28', '2026-03-01', '2026-03-02']);
-    assert.equal(percent(1, 4), '25 %');
+    assert.equal(percent(1, 4), '25\u00a0%', 'a non-breaking space before the percent sign, as in Norwegian');
     assert.equal(percent(1, 0), '–');
   });
 });
@@ -170,6 +171,18 @@ describe('more from the same numbers', () => {
     assert.equal(splitPeriods({ ...data, from: '2026-11-08', days: 7, events: events.filter((e) => e.day >= '2026-11-08') }, 7).previous, null, 'asked for 7 days, so nothing before');
   });
 
+  it('writes days the Norwegian way (day first, the month in words)', () => {
+    assert.equal(formatDay('2026-11-03'), '3. nov.');
+    assert.equal(formatDay('2026-11-03', true), 'tir. 3. nov.');
+    assert.equal(formatDay('2026-03-11'), '11. mars', 'the 11th of March, not «11.03» read as November');
+  });
+
+  it('adds up the round the packages came on screen in', () => {
+    const s = summarize({ ...data, events: [...events, row('2026-11-12', 'paywall_round_3', 5), row('2026-11-12', 'paywall_round_2', 2), row('2026-11-13', 'paywall_round_more', 1)] });
+    assert.deepEqual(s.paywallRounds.map((r) => [r.round, r.n]), [[2, 2], [3, 5], [11, 1]]);
+    assert.deepEqual(summarize(data).paywallRounds, [], 'nothing counted yet');
+  });
+
   it('adds up how many played and which length they chose', () => {
     const more = [...events, row('2026-11-12', 'players_4', 6, { mode: 'cabin' }), row('2026-11-12', 'players_4', 2, { mode: 'car' }), row('2026-11-12', 'players_6', 2, { mode: 'cabin' }), row('2026-11-13', 'length_8', 7), row('2026-11-13', 'length_12', 3)];
     const s = summarize({ ...data, events: more });
@@ -183,7 +196,7 @@ describe('more from the same numbers', () => {
 
   it('works out per game and per order, and by the day of the week', () => {
     const s = summarize(data);
-    assert.deepEqual(s.kpi, { guestsPerGame: 2.5, roundsPerGame: 3.5, finishRate: '50 %', averageOrder: 224, playersPerGame: null });
+    assert.deepEqual(s.kpi, { guestsPerGame: 2.5, roundsPerGame: 3.5, finishRate: '50\u00a0%', averageOrder: 224, playersPerGame: null });
     assert.equal(ratio(1, 0), null);
     assert.deepEqual(s.sales.perPlanIncome, { year: 299, evening: 149 });
     assert.equal(s.days.find((d) => d.day === '2026-11-12').income, 299);

@@ -1295,8 +1295,8 @@ async function turnEndpoint(env) {
 // ------------------------------------------------------------------------------------------------ counting what happens in the game
 
 /** The things the game may say have happened (anything else is turned away). */
-// (players_2 ... players_10: how many played when the first round began; length_8 / length_12: «Småkrangel» / «Storkrangel», length_other: a game with another target)
-const STAT_EVENTS = ['visit', 'start', 'mode', 'lobby', 'joined', 'game_start', 'round', 'finished', 'paywall', 'checkout', ...Array.from({ length: 9 }, (_, i) => `players_${i + 2}`), 'length_8', 'length_12', 'length_other'];
+// (paywall_round_1 ... 10 / paywall_round_more: the round the host had got to when the packages came on screen; players_2 ... players_10: how many played when the first round began; length_8 / length_12: «Småkrangel» / «Storkrangel», length_other: a game with another target)
+const STAT_EVENTS = ['visit', 'start', 'mode', 'lobby', 'joined', 'game_start', 'round', 'finished', 'paywall', 'checkout', ...Array.from({ length: 9 }, (_, i) => `players_${i + 2}`), 'length_8', 'length_12', 'length_other', ...Array.from({ length: 10 }, (_, i) => `paywall_round_${i + 1}`), 'paywall_round_more'];
 const STAT_LANGS = ['no', 'da', 'sv'];
 const STAT_MODES = ['cabin', 'car'];
 const STAT_PLANS = ['evening', 'weekend', 'year'];

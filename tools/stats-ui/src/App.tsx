@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { ArrowDownRight, ArrowUpRight, CircleAlert, Loader2, LogOut, Minus, ShieldCheck } from "lucide-react"
-import { LANG_NAMES, METHOD_NAMES, MODE_NAMES, PLAN_NAMES, change, percent, splitPeriods, summarize } from "@math"
+import { ArrowDownRight, ArrowUpRight, CircleAlert, Loader2, LogOut, Minus, Monitor, Moon, ShieldCheck, Sun } from "lucide-react"
+import { LANG_NAMES, METHOD_NAMES, MODE_NAMES, PLAN_NAMES, change, formatDay, percent, splitPeriods, summarize } from "@math"
 import { loadStats } from "@/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const KEY = "disputt:stats-key" // sessionStorage: the admin key lasts until the tab is closed
+const THEME_KEY = "disputt:stats-theme" // localStorage: light, dark, or (nothing) as the phone has it
+type Theme = "system" | "light" | "dark"
 const nf = new Intl.NumberFormat("nb-NO")
 const n = (v: number) => nf.format(v)
 const chartConfig = {
@@ -71,7 +73,7 @@ function Delta({ value }: { value: number | null | undefined }) {
   return (
     <Badge variant="outline" className="font-normal tabular-nums">
       <Icon data-icon="inline-start" /> {value > 0 ? "+" : ""}
-      {value} %
+      {value} %
     </Badge>
   )
 }
@@ -91,10 +93,54 @@ function Stat({ title, value, hint, delta, small }: { title: string; value: stri
   )
 }
 
-function Login({ error, onLogin }: { error: string; onLogin: (key: string) => void }) {
+const readTheme = (): Theme => {
+  try {
+    const v = localStorage.getItem(THEME_KEY)
+    return v === "light" || v === "dark" ? v : "system"
+  } catch {
+    return "system"
+  }
+}
+
+/** Light, dark, or as the phone has it; the choice is kept on this phone. */
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>(readTheme)
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)")
+    const apply = () => document.documentElement.classList.toggle("dark", theme === "dark" || (theme === "system" && media.matches))
+    apply()
+    media.addEventListener("change", apply)
+    return () => media.removeEventListener("change", apply)
+  }, [theme])
+  const choose = (next: Theme) => {
+    setTheme(next)
+    try {
+      if (next === "system") localStorage.removeItem(THEME_KEY)
+      else localStorage.setItem(THEME_KEY, next)
+    } catch {
+      /* no storage: the choice lasts for this page only */
+    }
+  }
+  return [theme, choose] as const
+}
+
+function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (t: Theme) => void }) {
+  return (
+    <Tabs value={theme} onValueChange={(v) => onChange(v as Theme)}>
+      <TabsList aria-label="Utseende">
+        <TabsTrigger value="light" aria-label="Lyst"><Sun /></TabsTrigger>
+        <TabsTrigger value="dark" aria-label="Mørkt"><Moon /></TabsTrigger>
+        <TabsTrigger value="system" aria-label="Som telefonen"><Monitor /></TabsTrigger>
+      </TabsList>
+    </Tabs>
+  )
+}
+
+function Login({ error, onLogin, theme, onTheme }: { error: string; onLogin: (key: string) => void; theme: Theme; onTheme: (t: Theme) => void }) {
   const [value, setValue] = useState("")
   return (
-    <div className="flex min-h-svh items-center justify-center p-4">
+    <div className="relative flex min-h-svh items-center justify-center p-4">
+      <div className="absolute top-4 right-4"><ThemeToggle theme={theme} onChange={onTheme} /></div>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <div className="mb-2 flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -153,14 +199,7 @@ export default function App() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // light or dark, as the phone has it
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)")
-    const apply = () => document.documentElement.classList.toggle("dark", media.matches)
-    apply()
-    media.addEventListener("change", apply)
-    return () => media.removeEventListener("change", apply)
-  }, [])
+  const [theme, setTheme] = useTheme()
 
   const logout = (message = "") => {
     writeKey("")
@@ -195,7 +234,7 @@ export default function App() {
   const s = periods?.s ?? null
   const p = periods?.p ?? null
   const [view, setView] = useState<ViewKey>("game")
-  if (!key) return <Login error={error} onLogin={(k) => { writeKey(k); setError(""); setKey(k) }} />
+  if (!key) return <Login error={error} theme={theme} onTheme={setTheme} onLogin={(k) => { writeKey(k); setError(""); setKey(k) }} />
   if (!s) {
     return (
       <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4 text-sm text-muted-foreground">
@@ -215,9 +254,9 @@ export default function App() {
 
   const money = (revenue: Record<string, number>) =>
     Object.entries(revenue)
-      .map(([cur, v]) => `${nf.format(Math.round(v))} ${cur === "NOK" ? "kr" : cur}`)
-      .join(" og ") || "0 kr"
-  const chartData = s.days.map((d: any) => ({ ...d, label: d.day.slice(5).replace("-", ".") }))
+      .map(([cur, v]) => `${nf.format(Math.round(v))} ${cur === "NOK" ? "kr" : cur}`)
+      .join(" og ") || "0 kr"
+  const chartData = s.days.map((d: any) => ({ ...d, label: formatDay(d.day) }))
   const activeDays = [...s.days].reverse().filter((d: any) => d.visit || d.lobby || d.game_start || d.paywall || d.checkout || d.sold)
   const v = VIEWS[view]
   const vs = (key: string) => (p ? change(s[key], p[key]) : null) // the change since the period before
@@ -230,7 +269,7 @@ export default function App() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Statistikk</h1>
-          <p className="text-sm text-muted-foreground">Disputt · det spillet har talt og de kjøpene som er betalt{s.first ? ` · talt siden ${s.first.slice(8)}.${s.first.slice(5, 7)}.` : ""}</p>
+          <p className="text-sm text-muted-foreground">Disputt · det spillet har talt og de kjøpene som er betalt{s.first ? ` · talt siden ${formatDay(s.first)}` : ""}</p>
         </div>
         <div className="flex items-center gap-2">
           <Tabs value={String(days)} onValueChange={(x) => setDays(Number(x))}>
@@ -240,6 +279,7 @@ export default function App() {
               <TabsTrigger value="90">90 dager</TabsTrigger>
             </TabsList>
           </Tabs>
+          <ThemeToggle theme={theme} onChange={setTheme} />
           <Button variant="outline" size="icon" aria-label="Logg ut" onClick={() => logout()}>
             <LogOut />
           </Button>
@@ -264,7 +304,7 @@ export default function App() {
           <Stat small title="Gjester per spill" value={s.kpi.guestsPerGame === null ? "–" : String(s.kpi.guestsPerGame).replace(".", ",")} hint="som kom inn med QR-kode" />
           <Stat small title="Runder per spill" value={s.kpi.roundsPerGame === null ? "–" : String(s.kpi.roundsPerGame).replace(".", ",")} hint="av spill der første runde kom i gang" />
           <Stat small title="Spilt ferdig" value={s.kpi.finishRate} hint="av spill som kom i gang" />
-          <Stat small title="Snittkjøp" value={s.kpi.averageOrder === null ? "–" : `${n(s.kpi.averageOrder)} kr`} hint={s.sales.refunded ? `${s.sales.refunded} kjøp refundert helt` : "ingen refunderte"} />
+          <Stat small title="Snittkjøp" value={s.kpi.averageOrder === null ? "–" : `${n(s.kpi.averageOrder)} kr`} hint={s.sales.refunded ? `${s.sales.refunded} kjøp refundert helt` : "ingen refunderte"} />
         </section>
         <p className="text-xs text-muted-foreground">Endring i prosent {spanText}.</p>
       </div>
@@ -345,6 +385,25 @@ export default function App() {
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <Funnel rows={s.pay} relativeToFirst />
+            <div className="flex flex-col gap-3">
+              <div className="text-sm font-medium">Runden pakkene ble vist i</div>
+              {s.paywallRounds.length === 0 && <p className="text-xs text-muted-foreground">Ikke talt ennå. Telles fra nå av.</p>}
+              {s.paywallRounds.map((r: any) => {
+                const all = s.paywallRounds.reduce((t: number, x: any) => t + x.n, 0)
+                return (
+                  <div key={r.round} className="flex flex-col gap-1.5">
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span>{r.label}</span>
+                      <span className="flex items-center gap-2">
+                        <Badge variant="secondary" className="font-normal tabular-nums">{percent(r.n, all)}</Badge>
+                        <span className="w-10 text-right font-semibold tabular-nums">{n(r.n)}</span>
+                      </span>
+                    </div>
+                    <Progress value={all ? (r.n / all) * 100 : 0} />
+                  </div>
+                )
+              })}
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -400,7 +459,7 @@ export default function App() {
                 <TableRow key={k}>
                   <TableCell className="font-medium">{PLAN_NAMES[k] ?? k}</TableCell>
                   <TableCell className="text-right tabular-nums">{n(s.sales.perPlan[k])}</TableCell>
-                  <TableCell className="text-right tabular-nums">{n(Math.round(s.sales.perPlanIncome[k]))} kr</TableCell>
+                  <TableCell className="text-right tabular-nums">{n(Math.round(s.sales.perPlanIncome[k]))} kr</TableCell>
                   <TableCell className="text-right tabular-nums">{percent(s.sales.perPlan[k], s.sales.orders)}</TableCell>
                 </TableRow>
               ))}
@@ -577,7 +636,7 @@ export default function App() {
                 )}
                 {activeDays.map((d: any) => (
                   <TableRow key={d.day}>
-                    <TableCell className="font-medium">{d.day.slice(5).replace("-", ".")}</TableCell>
+                    <TableCell className="font-medium">{formatDay(d.day, true)}</TableCell>
                     <TableCell className="text-right tabular-nums">{n(d.visit)}</TableCell>
                     <TableCell className="text-right tabular-nums">{n(d.lobby)}</TableCell>
                     <TableCell className="hidden text-right tabular-nums sm:table-cell">{n(d.game_start)}</TableCell>
@@ -585,7 +644,7 @@ export default function App() {
                     <TableCell className="hidden text-right tabular-nums sm:table-cell">{n(d.paywall)}</TableCell>
                     <TableCell className="text-right tabular-nums">{n(d.checkout)}</TableCell>
                     <TableCell className="text-right tabular-nums">{d.sold ? <Badge>{d.sold}</Badge> : 0}</TableCell>
-                    <TableCell className="hidden text-right tabular-nums sm:table-cell">{d.income ? `${n(Math.round(d.income))} kr` : "–"}</TableCell>
+                    <TableCell className="hidden text-right tabular-nums sm:table-cell">{d.income ? `${n(Math.round(d.income))} kr` : "–"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -51,8 +51,10 @@ describe('POST /e: the game says that something happened', () => {
     assert.equal((await send({ n: 'length_8', m: 'cabin' })).status, 200);
     assert.equal((await send({ n: 'length_12' })).status, 200);
     assert.equal((await send({ n: 'length_other' })).status, 200);
-    for (const bad of ['players_1', 'players_11', 'players_4; DROP TABLE stats', 'length_99']) assert.equal((await send({ n: bad })).status, 400, bad);
-    assert.deepEqual(rows().map((x) => [x.name, x.lang, x.mode, x.n]), [['length_12', '', '', 1], ['length_8', '', 'cabin', 1], ['length_other', '', '', 1], ['players_10', '', '', 1], ['players_4', 'da', 'car', 1]]);
+    assert.equal((await send({ n: 'paywall_round_3', m: 'car' })).status, 200);
+    assert.equal((await send({ n: 'paywall_round_more' })).status, 200);
+    for (const bad of ['players_1', 'players_11', 'players_4; DROP TABLE stats', 'length_99', 'paywall_round_0', 'paywall_round_11']) assert.equal((await send({ n: bad })).status, 400, bad);
+    assert.deepEqual(rows().map((x) => [x.name, x.lang, x.mode, x.n]), [['length_12', '', '', 1], ['length_8', '', 'cabin', 1], ['length_other', '', '', 1], ['paywall_round_3', '', 'car', 1], ['paywall_round_more', '', '', 1], ['players_10', '', '', 1], ['players_4', 'da', 'car', 1]]);
   });
 
   it('only listens to the site itself', async () => {

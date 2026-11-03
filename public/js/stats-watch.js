@@ -27,7 +27,12 @@ export function observe(s, send = track) {
   const mode = view?.mode ?? '';
   if (s.modeStep && !was.modeStep) send('start');
   if (s.readyStep && !was.readyStep && s.readyMode) send('mode', { m: s.readyMode });
-  if (s.paywall && s.payments?.enabled && !was.paywall) send('paywall', { m: mode });
+  if (s.paywall && s.payments?.enabled && !was.paywall) {
+    send('paywall', { m: mode });
+    // which round the host had got to when the packages came on screen
+    const round = view?.round;
+    if (Number.isInteger(round) && round >= 1) send(round <= 10 ? `paywall_round_${round}` : 'paywall_round_more', { m: mode });
+  }
   was = { modeStep: Boolean(s.modeStep), readyStep: Boolean(s.readyStep), paywall: Boolean(s.paywall) };
   if (!view?.code) return;
   if (!view.you?.isHost) {
