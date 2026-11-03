@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { beforeEach, describe, it } from 'node:test';
-import { daysBetween, percent, salesSummary, summarize } from '../public/js/stats-math.js';
+import { change, daysBetween, percent, ratio, salesSummary, splitPeriods, summarize } from '../public/js/stats-math.js';
 
 // (a pretend browser: the page modules read these when they are loaded, so this comes first)
 const memory = () => {
@@ -128,6 +128,47 @@ describe('the owner\'s sums', () => {
     assert.deepEqual(daysBetween('2026-02-27', '2026-03-02'), ['2026-02-27', '2026-02-28', '2026-03-01', '2026-03-02']);
     assert.equal(percent(1, 4), '25 %');
     assert.equal(percent(1, 0), '–');
+  });
+});
+
+describe('more from the same numbers', () => {
+  const row = (day, name, n, extra = {}) => ({ day, name, lang: 'no', mode: '', plan: '', method: '', n, ...extra });
+  // counted since the 1st: 14 days (the 1st to the 14th), so that 7 days and the 7 before them are both whole
+  const events = [row('2026-11-01', 'visit', 10), row('2026-11-05', 'visit', 10), row('2026-11-09', 'visit', 30), row('2026-11-12', 'visit', 30), row('2026-11-12', 'lobby', 8, { mode: 'car' }), row('2026-11-12', 'joined', 20), row('2026-11-12', 'game_start', 4), row('2026-11-12', 'round', 14), row('2026-11-13', 'finished', 2)];
+  const sales = [
+    { day: '2026-11-12', plan: 'year', amount: 29900, currency: 'NOK', state: 'paid', refunded: 0 },
+    { day: '2026-11-13', plan: 'evening', amount: 14900, currency: 'NOK', state: 'paid', refunded: 0 },
+  ];
+  const data = { today: '2026-11-14', from: '2026-11-01', days: 14, events, sales };
+
+  it('splits the days in the last period and the one before, and says how much things changed', () => {
+    const { current, previous } = splitPeriods(data, 7);
+    assert.equal(current.from, '2026-11-08');
+    assert.equal(current.days, 7);
+    assert.equal(summarize(current).visits, 60);
+    assert.equal(summarize(previous).visits, 20);
+    assert.equal(previous.today, '2026-11-07');
+    assert.equal(change(60, 20), 200);
+    assert.equal(change(5, 0), null, 'nothing to compare with');
+  });
+
+  it('does not compare with a period that was only half counted', () => {
+    const late = { ...data, events: events.filter((e) => e.day >= '2026-11-05') };
+    assert.equal(splitPeriods(late, 7).previous, null);
+    assert.equal(splitPeriods({ ...data, from: '2026-11-08', days: 7, events: events.filter((e) => e.day >= '2026-11-08') }, 7).previous, null, 'asked for 7 days, so nothing before');
+  });
+
+  it('works out per game and per order, and by the day of the week', () => {
+    const s = summarize(data);
+    assert.deepEqual(s.kpi, { guestsPerGame: 2.5, roundsPerGame: 3.5, finishRate: '50 %', averageOrder: 224 });
+    assert.equal(ratio(1, 0), null);
+    assert.deepEqual(s.sales.perPlanIncome, { year: 299, evening: 149 });
+    assert.equal(s.days.find((d) => d.day === '2026-11-12').income, 299);
+    assert.equal(s.weekdays.length, 7);
+    assert.equal(s.weekdays[0].name, 'Mandag');
+    assert.equal(s.weekdays[3].visit, 40, 'the 5th and the 12th of November 2026 are Thursdays (10 + 30)');
+    assert.equal(s.weekdays.reduce((n, d) => n + d.visit, 0), 80, 'every day of the week adds up to the whole');
+    assert.equal(s.first, '2026-11-01');
   });
 });
 

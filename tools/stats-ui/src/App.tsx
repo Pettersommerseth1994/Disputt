@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { ArrowDownRight, CircleAlert, Loader2, LogOut, ShieldCheck } from "lucide-react"
-import { LANG_NAMES, METHOD_NAMES, MODE_NAMES, PLAN_NAMES, percent, summarize } from "@math"
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { ArrowDownRight, ArrowUpRight, CircleAlert, Loader2, LogOut, Minus, ShieldCheck } from "lucide-react"
+import { LANG_NAMES, METHOD_NAMES, MODE_NAMES, PLAN_NAMES, change, percent, splitPeriods, summarize } from "@math"
 import { loadStats } from "@/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,7 +20,20 @@ const n = (v: number) => nf.format(v)
 const chartConfig = {
   visit: { label: "Åpnet siden", color: "#3b82f6" },
   lobby: { label: "Spill laget", color: "#10b981" },
+  game_start: { label: "Første runde", color: "#a855f7" },
+  paywall: { label: "Så pakkene", color: "#f59e0b" },
+  checkout: { label: "Trykket betal", color: "#3b82f6" },
+  sold: { label: "Kjøp", color: "#10b981" },
+  income: { label: "Inn (kr)", color: "#10b981" },
 } satisfies ChartConfig
+
+// the series of each view of the big chart
+const VIEWS = {
+  game: { title: "Besøk og spill", description: "Besøk, spill som ble laget og spill der første runde kom i gang", keys: ["visit", "lobby", "game_start"], kind: "area" },
+  pay: { title: "Betaling", description: "Så pakkene, trykket for å betale og kjøp per dag", keys: ["paywall", "checkout", "sold"], kind: "bar" },
+  income: { title: "Inntekt", description: "Kroner inn per dag, etter refusjoner", keys: ["income"], kind: "bar" },
+} as const
+type ViewKey = keyof typeof VIEWS
 
 type Step = { name: string; label: string; n: number }
 
@@ -48,12 +61,27 @@ function Funnel({ rows, relativeToFirst }: { rows: Step[]; relativeToFirst: bool
   )
 }
 
-function Stat({ title, value, hint }: { title: string; value: string; hint: string }) {
+/** The change since the period before, as a small badge (nothing when there is nothing to compare with). */
+function Delta({ value }: { value: number | null | undefined }) {
+  if (value === null || value === undefined) return null
+  const Icon = value > 0 ? ArrowUpRight : value < 0 ? ArrowDownRight : Minus
+  return (
+    <Badge variant="outline" className="font-normal tabular-nums">
+      <Icon data-icon="inline-start" /> {value > 0 ? "+" : ""}
+      {value} %
+    </Badge>
+  )
+}
+
+function Stat({ title, value, hint, delta, small }: { title: string; value: string; hint: string; delta?: number | null; small?: boolean }) {
   return (
     <Card size="sm">
       <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <div className="text-3xl font-semibold tracking-tight tabular-nums">{value}</div>
+        <CardDescription className="flex items-center justify-between gap-2">
+          {title}
+          <Delta value={delta} />
+        </CardDescription>
+        <div className={`${small ? "text-2xl" : "text-3xl"} font-semibold tracking-tight tabular-nums`}>{value}</div>
       </CardHeader>
       <CardFooter className="text-xs text-muted-foreground">{hint}</CardFooter>
     </Card>
@@ -142,7 +170,7 @@ export default function App() {
     if (!key) return
     let stale = false
     setLoading(true)
-    loadStats(days, key).then((r) => {
+    loadStats(days < 90 ? days * 2 : days, key).then((r) => {  // (twice as many days, to have a period before to compare with)
       if (stale) return
       setLoading(false)
       if (r.ok) {
@@ -156,7 +184,14 @@ export default function App() {
     }
   }, [key, days])
 
-  const s = useMemo(() => (data ? summarize(data) : null), [data])
+  const periods = useMemo(() => {
+    if (!data) return null
+    const { current, previous } = splitPeriods(data, days)
+    return { current, s: summarize(current), p: previous ? summarize(previous) : null }
+  }, [data, days])
+  const s = periods?.s ?? null
+  const p = periods?.p ?? null
+  const [view, setView] = useState<ViewKey>("game")
   if (!key) return <Login error={error} onLogin={(k) => { writeKey(k); setError(""); setKey(k) }} />
   if (!s) {
     return (
@@ -174,22 +209,28 @@ export default function App() {
     )
   }
 
-  const money =
-    Object.entries(s.sales.revenue as Record<string, number>)
+
+  const money = (revenue: Record<string, number>) =>
+    Object.entries(revenue)
       .map(([cur, v]) => `${nf.format(Math.round(v))} ${cur === "NOK" ? "kr" : cur}`)
       .join(" og ") || "0 kr"
   const chartData = s.days.map((d: any) => ({ ...d, label: d.day.slice(5).replace("-", ".") }))
   const activeDays = [...s.days].reverse().filter((d: any) => d.visit || d.lobby || d.game_start || d.paywall || d.checkout || d.sold)
+  const v = VIEWS[view]
+  const vs = (key: string) => (p ? change(s[key], p[key]) : null) // the change since the period before
+  const plans = Object.keys(s.sales.perPlan).sort((a, b) => s.sales.perPlan[b] - s.sales.perPlan[a])
+  const spanText = p ? `mot de ${s.days.length} dagene før` : "kommer når tellingen har pågått i to perioder (ingen sammenligning ennå)"
+  const noData = !s.first
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Statistikk</h1>
-          <p className="text-sm text-muted-foreground">Disputt · det spillet har talt og de kjøpene som er betalt</p>
+          <p className="text-sm text-muted-foreground">Disputt · det spillet har talt og de kjøpene som er betalt{s.first ? ` · talt siden ${s.first.slice(8)}.${s.first.slice(5, 7)}.` : ""}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Tabs value={String(days)} onValueChange={(v) => setDays(Number(v))}>
+          <Tabs value={String(days)} onValueChange={(x) => setDays(Number(x))}>
             <TabsList>
               <TabsTrigger value="7">7 dager</TabsTrigger>
               <TabsTrigger value="30">30 dager</TabsTrigger>
@@ -209,35 +250,74 @@ export default function App() {
         </Alert>
       )}
 
-      <section className={`grid grid-cols-2 gap-3 transition-opacity lg:grid-cols-4 ${loading ? "opacity-60" : ""}`}>
-        <Stat title="Åpnet siden" value={n(s.visits)} hint="besøk, ikke personer" />
-        <Stat title="Spill laget" value={n(s.game[3].n)} hint={`${percent(s.game[3].n, s.visits)} av besøkene`} />
-        <Stat title="Runder spilt" value={n(s.rounds)} hint={`${n(s.joined)} gjester kom inn med QR-kode`} />
-        <Stat title="Kjøp" value={n(s.sales.orders)} hint={`${money} inn etter refusjoner`} />
-      </section>
+      <div className={`flex flex-col gap-3 transition-opacity ${loading ? "opacity-60" : ""}`}>
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Stat title="Åpnet siden" value={n(s.visits)} hint="besøk, ikke personer" delta={vs("visits")} />
+          <Stat title="Spill laget" value={n(s.games)} hint={`${percent(s.games, s.visits)} av besøkene`} delta={vs("games")} />
+          <Stat title="Runder spilt" value={n(s.rounds)} hint={`${n(s.joined)} gjester kom inn med QR-kode`} delta={vs("rounds")} />
+          <Stat title="Kjøp" value={n(s.sales.orders)} hint={`${money(s.sales.revenue)} inn etter refusjoner`} delta={p ? change(s.sales.orders, p.sales.orders) : null} />
+        </section>
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Stat small title="Gjester per spill" value={s.kpi.guestsPerGame === null ? "–" : String(s.kpi.guestsPerGame).replace(".", ",")} hint="som kom inn med QR-kode" />
+          <Stat small title="Runder per spill" value={s.kpi.roundsPerGame === null ? "–" : String(s.kpi.roundsPerGame).replace(".", ",")} hint="av spill der første runde kom i gang" />
+          <Stat small title="Spilt ferdig" value={s.kpi.finishRate} hint="av spill som kom i gang" />
+          <Stat small title="Snittkjøp" value={s.kpi.averageOrder === null ? "–" : `${n(s.kpi.averageOrder)} kr`} hint={s.sales.refunded ? `${s.sales.refunded} kjøp refundert helt` : "ingen refunderte"} />
+        </section>
+        <p className="text-xs text-muted-foreground">Endring i prosent {spanText}.</p>
+      </div>
+
+      {noData && (
+        <Alert>
+          <CircleAlert />
+          <AlertDescription>Ingenting er talt i denne perioden ennå.</AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Dag for dag</CardTitle>
-          <CardDescription>Besøk og spill som ble laget, siste {data.days} dager (norsk klokke)</CardDescription>
+          <CardTitle>{v.title}</CardTitle>
+          <CardDescription>
+            {v.description} (siste {s.days.length} dager, norsk klokke)
+          </CardDescription>
+          <CardAction>
+            <Tabs value={view} onValueChange={(x) => setView(x as ViewKey)}>
+              <TabsList>
+                <TabsTrigger value="game">Spill</TabsTrigger>
+                <TabsTrigger value="pay">Betaling</TabsTrigger>
+                <TabsTrigger value="income">Inntekt</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </CardAction>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="aspect-auto h-56 w-full">
-            <AreaChart data={chartData} margin={{ left: 0, right: 8 }}>
-              <defs>
-                {(["visit", "lobby"] as const).map((k) => (
-                  <linearGradient key={k} id={`fill-${k}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={`var(--color-${k})`} stopOpacity={0.6} />
-                    <stop offset="95%" stopColor={`var(--color-${k})`} stopOpacity={0.05} />
-                  </linearGradient>
+            {v.kind === "area" ? (
+              <AreaChart data={chartData} margin={{ left: 0, right: 8 }}>
+                <defs>
+                  {v.keys.map((k) => (
+                    <linearGradient key={k} id={`fill-${k}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={`var(--color-${k})`} stopOpacity={0.5} />
+                      <stop offset="95%" stopColor={`var(--color-${k})`} stopOpacity={0.05} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={28} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                {v.keys.map((k) => (
+                  <Area key={k} dataKey={k} type="monotone" isAnimationActive={false} fill={`url(#fill-${k})`} stroke={`var(--color-${k})`} />
                 ))}
-              </defs>
-              <CartesianGrid vertical={false} />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={28} />
-              <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" labelFormatter={(v) => `${v}`} />} />
-              <Area dataKey="visit" type="monotone" fill="url(#fill-visit)" stroke="var(--color-visit)" />
-              <Area dataKey="lobby" type="monotone" fill="url(#fill-lobby)" stroke="var(--color-lobby)" />
-            </AreaChart>
+              </AreaChart>
+            ) : (
+              <BarChart data={chartData} margin={{ left: 0, right: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={28} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                {v.keys.map((k) => (
+                  <Bar key={k} dataKey={k} fill={`var(--color-${k})`} radius={3} isAnimationActive={false} />
+                ))}
+              </BarChart>
+            )}
           </ChartContainer>
         </CardContent>
       </Card>
@@ -246,18 +326,19 @@ export default function App() {
         <Card>
           <CardHeader>
             <CardTitle>Spillet, steg for steg</CardTitle>
-            <CardDescription>Pilen viser andelen av forrige steg</CardDescription>
+            <CardDescription>Merkelappen viser andelen av forrige steg</CardDescription>
           </CardHeader>
           <CardContent>
             <Funnel rows={s.game} relativeToFirst />
           </CardContent>
+          <CardFooter className="text-xs text-muted-foreground">
+            Gjester som kom inn med QR-koden teller ikke som besøk, bare som «gjester» ({n(s.joined)}). Verten teller, ikke gjestene. En vert som laster siden på nytt midt i en runde kan telle samme runde to ganger.
+          </CardFooter>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Betaling</CardTitle>
-            <CardDescription>
-              {percent(s.pay[2].n, s.pay[0].n)} av dem som så pakkene, endte med et kjøp
-            </CardDescription>
+            <CardDescription>{percent(s.pay[2].n, s.pay[0].n)} av dem som så pakkene, endte med et kjøp</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <Funnel rows={s.pay} relativeToFirst />
@@ -270,6 +351,11 @@ export default function App() {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {s.checkouts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">Ingen har trykket for å betale ennå</TableCell>
+                  </TableRow>
+                )}
                 {s.checkouts.map((c: any) => (
                   <TableRow key={c.plan + c.method}>
                     <TableCell className="font-medium">{PLAN_NAMES[c.plan] ?? c.plan}</TableCell>
@@ -282,68 +368,134 @@ export default function App() {
               </TableBody>
             </Table>
           </CardContent>
-          <CardFooter className="text-xs text-muted-foreground">
-            «Trykket for å betale» teller også de som angret i nettbutikken eller hos Vipps.
-          </CardFooter>
+          <CardFooter className="text-xs text-muted-foreground">«Trykket for å betale» teller også de som angret i nettbutikken eller hos Vipps.</CardFooter>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Kjøp per pakke</CardTitle>
+          <CardDescription>Fra bestillingene (uten testbestillinger), etter refusjoner</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Pakke</TableHead>
+                <TableHead className="text-right">Kjøp</TableHead>
+                <TableHead className="text-right">Inn</TableHead>
+                <TableHead className="text-right">Andel av kjøpene</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {plans.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">Ingen kjøp i perioden</TableCell>
+                </TableRow>
+              )}
+              {plans.map((k) => (
+                <TableRow key={k}>
+                  <TableCell className="font-medium">{PLAN_NAMES[k] ?? k}</TableCell>
+                  <TableCell className="text-right tabular-nums">{n(s.sales.perPlan[k])}</TableCell>
+                  <TableCell className="text-right tabular-nums">{n(Math.round(s.sales.perPlanIncome[k]))} kr</TableCell>
+                  <TableCell className="text-right tabular-nums">{percent(s.sales.perPlan[k], s.sales.orders)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Måten å spille på</CardTitle>
+            <CardDescription>Hytteturmodus og Bilturmodus ved siden av hverandre</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead />
-                  <TableHead className="text-right">Spill</TableHead>
-                  <TableHead className="text-right">Runder</TableHead>
-                  <TableHead className="text-right">Ferdig</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {s.byMode.map((m: any) => (
-                  <TableRow key={m.mode}>
-                    <TableCell className="font-medium whitespace-normal">{MODE_NAMES[m.mode]}</TableCell>
-                    <TableCell className="text-right tabular-nums">{n(m.lobby)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{n(m.round)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{n(m.finished)}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead />
+                    <TableHead className="text-right">Valgt</TableHead>
+                    <TableHead className="text-right">Spill</TableHead>
+                    <TableHead className="text-right">1. runde</TableHead>
+                    <TableHead className="text-right">Runder</TableHead>
+                    <TableHead className="text-right">Ferdig</TableHead>
+                    <TableHead className="text-right">Pakker</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {s.byMode.map((m: any) => (
+                    <TableRow key={m.mode}>
+                      <TableCell className="font-medium whitespace-normal">{MODE_NAMES[m.mode]}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(m.chosen)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(m.lobby)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(m.game_start)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(m.round)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(m.finished)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(m.paywall)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Språk</CardTitle>
+            <CardDescription>Språket på verten sin telefon</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead />
-                  <TableHead className="text-right">Åpnet</TableHead>
-                  <TableHead className="text-right">Spill</TableHead>
-                  <TableHead className="text-right">Så pakkene</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {s.byLang.map((l: any) => (
-                  <TableRow key={l.lang}>
-                    <TableCell className="font-medium">{LANG_NAMES[l.lang] ?? l.lang}</TableCell>
-                    <TableCell className="text-right tabular-nums">{n(l.visit)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{n(l.lobby)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{n(l.paywall)}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead />
+                    <TableHead className="text-right">Åpnet</TableHead>
+                    <TableHead className="text-right">Spill</TableHead>
+                    <TableHead className="text-right">1. runde</TableHead>
+                    <TableHead className="text-right">Pakker</TableHead>
+                    <TableHead className="text-right">Betal</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {s.byLang.map((l: any) => (
+                    <TableRow key={l.lang}>
+                      <TableCell className="font-medium">{LANG_NAMES[l.lang] ?? l.lang}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(l.visit)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(l.lobby)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(l.game_start)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(l.paywall)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{n(l.checkout)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ukedager</CardTitle>
+          <CardDescription>Når på uka spilles det? Summen av besøk og spill per ukedag i perioden</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="aspect-auto h-44 w-full">
+            <BarChart data={s.weekdays.map((d: any) => ({ ...d, label: d.name.slice(0, 3) }))} margin={{ left: 0, right: 8 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+              <Bar dataKey="visit" fill="var(--color-visit)" radius={3} isAnimationActive={false} />
+              <Bar dataKey="lobby" fill="var(--color-lobby)" radius={3} isAnimationActive={false} />
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -359,21 +511,30 @@ export default function App() {
                   <TableHead className="text-right">Åpnet</TableHead>
                   <TableHead className="text-right">Spill</TableHead>
                   <TableHead className="hidden text-right sm:table-cell">Første runde</TableHead>
+                  <TableHead className="hidden text-right sm:table-cell">Runder</TableHead>
                   <TableHead className="hidden text-right sm:table-cell">Pakker</TableHead>
                   <TableHead className="text-right">Betal</TableHead>
                   <TableHead className="text-right">Kjøp</TableHead>
+                  <TableHead className="hidden text-right sm:table-cell">Inn</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {activeDays.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">Ingenting talt i perioden ennå</TableCell>
+                  </TableRow>
+                )}
                 {activeDays.map((d: any) => (
                   <TableRow key={d.day}>
                     <TableCell className="font-medium">{d.day.slice(5).replace("-", ".")}</TableCell>
                     <TableCell className="text-right tabular-nums">{n(d.visit)}</TableCell>
                     <TableCell className="text-right tabular-nums">{n(d.lobby)}</TableCell>
                     <TableCell className="hidden text-right tabular-nums sm:table-cell">{n(d.game_start)}</TableCell>
+                    <TableCell className="hidden text-right tabular-nums sm:table-cell">{n(d.round)}</TableCell>
                     <TableCell className="hidden text-right tabular-nums sm:table-cell">{n(d.paywall)}</TableCell>
                     <TableCell className="text-right tabular-nums">{n(d.checkout)}</TableCell>
                     <TableCell className="text-right tabular-nums">{d.sold ? <Badge>{d.sold}</Badge> : 0}</TableCell>
+                    <TableCell className="hidden text-right tabular-nums sm:table-cell">{d.income ? `${n(Math.round(d.income))} kr` : "–"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

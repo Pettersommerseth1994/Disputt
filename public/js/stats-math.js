@@ -38,9 +38,39 @@ export function salesSummary(sales) {
   const revenue = {};
   for (const s of paid) revenue[s.currency] = (revenue[s.currency] ?? 0) + Math.max(0, s.amount - s.refunded) / 100;
   const perPlan = {};
-  for (const s of paid) perPlan[s.plan] = (perPlan[s.plan] ?? 0) + 1;
-  return { orders: paid.length, refunded: kept.length - paid.length, revenue, perPlan };
+  const perPlanIncome = {}; // (in whole units of the order's own currency, after refunds)
+  for (const s of paid) {
+    perPlan[s.plan] = (perPlan[s.plan] ?? 0) + 1;
+    perPlanIncome[s.plan] = (perPlanIncome[s.plan] ?? 0) + Math.max(0, s.amount - s.refunded) / 100;
+  }
+  return { orders: paid.length, refunded: kept.length - paid.length, revenue, perPlan, perPlanIncome };
 }
+
+/** The change from `before` to `now` in whole percent, or null when there is nothing to compare with. */
+export const change = (now, before) => (before > 0 ? Math.round(((now - before) / before) * 100) : null);
+
+/** `part` per `whole` with one decimal (3,2), or null when there is no whole. */
+export const ratio = (part, whole) => (whole > 0 ? Math.round((part / whole) * 10) / 10 : null);
+
+const dayBefore = (day) => new Date(Date.parse(`${day}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+
+/**
+ * `data` holds up to twice `days` days (the page asks for that, so that there is something to compare with): this splits it into the last `days`
+ * days and the same number of days before them. `previous` is null unless the counting had started before the first of those days
+ * (a comparison with a period that was only half counted would say that things have grown when they have not).
+ */
+export function splitPeriods(data, days) {
+  const all = daysBetween(data.from, data.today);
+  const cut = all.length > days ? all[all.length - days] : data.from;
+  const current = { ...data, from: cut, days: Math.min(days, all.length), events: data.events.filter((e) => e.day >= cut), sales: data.sales.filter((o) => o.day >= cut) };
+  const first = data.events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '');
+  if (all.length <= days || !first || first > data.from) return { current, previous: null };
+  const events = data.events.filter((e) => e.day < cut);
+  const sales = data.sales.filter((o) => o.day < cut);
+  return { current, previous: { ...data, today: dayBefore(cut), days: all.length - days, events, sales } };
+}
+
+export const WEEKDAYS = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'];
 
 /** Everything the page shows. `data` is what GET /stats answers: { today, from, days, events, sales }. */
 export function summarize(data) {
@@ -65,7 +95,33 @@ export function summarize(data) {
   checkouts.sort((a, b) => b.n - a.n);
   const days = daysBetween(data.from, data.today).map((day) => {
     const of = (name) => events.reduce((n, e) => n + (e.day === day && e.name === name ? e.n : 0), 0);
-    return { day, visit: of('visit'), lobby: of('lobby'), game_start: of('game_start'), joined: of('joined'), paywall: of('paywall'), checkout: of('checkout'), sold: sales.filter((s) => s.day === day && s.state === 'paid').length };
+    const paidThatDay = sales.filter((o) => o.day === day && o.state === 'paid');
+    return {
+      day,
+      visit: of('visit'),
+      lobby: of('lobby'),
+      game_start: of('game_start'),
+      joined: of('joined'),
+      round: of('round'),
+      paywall: of('paywall'),
+      checkout: of('checkout'),
+      sold: paidThatDay.length,
+      income: paidThatDay.reduce((n, o) => n + Math.max(0, o.amount - o.refunded) / 100, 0),
+    };
   });
-  return { game, pay, byLang, byMode, checkouts, days, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit') };
+  // by the day of the week (Monday first): where the weekend shows
+  const weekdays = WEEKDAYS.map((name, i) => {
+    const mine = days.filter((d) => (new Date(`${d.day}T12:00:00Z`).getUTCDay() + 6) % 7 === i);
+    const add = (key) => mine.reduce((n, d) => n + d[key], 0);
+    return { name, visit: add('visit'), lobby: add('lobby'), round: add('round'), sold: add('sold') };
+  });
+  const lobbies = total('lobby');
+  const firstRounds = total('game_start');
+  const kpi = {
+    guestsPerGame: ratio(total('joined'), lobbies), // guests who came in with the QR code, per game that was made
+    roundsPerGame: ratio(total('round'), firstRounds),
+    finishRate: percent(total('finished'), firstRounds),
+    averageOrder: sum.orders ? Math.round((sum.revenue.NOK ?? 0) / sum.orders) : null, // (kroner)
+  };
+  return { game, pay, byLang, byMode, checkouts, days, weekdays, kpi, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit'), games: lobbies, firstRounds, first: events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '') };
 }
