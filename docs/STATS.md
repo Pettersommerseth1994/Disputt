@@ -25,6 +25,8 @@ Bare **antall per dag** (etter norsk klokke), delt på språk, måte å spille p
 | `joined` | En gjest er kommet inn i et spill |
 | `game_start` | Første runde begynner |
 | `round` | Hver runde som begynner (verten teller) |
+| `players_2` … `players_10` | Hvor mange som spiller, talt når første runde begynner (ett av dem per spill) |
+| `length_8`, `length_12`, `length_other` | Lengden på spillet, talt samtidig: Småkrangel (første til 8), Storkrangel (første til 12), eller et annet poengmål |
 | `finished` | Spillet er spilt ferdig |
 | `paywall` | Pakkene vises |
 | `checkout` | Verten trykker for å betale (kort/nettbutikk eller Vipps-knappen, med pakken) |

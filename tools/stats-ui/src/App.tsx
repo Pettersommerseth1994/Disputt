@@ -25,6 +25,9 @@ const chartConfig = {
   checkout: { label: "Trykket betal", color: "#3b82f6" },
   sold: { label: "Kjøp", color: "#10b981" },
   income: { label: "Inn (kr)", color: "#10b981" },
+  cabin: { label: "Hytteturmodus", color: "#3b82f6" },
+  car: { label: "Bilturmodus", color: "#f59e0b" },
+  other: { label: "Annet", color: "#a1a1aa" },
 } satisfies ChartConfig
 
 // the series of each view of the big chart
@@ -410,7 +413,7 @@ export default function App() {
         <Card>
           <CardHeader>
             <CardTitle>Måten å spille på</CardTitle>
-            <CardDescription>Hytteturmodus og Bilturmodus ved siden av hverandre</CardDescription>
+            <CardDescription>Hytte (hver sin telefon) og Bil (én telefon) ved siden av hverandre</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -429,7 +432,7 @@ export default function App() {
                 <TableBody>
                   {s.byMode.map((m: any) => (
                     <TableRow key={m.mode}>
-                      <TableCell className="font-medium whitespace-normal">{MODE_NAMES[m.mode]}</TableCell>
+                      <TableCell className="font-medium">{m.mode === "cabin" ? "Hytte" : m.mode === "car" ? "Bil" : MODE_NAMES[m.mode]}</TableCell>
                       <TableCell className="text-right tabular-nums">{n(m.chosen)}</TableCell>
                       <TableCell className="text-right tabular-nums">{n(m.lobby)}</TableCell>
                       <TableCell className="text-right tabular-nums">{n(m.game_start)}</TableCell>
@@ -478,6 +481,54 @@ export default function App() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Spillere og lengde</CardTitle>
+          <CardDescription>
+            {s.countedGames
+              ? `Fra ${n(s.countedGames)} spill som kom i gang · i snitt ${String(s.kpi.playersPerGame).replace(".", ",")} spillere`
+              : "Telles fra spillet som kommer i gang. Ingen spill er talt med spillere og lengde ennå."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 md:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-medium">Antall spillere</div>
+            <ChartContainer config={chartConfig} className="aspect-auto h-44 w-full">
+              <BarChart data={s.players.map((x: any) => ({ ...x, label: String(x.size) }))} margin={{ left: 0, right: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                <Bar dataKey="cabin" stackId="a" fill="var(--color-cabin)" isAnimationActive={false} />
+                <Bar dataKey="car" stackId="a" fill="var(--color-car)" isAnimationActive={false} />
+                <Bar dataKey="other" stackId="a" fill="var(--color-other)" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+              </BarChart>
+            </ChartContainer>
+            <div className="flex gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-[#3b82f6]" /> Hytteturmodus</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-[#f59e0b]" /> Bilturmodus</span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <div className="text-sm font-medium">Lengde på spillet</div>
+            {s.lengths.map((l: any) => (
+              <div key={l.id} className="flex flex-col gap-1.5">
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span>
+                    <span className="font-medium">{l.label}</span> <span className="text-xs text-muted-foreground">{l.hint}</span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Badge variant="secondary" className="font-normal tabular-nums">{percent(l.n, s.lengths.reduce((t: number, x: any) => t + x.n, 0))}</Badge>
+                    <span className="w-10 text-right font-semibold tabular-nums">{n(l.n)}</span>
+                  </span>
+                </div>
+                <Progress value={s.lengths.reduce((t: number, x: any) => t + x.n, 0) ? (l.n / s.lengths.reduce((t: number, x: any) => t + x.n, 0)) * 100 : 0} />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+        <CardFooter className="text-xs text-muted-foreground">Telles når første runde begynner. Spillere som kommer inn senere, eller en lengde som endres underveis, telles ikke på nytt.</CardFooter>
+      </Card>
 
       <Card>
         <CardHeader>

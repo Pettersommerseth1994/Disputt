@@ -45,6 +45,16 @@ describe('POST /e: the game says that something happened', () => {
     assert.deepEqual(rows().map((x) => [x.lang, x.mode, x.plan, x.method]), [['', '', '', '']]);
   });
 
+  it('counts how many played and which length, and nothing outside the list', async () => {
+    assert.equal((await send({ n: 'players_4', l: 'da', m: 'car' })).status, 200);
+    assert.equal((await send({ n: 'players_10' })).status, 200);
+    assert.equal((await send({ n: 'length_8', m: 'cabin' })).status, 200);
+    assert.equal((await send({ n: 'length_12' })).status, 200);
+    assert.equal((await send({ n: 'length_other' })).status, 200);
+    for (const bad of ['players_1', 'players_11', 'players_4; DROP TABLE stats', 'length_99']) assert.equal((await send({ n: bad })).status, 400, bad);
+    assert.deepEqual(rows().map((x) => [x.name, x.lang, x.mode, x.n]), [['length_12', '', '', 1], ['length_8', '', 'cabin', 1], ['length_other', '', '', 1], ['players_10', '', '', 1], ['players_4', 'da', 'car', 1]]);
+  });
+
   it('only listens to the site itself', async () => {
     assert.equal((await send({ n: 'visit' })).status, 200);
     assert.equal((await send({ n: 'visit' }, { origin: 'https://evil.example' })).status, 403);

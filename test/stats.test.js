@@ -62,12 +62,24 @@ describe('the steps that are counted', () => {
     observe({ ...home, readyStep: true, readyMode: 'cabin' }, send);
     observe({ ...home, view: host('lobby', { mode: 'cabin' }) }, send);
     observe({ ...home, view: host('lobby', { mode: 'cabin' }) }, send);
-    observe({ ...home, view: host('role', { mode: 'cabin', round: 1 }) }, send);
-    observe({ ...home, view: host('question', { mode: 'cabin', round: 1 }) }, send);
+    const four = { players: [{}, {}, {}, {}], target: 12 }; // (four players, «Storkrangel»)
+    observe({ ...home, view: host('role', { mode: 'cabin', round: 1, ...four }) }, send);
+    observe({ ...home, view: host('question', { mode: 'cabin', round: 1, ...four }) }, send);
     observe({ ...home, view: host('role', { mode: 'cabin', round: 2 }) }, send);
     observe({ ...home, view: host('finished', { mode: 'cabin', round: 2 }) }, send);
     observe({ ...home, view: host('finished', { mode: 'cabin', round: 2 }) }, send);
-    assert.deepEqual(sent, [['start', ''], ['mode', 'cabin'], ['lobby', 'cabin'], ['game_start', 'cabin'], ['round', 'cabin'], ['round', 'cabin'], ['finished', 'cabin']]);
+    assert.deepEqual(sent, [['start', ''], ['mode', 'cabin'], ['lobby', 'cabin'], ['game_start', 'cabin'], ['players_4', 'cabin'], ['length_12', 'cabin'], ['round', 'cabin'], ['round', 'cabin'], ['finished', 'cabin']]);
+  });
+
+  it('counts the number of players and the length once, when the first round begins, and puts an unusual length or a crowd that does not fit under «other»', () => {
+    const home = { route: { page: 'home' }, session: { code: 'x' } };
+    observe({ ...home, view: host('role', { round: 1, players: [{}, {}, {}], target: 8 }) }, send);
+    observe({ ...home, view: host('role', { round: 2, players: [{}, {}, {}, {}], target: 12 }) }, send);
+    assert.deepEqual(sent.filter(([n]) => /^(players|length)_/.test(n)), [['players_3', 'car'], ['length_8', 'car']], 'later rounds and later joiners are not counted again');
+    resetWatch();
+    sent = [];
+    observe({ ...home, view: host('role', { code: 'ZZZZ', round: 1, players: [{}], target: 5 }) }, send);
+    assert.deepEqual(sent.filter(([n]) => /^(players|length)_/.test(n)), [['length_other', 'car']], 'one player is no game to count, and a target of 5 is not one of the two cards');
   });
 
   it('counts a guest only as joined, and the game\'s own steps only on the host\'s phone', () => {
@@ -158,9 +170,20 @@ describe('more from the same numbers', () => {
     assert.equal(splitPeriods({ ...data, from: '2026-11-08', days: 7, events: events.filter((e) => e.day >= '2026-11-08') }, 7).previous, null, 'asked for 7 days, so nothing before');
   });
 
+  it('adds up how many played and which length they chose', () => {
+    const more = [...events, row('2026-11-12', 'players_4', 6, { mode: 'cabin' }), row('2026-11-12', 'players_4', 2, { mode: 'car' }), row('2026-11-12', 'players_6', 2, { mode: 'cabin' }), row('2026-11-13', 'length_8', 7), row('2026-11-13', 'length_12', 3)];
+    const s = summarize({ ...data, events: more });
+    assert.deepEqual(s.players.find((x) => x.size === 4), { size: 4, cabin: 6, car: 2, other: 0, total: 8 });
+    assert.equal(s.players.length, 9);
+    assert.equal(s.countedGames, 10);
+    assert.equal(s.kpi.playersPerGame, 4.4, '(8 x 4 + 2 x 6) / 10');
+    assert.deepEqual(s.lengths.map((l) => [l.id, l.n]), [['lite', 7], ['stor', 3], ['other', 0]]);
+    assert.equal(summarize(data).kpi.playersPerGame, null, 'nothing counted yet');
+  });
+
   it('works out per game and per order, and by the day of the week', () => {
     const s = summarize(data);
-    assert.deepEqual(s.kpi, { guestsPerGame: 2.5, roundsPerGame: 3.5, finishRate: '50 %', averageOrder: 224 });
+    assert.deepEqual(s.kpi, { guestsPerGame: 2.5, roundsPerGame: 3.5, finishRate: '50 %', averageOrder: 224, playersPerGame: null });
     assert.equal(ratio(1, 0), null);
     assert.deepEqual(s.sales.perPlanIncome, { year: 299, evening: 149 });
     assert.equal(s.days.find((d) => d.day === '2026-11-12').income, 299);

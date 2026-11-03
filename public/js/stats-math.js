@@ -115,6 +115,19 @@ export function summarize(data) {
     const add = (key) => mine.reduce((n, d) => n + d[key], 0);
     return { name, visit: add('visit'), lobby: add('lobby'), round: add('round'), sold: add('sold') };
   });
+  // how many played when the first round began (only games counted since this was added), and which length they chose
+  const players = Array.from({ length: 9 }, (_, i) => {
+    const size = i + 2;
+    const cabin = total(`players_${size}`, { mode: 'cabin' });
+    const car = total(`players_${size}`, { mode: 'car' });
+    return { size, cabin, car, other: total(`players_${size}`) - cabin - car, total: total(`players_${size}`) };
+  });
+  const countedGames = players.reduce((n, p) => n + p.total, 0);
+  const lengths = [
+    { id: 'lite', label: 'Småkrangel', hint: 'første til 8 poeng, ca. 1 time', n: total('length_8') },
+    { id: 'stor', label: 'Storkrangel', hint: 'første til 12 poeng, ca. 2 timer', n: total('length_12') },
+    { id: 'other', label: 'Annen lengde', hint: 'et annet poengmål enn de to kortene', n: total('length_other') },
+  ];
   const lobbies = total('lobby');
   const firstRounds = total('game_start');
   const kpi = {
@@ -123,5 +136,6 @@ export function summarize(data) {
     finishRate: percent(total('finished'), firstRounds),
     averageOrder: sum.orders ? Math.round((sum.revenue.NOK ?? 0) / sum.orders) : null, // (kroner)
   };
-  return { game, pay, byLang, byMode, checkouts, days, weekdays, kpi, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit'), games: lobbies, firstRounds, first: events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '') };
+  kpi.playersPerGame = countedGames ? Math.round((players.reduce((n, p) => n + p.size * p.total, 0) / countedGames) * 10) / 10 : null;
+  return { game, pay, byLang, byMode, checkouts, days, weekdays, kpi, players, lengths, countedGames, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit'), games: lobbies, firstRounds, first: events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '') };
 }

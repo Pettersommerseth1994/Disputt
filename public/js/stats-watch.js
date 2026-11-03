@@ -1,5 +1,5 @@
 // Watches the game's state and counts the steps that matter: the page opened, the host started, chose the way to play, a game was made,
-// somebody joined, the first round began, every round, the end, the packages shown. Called from App on every drawing (it only reacts to
+// somebody joined, the first round began (with how many play and how long the game is), every round, the end, the packages shown. Called from App on every drawing (it only reacts to
 // a change). Only the host's phone counts the game's own steps (the guests' phones see the same game), and every game counts each step once.
 // What the numbers say and what is kept: docs/STATS.md. (A file of its own: pages are cached for ten minutes ...)
 
@@ -36,7 +36,13 @@ export function observe(s, send = track) {
   }
   if (view.phase === 'lobby') once(`lobby:${view.code}`, 'lobby', { m: mode }, send);
   if (view.phase === 'role') {
-    if (view.round === 1) once(`game_start:${view.code}`, 'game_start', { m: mode }, send);
+    if (view.round === 1 && !done.has(`game_start:${view.code}`)) {
+      once(`game_start:${view.code}`, 'game_start', { m: mode }, send);
+      // how many play, and how long the game is to be (Småkrangel is first to 8, Storkrangel first to 12): counted when the first round begins
+      const players = view.players?.length;
+      if (Number.isInteger(players) && players >= 2 && players <= 10) send(`players_${players}`, { m: mode });
+      send(`length_${view.target === 8 || view.target === 12 ? view.target : 'other'}`, { m: mode });
+    }
     once(`round:${view.code}:${view.round}`, 'round', { m: mode }, send);
   }
   if (view.phase === 'finished') once(`finished:${view.code}`, 'finished', { m: mode }, send);
