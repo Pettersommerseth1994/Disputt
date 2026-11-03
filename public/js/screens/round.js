@@ -264,6 +264,13 @@ export function Summary({ view }) {
     ${none && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${s.correct ? t('Dere svarte riktig sammen!') : t('Dere svarte feil. Ingen fikk poeng.')}</p>`}
     ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${t('Uavgjort i teten, én runde til!')}</p>`}
 
+    ${s.answer?.why &&
+    html`<aside class="card card--paper why rise-in" aria-label=${t('Visste du det?')}>
+      <p class="eyebrow">${t('Visste du det?')}</p>
+      <p class="why__text">${s.answer.why}</p>
+      ${s.answer.source && html`<p class="why__source">${t('Kilde:')} ${s.answer.source}</p>`}
+    </aside>`}
+
     <section class="card stack">
       <${Scoreboard} view=${view} gains=${s.gained} />
       ${!s.skipped && html`<div class="row row--center"><${Button} variant="text" onClick=${() => setStore({ sheet: 'fasit' })}>${t('Uenige? Se fasit')}</${Button}></div>`}

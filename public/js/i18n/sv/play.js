@@ -44,6 +44,8 @@ export default {
   'Dere svarte feil. Ingen fikk poeng.': 'Ni svarade fel. Ingen fick poäng.',
   'Uavgjort i teten, én runde til!': 'Lika i toppen, en runda till!',
   'Uenige? Se fasit': 'Oeniga? Se facit',
+  'Visste du det?': 'Visste du det?',
+  'Kilde:': 'Källa:',
   'Neste runde får dere nye roller: send telefonen rundt igjen.': 'I nästa runda får ni nya roller: skicka runt telefonen igen.',
   'Neste runde': 'Nästa runda',
   'Venter på at verten starter neste runde …': 'Väntar på att värden startar nästa runda …',

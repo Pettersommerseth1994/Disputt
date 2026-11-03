@@ -44,6 +44,8 @@ export default {
   'Dere svarte feil. Ingen fikk poeng.': 'I svarede forkert. Ingen fik point.',
   'Uavgjort i teten, én runde til!': 'Uafgjort i toppen, én runde til!',
   'Uenige? Se fasit': 'Uenige? Se facit',
+  'Visste du det?': 'Vidste du det?',
+  'Kilde:': 'Kilde:',
   'Neste runde får dere nye roller: send telefonen rundt igjen.': 'I næste runde får I nye roller: send telefonen rundt igen.',
   'Neste runde': 'Næste runde',
   'Venter på at verten starter neste runde …': 'Venter på, at værten starter næste runde …',

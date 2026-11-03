@@ -752,6 +752,7 @@ describe('locking, countdown and reveal', () => {
         chosenIndex: picked,
         chosenLetter: 'ABCD'[picked],
         chosenText: q.options[picked],
+        ...(q.why ? { why: q.why, source: q.source } : {}), // (what backs the answer up, when the question has it)
       });
     }
   });

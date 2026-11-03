@@ -49,6 +49,24 @@ test('the question does not hand over the answer', () => {
   }
 });
 
+// The box «Visste du det?» that backs the right answer up (shared/why-*.js): one or two short sentences and a source.
+// These questions have none on purpose: the answer or the wording is too uncertain to back up with a source (the list is in README.md).
+const NO_WHY = new Set(['ekvator-land', 'by-flest-hamburg', 'by-flest-toronto', 'film-mest-penger', ...(lang === 'no' ? ['vinmonopolet-liter'] : [])]);
+
+test('every question has an explanation of one or two short sentences, with a source', () => {
+  for (const q of QUESTIONS) {
+    if (NO_WHY.has(q.id)) {
+      assert.equal(q.why, undefined, `${q.id}: has an explanation, so take it off the list of exceptions`);
+      continue;
+    }
+    assert.equal(typeof q.why, 'string', `${q.id}: has no explanation`);
+    assert.ok(q.why.length >= 30 && q.why.length <= 260, `${q.id}: explanation length (${q.why.length}) keeps the box short`);
+    const sentences = q.why.split(/(?<=[a-zæøåäö0-9)»"]{2}[.!?])\s+(?=[A-ZÆØÅÄÖ«"])/); // (not at an initial such as "D. Roosevelt")
+    assert.ok(sentences.length <= 2, `${q.id}: at most two sentences (has ${sentences.length})`);
+    assert.ok(typeof q.source === 'string' && q.source.length >= 4, `${q.id}: names its source`);
+  }
+});
+
 test('the first question is the same in every language (the QA fixtures and the tests start from it)', () => {
   assert.equal(QUESTIONS[0].id, 'turister');
 });

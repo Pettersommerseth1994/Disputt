@@ -10,17 +10,21 @@ import { QUESTIONS_SV } from '../shared/questions-sv.js';
 
 const fakeSocket = () => ({ readyState: 1, sent: [], send(m) { this.sent.push(JSON.parse(m)); }, close() {} });
 
+// (the banks as the game has them carry the explanations of the answers too; the question files do not)
+const plain = (bank) => bank.map(({ why, source, ...q }) => q);
+
 describe('the language of a game', () => {
   it('is Norwegian when nothing is said, and when it is something we do not have', () => {
     assert.deepEqual(LANGUAGES, ['no', 'da', 'sv']);
     for (const odd of [undefined, null, '', 'en', 'nb', 'DA', 42, {}]) assert.equal(normalizeLanguage(odd), 'no');
-    assert.equal(bankFor(undefined), QUESTIONS);
-    assert.equal(bankFor('da'), QUESTIONS_DA);
-    assert.equal(bankFor('sv'), QUESTIONS_SV);
+    assert.equal(bankFor(undefined), bankFor('no'));
+    assert.deepEqual(plain(bankFor('no')), QUESTIONS);
+    assert.deepEqual(plain(bankFor('da')), QUESTIONS_DA);
+    assert.deepEqual(plain(bankFor('sv')), QUESTIONS_SV);
   });
 
   it('gives a room the bank of its language, and keeps the language when the room is saved and opened again', () => {
-    for (const [lang, bank] of [['no', QUESTIONS], ['da', QUESTIONS_DA], ['sv', QUESTIONS_SV]]) {
+    for (const [lang, bank] of [['no', bankFor('no')], ['da', bankFor('da')], ['sv', bankFor('sv')]]) {
       const room = new Room({ code: 'ABCD', lang });
       assert.equal(room.lang, lang);
       assert.equal(room.questions, bank);
@@ -44,7 +48,7 @@ describe('the language of a game', () => {
     const conn = { ws: fakeSocket(), code: null, playerId: null };
     hub.createWithCode(conn, 'ZZZZ', 'cabin', 'sv');
     assert.equal(hub.rooms.get('ZZZZ').room.lang, 'sv');
-    assert.equal(hub.rooms.get('ZZZZ').room.questions, QUESTIONS_SV);
+    assert.equal(hub.rooms.get('ZZZZ').room.questions, bankFor('sv'));
   });
 
   it('asks questions from its own bank, and the Danish and Swedish banks are not the Norwegian one with other words', () => {

@@ -875,6 +875,8 @@ export class Room {
                 chosenIndex: picked,
                 chosenLetter: LETTERS[picked],
                 chosenText: q.options[picked],
+                // one or two sentences that back the answer up, with where they come from (not every question has one yet)
+                ...(q.why ? { why: q.why, source: q.source } : {}),
               },
             }
           : {}),
