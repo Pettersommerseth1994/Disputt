@@ -5,6 +5,7 @@
 // (A file of its own: pages are cached for ten minutes ...)
 
 import { t, tServer } from '../i18n/lang.js';
+import { track } from '../stats.js';
 import { setStore, store, toast } from '../store.js';
 import { announceAway } from './away.js';
 import { CODE_ALPHABET } from './pass.js';
@@ -156,6 +157,7 @@ export function startShopCheckout(plan, discount = '') {
   }
   writeWaiting(waiting);
   setStore({ payWaiting: waiting });
+  track('checkout', { p: plan, x: 'card' });
   if (tab) schedule();
   else told.then(() => location.assign(waiting.url)); // (not before the guests have been told: the page is gone as soon as it is sent)
 }

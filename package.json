@@ -16,6 +16,7 @@
     "dev": "node --watch server/index.js",
     "test": "node --test \"test/*.test.js\"",
     "shots": "node tools/qa/shots.mjs",
+    "stats:build": "npm --prefix tools/stats-ui ci && npm --prefix tools/stats-ui run build",
     "art": "node tools/art/build.mjs && node tools/art/soften.mjs",
     "logo": "node tools/logo/build.mjs",
     "fonts": "bash tools/fonts/build.sh",

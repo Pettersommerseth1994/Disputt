@@ -21,6 +21,7 @@ import { AccessSheet, LoginSheet, Paywall, ThanksSheet } from './screens/pay.js'
 import { HostSheet, QrSheet, RulesSheet, ScoresSheet, SettingsSheet } from './screens/sheets.js';
 import { isP2P } from './settings.js';
 import { useSlowConnect } from './slowconnect.js';
+import { observe } from './stats-watch.js';
 import { useStore } from './store.js';
 import { Button, useWakeLock } from './ui.js';
 
@@ -75,6 +76,7 @@ export function App() {
   useLang(); // (the whole page is drawn again when the language is changed)
   const { view } = s;
   useWakeLock(Boolean(view));
+  useEffect(() => observe(s)); // (counts the steps of the game, nothing about anybody: stats-watch.js)
   useRememberGame(s.session, view); // (a guest's seat is remembered, so that closing the page is not the end of it: screens/rejoin.js)
 
   // every new screen starts at the top

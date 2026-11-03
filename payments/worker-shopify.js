@@ -24,6 +24,10 @@
 //   GET  /vipps/admin/check     (Bearer ADMIN_TOKEN)  tries every connection (Vipps, Shopify, the prices) and says what works
 //   GET  /turn            { iceServers }          short-lived access to Cloudflare's relay (TURN) for phones that cannot reach each other directly (docs/P2P.md,
 //                                                 «Relé»); an empty list while the relay is not set up, and then the game goes on without it
+//   POST /e               { n, l?, m?, p?, x? }   one thing happened in the game (the page counts: it opened, a game was made, the packages were shown ...).
+//                                                 Only a count per day is kept, with the language, the way to play, the package and the way to pay: no
+//                                                 names, no addresses, nothing that is one person (docs/STATS.md)
+//   GET  /stats?days=30   (Bearer ADMIN_TOKEN)    the counts and the paid orders, for the page /stats/ (10 wrong keys in an hour lock every admin door for that hour)
 //   GET  /health                                  { ok, provider, mode: "test" | "live", site, shop, set, vipps, hooks }   (to check the set-up and to see
 //                                                 what became of the last calls from Shopify and Vipps; no secrets, no names, no order numbers)
 //
@@ -222,6 +226,11 @@ const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
   // one row for every time somebody asks whether a discount code is good (to keep the number of questions to Shopify in check)
   'CREATE TABLE IF NOT EXISTS discount_checks (at INTEGER NOT NULL)',
+  // how many times each thing happened in the game on each day (the day by the Norwegian clock): the game says "a game was made, in Danish,
+  // in the car" and the Worker adds one to the row. Nothing but counts; nothing that tells one phone from another. See docs/STATS.md.
+  // one row for every wrong admin key (to keep somebody who guesses it in check: see checkAdmin). Only the time; not who, not what was tried.
+  'CREATE TABLE IF NOT EXISTS admin_fails (at INTEGER NOT NULL)',
+  'CREATE TABLE IF NOT EXISTS stats (day TEXT NOT NULL, name TEXT NOT NULL, lang TEXT NOT NULL, mode TEXT NOT NULL, plan TEXT NOT NULL, method TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, name, lang, mode, plan, method))',
 ];
 const HOOKS_KEPT = 100;
 const prepared = new WeakSet(); // (the databases whose tables are known to be there)
@@ -1040,11 +1049,28 @@ async function vippsWebhook(request, env) {
   return { ok: true };
 }
 
+const ADMIN_MAX_FAILS = 10; // wrong keys in the last hour, all together, before the admin doors are shut for the rest of that hour
+const ADMIN_FAIL_WINDOW = 3600; // seconds
+
+/**
+ * The key to the admin doors (the Vipps set-up, the check, the statistics). Somebody who guesses is stopped: after ADMIN_MAX_FAILS wrong keys
+ * within an hour, every call to the admin doors is turned away (429), the right key too, until an hour has passed since the tenth wrong one
+ * (a right key would otherwise tell the guesser that it was the right one). Turned-away calls are not written down, so the guesser cannot fill
+ * the database. The price is that somebody who guesses can shut the owner out for an hour; nothing else is affected (payments, the game).
+ */
 async function checkAdmin(request, env) {
   const want = clean(env.ADMIN_TOKEN);
   if (want.length < MIN_SECRET) throw new HttpError(503, 'unavailable', 'ADMIN_TOKEN mangler, eller er for kort (16 tegn minst).');
+  const db = await database(env);
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare('DELETE FROM admin_fails WHERE at < ?').bind(now - ADMIN_FAIL_WINDOW).run();
+  const { n } = (await db.prepare('SELECT COUNT(*) AS n FROM admin_fails').first()) ?? { n: 0 };
+  if (n >= ADMIN_MAX_FAILS) throw new HttpError(429, 'locked', 'For mange gale nøkler på rad. Adminsidene er låst i en time.');
   const got = (request.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
-  if (!(await sameText(got, want))) throw new HttpError(401, 'unauthorized', 'Feil ADMIN_TOKEN.');
+  if (!(await sameText(got, want))) {
+    await db.prepare('INSERT INTO admin_fails (at) VALUES (?)').bind(now).run();
+    throw new HttpError(401, 'unauthorized', 'Feil ADMIN_TOKEN.');
+  }
 }
 
 /** Registers this Worker's address at Vipps as the place to say what became of the payments, and keeps the secret that comes with it. */
@@ -1266,6 +1292,60 @@ async function turnEndpoint(env) {
   return { iceServers: servers };
 }
 
+// ------------------------------------------------------------------------------------------------ counting what happens in the game
+
+/** The things the game may say have happened (anything else is turned away). */
+const STAT_EVENTS = ['visit', 'start', 'mode', 'lobby', 'joined', 'game_start', 'round', 'finished', 'paywall', 'checkout'];
+const STAT_LANGS = ['no', 'da', 'sv'];
+const STAT_MODES = ['cabin', 'car'];
+const STAT_PLANS = ['evening', 'weekend', 'year'];
+const STAT_METHODS = ['card', 'vipps'];
+const STATS_DAILY_CAP = 10_000; // events counted per day: more are dropped, so that nobody can fill the database that the payments live in
+const STATS_KEPT_DAYS = 400;
+const STATS_MAX_DAYS = 120;
+
+/** The day by the Norwegian clock, as 2026-11-03. */
+const osloDay = (ms = Date.now()) => new Date(ms).toLocaleDateString('sv-SE', { timeZone: 'Europe/Oslo' });
+
+const oneOf = (list, value) => (list.includes(value) ? value : '');
+
+/** The game says that something happened. Adds one to that day's count; says nothing back that matters. */
+async function statsEvent(request, env) {
+  const data = await readJson(request);
+  if (!STAT_EVENTS.includes(data.n)) throw bad('Ukjent hendelse.');
+  const db = await database(env);
+  const day = osloDay();
+  const cap = Number(env.STATS_DAILY_CAP) > 0 ? Number(env.STATS_DAILY_CAP) : STATS_DAILY_CAP;
+  const { total } = (await db.prepare('SELECT COALESCE(SUM(n), 0) AS total FROM stats WHERE day = ?').bind(day).first()) ?? { total: 0 };
+  if (total >= cap) return { ok: true, counted: false };
+  const batch = [
+    db
+      .prepare('INSERT INTO stats (day, name, lang, mode, plan, method, n) VALUES (?, ?, ?, ?, ?, ?, 1) ON CONFLICT (day, name, lang, mode, plan, method) DO UPDATE SET n = n + 1')
+      .bind(day, data.n, oneOf(STAT_LANGS, data.l), oneOf(STAT_MODES, data.m), oneOf(STAT_PLANS, data.p), oneOf(STAT_METHODS, data.x)),
+  ];
+  if (Math.random() < 0.01) batch.push(db.prepare('DELETE FROM stats WHERE day < ?').bind(osloDay(Date.now() - STATS_KEPT_DAYS * 86_400_000)));
+  await db.batch(batch);
+  return { ok: true, counted: true };
+}
+
+/** The counts of the last `days` days, and the orders that were paid in them (real ones: no test orders), for the page /stats/. Needs ADMIN_TOKEN. */
+async function statsRead(request, env, url) {
+  await checkAdmin(request, env);
+  const db = await database(env);
+  const asked = Number(url.searchParams.get('days'));
+  const days = Number.isInteger(asked) && asked >= 1 ? Math.min(asked, STATS_MAX_DAYS) : 30;
+  const since = Date.now() - (days - 1) * 86_400_000;
+  const from = osloDay(since);
+  const { results: events } = await db.prepare('SELECT day, name, lang, mode, plan, method, n FROM stats WHERE day >= ? ORDER BY day').bind(from).all();
+  // (an hour of margin each way: the days are by the Norwegian clock and the orders by the second)
+  const { results: orders } = await db
+    .prepare('SELECT paid_at, plan, amount, currency, state, refunded FROM orders WHERE test = 0 AND paid_at >= ? ORDER BY paid_at')
+    .bind(Math.floor(since / 1000) - 86_400)
+    .all();
+  const sales = orders.map((o) => ({ day: osloDay(o.paid_at * 1000), plan: o.plan, amount: o.amount, currency: o.currency, state: o.state, refunded: o.refunded })).filter((o) => o.day >= from);
+  return { today: osloDay(), from, days, events, sales };
+}
+
 // ------------------------------------------------------------------------------------------------ routing and CORS
 
 function corsHeaders(request, env) {
@@ -1275,7 +1355,7 @@ function corsHeaders(request, env) {
   if (origin && origin === allowed) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
-    headers['Access-Control-Allow-Headers'] = 'Content-Type';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
     headers['Access-Control-Max-Age'] = '86400';
   }
   return headers;
@@ -1307,6 +1387,8 @@ async function route(request, env) {
   if (request.method === 'POST' && url.pathname === '/vipps/status') return json(200, await vippsStatus(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/vipps/webhook') return json(200, await vippsWebhook(request, env), request, env);
   if (request.method === 'POST' && url.pathname === '/vipps/admin/webhook') return json(200, await vippsAdminWebhook(request, env), request, env);
+  if (request.method === 'POST' && url.pathname === '/e') return json(200, await statsEvent(request, env), request, env);
+  if (request.method === 'GET' && url.pathname === '/stats') return json(200, await statsRead(request, env, url), request, env);
   if (request.method === 'GET' && url.pathname === '/vipps/admin/check') return json(200, await vippsAdminCheck(request, env), request, env);
   throw new HttpError(404, 'not_found', 'Fant ikke siden.');
 }

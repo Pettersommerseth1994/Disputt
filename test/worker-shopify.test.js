@@ -70,7 +70,7 @@ describe('health', () => {
     assert.deepEqual(t.db.sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((r) => r.name), []);
     await t.call('/health');
     const names = t.db.sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all().map((r) => r.name);
-    assert.deepEqual(names, ['discount_checks', 'hooks', 'orders', 'refunds', 'settings', 'stops', 'vipps']);
+    assert.deepEqual(names, ['admin_fails', 'discount_checks', 'hooks', 'orders', 'refunds', 'settings', 'stats', 'stops', 'vipps']);
     await t.call('/health'); // (and again is no harm)
   });
 });

@@ -174,7 +174,7 @@ describe('CORS', () => {
     const pre = await t.call('/checkout', { method: 'OPTIONS' });
     assert.equal(pre.status, 204);
     assert.equal(pre.headers.get('Access-Control-Allow-Methods'), 'GET, POST, OPTIONS');
-    assert.equal(pre.headers.get('Access-Control-Allow-Headers'), 'Content-Type');
+    assert.equal(pre.headers.get('Access-Control-Allow-Headers'), 'Content-Type, Authorization');
     const preOther = await t.call('/checkout', { method: 'OPTIONS', origin: 'https://evil.example' });
     assert.equal(preOther.status, 403);
   });

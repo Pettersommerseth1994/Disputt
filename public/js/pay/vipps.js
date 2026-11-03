@@ -8,6 +8,7 @@
 // have would not load. Everything here is made of what shop.js already had, and of the browser.)
 
 import { LANGUAGES, getLang, t, tServer } from '../i18n/lang.js';
+import { track } from '../stats.js';
 import { setStore, store } from '../store.js';
 import { announceAway } from './away.js';
 import { PayError } from './payments.js';
@@ -126,6 +127,7 @@ export function startVippsCheckout(plan, discount = '') {
   } catch {
     /* a tab that cannot be written to is sent on all the same */
   }
+  track('checkout', { p: plan, x: 'vipps' });
   setStore({ payWaiting: waiting }); // «Venter på betalingen …» at once: the call to the server takes a moment
 
   const fail = (err) => {
