@@ -81,9 +81,9 @@ export const QUESTIONS_DA = [
     correct: 1,
   },
   {
-    id: 'grundlovsdag',
-    text: 'Hvilken dato fejrer danskerne Grundlovsdag?',
-    options: ['9. april', '5. maj', '5. juni', '23. juni'],
+    id: 'valgretsalder-18',
+    text: 'Hvilket år blev valgretsalderen sænket til 18 år?',
+    options: ['1971', '1975', '1978', '1982'],
     correct: 2,
   },
   {
@@ -109,10 +109,10 @@ export const QUESTIONS_DA = [
     correct: 2,
   },
   {
-    id: 'karen-blixen',
-    text: 'Hvem skrev «Den afrikanske farm»?',
-    options: ['Tove Ditlevsen', 'Inger Christensen', 'Dorrit Willumsen', 'Karen Blixen'],
-    correct: 3,
+    id: 'nobel-1917-pontoppidan',
+    text: 'Hvem delte Nobels litteraturpris i 1917 med Gjellerup?',
+    options: ['Herman Bang', 'Henrik Pontoppidan', 'Karen Blixen', 'Johannes V. Jensen'],
+    correct: 1,
   },
 
   // ---- Verden: historie og teknologi
@@ -219,10 +219,10 @@ export const QUESTIONS_DA = [
   { id: 'limfjorden', text: 'Hvad er Danmarks længste fjord?', options: ['Roskilde Fjord', 'Isefjorden', 'Limfjorden', 'Flensborg Fjord'], correct: 2 },
   { id: 'rigsvaben', text: 'Hvilken farve har løverne i Danmarks rigsvåben?', options: ['Blå', 'Rød', 'Sort', 'Grøn'], correct: 0 },
   {
-    id: 'thorning-schmidt',
-    text: 'Hvem var Danmarks første kvindelige statsminister?',
-    options: ['Mette Frederiksen', 'Margrethe Vestager', 'Pia Kjærsgaard', 'Helle Thorning-Schmidt'],
-    correct: 3,
+    id: 'statsminister-1989',
+    text: 'Hvem var statsminister, da Berlinmuren faldt i 1989?',
+    options: ['Poul Schlüter', 'Anker Jørgensen', 'Poul Nyrup Rasmussen', 'Uffe Ellemann-Jensen'],
+    correct: 0,
   },
   { id: 'nato-danmark', text: 'Hvilket år blev Danmark medlem af NATO?', options: ['1945', '1949', '1952', '1957'], correct: 1 },
   { id: 'maersk', text: 'Hvilket år blev A.P. Møller - Mærsk grundlagt?', options: ['1904', '1884', '1924', '1945'], correct: 0 },
@@ -636,10 +636,10 @@ export const QUESTIONS_DA = [
     correct: 0,
   },
   {
-    id: 'borgen',
-    text: 'Hvilken tv-serie handler om statsminister Birgitte Nyborg?',
-    options: ['Forbrydelsen', 'Borgen', 'Rejseholdet', 'Matador'],
-    correct: 1,
+    id: 'matador-premiere',
+    text: 'Hvilket år begyndte «Matador» at blive sendt i tv?',
+    options: ['1972', '1975', '1978', '1981'],
+    correct: 2,
   },
   { id: 'forbrydelsen-ar', text: 'Hvilket år havde «Forbrydelsen» premiere?', options: ['2005', '2007', '2009', '2011'], correct: 1 },
   { id: 'got-sesonger', text: 'Hvor mange sæsoner har «Game of Thrones»?', options: ['6', '7', '8', '9'], correct: 2 },
@@ -686,10 +686,10 @@ export const QUESTIONS_DA = [
     correct: 2,
   },
   {
-    id: 'lukas-graham',
-    text: 'Hvilket dansk band står bag «7 Years»?',
-    options: ['Lukas Graham', 'Alphabeat', 'Aqua', 'Volbeat'],
-    correct: 0,
+    id: 'lukas-graham-opvaekst',
+    text: 'Hvor voksede Lukas Graham-forsangeren op?',
+    options: ['Nørrebro', 'Vesterbro', 'Amager', 'Christiania'],
+    correct: 3,
   },
   {
     id: 'best-solgte-album',

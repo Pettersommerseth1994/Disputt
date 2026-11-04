@@ -55,7 +55,12 @@ export const QUESTIONS_SV = [
     correct: 1,
   },
   { id: 'ikea-grundades', text: 'Vilket år grundades IKEA av Ingvar Kamprad?', options: ['1943', '1951', '1958', '1964'], correct: 0 },
-  { id: 'hogertrafik', text: 'Vilket år gick Sverige över till högertrafik?', options: ['1953', '1957', '1962', '1967'], correct: 3 },
+  {
+    id: 'hogertrafik-folkomrostning',
+    text: 'Vilket år röstade svenskarna nej till högertrafik?',
+    options: ['1951', '1955', '1959', '1963'],
+    correct: 1,
+  },
   { id: 'blodbadet', text: 'Vilket år var Stockholms blodbad?', options: ['1520', '1523', '1397', '1632'], correct: 0 },
   {
     id: 'vasa-sjonk',
@@ -72,21 +77,26 @@ export const QUESTIONS_SV = [
     options: ['1935', '1945', '1955', '1965'],
     correct: 1,
   },
-  { id: 'waterloo', text: 'Vilket år vann ABBA Eurovision med «Waterloo»?', options: ['1974', '1976', '1979', '1982'], correct: 0 },
   {
-    id: 'nationaldagen',
-    text: 'Vilket datum är Sveriges nationaldag?',
-    options: ['30 april', '1 maj', '21 juni', '6 juni'],
-    correct: 3,
+    id: 'eurovision-1974-stad',
+    text: 'I vilken stad vann ABBA Eurovision med «Waterloo»?',
+    options: ['Brighton', 'London', 'Edinburgh', 'Harrogate'],
+    correct: 0,
+  },
+  {
+    id: 'nationaldag-helgdag',
+    text: 'Vilket år blev nationaldagen 6 juni allmän helgdag?',
+    options: ['1983', '2002', '2005', '2008'],
+    correct: 2,
   },
   { id: 'spotify', text: 'Vilket år grundades Spotify?', options: ['2006', '2009', '2011', '2013'], correct: 0 },
   { id: 'riksdagen', text: 'Hur många ledamöter har Sveriges riksdag?', options: ['299', '325', '349', '375'], correct: 2 },
 
   // ---- Sverige: natur och kultur
   {
-    id: 'lagerlof-nobel',
-    text: 'Vem var första kvinna med Nobelpriset i litteratur?',
-    options: ['Astrid Lindgren', 'Karin Boye', 'Elin Wägner', 'Selma Lagerlöf'],
+    id: 'strindberg-aldrig-nobel',
+    text: 'Vilken av dessa svenska författare fick aldrig Nobelpriset?',
+    options: ['Pär Lagerkvist', 'Eyvind Johnson', 'Erik Axel Karlfeldt', 'August Strindberg'],
     correct: 3,
   },
   { id: 'andree-ornen', text: 'Vad hette ballongen som Andrée flög med 1897?', options: ['Svanen', 'Falken', 'Örnen', 'Fenix'], correct: 2 },
@@ -186,10 +196,10 @@ export const QUESTIONS_SV = [
     correct: 1,
   },
   {
-    id: 'absolut-ahus',
-    text: 'Vilken vodka tillverkas i Åhus i Skåne?',
-    options: ['Absolut Vodka', 'Smirnoff', 'Finlandia', 'Grey Goose'],
-    correct: 0,
+    id: 'hm-grundades',
+    text: 'Vilket år öppnades den första H&M-butiken i Västerås?',
+    options: ['1944', '1947', '1951', '1955'],
+    correct: 1,
   },
   { id: 'franz-ferdinand', text: 'I vilken stad sköts Franz Ferdinand 1914?', options: ['Moskva', 'Dallas', 'Berlin', 'Sarajevo'], correct: 3 },
   { id: 'afrika-land', text: 'Hur många länder består Afrika av?', options: ['22', '34', '46', '54'], correct: 3 },
@@ -209,24 +219,34 @@ export const QUESTIONS_SV = [
 
   // ---- More in the same style: Sverige
   {
-    id: 'vanern',
-    text: 'Vilken är Sveriges största sjö?',
-    options: ['Vättern', 'Vänern', 'Mälaren', 'Hjälmaren'],
+    id: 'djupaste-sjon-hornavan',
+    text: 'Vilken är Sveriges djupaste sjö?',
+    options: ['Vättern', 'Hornavan', 'Torneträsk', 'Siljan'],
     correct: 1,
   },
-  { id: 'kebnekaise', text: 'Vilket är Sveriges högsta berg?', options: ['Sarektjåkka', 'Kebnekaise', 'Åreskutan', 'Helagsfjället'], correct: 1 },
+  {
+    id: 'forsta-nationalparker-1909',
+    text: 'Vilket år fick Sverige sina första nationalparker?',
+    options: ['1904', '1909', '1914', '1919'],
+    correct: 1,
+  },
   {
     id: 'hammarskjold',
     text: 'Vilken svensk var FN:s generalsekreterare?',
     options: ['Folke Bernadotte', 'Olof Palme', 'Dag Hammarskjöld', 'Hans Blix'],
     correct: 2,
   },
-  { id: 'nato-sverige', text: 'Vilket år blev Sverige medlem i Nato?', options: ['1995', '2024', '2022', '1949'], correct: 1 },
   {
-    id: 'systembolaget-alder',
-    text: 'Hur gammal måste man vara för att handla på Systembolaget?',
-    options: ['18 år', '20 år', '21 år', '25 år'],
-    correct: 1,
+    id: 'fn-medlem-sverige',
+    text: 'Vilket år blev Sverige medlem i FN?',
+    options: ['1946', '1945', '1948', '1950'],
+    correct: 0,
+  },
+  {
+    id: 'barnaga-forbjudet-1979',
+    text: 'Vilket år blev det förbjudet att aga barn i Sverige?',
+    options: ['1969', '1974', '1979', '1984'],
+    correct: 2,
   },
 
   // ---- More in the same style: geografi och flaggor
@@ -534,22 +554,22 @@ export const QUESTIONS_SV = [
   // ---- Sport, film, TV och serier, musik, litteratur och konst (the five categories that had the fewest questions)
   // (two of the four options are close on purpose, so it is mostly a choice between two)
   {
-    id: 'grand-slam-svensk',
-    text: 'Vilken svensk har vunnit flest grand slam-titlar i singel?',
-    options: ['Mats Wilander', 'Stefan Edberg', 'Björn Borg', 'Thomas Johansson'],
-    correct: 2,
+    id: 'wilander-grand-slam-titlar',
+    text: 'Hur många grand slam-titlar i singel vann Mats Wilander?',
+    options: ['6', '7', '9', '11'],
+    correct: 1,
   },
   {
-    id: 'landslagsmal-herrar',
-    text: 'Vem har gjort flest mål för Sveriges herrlandslag per 2026?',
-    options: ['Henrik Larsson', 'Gunnar Nordahl', 'Sven Rydell', 'Zlatan Ibrahimović'],
-    correct: 3,
-  },
-  {
-    id: 'duplantis-os-guld',
-    text: 'Vem tog OS-guld i stavhopp i både Tokyo och Paris?',
-    options: ['Armand Duplantis', 'Kajsa Bergqvist', 'Patrik Sjöberg', 'Stefan Holm'],
+    id: 'forbundskapten-vm-1994',
+    text: 'Vem var förbundskapten när Sverige tog VM-brons 1994?',
+    options: ['Tommy Svensson', 'Olle Nordin', 'Lars Lagerbäck', 'Erik Hamrén'],
     correct: 0,
+  },
+  {
+    id: 'duplantis-fodd-lafayette',
+    text: 'I vilken stad är Mondo Duplantis född?',
+    options: ['New Orleans', 'Baton Rouge', 'Shreveport', 'Lafayette'],
+    correct: 3,
   },
   {
     id: 'rekord-100m',
@@ -688,10 +708,10 @@ export const QUESTIONS_SV = [
     correct: 2,
   },
   {
-    id: 'avicii-levels',
-    text: 'Vilken svensk DJ står bakom låten «Levels»?',
-    options: ['Alesso', 'Avicii', 'Axwell', 'Eric Prydz'],
-    correct: 1,
+    id: 'herreys-eurovision-1984',
+    text: 'Vilket år vann Herreys Eurovision Song Contest?',
+    options: ['1980', '1982', '1984', '1987'],
+    correct: 2,
   },
   {
     id: 'best-solgte-album',
@@ -732,10 +752,10 @@ export const QUESTIONS_SV = [
     correct: 1,
   },
   {
-    id: 'man-som-hatar-kvinnor',
-    text: 'Vem skrev romanen «Män som hatar kvinnor»?',
-    options: ['Henning Mankell', 'Håkan Nesser', 'Stieg Larsson', 'Jens Lapidus'],
-    correct: 2,
+    id: 'martin-beck-forfattarpar',
+    text: 'Vilket författarpar skapade kommissarie Martin Beck?',
+    options: ['Sjöwall och Wahlöö', 'Roslund och Hellström', 'Läckberg och Fexeus', 'Lars Kepler'],
+    correct: 0,
   },
   {
     id: 'warhol-suppe',

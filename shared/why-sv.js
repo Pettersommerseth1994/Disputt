@@ -18,8 +18,8 @@ export const WHY_SV = {
     "why": "Ingvar Kamprad grundade IKEA år 1943, när han bara var 17 år. Namnet kommer från hans initialer plus gården Elmtaryd i Agunnaryd.",
     "source": "Wikipedia"
   },
-  "hogertrafik": {
-    "why": "Sverige bytte till högertrafik klockan 05.00 söndagen den 3 september 1967, en dag som kallades Dagen H.",
+  "hogertrafik-folkomrostning": {
+    "why": "I folkomröstningen 1955 röstade nästan 83 procent emot högertrafik. Riksdagen beslutade ändå om bytet, som genomfördes 1967.",
     "source": "Wikipedia"
   },
   "blodbadet": {
@@ -46,12 +46,12 @@ export const WHY_SV = {
     "why": "Den första boken om Pippi Långstrump utkom i november 1945 på Rabén & Sjögren, efter att Bonniers hade tackat nej.",
     "source": "Wikipedia"
   },
-  "waterloo": {
-    "why": "ABBA vann Eurovision Song Contest den 6 april 1974 i Brighton med «Waterloo». Segern blev starten på gruppens världskarriär.",
+  "eurovision-1974-stad": {
+    "why": "Eurovision Song Contest 1974 hölls i Brighton Dome i Brighton, England. ABBA vann med «Waterloo» den 6 april 1974.",
     "source": "Wikipedia"
   },
-  "nationaldagen": {
-    "why": "Den 6 juni firar både Gustav Vasas val till kung 1523 och att regeringsformen från 1809 antogs. Dagen blev nationaldag 1983 och helgdag 2005.",
+  "nationaldag-helgdag": {
+    "why": "6 juni blev nationaldag 1983 men räknades först som allmän helgdag från 2005. Då försvann annandag pingst som helgdag.",
     "source": "Wikipedia"
   },
   "spotify": {
@@ -62,8 +62,8 @@ export const WHY_SV = {
     "why": "Riksdagen har 349 ledamöter, ett antal som gäller sedan valet 1976. Dessförinnan hade enkammarriksdagen 350.",
     "source": "Wikipedia"
   },
-  "lagerlof-nobel": {
-    "why": "Selma Lagerlöf fick Nobelpriset i litteratur år 1909 och blev därmed den första kvinnan som fick det litteraturpriset.",
+  "strindberg-aldrig-nobel": {
+    "why": "August Strindberg fick aldrig Nobelpriset i litteratur, trots att han är en av Sveriges mest kända författare. Lagerkvist fick det 1951, Johnson 1974 och Karlfeldt postumt 1931.",
     "source": "Wikipedia"
   },
   "andree-ornen": {
@@ -78,32 +78,32 @@ export const WHY_SV = {
     "why": "August Strindberg gav ut «Röda rummet» 1879, och boken räknas ofta som startskottet för 1880-talets litteratur i Sverige.",
     "source": "Wikipedia"
   },
-  "absolut-ahus": {
-    "why": "Absolut Vodka färdigställs och tappas i Åhus i Skåne, medan spriten destilleras i närliggande Nöbbelöv. Den moderna Absolut lanserades i USA 1979.",
+  "hm-grundades": {
+    "why": "Erling Persson öppnade den första butiken, Hennes, i Västerås 1947. Först 1968 köpte han Mauritz Widforss och bolaget blev Hennes & Mauritz.",
     "source": "Wikipedia"
   },
   "janssons-frestelse": {
     "why": "Janssons frestelse är en gratäng på potatis, lök och ansjovis (skarpsill) med grädde. Ursprunget till namnet är oklart.",
     "source": "Wikipedia"
   },
-  "vanern": {
-    "why": "Vänern är på 5 450 km² Sveriges största sjö, och dessutom EU:s största sjö. I Europa är bara Ladoga och Onega större.",
+  "djupaste-sjon-hornavan": {
+    "why": "Hornavan i Lappland är Sveriges djupaste insjö, med ett djup på över 200 meter. Torneträsk når 168 meter.",
     "source": "Wikipedia"
   },
-  "kebnekaise": {
-    "why": "Kebnekaise är Sveriges högsta fjäll, med Nordtoppen på cirka 2 097 meter. Sydtoppen har varit lägre sedan 2018 när glaciären smalnade av.",
+  "forsta-nationalparker-1909": {
+    "why": "Sverige blev 1909 första land i Europa med nationalparker, nio till antalet. Riksdagen fattade beslutet den 24 maj 1909.",
     "source": "Wikipedia"
   },
   "hammarskjold": {
     "why": "Dag Hammarskjöld var FN:s generalsekreterare 1953–1961. Han omkom i en flygolycka i dåvarande Nordrhodesia och fick Nobels fredspris postumt 1961.",
     "source": "Wikipedia"
   },
-  "nato-sverige": {
-    "why": "Sverige blev medlem i Nato den 7 mars 2024 och därmed alliansens 32:a medlemsland.",
+  "fn-medlem-sverige": {
+    "why": "Sverige var inte med när FN bildades 1945 utan antogs som medlem den 19 november 1946.",
     "source": "Wikipedia"
   },
-  "systembolaget-alder": {
-    "why": "Åldersgränsen på Systembolaget är 20 år, och sänktes 1969 från 21. Personalen kan begära leg om de inte är säkra på att kunden är över 25.",
+  "barnaga-forbjudet-1979": {
+    "why": "Sverige blev 1979 första land i världen med ett uttryckligt lagförbud mot barnaga; förbudet beslutades den 15 mars och trädde i kraft 1 juli.",
     "source": "Wikipedia"
   },
   "fodt-forst-svenskar": {
@@ -118,16 +118,16 @@ export const WHY_SV = {
     "why": "Selma Lagerlöf dog 1940. Övriga var tidigare ute: Nobel 1896, Strindberg 1912 och Carl Larsson 1919.",
     "source": "Wikipedia"
   },
-  "grand-slam-svensk": {
-    "why": "Björn Borg vann 11 grand slam-titlar i singel, sex i Franska öppna och fem i Wimbledon. Mats Wilander tog sju och Stefan Edberg sex.",
+  "wilander-grand-slam-titlar": {
+    "why": "Wilander vann sju grand slam-titlar i singel: tre i Australian Open, tre i Franska öppna och en i US Open. Stefan Edberg vann sex.",
     "source": "Wikipedia"
   },
-  "landslagsmal-herrar": {
-    "why": "Zlatan Ibrahimović gjorde 62 mål för landslaget fram till sin sista match 2023, vilket är rekord för Sveriges herrlandslag.",
+  "forbundskapten-vm-1994": {
+    "why": "Tommy Svensson var förbundskapten 1991–1997 och ledde Sverige till bronsmedalj i VM i USA 1994.",
     "source": "Wikipedia"
   },
-  "duplantis-os-guld": {
-    "why": "Armand Duplantis tog OS-guld i stavhopp med 6,02 i Tokyo (2021) och 6,25 i Paris 2024, det senare ett nytt världsrekord.",
+  "duplantis-fodd-lafayette": {
+    "why": "Mondo Duplantis föddes 1999 i Lafayette, Louisiana. Han tävlar för Sverige genom sin svenska mamma.",
     "source": "Wikipedia"
   },
   "fotbolls-vm-sverige": {
@@ -154,8 +154,8 @@ export const WHY_SV = {
     "why": "Loreen vann Eurovision 2012 i Baku med «Euphoria» och 372 poäng. År 2023 vann hon igen med «Tattoo».",
     "source": "Wikipedia"
   },
-  "avicii-levels": {
-    "why": "«Levels» släpptes av Avicii (Tim Bergling) hösten 2011 och bygger på en sampling av Etta James. Låten toppade listan i Sverige och nådde plats 4 i Storbritannien.",
+  "herreys-eurovision-1984": {
+    "why": "Herreys vann Eurovision Song Contest 1984 i Luxemburg med «Diggi-Loo Diggi-Ley» och 145 poäng.",
     "source": "Wikipedia"
   },
   "nyckelharpa": {
@@ -166,8 +166,8 @@ export const WHY_SV = {
     "why": "Ingmar Bergmans «Det sjunde inseglet» hade premiär 16 februari 1957 och fick juryns specialpris i Cannes samma år.",
     "source": "Wikipedia"
   },
-  "man-som-hatar-kvinnor": {
-    "why": "Stieg Larsson skrev kriminalromanen «Män som hatar kvinnor», som utkom 2005. Den filmades 2009 i regi av Niels Arden Oplev.",
+  "martin-beck-forfattarpar": {
+    "why": "Maj Sjöwall och Per Wahlöö skrev tio romaner om Martin Beck, från «Roseanna» 1965 till «Terroristerna».",
     "source": "Wikipedia"
   },
   "turister": {

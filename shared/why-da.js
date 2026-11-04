@@ -54,8 +54,8 @@ export const WHY_DA = {
     "why": "Roskilde Festival blev holdt første gang den 28.-29. august 1971, startet af to gymnasieelever og arrangøren Carl Fischer. Cirka 10.000 gæster kom, frivillige inklusive.",
     "source": "Wikipedia"
   },
-  "grundlovsdag": {
-    "why": "Grundlovsdag er den 5. juni, fordi Frederik 7. underskrev Junigrundloven den dag i 1849. Også grundlovene fra 1915 og 1953 blev underskrevet den 5. juni.",
+  "valgretsalder-18": {
+    "why": "Valgretsalderen til Folketinget blev sænket fra 20 til 18 år i 1978. Tidligere var den sænket til 21 år i 1961 og 20 år i 1971.",
     "source": "Wikipedia"
   },
   "stroustrup": {
@@ -78,8 +78,8 @@ export const WHY_DA = {
     "why": "Carl Nielsen komponerede «Maskarade», som havde urpremiere på Det Kongelige Teater den 11. november 1906. Librettoen af Vilhelm Andersen bygger på Holbergs komedie.",
     "source": "Wikipedia"
   },
-  "karen-blixen": {
-    "why": "Karen Blixen udgav «Den afrikanske farm» i 1937 under pseudonymet Isak Dinesen. Bogen handler om hendes ca. 17 år på en kaffefarm i Kenya.",
+  "nobel-1917-pontoppidan": {
+    "why": "Henrik Pontoppidan og Karl Gjellerup delte Nobelprisen i litteratur i 1917. Pontoppidan fik den for sine autentiske skildringer af nutidens liv i Danmark.",
     "source": "Wikipedia"
   },
   "carlsberg": {
@@ -98,8 +98,8 @@ export const WHY_DA = {
     "why": "Danmarks rigsvåben viser tre blå løver med guldkroner og røde tunger på gult skjold. Skjoldet er desuden besat med ni røde søblade.",
     "source": "Wikipedia"
   },
-  "thorning-schmidt": {
-    "why": "Helle Thorning-Schmidt blev statsminister den 3. oktober 2011 som den første kvinde på posten. Hun ledede en centrum-venstre-regering indtil juni 2015.",
+  "statsminister-1989": {
+    "why": "Poul Schlüter var statsminister fra 1982 til 1993, så han sad, da Berlinmuren faldt i november 1989. Anker Jørgensen var gået af i 1982, og Nyrup tiltrådte i 1993.",
     "source": "Wikipedia"
   },
   "nato-danmark": {
@@ -146,8 +146,8 @@ export const WHY_DA = {
     "why": "Susanne Biers «Hævnen» vandt Oscar for bedste udenlandske film ved den 83. Oscar-uddeling i 2011.",
     "source": "Wikipedia"
   },
-  "borgen": {
-    "why": "«Borgen» er en dansk politisk dramaserie, der havde premiere på DR1 i 2010. Sidse Babett Knudsen spiller Birgitte Nyborg, der bliver landets første kvindelige statsminister.",
+  "matador-premiere": {
+    "why": "Første afsnit af «Matador» blev vist i november 1978, og serien sluttede i 1982 efter 24 afsnit. Den blev genudsendt flere gange siden.",
     "source": "Wikipedia"
   },
   "forbrydelsen-ar": {
@@ -162,8 +162,8 @@ export const WHY_DA = {
     "why": "Brødrene Olsen vandt Eurovision Song Contest i Stockholm i 2000 med «Fly on the Wings of Love» (på dansk «Smuk som et stjerneskud»).",
     "source": "Wikipedia"
   },
-  "lukas-graham": {
-    "why": "«7 Years» er med bandet Lukas Graham, med forsanger Lukas Forchhammer. Sangen udkom i 2015 og nåede andenpladsen på den amerikanske Billboard Hot 100.",
+  "lukas-graham-opvaekst": {
+    "why": "Forsangeren Lukas Forchhammer voksede op i fristaden Christiania i København. Bandet Lukas Graham blev dannet i Danmark i 2011.",
     "source": "Wikipedia"
   },
   "gasolin": {
