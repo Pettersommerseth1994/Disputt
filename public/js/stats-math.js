@@ -83,10 +83,14 @@ export function summarize(data) {
   const sum = salesSummary(sales);
   const total = (name, where) => count(events, name, where);
   const game = GAME_STEPS.map(([name, label]) => ({ name, label, n: total(name) }));
+  // The game was counted from `first` on, the orders go back further: the funnel only takes the orders from the day the counting started,
+  // or "paid" would be set against "saw the packages" from a shorter period (and could come out above 100 %).
+  const first = events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '');
+  const paidSinceCounting = first ? salesSummary(sales.filter((o) => o.day >= first)).orders : 0;
   const pay = [
     { name: 'paywall', label: 'Så pakkene (betalingsvinduet)', n: total('paywall') },
     { name: 'checkout', label: 'Trykket for å betale', n: total('checkout') },
-    { name: 'paid', label: 'Betalte', n: sum.orders },
+    { name: 'paid', label: 'Betalte', n: paidSinceCounting },
   ];
   const byLang = ['no', 'da', 'sv', ''].filter((lang) => events.some((e) => e.lang === lang)).map((lang) => ({ lang, visit: total('visit', { lang }), lobby: total('lobby', { lang }), game_start: total('game_start', { lang }), paywall: total('paywall', { lang }), checkout: total('checkout', { lang }) }));
   const byMode = ['cabin', 'car'].map((mode) => ({ mode, chosen: total('mode', { mode }), lobby: total('lobby', { mode }), game_start: total('game_start', { mode }), round: total('round', { mode }), finished: total('finished', { mode }), paywall: total('paywall', { mode }) }));
@@ -147,5 +151,5 @@ export function summarize(data) {
     averageOrder: sum.orders ? Math.round((sum.revenue.NOK ?? 0) / sum.orders) : null, // (kroner)
   };
   kpi.playersPerGame = countedGames ? Math.round((players.reduce((n, p) => n + p.size * p.total, 0) / countedGames) * 10) / 10 : null;
-  return { game, pay, byLang, byMode, checkouts, days, weekdays, kpi, players, lengths, countedGames, paywallRounds, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit'), games: lobbies, firstRounds, first: events.reduce((min, e) => (min === '' || e.day < min ? e.day : min), '') };
+  return { game, pay, byLang, byMode, checkouts, days, weekdays, kpi, players, lengths, countedGames, paywallRounds, sales: sum, rounds: total('round'), joined: total('joined'), visits: total('visit'), games: lobbies, firstRounds, first, paidBeforeCounting: sum.orders - paidSinceCounting };
 }

@@ -129,6 +129,15 @@ describe('the owner\'s sums', () => {
     assert.equal(s.pay[2].n, 2, 'two paid orders (a refunded and a cancelled one do not count)');
   });
 
+  it('sets the paid orders against the packages only from the day the counting started', () => {
+    const older = [{ day: '2026-10-20', plan: 'evening', amount: 14900, currency: 'NOK', state: 'paid', refunded: 0 }, ...sales];
+    const s = summarize({ today: '2026-11-03', from: '2026-10-01', days: 34, events, sales: older });
+    assert.equal(s.pay[2].n, 2, 'the order from before the counting is left out of the funnel');
+    assert.equal(s.paidBeforeCounting, 1);
+    assert.equal(s.sales.orders, 3, 'but it is still a sale in the sums');
+    assert.equal(summarize({ today: '2026-11-03', from: '2026-11-01', days: 3, events: [], sales }).pay[2].n, 0, 'nothing counted, nothing to compare with');
+  });
+
   it('counts only paid orders, and takes refunds off what came in', () => {
     const s = salesSummary(sales);
     assert.equal(s.orders, 2);

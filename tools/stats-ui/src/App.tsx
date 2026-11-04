@@ -430,7 +430,10 @@ export default function App() {
               </TableBody>
             </Table>
           </CardContent>
-          <CardFooter className="text-xs text-muted-foreground">«Trykket for å betale» teller også de som angret i nettbutikken eller hos Vipps.</CardFooter>
+          <CardFooter className="flex flex-col items-start gap-1 text-xs text-muted-foreground">
+            <span>«Trykket for å betale» teller også de som angret i nettbutikken eller hos Vipps.</span>
+            {s.paidBeforeCounting > 0 && <span>«Betalte» her teller bare kjøp fra {formatDay(s.first)}, da tellingen i spillet startet. {s.paidBeforeCounting === 1 ? "Ett eldre kjøp" : `${s.paidBeforeCounting} eldre kjøp`} er med i «Kjøp» øverst og i tabellen under, men ikke her.</span>}
+          </CardFooter>
         </Card>
       </div>
 
