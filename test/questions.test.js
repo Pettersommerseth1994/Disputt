@@ -51,7 +51,7 @@ test('the question does not hand over the answer', () => {
 
 // The box «Visste du det?» that backs the right answer up (shared/why-*.js): one or two short sentences and a source.
 // These questions have none on purpose: the answer or the wording is too uncertain to back up with a source (the list is in README.md).
-const NO_WHY = new Set(['ekvator-land', 'by-flest-hamburg', 'by-flest-toronto', 'film-mest-penger', ...(lang === 'no' ? ['vinmonopolet-liter'] : [])]);
+const NO_WHY = new Set(['by-flest-hamburg', 'by-flest-toronto']);
 
 test('every question has an explanation of one or two short sentences, with a source', () => {
   for (const q of QUESTIONS) {

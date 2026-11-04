@@ -193,7 +193,7 @@ export const QUESTIONS_SV = [
   },
   { id: 'franz-ferdinand', text: 'I vilken stad sköts Franz Ferdinand 1914?', options: ['Moskva', 'Dallas', 'Berlin', 'Sarajevo'], correct: 3 },
   { id: 'afrika-land', text: 'Hur många länder består Afrika av?', options: ['22', '34', '46', '54'], correct: 3 },
-  { id: 'ekvator-land', text: 'Hur många länder går ekvatorn genom?', options: ['3', '6', '9', '13'], correct: 3 },
+  { id: 'ekvator-land', text: 'Hur många länder går ekvatorn genom?', options: ['3', '6', '9', '11'], correct: 3 },
   {
     id: 'mosambik',
     text: 'Vad finns på Moçambiques flagga?',
@@ -592,7 +592,7 @@ export const QUESTIONS_SV = [
     id: 'film-mest-penger',
     text: 'Vilken film har tjänat mest pengar genom tiderna?',
     options: ['Spider-Man: No Way Home', 'Avengers: Endgame', 'Avatar', 'Titanic'],
-    correct: 2,
+    correct: 1,
   },
   {
     id: 'oscar-2020',

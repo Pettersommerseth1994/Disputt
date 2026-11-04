@@ -237,6 +237,22 @@ export const WaitReveal = ({ view }) => html`<${RevealStage} view=${view} />`;
 // ------------------------------------------------------------------ 5. the points
 
 /**
+ * «Visste du det?»: what backs the right answer up. Closed it shows the first lines of the text (so the group sees what it is about
+ * without a tap); a tap on the card opens the rest and the source. A new round gets a new box (key), closed again.
+ */
+const Why = ({ answer }) => {
+  const [open, setOpen] = useState(false);
+  return html`<aside class=${cx('card card--paper why rise-in', open && 'why--open')} aria-label=${t('Visste du det?')} onClick=${() => setOpen(!open)}>
+    <button type="button" class="why__head" aria-expanded=${open}>
+      <span class="eyebrow">${t('Visste du det?')}</span>
+      <svg class="why__chevron" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+    </button>
+    <p class="why__text">${answer.why}</p>
+    ${open && answer.source && html`<p class="why__source">${t('Kilde:')} ${answer.source}</p>`}
+  </aside>`;
+};
+
+/**
  * The points, and one line on how the round went. Who the impostors were, and the answer, have been said out loud; for when
  * the group disagrees about it, "Se fasit" (fasit.js) has them.
  */
@@ -264,12 +280,7 @@ export function Summary({ view }) {
     ${none && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${s.correct ? t('Dere svarte riktig sammen!') : t('Dere svarte feil. Ingen fikk poeng.')}</p>`}
     ${s.tiebreak && html`<p class="chip chip--yellow center" role="status" style="align-self:center">${t('Uavgjort i teten, én runde til!')}</p>`}
 
-    ${s.answer?.why &&
-    html`<aside class="card card--paper why rise-in" aria-label=${t('Visste du det?')}>
-      <p class="eyebrow">${t('Visste du det?')}</p>
-      <p class="why__text">${s.answer.why}</p>
-      ${s.answer.source && html`<p class="why__source">${t('Kilde:')} ${s.answer.source}</p>`}
-    </aside>`}
+    ${s.answer?.why && html`<${Why} key=${s.answer.why} answer=${s.answer} />`}
 
     <section class="card stack">
       <${Scoreboard} view=${view} gains=${s.gained} />

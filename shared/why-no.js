@@ -994,5 +994,13 @@ export const WHY_NO = {
   "svart-boks-oransje": {
     "why": "Flygeregistratorene er skarpt oransje for at de lettere skal finnes i vraket etter en ulykke. Navnet «svart boks» kan komme fra svarte kasser rundt radioutstyr under andre verdenskrig, men opphavet er usikkert.",
     "source": "Wikipedia"
+  },
+  "ekvator-land": {
+    "why": "Ekvator går over land i 11 stater, blant dem Ecuador, Brasil, Kenya og Indonesia. Teller man også havområder, kommer Maldivene og Kiribati i tillegg.",
+    "source": "Store norske leksikon og Wikipedia"
+  },
+  "film-mest-penger": {
+    "why": "«Avengers: Endgame» har tjent om lag 2,9 milliarder dollar. Rekorden har skiftet mellom «Endgame» og «Avatar» flere ganger etter gjenutgivelser, og «Endgame» tok den tilbake i oktober 2026.",
+    "source": "Deadline og Wikipedia"
   }
 };

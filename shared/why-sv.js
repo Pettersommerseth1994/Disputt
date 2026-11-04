@@ -997,5 +997,13 @@ export const WHY_SV = {
   "svart-boks-oransje": {
     "why": "Flygregistratorerna är skarpt orangea för att de lättare ska hittas i vraket efter en olycka. Namnet «svarta lådan» kan komma från svarta lådor kring radioutrustning under andra världskriget, men ursprunget är osäkert.",
     "source": "Wikipedia"
+  },
+  "ekvator-land": {
+    "why": "Ekvatorn går över land i 11 stater, bland dem Ecuador, Brasilien, Kenya och Indonesien. Räknar man också havsområden tillkommer Maldiverna och Kiribati.",
+    "source": "Wikipedia"
+  },
+  "film-mest-penger": {
+    "why": "«Avengers: Endgame» har tjänat omkring 2,9 miljarder dollar. Rekordet har växlat mellan «Endgame» och «Avatar» flera gånger efter återutgivningar, och «Endgame» tog tillbaka det i oktober 2026.",
+    "source": "Deadline och Wikipedia"
   }
 };

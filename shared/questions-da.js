@@ -201,7 +201,7 @@ export const QUESTIONS_DA = [
   { id: 'carlsberg', text: 'Hvilket år blev Carlsberg grundlagt?', options: ['1827', '1847', '1867', '1887'], correct: 1 },
   { id: 'franz-ferdinand', text: 'I hvilken by blev Franz Ferdinand skudt i 1914?', options: ['Moskva', 'Dallas', 'Berlin', 'Sarajevo'], correct: 3 },
   { id: 'afrika-land', text: 'Hvor mange lande består Afrika af?', options: ['22', '34', '46', '54'], correct: 3 },
-  { id: 'ekvator-land', text: 'Hvor mange lande går ækvator igennem?', options: ['3', '6', '9', '13'], correct: 3 },
+  { id: 'ekvator-land', text: 'Hvor mange lande går ækvator igennem?', options: ['3', '6', '9', '11'], correct: 3 },
   {
     id: 'mosambik',
     text: 'Hvad er afbildet i Mozambiques flag?',
@@ -590,7 +590,7 @@ export const QUESTIONS_DA = [
     id: 'film-mest-penger',
     text: 'Hvilken film har tjent flest penge nogensinde?',
     options: ['Spider-Man: No Way Home', 'Avengers: Endgame', 'Avatar', 'Titanic'],
-    correct: 2,
+    correct: 1,
   },
   {
     id: 'oscar-2020',

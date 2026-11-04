@@ -175,17 +175,9 @@ export const QUESTIONS = [
   },
   { id: 'gutenberg', text: 'Rundt hvilket år fant Gutenberg opp boktrykkerkunsten?', options: ['1450', '1540', '1630', '1720'], correct: 0 },
   { id: 'ekvator-storst', text: 'Hva er det største landet (i areal) ekvator krysser?', options: ['DR Kongo', 'Brasil', 'India', 'Colombia'], correct: 1 },
-  // The card says that Falling Feather is what Vinmonopolet sells most of. In 2025 it came second (1 004 058 litres), just
-  // behind Marqués de Nombrevilla (1 038 717), which is not among the options: hence "av disse", which is right either way.
-  {
-    id: 'vinmonopolet-liter',
-    text: 'Hvilket av disse solgte Vinmonopolet mest av i liter i 2025?',
-    options: ['Falling Feather (rødvin)', 'Dworek Vodka', 'Jägermeister', 'Baileys'],
-    correct: 0,
-  },
   { id: 'franz-ferdinand', text: 'I hvilken by ble Franz Ferdinand skutt i 1914?', options: ['Moskva', 'Dallas', 'Berlin', 'Sarajevo'], correct: 3 },
   { id: 'afrika-land', text: 'Hvor mange land består Afrika av?', options: ['22', '34', '46', '54'], correct: 3 },
-  { id: 'ekvator-land', text: 'Hvor mange land går ekvator gjennom?', options: ['3', '6', '9', '13'], correct: 3 },
+  { id: 'ekvator-land', text: 'Hvor mange land går ekvator gjennom?', options: ['3', '6', '9', '11'], correct: 3 },
   {
     id: 'mosambik',
     text: 'Hva er avbildet i flagget til Mosambik?',
@@ -579,7 +571,7 @@ export const QUESTIONS = [
     id: 'film-mest-penger',
     text: 'Hvilken film har tjent mest penger gjennom tidene?',
     options: ['Spider-Man: No Way Home', 'Avengers: Endgame', 'Avatar', 'Titanic'],
-    correct: 2,
+    correct: 1,
   },
   {
     id: 'oscar-2020',
