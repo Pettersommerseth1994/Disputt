@@ -114,6 +114,8 @@ export default {
   'Åpner Vipps …': 'Öppnar Vipps …',
   'Et øyeblikk. Vipps åpner seg her, og spillet venter i fanen bak.': 'Ett ögonblick. Vipps öppnas här, och spelet väntar i fliken bakom.',
   '{n} % rabatt': '{n} % rabatt',
+  'ca. {amount}': 'ca {amount}',
+  'Du betaler i norske kroner (NOK). Beløp i {currency} er omtrentlige og kan avvike litt med kortutstederens kurs.': 'Du betalar i norska kronor (NOK). Belopp i {currency} är ungefärliga och kan avvika något med din banks kurs.',
   '{n} kr rabatt': '{n}\u00a0NOK rabatt',
   'Ugyldig innhold.': 'Ogiltigt innehåll.',
   'Fikk ikke kontakt med Vipps eller butikken. Prøv igjen om litt.': 'Vi fick ingen kontakt med Vipps eller butiken. Försök igen om en stund.',

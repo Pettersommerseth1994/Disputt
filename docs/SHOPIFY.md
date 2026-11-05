@@ -421,6 +421,16 @@ npm run qa:overlap              # ingen tekst oppå annen tekst, heller ikke på
 - **Ingen automatisk retur fra butikken.** Shopifys takkeside kan ikke sende kunden tilbake til spillet. Derfor åpnes butikken i en ny fane, spillet finner betalingen selv, og forsiden i butikken lukker fanen. En nettleser som ikke åpner nye faner sender den fanen verten står i til butikken, og verten går tilbake med tilbakeknappen.
 - **Alle kan banke på Workeren.** Adressen er offentlig, og `/shop`, `/restore` og `/health` kan kalles med `curl`. Ingenting kan hentes uten en kode som er betalt (60 bit, så den kan ikke gjettes), men den som sender svært mange spørsmål kan bruke opp den gratis kvoten (100 000 kall om dagen, og 5 millioner leste rader i databasen). Vil du stenge det ute, legg en rate-begrensning foran Workeren (Cloudflare → Security → WAF → Rate limiting rules). Webhooken er signert og tar ikke imot noe uten Shopifys signatur.
 - **Bruk bare NOK i butikken** (ikke flere valutaer med Shopify Markets). Workeren regner en refusjon i samme valuta som ordren; en refusjon i en annen valuta stopper ikke koden.
+
+### Danske og svenske kroner
+
+Butikken selger bare i NOK, og kortet belastes i NOK. På dansk og svensk viser spillet likevel «ca. 109 DKK» / «ca. 159 SEK» under hver pris, og en linje om at beløpet er omtrentlig (betalingsskjermen i spillet, og prisblobbene på `playdisputt.com/da/` og `/sv/`). Beløpet er NOK-prisen regnet med dagens kurs og **rundet opp** til neste tall som ender på 9, så den ekte prisen aldri er høyere enn det som står.
+
+Kursene står for hånd i `public/js/pay/approx.js` (`RATES`, med dato). Slik oppdaterer du dem:
+1. Slå opp kursene hos Norges Bank (DKK og SEK oppgis per 100 enheter: 100 DKK = 139,11 NOK gir `nokPer: 1.3911`).
+2. Rett `RATES` og `RATES_DATE`, og kjør `node --test test/approx.test.js` (testen med tallene for de tre pakkene må oppdateres til de nye tallene).
+3. Kjør landingssiden på nytt (`python3 tmp/nettside/publish-landing.py <mappen med playdisputt>`; den leser de samme tallene), og push begge repoene.
+Endre bare når en kurs har flyttet seg omtrent 5 %, så tallene ikke hopper. Skal butikken en gang selge i DKK og SEK på ordentlig, er det Shopify Markets med faste priser, og betalingsserveren må da lese prisen per valuta (den sjekker i dag at butikken er NOK).
 - **Faner som spillet åpner beholder `window.opener`** (det er derfor spillet kan lukke dem igjen). Butikkens egne sider kunne i teorien sendt spillfanen til en annen adresse; i en butikk uten tredjepartsapper på forsiden er det ikke noe problem. Ikke legg apper eller skript på butikkens forside.
 - **Kjøp utenom spillet gir ingen kode** ([del 14](#14-drift)). Vil du hindre det, kan produktsidene i temaet fjernes eller stenges.
 - **E-posten og spillet er på norsk, dansk og svensk.** E-posten bruker språket kassen åpnes på ([del 7](#7-shopify-e-postbekreftelsen)), og knappen den nevner heter «Logg inn» (dansk «Log ind», svensk «Logga in»), under pakkene i spillet. Teksten er ikke lest av noen som kan språkene, eller av en jurist.

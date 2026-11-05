@@ -107,3 +107,8 @@ html[lang='da'] .plan__price,
 html[lang='sv'] .plan__price { font-size: 1.3rem; }
 html[lang='da'] .plan__was,
 html[lang='sv'] .plan__was { font-size: 0.8rem; }
+
+/* «ca. 109 DKK» under the price in NOK (pay/approx.js): a second, small line in the price's own column, so the card is no taller (the name and the
+   length already make two lines on the left). */
+.plan__price:has(.plan__approx) { display: flex; flex-direction: column; align-items: flex-end; gap: 0.18rem; }
+.plan__approx { font-family: var(--font-text); font-size: 0.72rem; font-weight: 700; line-height: 1; opacity: 0.75; letter-spacing: 0; }

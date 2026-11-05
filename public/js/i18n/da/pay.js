@@ -114,6 +114,8 @@ export default {
   'Åpner Vipps …': 'Åbner MobilePay …',
   'Et øyeblikk. Vipps åpner seg her, og spillet venter i fanen bak.': 'Et øjeblik. MobilePay åbner her, og spillet venter i fanen bagved.',
   '{n} % rabatt': '{n} % rabat',
+  'ca. {amount}': 'ca. {amount}',
+  'Du betaler i norske kroner (NOK). Beløp i {currency} er omtrentlige og kan avvike litt med kortutstederens kurs.': 'Du betaler i norske kroner (NOK). Beløb i {currency} er omtrentlige og kan afvige lidt med din banks kurs.',
   '{n} kr rabatt': '{n}\u00a0NOK rabat',
   'Ugyldig innhold.': 'Ugyldigt indhold.',
   'Fikk ikke kontakt med Vipps eller butikken. Prøv igjen om litt.': 'Vi kunne ikke få forbindelse til MobilePay eller butikken. Prøv igen om lidt.',

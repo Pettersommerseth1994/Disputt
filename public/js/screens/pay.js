@@ -3,7 +3,7 @@
 // (A file of its own: pages are cached for ten minutes ...)
 
 import { html, useEffect, useRef, useState } from '../vendor/htm-preact.js';
-import { t, tx } from '../i18n/lang.js';
+import { getLang, t, tx } from '../i18n/lang.js';
 import { setStore, toast, useStore } from '../store.js';
 import { Button, Sheet } from '../ui.js';
 import { joinNames } from '../impostors.js';
@@ -13,6 +13,7 @@ import { requestNextRound } from '../pay/gate.js';
 import { forgetPass, restoreWithCode, startCheckout } from '../pay/payments.js';
 import { DEFAULT_PLAN, describeValidity, formatPrice, planById } from '../pay/plans.js';
 import { dealFor, kr } from '../pay/discount.js';
+import { RATES, approxPrice } from '../pay/approx.js';
 import { DiscountField } from './discount.js';
 import { ShopDock } from './shoppay.js';
 import { useOffered } from './offer.js';
@@ -62,6 +63,12 @@ const planName = (id) => {
 
 // ------------------------------------------------------------------------------------------------ the packages
 
+/** «ca. 109 DKK» under a price in Danish and Swedish (nothing in Norwegian): the price is in NOK, this only helps to read it (pay/approx.js). */
+function approx(nok) {
+  const a = approxPrice(nok, getLang());
+  return a && html`<small class="plan__approx">${t('ca. {amount}', { amount: `${a.amount}\u00a0${a.code}` })}</small>`;
+}
+
 function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
   return html`<label class=${cx('plan', selected && 'is-selected', locked && 'plan--locked')}>
     <input type="radio" name="plan" value=${plan.id} checked=${selected} disabled=${locked} onChange=${() => onSelect(plan.id)} />
@@ -71,8 +78,8 @@ function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
       <span class="plan__sub">${t(plan.length)}<span class="plan__nr">${t('Fornyes ikke')}</span></span>
     </span>
     ${deal
-      ? html`<span class="plan__price plan__price--deal"><s class="plan__was">${formatPrice(plan.price)}</s><span>${kr(deal.now)}</span></span>`
-      : html`<span class="plan__price">${formatPrice(plan.price)}</span>`}
+      ? html`<span class="plan__price plan__price--deal"><s class="plan__was">${formatPrice(plan.price)}</s><span>${kr(deal.now)}</span>${approx(deal.now / 100)}</span>`
+      : html`<span class="plan__price">${formatPrice(plan.price)}${approx(plan.price)}</span>`}
     ${plan.badge && html`<span class="plan__badge">${t(plan.badge)}</span>`}
   </label>`;
 }
@@ -128,7 +135,8 @@ export function Paywall({ view = null }) {
     <p class="center paywall__customer"><span class="muted">${t('Er du allerede kunde?')}</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}></p>
 
     <p class="small muted center paywall__fine">
-      ${t('Engangsbetaling inkl. mva, ingen abonnement.')}${terms.length > 0 && ' '}
+      ${t('Engangsbetaling inkl. mva, ingen abonnement.')}${' '}
+      ${RATES[getLang()] && t('Du betaler i norske kroner (NOK). Beløp i {currency} er omtrentlige og kan avvike litt med kortutstederens kurs.', { currency: RATES[getLang()].code })}${terms.length > 0 && ' '}
       ${terms.map(([name, href], i) => html`${i > 0 && ' · '}<a href=${href} target="_blank" rel="noopener">${t(name)}</a>`)}
     </p>
     <div class="dock">
