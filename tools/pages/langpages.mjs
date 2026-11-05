@@ -3,7 +3,13 @@
 // links to the other versions. js/i18n/lang.js reads data-sprak, so the game opens in that language and the language card does not ask.
 // The point is the link preview: a chat or a feed shows what is in the HTML of the page, and a robot cannot ask which language the sender has.
 //
-// The two files are GENERATED from public/index.html and are committed, so the dev server and the Pages build serve them like any other page.
+// The terms and the privacy statement get the same treatment: public/da/vilkar.html, public/da/personvern.html and the same two in sv/. Their source
+// (public/vilkar.html, public/personvern.html) holds one block per language and js/legal-lang.js picks the block that fits the phone; the page of a
+// language here holds only its own block, with its own title, description, address and links to the other versions, so a link to it, a search result
+// and a robot all get that language without asking anybody.
+//
+// The files are GENERATED from public/index.html, vilkar.html and personvern.html and are committed, so the dev server and the Pages build serve
+// them like any other page.
 // Usage: node tools/pages/langpages.mjs      (writes them; test/langpages.test.js fails when they are not what this would write)
 import fs from 'node:fs';
 import path from 'node:path';
@@ -61,16 +67,45 @@ export function langPage(indexHtml, lang) {
   return html;
 }
 
+export const LEGAL_PAGES = ['vilkar', 'personvern'];
+
+/** One language of the terms or the privacy statement: the block of that language alone (not hidden), the page's own head, files from one folder down. */
+export function legalPage(source, lang, name) {
+  const marker = '\n  <div lang="';
+  const first = source.indexOf(marker);
+  const end = source.indexOf('\n</main>');
+  if (first < 0 || end < 0) throw new Error(`public/${name}.html no longer has its blocks per language`);
+  const blocks = source.slice(first, end).split(marker).slice(1).map((b) => marker + b);
+  const block = blocks.find((b) => b.startsWith(`${marker}${LANG_PAGES[lang].html}" data-lang="${lang}"`));
+  if (!block) throw new Error(`public/${name}.html has no block for ${lang}`);
+  const attr = (a) => /data-title="([^"]*)"/.exec(block) && new RegExp(`data-${a}="([^"]*)"`).exec(block)[1];
+  const title = attr('title');
+  const description = attr('description');
+  let html = source.slice(0, first) + block.replace(/\s*\n$/, '') + source.slice(end);
+  html = swap(html, '<html lang="nb">', `<html lang="${LANG_PAGES[lang].html}">`);
+  html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${title}</title>`);
+  html = html.replace(/<meta name="description" content="[^"]*">/, () => `<meta name="description" content="${description}">`);
+  html = swap(html, `<link rel="canonical" href="${SITE}${name}.html">`, `<link rel="canonical" href="${SITE}${lang}/${name}.html">`);
+  html = html.replace(' hidden>', '>');
+  html = html.replace(' loading="lazy"', ''); // (the logo is the first thing on this page; in the page with all three it was only the first block's that was)
+  html = html.replace(/\n<script src="js\/legal-lang\.js"><\/script>/, '');
+  // the files (style, fonts, logo) are in the folder above; the links to the other terms page and to the game stay: they are in this folder
+  html = html.replace(/\b(href|src)="(assets\/|css\/|js\/|favicon\.)/g, '$1="../$2');
+  return html;
+}
+
 export function writeLangPages() {
-  const index = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
+  const read = (f) => fs.readFileSync(path.join(ROOT, 'public', f), 'utf8');
+  const index = read('index.html');
   for (const lang of Object.keys(LANG_PAGES)) {
     const dir = path.join(ROOT, 'public', lang);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'index.html'), langPage(index, lang));
+    for (const name of LEGAL_PAGES) fs.writeFileSync(path.join(dir, `${name}.html`), legalPage(read(`${name}.html`), lang, name));
   }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   writeLangPages();
-  console.log('wrote public/da/index.html and public/sv/index.html');
+  console.log('wrote public/{da,sv}/{index,vilkar,personvern}.html');
 }
