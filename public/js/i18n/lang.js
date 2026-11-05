@@ -42,7 +42,28 @@ function setPageLang(lang) {
   if (typeof document !== 'undefined' && document.documentElement) document.documentElement.lang = LANGUAGES[lang].html;
 }
 
-let current = chosenLang() ?? 'no';
+/** The language handed over in the address (`?sprak=da`), from the landing page on playdisputt.com where the visitor has already chosen:
+ *  it is kept like a choice made here (so the card «Velg språk» does not ask again) and taken out of the address. */
+function languageFromAddress() {
+  try {
+    const url = new URL(location.href);
+    const v = url.searchParams.get('sprak');
+    if (v === null) return null;
+    url.searchParams.delete('sprak');
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    if (!isLang(v)) return null;
+    try {
+      localStorage.setItem(KEY, v);
+    } catch {
+      /* private window: the language holds for this visit only */
+    }
+    return v;
+  } catch {
+    return null; // (no address, no history: the tests' make-believe pages)
+  }
+}
+
+let current = languageFromAddress() ?? chosenLang() ?? 'no';
 setPageLang(current);
 
 export const getLang = () => current;

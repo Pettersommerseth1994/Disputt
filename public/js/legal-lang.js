@@ -11,6 +11,20 @@
   } catch (e) {
     /* storage blocked: Norwegian */
   }
+  // A link from the landing page on playdisputt.com carries the language the visitor chose there (?sprak=da): that one wins, and is kept.
+  try {
+    var asked = new URLSearchParams(location.search).get('sprak');
+    if (asked === 'da' || asked === 'sv' || asked === 'no') {
+      lang = asked;
+      try {
+        localStorage.setItem(KEY, asked);
+      } catch (e) {
+        /* storage blocked: only for this visit */
+      }
+    }
+  } catch (e) {
+    /* no address to read */
+  }
   var blocks = document.querySelectorAll('[data-lang]');
   var found = null;
   for (var i = 0; i < blocks.length; i++) if (blocks[i].getAttribute('data-lang') === lang) found = blocks[i];
