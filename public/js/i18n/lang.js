@@ -42,28 +42,36 @@ function setPageLang(lang) {
   if (typeof document !== 'undefined' && document.documentElement) document.documentElement.lang = LANGUAGES[lang].html;
 }
 
-/** The language handed over in the address (`?sprak=da`), from the landing page on playdisputt.com where the visitor has already chosen:
- *  it is kept like a choice made here (so the card «Velg språk» does not ask again) and taken out of the address. */
-function languageFromAddress() {
+/** The language handed over to the page: in the address (`?sprak=da`, from a link on the landing page on playdisputt.com) or by the page itself
+ *  (disputt.site/da/ and /sv/ are the same game with `<html data-sprak="da">`, so a shared link there shows a Danish title and picture). The visitor
+ *  has chosen it by coming here: it is kept like a choice made in the game (so the card «Velg språk» does not ask again), and `?sprak=` is taken
+ *  out of the address. The address wins over the page. */
+function languageHandedOver() {
+  let fromAddress = null;
   try {
     const url = new URL(location.href);
     const v = url.searchParams.get('sprak');
-    if (v === null) return null;
-    url.searchParams.delete('sprak');
-    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
-    if (!isLang(v)) return null;
+    if (v !== null) {
+      url.searchParams.delete('sprak');
+      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+      if (isLang(v)) fromAddress = v;
+    }
+  } catch {
+    /* no address, no history: the tests' make-believe pages */
+  }
+  const fromPage = typeof document !== 'undefined' ? document.documentElement?.dataset?.sprak : undefined;
+  const lang = fromAddress ?? (isLang(fromPage) ? fromPage : null);
+  if (lang) {
     try {
-      localStorage.setItem(KEY, v);
+      localStorage.setItem(KEY, lang);
     } catch {
       /* private window: the language holds for this visit only */
     }
-    return v;
-  } catch {
-    return null; // (no address, no history: the tests' make-believe pages)
   }
+  return lang;
 }
 
-let current = languageFromAddress() ?? chosenLang() ?? 'no';
+let current = languageHandedOver() ?? chosenLang() ?? 'no';
 setPageLang(current);
 
 export const getLang = () => current;

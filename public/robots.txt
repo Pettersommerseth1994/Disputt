@@ -1,3 +1,4 @@
 User-agent: *
 Disallow: /j/
 Disallow: /api/
+Sitemap: https://disputt.site/sitemap.xml

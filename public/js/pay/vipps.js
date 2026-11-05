@@ -8,6 +8,7 @@
 // have would not load. Everything here is made of what shop.js already had, and of the browser.)
 
 import { LANGUAGES, getLang, t, tServer } from '../i18n/lang.js';
+import { asset } from '../paths.js';
 import { track } from '../stats.js';
 import { setStore, store } from '../store.js';
 import { announceAway } from './away.js';
@@ -55,19 +56,7 @@ function vippsAddress(text, app = false) {
  * base address of its own), not a bare page. Only what the tab has to say: the game stands in the tab behind.
  */
 export function openingPage() {
-  let base = '';
-  try {
-    base = new URL(document.baseURI || location.href).href;
-  } catch {
-    /* the plain addresses are used */
-  }
-  const at = (path) => {
-    try {
-      return new URL(path, base).href;
-    } catch {
-      return path;
-    }
-  };
+  const at = asset; // (from the site root, not from the page: the game also opens from disputt.site/da/ and /sv/)
   const sheets = ['tokens', 'base', 'components', 'screens'].map((name) => `<link rel="stylesheet" href="${at(`css/${name}.css`)}">`).join('');
   return `<!doctype html><html lang="${LANGUAGES[getLang()].html}"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${t('Åpner Vipps')}</title><meta name="theme-color" content="#6a1428"><meta name="color-scheme" content="dark">${sheets}<body><main class="screen screen--padded takk"><div class="grow center stack stack--loose" style="align-items:center;justify-content:center"><span class="logo-sticker"><img src="${at('assets/logo/disputt-logo.svg')}" alt="Disputt" width="300" height="130"></span><h1>${t('Åpner Vipps …')}</h1><p class="lead muted">${t('Et øyeblikk. Vipps åpner seg her, og spillet venter i fanen bak.')}</p></div></main>`;
 }
