@@ -32,9 +32,8 @@
 @media (max-height: 700px) { .home__hero { gap: var(--s-4); padding-block: var(--s-4) var(--s-3); } }
 @keyframes home-tag-in { from { opacity: 0; transform: scale(0.7) translateY(0.6rem); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .home-tag { animation: none; } }
-/* "Allerede kunde? Logg inn" and "Du har tilgang Min tilgang": a question or a sentence and its link, with an ordinary word space between them (the text button has padding of its own) */
+/* the underlined «Min tilgang» under the buttons when there is a pass */
 .home__links { gap: 0; }
-.home__links .btn--text { padding-inline-start: 0.28rem; }
 .decor--home-a { top: 1rem; left: -1.5rem; --size: 6.5rem; }
 .decor--home-b { top: 4.4rem; right: -1.8rem; --size: 6rem; }
 .decor--home-c { bottom: 15.2rem; left: -0.9rem; --size: 4.4rem; }

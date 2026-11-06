@@ -9,7 +9,6 @@ export default {
   'Et quizspill med uenighetsgaranti': 'Ett frågespel med osämjegaranti',
   'Opprett spill': 'Skapa spel',
   'Bli med i spill': 'Gå med i spel',
-  'Du har tilgang': 'Du har tillgång',
   'Min tilgang': 'Min tillgång',
   'Allerede kunde?': 'Redan kund?',
   'Logg inn': 'Logga in',

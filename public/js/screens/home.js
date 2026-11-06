@@ -36,7 +36,7 @@ export function Home() {
       ${s.payments?.enabled &&
       isActive(s.pass) &&
       html`<div class="row row--center home__links">
-        <span class="muted">${t('Du har tilgang')}</span><${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>${t('Min tilgang')}</${Button}>
+        <${Button} variant="text" onClick=${() => setStore({ sheet: 'access' })}>${t('Min tilgang')}</${Button}>
       </div>`}
     </div>
   </main>`;
