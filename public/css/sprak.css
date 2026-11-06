@@ -68,16 +68,18 @@
   transition: transform var(--dur-1) var(--ease-bounce);
 }
 .lang-pick:active { transform: scale(0.93) rotate(var(--tilt)); }
-.lang-pick.is-now { background: rgb(var(--ink-rgb) / 0.08); }
-.lang-pick em {
+.lang-pick.is-now { background: rgb(var(--ink-rgb) / 0.2); box-shadow: inset 0 0 0 2px rgb(var(--ink-rgb) / 0.4); } /* the language in use: clearly darker than the paper */
+.lang-pick__check {
   position: absolute;
-  top: -0.7rem;
-  padding: 0.05rem 0.5rem;
-  border-radius: 999px;
-  font: 700 0.7rem var(--font-text);
-  font-style: normal;
-  color: var(--ink);
-  background: var(--yellow);
+  top: 0.15rem;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  color: var(--cream);
+  background: var(--ink);
   box-shadow: var(--shadow-1);
 }
 

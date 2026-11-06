@@ -11,6 +11,9 @@ import { useLangStyles } from './styles.js';
 
 const WAIT_MS = 3000;
 
+/** The tick that marks the language in use. */
+const Tick = () => html`<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7" /></svg>`;
+
 /** The card itself. It speaks all three languages at once (nobody has chosen yet), so its words are not translated. */
 export function LangChooser() {
   const s = useStore();
@@ -51,7 +54,7 @@ export function LangChooser() {
       <div class="lang-card__row">
         ${LANGUAGE_CODES.map(
           (code, i) => html`<button type="button" key=${code} lang=${LANGUAGES[code].html} class=${`lang-pick ${code === now ? 'is-now' : ''}`} style=${`--tilt:${[-4, 2, -2][i]}deg`} onClick=${() => choose(code)} aria-current=${!first && code === now ? 'true' : undefined}>
-            <${Flag} code=${code} round /><span>${LANGUAGES[code].name}</span>${first && code === 'no' && html`<em>Standard</em>`}
+            <${Flag} code=${code} round /><span>${LANGUAGES[code].name}</span>${code === now && html`<span class="lang-pick__check" aria-hidden="true"><${Tick} /></span>`}
           </button>`,
         )}
       </div>
