@@ -154,6 +154,15 @@ For hvert produkt:
 
 > Endrer du **prisen** i Shopify, endres den i kassen med en gang og trenger ikke noe i koden (men teksten på pakkeskjermen står i [`public/js/pay/plans.js`](../public/js/pay/plans.js): endre den også). Rabattkoder du lager i Shopify virker i kassen, og betalingsserveren spør ikke hva som ble betalt: en bestilling med rabatt gir tilgang. Gir du bort tilgang med en rabattkode på 100 %, så prøv det først, siden det er Shopify som bestemmer om en gratis bestilling sender varselet «Order payment». Oppretter du et **nytt** produkt eller en ny variant, får den en ny ID, og da må Cloudflare-variabelen byttes.
 
+### Black month: en rabattkode som følger med lenken
+
+En kampanje kjøres som en vanlig rabattkode i Shopify, så prisen som trekkes og prisen som vises aldri kommer ut av takt, og kampanjen slutter av seg selv på datoen du setter.
+
+- **Koden:** `BLACK` (alt som starter med `BLACK` får kampanjeutseendet: svart kort med gul kant, gult klistremerke «Black month» og «Du sparer 50 kr»; andre koder vises som vanlig). I Shopify: *Discounts → Create discount → Amount off products*, metode **Discount code**. Velg de tre produktene, gjerne **fast beløp (50 kr)** og ikke prosent (prosent gir øre-beløp som 104,30 kr). Ingen minstekjøp, **ingen grense per kunde** og **alle kunder** (ellers kan ikke «Betal med Vipps» ta den; kortet i kassen virker uansett). Sett **sluttdato**.
+- **Forhåndsutfylt:** en lenke med `?rabatt=BLACK` (`https://disputt.site/?rabatt=BLACK`, `/da/?rabatt=BLACK`) tar koden ut av adressen, husker den i 14 dager på telefonen ([`public/js/pay/campaign.js`](../public/js/pay/campaign.js)) og bruker den når pakkeskjermen åpner (`screens/discount.js`). Betalingsserveren avgjør: en kode som ikke finnes, er utløpt eller ikke gjelder pakkene slippes uten en lyd, og prisene er de vanlige. «Fjern» glemmer koden.
+- **playdisputt.com:** alle knappene som åpner spillet får `?rabatt=BLACK` (`CAMPAIGN` øverst i `tmp/nettside/publish-landing.py`; tom streng = av).
+- **Etterpå:** koden slutter å virke i Shopify på sluttdatoen. Lenkene kan stå, men fjern parameteren fra landingssiden når kampanjen er over.
+
 ## 6. Shopify: kassen og forsiden
 
 **Kassen** (*Settings → Checkout*): kunden skal bare behøve å oppgi e-post.

@@ -13,6 +13,7 @@ import { requestNextRound } from '../pay/gate.js';
 import { forgetPass, restoreWithCode, startCheckout } from '../pay/payments.js';
 import { DEFAULT_PLAN, describeValidity, formatPrice, planById } from '../pay/plans.js';
 import { dealFor, kr } from '../pay/discount.js';
+import { isBlackCode } from '../pay/campaign.js';
 import { RATES, approxPrice } from '../pay/approx.js';
 import { DiscountField } from './discount.js';
 import { ShopDock } from './shoppay.js';
@@ -69,8 +70,8 @@ function approx(nok) {
   return a && html`<small class="plan__approx">${t('ca. {amount}', { amount: `${a.amount}\u00a0${a.code}` })}</small>`;
 }
 
-function PlanCard({ plan, selected, locked = false, deal = null, onSelect }) {
-  return html`<label class=${cx('plan', selected && 'is-selected', locked && 'plan--locked')}>
+function PlanCard({ plan, selected, locked = false, deal = null, black = false, onSelect }) {
+  return html`<label class=${cx('plan', selected && 'is-selected', locked && 'plan--locked', deal && black && 'plan--black')}>
     <input type="radio" name="plan" value=${plan.id} checked=${selected} disabled=${locked} onChange=${() => onSelect(plan.id)} />
     <span class="plan__radio" aria-hidden="true"></span>
     <span class="plan__main">
@@ -130,7 +131,7 @@ export function Paywall({ view = null }) {
     ${pay.provider === 'shopify' && html`<${DiscountField} plan=${plan} />`}
 
     <div class="plans" role="radiogroup" aria-label=${t('Velg pakke')}>
-      ${offered.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} deal=${dealFor(s.discount, p.id)} onSelect=${setPlan} />`)}
+      ${offered.map((p) => html`<${PlanCard} key=${p.id} plan=${p} selected=${plan === p.id} locked=${Boolean(s.payWaiting)} deal=${dealFor(s.discount, p.id)} black=${isBlackCode(s.discount?.code)} onSelect=${setPlan} />`)}
     </div>
     <p class="center paywall__customer"><span class="muted">${t('Er du allerede kunde?')}</span> <${Button} variant="text" onClick=${() => setStore({ sheet: 'login' })}>${t('Logg inn')}</${Button}></p>
 

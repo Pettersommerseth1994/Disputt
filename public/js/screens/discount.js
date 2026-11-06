@@ -6,10 +6,11 @@ import { html, useEffect, useState } from '../vendor/htm-preact.js';
 import { t, tServer } from '../i18n/lang.js';
 import { setStore, useStore } from '../store.js';
 import { Button } from '../ui.js';
-import { dealFor, lookUpDiscount } from '../pay/discount.js';
+import { dealFor, kr, lookUpDiscount } from '../pay/discount.js';
 import { formatCodeInput, normalizeCode } from '../pay/pass.js';
 import { knownShop, loadShop } from '../pay/shop.js';
 import { vippsIsOfferedIn } from '../pay/vippslang.js';
+import { forgetCode, isBlackCode, rememberedCode } from '../pay/campaign.js';
 
 export function DiscountField({ plan }) {
   const s = useStore();
@@ -27,6 +28,19 @@ export function DiscountField({ plan }) {
       live = false;
     };
   }, [shop]);
+  // a code that came with the link (?rabatt=BLACK, pay/campaign.js) is asked about as soon as the shop is known, and taken like one that was typed; a code that is not good is dropped without a word
+  const handed = rememberedCode();
+  const already = Boolean(s.discount);
+  useEffect(() => {
+    if (!shop?.discounts || s.payWaiting || already || !handed) return undefined;
+    let live = true;
+    lookUpDiscount(handed)
+      .then((found) => live && setStore({ discount: found }))
+      .catch((err) => (err.code === 'network' || err.code === 'server' ? null : forgetCode())); // (trouble with the line: try again the next time the packages open)
+    return () => {
+      live = false;
+    };
+  }, [shop?.discounts, s.payWaiting, already, handed]);
   if (!shop?.discounts || s.payWaiting) return null;
 
   const apply = async (e) => {
@@ -48,9 +62,16 @@ export function DiscountField({ plan }) {
   if (s.discount) {
     const here = dealFor(s.discount, plan);
     const summary = tServer(s.discount.summary); // (the server's words: «10 % rabatt», «50 kr rabatt»)
+    if (isBlackCode(s.discount.code)) {
+      // the campaign: a sticker and what it saves on the chosen package (the old and the new price stand on the cards)
+      return html`<div class="discount discount--on discount--black" role="status">
+        <p class="discount__line"><span class="black-sticker">${t('Black month')}</span> <span>${here ? t('Du sparer {amount}', { amount: kr(here.price - here.now) }) : t('Gjelder ikke denne pakken.')}</span></p>
+        <${Button} variant="text" size="small" onClick=${() => (forgetCode(), setStore({ discount: null }))}>${t('Fjern')}</${Button}>
+      </div>`;
+    }
     return html`<div class="discount discount--on" role="status">
       <p class="discount__line"><span class="chip chip--yellow">${s.discount.code}</span> <span>${here ? summary : t('{summary}. Gjelder ikke denne pakken.', { summary })}</span></p>
-      <${Button} variant="text" size="small" onClick=${() => setStore({ discount: null })}>${t('Fjern')}</${Button}>
+      <${Button} variant="text" size="small" onClick=${() => (forgetCode(), setStore({ discount: null }))}>${t('Fjern')}</${Button}>
       ${here && !here.vipps && vippsIsOfferedIn() && html`<p class="small muted discount__note">${t('Denne koden gjelder i butikkens kasse (Betal med kort), ikke med Vipps.')}</p>`}
     </div>`;
   }
